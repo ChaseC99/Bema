@@ -13,7 +13,7 @@ const client = (() => {
     const callback = (
         process.env.APP_STATE === "dev"
         ? `http://localhost:${PORT}${OAUTH_CALLBACK_PATH}`
-        : `https://council-judging-tool.herokuapp.com${OAUTH_CALLBACK_PATH}`
+        : `https://bema.herokuapp.com${OAUTH_CALLBACK_PATH}`
     );
     return new OAuthClient({
         key: KA_CONSUMER_KEY,
