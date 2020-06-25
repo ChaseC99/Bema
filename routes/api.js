@@ -130,7 +130,7 @@ const routeChecks = {
 		    .withMessage("Entry author cannot be empty or longer than 200 characters"),
 		    check("edit_entry_level")
 		    .isIn(skillLevels)
-		    .withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'tbd'"),
+		    .withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'TBD'"),
 			check("edit_flagged")
 		    .isBoolean()
 		    .withMessage("Flagged must be a boolean"),
