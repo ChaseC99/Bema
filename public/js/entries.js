@@ -11,9 +11,6 @@ let entriesSpinner = document.querySelector("#entries-spinner");
 let entryContestName = document.querySelector("#entry-contest-name");
 let sidebar = document.querySelector(".side-bar");
 let sidebarSpinner = document.querySelector("#sidebar-spinner");
-let groupDropdown = document.querySelector("#assigned-group-dropdown");
-let currentGroupDropdown = document.querySelector("#current-group-dropdown");
-let newGroupDropdown = document.querySelector("#new-group-dropdown");
 
 request("get", "/api/internal/contests", null, (data) => {
     if (!data.error) {
@@ -76,22 +73,6 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
             </tr>`;
         });
         entriesSpinner.style.display = "none";
-    } else {
-        alert(data.error.message);
-    }
-});
-
-request("get", "/api/internal/admin/getEvaluatorGroups", null, (data) => {
-    if (!data.error) {
-        if (data.is_admin) {
-            data.evaluatorGroups.forEach(g => {
-                if (g.is_active) {
-                    groupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                    currentGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                    newGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                }
-            });
-        }
     } else {
         alert(data.error.message);
     }
