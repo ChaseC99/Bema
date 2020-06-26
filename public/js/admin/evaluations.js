@@ -32,22 +32,32 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
 // Load page data
 request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + current_evaluator_id, null, (data) => {
     if (!data.error) {
-        titleSpinner.style.display = "none";
-        evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} - Evaluations For ` + evaluationsContestName.textContent;
+        if (data.contests.length > 0) {
+            titleSpinner.style.display = "none";
+            evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} - Evaluations For ` + evaluationsContestName.textContent;
 
-        sidebarSpinner.style.display = "none";
-        data.contests.forEach((c, idx) => {
-            sidebar.innerHTML += `
-                <a class="nav-button" href="/admin/evaluations/${current_evaluator_id}/${c.contest_id}" id="contest-tab-${c.contest_id}">
-                    <i class="fas fa-trophy"></i>
-                    <p>
-                        ${c.contest_name}
-                    </p>
-                </a>
-            `;
-        });
-        let navButton = document.querySelector(`#contest-tab-${current_contest_id}`);
-        navButton.classList.add("selected");
+            sidebarSpinner.style.display = "none";
+            data.contests.forEach((c, idx) => {
+                sidebar.innerHTML += `
+                    <a class="nav-button" href="/admin/evaluations/${current_evaluator_id}/${c.contest_id}" id="contest-tab-${c.contest_id}">
+                        <i class="fas fa-trophy"></i>
+                        <p>
+                            ${c.contest_name}
+                        </p>
+                    </a>
+                `;
+            });
+            let navButton = document.querySelector(`#contest-tab-${current_contest_id}`);
+            navButton.classList.add("selected");
+        } else {
+            // This user has not submitted any evaluations, so display different page data
+            titleSpinner.style.display = "none";
+            evaluationsContestName.textContent = `Evaluations For ` + evaluationsContestName.textContent;
+
+            sidebarSpinner.style.display = "none";
+
+            evaluationsTable.innerHTML = "<p>This user has not evaluated any entries!</p>";
+        }
     } else {
         alert(data.error.message);
     }

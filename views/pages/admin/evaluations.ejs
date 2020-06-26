@@ -161,7 +161,17 @@
 
         request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + body.evaluator_id, null, (data) => {
             if (!data.error) {
-                window.location.replace("/admin/evaluations/" + body.evaluator_id + "/" + data.contests[0].contest_id);
+                if (data.contests.length > 0) {
+                    window.location.replace("/admin/evaluations/" + body.evaluator_id + "/" + data.contests[0].contest_id);
+                } else {
+                    request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
+                        if (!data.error) {
+                            window.location.replace("/admin/evaluations/" + body.evaluator_id + "/" + data.currentContest.contest_id);
+                        } else {
+                            alert(data.error.message);
+                        }
+                    });
+                }
             } else {
                 alert(data.error.message);
             }
