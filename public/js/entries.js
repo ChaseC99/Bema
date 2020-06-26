@@ -105,6 +105,8 @@ let editEntry = (e) => {
     for (key of e.target) {
         if (key.name === "edit_flagged" || key.name === "edit_disqualified") {
             body[key.name] = key.checked;
+        } else if (key.name === "edit_entry_group" && key.value === "null") {
+            body[key.name] = null;
         } else {
             body[key.name] = key.value;
         }
