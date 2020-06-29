@@ -72,10 +72,17 @@ exports.get = (request, response, next) => {
 exports.getId = (request, response, next) => {
     if (request.decodedToken) {
         return response.json({
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            logged_in: true,
+            is_admin: request.decodedToken.is_admin
+        });
+    } else {
+        return response.json({
+            evaluator_id: null,
+            logged_in: false,
+            is_admin: false
         });
     }
-    return handleNext(next, 401, "Unauthorized");
 };
 
 // Add user to whitelist.

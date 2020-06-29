@@ -15,18 +15,21 @@ request("get", "/api/internal/contests/getCurrentContest", null, (data) => {
 
 request("get", "/api/internal/users/id", null, (d) => {
     if (!d.error) {
-        request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + d.evaluator_id, null, (data) => {
-            if (!data.error) {
-                if (data.contests.length > 0) {
-                    evaluationsTab.href += ("/" + data.contests[0].contest_id);
+        if (d.evaluator_id !== null) {
+            // The evaluations tab only needs to be updated if the user is logged in, since public users can't see the evaluations page
+            request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + d.evaluator_id, null, (data) => {
+                if (!data.error) {
+                    if (data.contests.length > 0) {
+                        evaluationsTab.href += ("/" + data.contests[0].contest_id);
+                    } else {
+                        evaluationsTab.href += ("/" + currentContest);
+                    }
                 } else {
-                    evaluationsTab.href += ("/" + currentContest);
+                    alert(data.error.message);
                 }
-            } else {
-                alert(data.error.message);
-            }
-        });
+            });
+        }
     } else {
-        alert(data.error.message);
+        alert(d.error.message);
     }
 });

@@ -141,10 +141,12 @@ exports.stats = (request, response, next) => {
     }
     // Dumby data for public presentation that cannot contain private data.
     return response.json({
-        entryCount: 100,
-        reviewedEntriesCount: 20,
-        totalEvaluationsNeeded: 700,
-        totalEvaluationsCount: 450
+        yourReviewedEntriesCount: 10,
+        groupEntriesCount: 50,
+        groupEvaluatorCount: 3,
+        groupEvaluationsCount: 80,
+        logged_in: false,
+        is_admin: false
     });
 };
 

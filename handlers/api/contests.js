@@ -26,12 +26,23 @@ exports.getCurrentContest = (request, response, next) => {
                 return handleNext(next, 400, "There was a problem getting the current contest");
             }
             response.json({
+                logged_in: true,
                 is_admin: request.decodedToken.is_admin,
                 currentContest: res.rows[0]
             });
         });
+    } else {
+        return db.query("SELECT * FROM contest WHERE current = true ORDER BY contest_id DESC LIMIT 1", [], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem getting the current contest");
+            }
+            response.json({
+                logged_in: false,
+                is_admin: false,
+                currentContest: res.rows[0]
+            });
+        });
     }
-    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.getContestsEvaluatedByUser = (request, response, next) => {
