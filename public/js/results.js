@@ -128,6 +128,12 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                         ${a.avg_score}
                     </td>` : ""
                 }
+                ${data.is_admin ? `
+                    <td>
+                        <i class="fas fa-trophy" onclick="addWinner(${a.entry_id})"></i>
+                    </td>
+                    ` : ""
+                }
             </tr>`;
         });
     } else {
@@ -135,23 +141,16 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
     }
 });
 
-let addWinner = () => {
-    let entry_id = window.prompt("Enter the ID of the entry you want to add:");
-    entry_id = +entry_id;
-
-    if (entry_id > 0) {
-        request("post", "/api/internal/winners", {
-            entry_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                alert(data.error.message);
-            }
-        });
-    } else {
-        window.alert("Entry ID must be > 0");
-    }
+let addWinner = (entry_id) => {
+    request("post", "/api/internal/winners", {
+        entry_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
+        }
+    });
 };
 
 let deleteWinner = entry_id => {
