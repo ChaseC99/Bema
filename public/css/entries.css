@@ -1,5 +1,5 @@
 /* Hide unloaded content and unused forms */
-#entries-table, #edit-entry-page, #update-entry-groups-page {
+#entries-table, #add-entry-page, #edit-entry-page, #update-entry-groups-page {
 	display: none;
 }
 /* Actions buttons */

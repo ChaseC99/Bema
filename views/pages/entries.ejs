@@ -30,7 +30,7 @@
                 <% if (is_admin) { %>
                 <div>
                     <span id="import-entries-btn" class="admin-button" onclick="updateEntries(<%= contest_id %>)">Import Entries</span>
-                    <span id="add-entry-btn" class="admin-button" onclick="addEntry(<%= contest_id %>)">Add Single Entry</span>
+                    <span id="add-entry-btn" class="admin-button" onclick="showAddEntryForm()">Add Single Entry</span>
                     <span id="transfer-entries-btn" class="admin-button" onclick="showUpdateGroupsForm()">Update Groups</span>
                 </div>
                 <% } %>
@@ -68,6 +68,27 @@
         </div>
 
         <% if (is_admin) { %>
+        <div class="content-container" id="add-entry-page">
+            <div class="content-header">
+                <h2>Add Entry</h2>
+            </div>
+
+            <form id="add-entry-form" class="admin-form" onsubmit="return addEntry(event)">
+                <div class="row">
+                    <div class="col-10">
+                        <label for="entry_kaid">Entry KAID</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="text" id="entry_kaid" name="entry_kaid">
+                    </div>
+                </div>
+                <div class="row">
+                    <input class="admin-button" type="submit" value="Submit">
+                </div>
+            </form>
+        </div>
+
+
         <div class="content-container" id="edit-entry-page">
             <div class="content-header">
                 <h2>Edit Entry</h2>
