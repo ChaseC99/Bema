@@ -31,9 +31,6 @@
             <div class="preview col-12 standard">
                 <div class="db-header">
                     <p>Selected Winners</p>
-                    <% if (is_admin) { %>
-                        <span class="add-winner-btn admin-button" onclick="addWinner();">Add Winner</span>
-                    <% } %>
                 </div>
                 <div class="preview-content">
                     <img id="winners-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
@@ -110,6 +107,9 @@
                                 <th>Evaluations</th>
                                 <th>Skill Level</th>
                                 <th>Avg Score</th>
+                                <% } %>
+                                <% if (is_admin) { %>
+                                <th>Actions</th>
                                 <% } %>
                             </thead>
                             <tbody id="entriesByAvgScore-table-body">

@@ -69,14 +69,20 @@ exports.oauthCallback = function(request, response, next) {
                                 // If row, truthy, user exists, just log in.
                                 if (result.rows.length) {
                                   if (result.rows[0].account_locked) {
+                                    // Account has been disabled, so do not allow the user to log in
                                     response.redirect("/login");
                                   } else {
-                                      createJWTToken(kaid, token, tokenSecret)
-                                        .then(jwtToken => {
-                                            response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 31536000000) });
-                                            response.redirect("/");
-                                        })
-                                        .catch(err => handleNext(next, 400, err.message));
+                                      db.query("UPDATE evaluator SET logged_in = true, logged_in_tstz = CURRENT_TIMESTAMP  WHERE evaluator_kaid = $1", [kaid], result => {
+                                          if (result.error) {
+                                              return handleNext(next, 400, "There was a problem logging you in");
+                                          }
+                                          createJWTToken(kaid, token, tokenSecret)
+                                            .then(jwtToken => {
+                                                response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 31536000000) });
+                                                response.redirect("/");
+                                            })
+                                            .catch(err => handleNext(next, 400, err.message));
+                                      });
                                   }
                                 } else {
                                     // User doesn't exist, sign up.
@@ -111,7 +117,7 @@ exports.oauthCallback = function(request, response, next) {
 exports.logout = function(request, response, next) {
     if (request.decodedToken) {
         // Get decoded user ID.
-        return db.query("UPDATE evaluator SET logged_in = 'f' WHERE evaluator_id = $1", [request.decodedToken.evaluator_id], res => {
+        return db.query("UPDATE evaluator SET logged_in = false WHERE evaluator_id = $1", [request.decodedToken.evaluator_id], res => {
             if (res.error) {
                 return handleNext(next, 400, "There was a problem logging you out");
             }

@@ -20,6 +20,9 @@
 .admin-form input[type=submit] {
     margin-top: 20px;
 }
+.admin-form input[type=checkbox] {
+    float: left;
+}
 .col-10 {
     width: 10%;
 }

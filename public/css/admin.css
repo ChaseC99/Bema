@@ -15,7 +15,10 @@
 }
 
 /* Styling for judging page */
-.flagged-entry-actions {
-    display: flex;
-    justify-content: space-around;
+.flagged-entry-actions i {
+    margin-left: 15%;
+}
+
+.flagged-entry-actions i:first-child {
+    margin-left: 0px;
 }

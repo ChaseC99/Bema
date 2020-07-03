@@ -11,9 +11,6 @@ let entriesSpinner = document.querySelector("#entries-spinner");
 let entryContestName = document.querySelector("#entry-contest-name");
 let sidebar = document.querySelector(".side-bar");
 let sidebarSpinner = document.querySelector("#sidebar-spinner");
-let groupDropdown = document.querySelector("#assigned-group-dropdown");
-let currentGroupDropdown = document.querySelector("#current-group-dropdown");
-let newGroupDropdown = document.querySelector("#new-group-dropdown");
 
 request("get", "/api/internal/contests", null, (data) => {
     if (!data.error) {
@@ -81,22 +78,6 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
     }
 });
 
-request("get", "/api/internal/admin/getEvaluatorGroups", null, (data) => {
-    if (!data.error) {
-        if (data.is_admin) {
-            data.evaluatorGroups.forEach(g => {
-                if (g.is_active) {
-                    groupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                    currentGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                    newGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                }
-            });
-        }
-    } else {
-        alert(data.error.message);
-    }
-});
-
 ///// These send form post requests /////
 let editEntry = (e) => {
     e.preventDefault();
@@ -105,6 +86,8 @@ let editEntry = (e) => {
     for (key of e.target) {
         if (key.name === "edit_flagged" || key.name === "edit_disqualified") {
             body[key.name] = key.checked;
+        } else if (key.name === "edit_entry_group" && key.value === "null") {
+            body[key.name] = null;
         } else {
             body[key.name] = key.value;
         }
@@ -147,14 +130,42 @@ const updateEntries = (contest_id) => {
     });
 };
 
-const addEntry = (contest_id) => {
-    let program_id = prompt("Enter the program ID");
+const addEntry = (e) => {
+    e.preventDefault();
+    let program_id = e.target.entry_kaid.value;
 
-    if (program_id) {
-        request("get", `https://www.khanacademy.org/api/internal/scratchpads/${program_id}`, {}, (data) => {
-            getProgramData(data);
+    request("get", `https://www.khanacademy.org/api/internal/scratchpads/${program_id}`, {}, (data) => {
+        let contest_id = currentContestId;
+        let entry_url = data.url;
+        let entry_kaid = entry_url.split("/")[5];
+        let entry_title = data.title;
+        let entry_level = 'TBD';
+        let entry_votes = data.sumVotesIncremented;
+        let entry_created = data.created;
+        let entry_height = data.height;
+
+        request("get", `https://www.khanacademy.org/api/internal/user/profile?kaid=${data.kaid}`, {}, (d) => {
+            let entry_author = d.nickname;
+
+            request("post", "/api/internal/entries", {
+                contest_id,
+                entry_url,
+                entry_kaid,
+                entry_title,
+                entry_author,
+                entry_level,
+                entry_votes,
+                entry_created,
+                entry_height
+            }, (data) => {
+                if (!data.error) {
+                    window.setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert(data.error.message);
+                }
+            });
         });
-    }
+    });
 }
 
 const assignEntries = (contest_id) => {
@@ -211,37 +222,14 @@ const transferEntries = (e) => {
     });
 }
 
-const getProgramData = (data) => {
-    let contest_id = currentContestId;
-    let entry_url = data.url;
-    let entry_kaid = entry_url.split("/")[5];
-    let entry_title = data.title;
-    let entry_author = data.kaid;
-    let entry_level = 'TBD';
-    let entry_votes = data.sumVotesIncremented;
-    let entry_created = data.created;
-    let entry_height = data.height;
-
-    request("post", "/api/internal/entries", {
-        contest_id,
-        entry_url,
-        entry_kaid,
-        entry_title,
-        entry_author,
-        entry_level,
-        entry_votes,
-        entry_created,
-        entry_height
-    }, (data) => {
-        if (!data.error) {
-            window.setTimeout(() => window.location.reload(), 1000);
-        } else {
-            alert(data.error.message);
-        }
-    });
-}
-
 ///// HTML modifier functions (like displaying forms) /////
+let showAddEntryForm = () => {
+    let addEntryForm = document.querySelector("#add-entry-page");
+    let viewEntryPage = document.querySelector("#entry-list");
+    viewEntryPage.style.display = "none";
+    addEntryForm.style.display = "block";
+};
+
 let showEditEntryForm = (...args) => {
     // id, title, author, skill level, group, flagged, disqualified
     let editEntryPage = document.querySelector("#edit-entry-page");

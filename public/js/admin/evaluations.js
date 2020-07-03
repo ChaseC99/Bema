@@ -21,7 +21,7 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
     if (!data.error) {
         editable_contest = data.currentContest.contest_id;
 
-        if (editable_contest === current_contest_id) {
+        if (editable_contest === current_contest_id && !data.is_admin) {
             evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 3%">Actions</th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
         }
     } else {
@@ -32,22 +32,32 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
 // Load page data
 request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + current_evaluator_id, null, (data) => {
     if (!data.error) {
-        titleSpinner.style.display = "none";
-        evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} - Evaluations For ` + evaluationsContestName.textContent;
+        if (data.contests.length > 0) {
+            titleSpinner.style.display = "none";
+            evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} - Evaluations For ` + evaluationsContestName.textContent;
 
-        sidebarSpinner.style.display = "none";
-        data.contests.forEach((c, idx) => {
-            sidebar.innerHTML += `
-                <a class="nav-button" href="/admin/evaluations/${current_evaluator_id}/${c.contest_id}" id="contest-tab-${c.contest_id}">
-                    <i class="fas fa-trophy"></i>
-                    <p>
-                        ${c.contest_name}
-                    </p>
-                </a>
-            `;
-        });
-        let navButton = document.querySelector(`#contest-tab-${current_contest_id}`);
-        navButton.classList.add("selected");
+            sidebarSpinner.style.display = "none";
+            data.contests.forEach((c, idx) => {
+                sidebar.innerHTML += `
+                    <a class="nav-button" href="/admin/evaluations/${current_evaluator_id}/${c.contest_id}" id="contest-tab-${c.contest_id}">
+                        <i class="fas fa-trophy"></i>
+                        <p>
+                            ${c.contest_name}
+                        </p>
+                    </a>
+                `;
+            });
+            let navButton = document.querySelector(`#contest-tab-${current_contest_id}`);
+            navButton.classList.add("selected");
+        } else {
+            // This user has not submitted any evaluations, so display different page data
+            titleSpinner.style.display = "none";
+            evaluationsContestName.textContent = `Evaluations For ` + evaluationsContestName.textContent;
+
+            sidebarSpinner.style.display = "none";
+
+            evaluationsTable.innerHTML = "<p>This user has not evaluated any entries!</p>";
+        }
     } else {
         alert(data.error.message);
     }
@@ -95,7 +105,7 @@ request("get", `/api/internal/evaluations?contestId=${current_contest_id}&userId
                 <td>
                     ${e.evaluation_level}
                 </td>
-                    ${editable_contest === current_contest_id ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
+                    ${editable_contest === current_contest_id && !data.is_admin ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
                     ${data.is_admin ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i><i class="control-btn red far fa-trash-alt" onclick="deleteEvaluation(${e.evaluation_id})"></i></td>` : ""}
             </tr>`;
         });

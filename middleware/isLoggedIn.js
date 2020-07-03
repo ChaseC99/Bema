@@ -1,3 +1,4 @@
+const db = require("../util/db");
 const jwt = require("jsonwebtoken");
 
 const isLoggedIn = (request, response, next) => {
@@ -8,9 +9,23 @@ const isLoggedIn = (request, response, next) => {
                 request.decodedToken = null;
                 next();
             } else if (decoded && decoded.token) {
-                // They are logged in.
-                request.decodedToken = decoded;
-                next();
+                // The user is logged in
+
+                db.query("SELECT * FROM evaluator WHERE evaluator_id = $1", [decoded.evaluator_id], res => {
+                    let evaluator = res.rows[0];
+
+                    if (evaluator.account_locked) {
+                        request.decodedToken = null;
+
+                        db.query("UPDATE evaluator SET logged_in = false WHERE evaluator_id = $1", [decoded.evaluator_id], res => {
+                            response.clearCookie("jwtToken");
+                            return response.redirect("/login");
+                        });
+                    } else {
+                        request.decodedToken = decoded;
+                        next();
+                    }
+                });
             } else {
                 request.decodedToken = null;
                 next();

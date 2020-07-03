@@ -138,16 +138,11 @@ exports.delete = (request, response, next) => {
             } = request.decodedToken;
 
             if (is_admin) {
-                return db.query("DELETE FROM evaluation WHERE entry_id = $1", [entry_id], res => {
+                return db.query("DELETE FROM entry WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem deleting this entry's evaluations");
+                        return handleNext(next, 400, "There was a problem deleting this entry");
                     }
-                    return db.query("DELETE FROM entry WHERE entry_id = $1", [entry_id], res => {
-                        if (res.error) {
-                            return handleNext(next, 400, "There was a problem deleting this entry");
-                        }
-                        successMsg(response);
-                    });
+                    successMsg(response);
                 });
             } else {
                 return handleNext(next, 403, "Insufficient access");
