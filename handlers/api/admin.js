@@ -22,7 +22,7 @@ exports.stats = (request, response, next) => {
                 return handleNext(next, 400, "There was a problem getting your group ID");
             }
             evaluatorGroup = res.rows[0].group_id;
-            return db.query("SELECT COUNT(x.entry_id) as cnt FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id	WHERE x.evaluation_complete = true AND z.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND x.evaluator_id = $1 AND z.assigned_group_id = $2GROUP BY (y.evaluator_name) ORDER BY cnt DESC;", [evaluator_id, evaluatorGroup], res => {
+            return db.query("SELECT COUNT(x.entry_id) as cnt FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id	WHERE x.evaluation_complete = true AND z.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND x.evaluator_id = $1 AND z.assigned_group_id = $2 AND z.disqualified = false GROUP BY (y.evaluator_name) ORDER BY cnt DESC;", [evaluator_id, evaluatorGroup], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting your evaluation count");
                 }
@@ -32,7 +32,8 @@ exports.stats = (request, response, next) => {
                 } else {
                     yourReviewedEntriesCount = 0;
                 }
-                return db.query("SELECT COUNT(*) FROM entry WHERE assigned_group_id = $1 AND flagged = false AND disqualified = false AND contest_id = (SELECT MAX(a.contest_id) FROM contest a)", [evaluatorGroup], res => {
+
+                return db.query("SELECT COUNT(*) FROM entry WHERE assigned_group_id = $1 AND disqualified = false AND contest_id = (SELECT MAX(a.contest_id) FROM contest a)", [evaluatorGroup], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting your group entries");
                     }
@@ -50,7 +51,7 @@ exports.stats = (request, response, next) => {
                         } else {
                             groupEvaluatorCount = 0;
                         }
-                        return db.query("SELECT y.group_id, COUNT(x.entry_id) as cnt FROM evaluation x INNER JOIN entry z ON z.entry_id = x.entry_id INNER JOIN evaluator_group y ON y.group_id = z.assigned_group_id WHERE x.evaluation_complete = true AND z.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND x.evaluator_id = $1 GROUP BY y.group_id ORDER BY cnt DESC;", [evaluator_id], res => {
+                        return db.query("SELECT y.group_id, COUNT(x.entry_id) as cnt FROM evaluation x INNER JOIN entry z ON z.entry_id = x.entry_id INNER JOIN evaluator_group y ON y.group_id = z.assigned_group_id WHERE x.evaluation_complete = true AND z.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND x.evaluator_id = $1 AND z.disqualified = false GROUP BY y.group_id ORDER BY cnt DESC;", [evaluator_id], res => {
                             if (res.error) {
                                 return handleNext(next, 400, "There was a problem getting the evaluation count in your group");
                             }
@@ -59,7 +60,7 @@ exports.stats = (request, response, next) => {
                             } else {
                                 groupEvaluationsCount = 0;
                             }
-                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND flagged = false AND disqualified = false", [], res => {
+                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = false", [], res => {
                                 if (res.error) {
                                     return handleNext(next, 400, "There was a problem getting the total entries for the current contest");
                                 }
@@ -68,7 +69,7 @@ exports.stats = (request, response, next) => {
                                 } else {
                                     totalEntriesCount = 0;
                                 }
-                                return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON ev.entry_id = en.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true GROUP BY en.entry_id;", [], res => {
+                                return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON ev.entry_id = en.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false GROUP BY en.entry_id;", [], res => {
                                     if (res.error) {
                                         return handleNext(next, 400, "There was a problem getting the reviewed entries for the current contest");
                                     }
@@ -77,7 +78,7 @@ exports.stats = (request, response, next) => {
                                     } else {
                                         totalReviewedEntries = 0;
                                     }
-                                    return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true", [], res => {
+                                    return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false", [], res => {
                                         if (res.error) {
                                             return handleNext(next, 400, "There was a problem getting the evaluation count for the current contest");
                                         }
@@ -86,7 +87,7 @@ exports.stats = (request, response, next) => {
                                         } else {
                                             totalEvaluationsCount = 0;
                                         }
-                                        return db.query("SELECT COUNT(*) FROM evaluator WHERE account_locked = false", [], res => {
+                                        return db.query("SELECT COUNT(*) FROM evaluator ev INNER JOIN evaluator_group eg ON ev.group_id = eg.group_id WHERE ev.account_locked = false AND eg.is_active = true", [], res => {
                                             if (res.error) {
                                                 return handleNext(next, 400, "There was a problem getting the active evaluators");
                                             }
