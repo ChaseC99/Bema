@@ -61,10 +61,6 @@ request("get", "/api/internal/users", null, data => {
                                 }
                             </p>
                             <p>
-                                <span class="bold">Logged in:</span>
-                                ${c.logged_in ? `Yes` : `No`}
-                            </p>
-                            <p>
                                 <span class="bold">Last login:</span>
                                 ${c.logged_in_tstz}
                             </p>
