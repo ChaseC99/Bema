@@ -203,6 +203,24 @@ const routeChecks = {
 		    check("skill_level")
 		    .isIn(skillLevels)
 		    .withMessage("skill_level must be 'Advanced', 'Intermediate', or 'Beginner'")
+		],
+		addCriteria: [
+			check("is_active")
+			.isBoolean()
+			.withMessage("is_active must be true or false")
+		],
+		editCriteria: [
+			check("criteria_id")
+			.isInt()
+			.withMessage("criteria_id must be an integer"),
+			check("is_active")
+			.isBoolean()
+			.withMessage("is_active must be true or false")
+		],
+		deleteCriteria: [
+			check("criteria_id")
+			.isInt()
+			.withMessage("criteria_id must be an integer")
 		]
 	},
 	messages: {
@@ -449,6 +467,9 @@ router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, m
 
 // Judging
 router.get("/internal/judging/criteria", judging.getJudgingCriteria);
+router.post("/internal/judging/criteria", routeChecks.judging.addCriteria, wasValidated, judging.addJudgingCriteria);
+router.put("/internal/judging/criteria", routeChecks.judging.editCriteria, wasValidated, judging.editJudgingCriteria);
+router.delete("/internal/judging/criteria", routeChecks.judging.deleteCriteria, wasValidated, judging.deleteJudgingCriteria);
 router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated, judging.submit);
 
 // Entries
