@@ -14,7 +14,7 @@ request("get", "/api/internal/tasks", null, data => {
                     <tr id="${t.task_id}">
                         <td>${t.task_title}</td>
                         <td>${t.due_date}</td>
-                        <td>${t.evaluator_name}</td>
+                        <td>${t.evaluator_name !== null ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
                         ${data.is_admin ? `
                             <td id="${t.task_id}-actions">
@@ -29,7 +29,7 @@ request("get", "/api/internal/tasks", null, data => {
                     <tr id="${t.task_id}">
                         <td>${t.task_title}</td>
                         <td>${t.due_date}</td>
-                        <td>${t.evaluator_name}</td>
+                        <td>${t.evaluator_name !== null  ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
                         ${data.is_admin ? `
                             <td id="${t.task_id}-actions">
@@ -73,7 +73,13 @@ let addTask = (e) => {
 
     let body = {};
     for (key of e.target) {
-        body[key.name] = key.value;
+        if (key.value === "null") {
+            body[key.name] = null;
+        } else if (key.name === "assigned_member") {
+            body[key.name] = parseInt(key.value);
+        } else {
+            body[key.name] = key.value;
+        }
     }
     delete body[""];
     request("post", "/api/internal/tasks", body, (data) => {
@@ -89,7 +95,13 @@ let editTask = (e) => {
 
     let body = {};
     for (key of e.target) {
-        body[key.name] = key.value;
+        if (key.value === "null") {
+            body[key.name] = null;
+        } else if (key.name === "edit_assigned_member") {
+            body[key.name] = parseInt(key.value);
+        } else {
+            body[key.name] = key.value;
+        }
     }
     delete body[""];
     request("put", "/api/internal/tasks", body, (data) => {

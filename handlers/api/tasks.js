@@ -5,8 +5,8 @@ const db = require(process.cwd() + "/util/db");
 const dateFormat = "FMMM-FMDD-YYYY";
 
 exports.get = (request, response, next) => {
-    if (request.decodedToken) {
-        return db.query("SELECT t.task_id, t.task_title, t.task_status, t.assigned_member, evaluator.evaluator_name, to_char(t.due_date, $1) as due_date FROM task t INNER JOIN evaluator ON t.assigned_member = evaluator.evaluator_id;", [dateFormat], res => {
+    if (request.decodedToken && request.decodedToken.is_admin) {
+        return db.query("SELECT t.task_id, t.task_title, t.task_status, t.assigned_member, evaluator.evaluator_name, to_char(t.due_date, $1) as due_date FROM task t LEFT JOIN evaluator ON t.assigned_member = evaluator.evaluator_id;", [dateFormat], res => {
             if (res.error) {
                 return handleNext(next, 400, "There was a problem getting all the tasks");
             }
@@ -18,6 +18,7 @@ exports.get = (request, response, next) => {
         });
     }
     response.json({
+        logged_in: false,
         is_admin: false
     });
 }
@@ -36,6 +37,26 @@ exports.getForUser = (request, response, next) => {
         });
     }
     response.json({
+        logged_in: false,
+        is_admin: false
+    });
+}
+
+exports.getAvailable = (request, response, next) => {
+    if (request.decodedToken) {
+        return db.query("SELECT *, to_char(t.due_date, $1) as due_date FROM task t WHERE assigned_member IS null AND task_status != 'Completed' ORDER BY t.due_date DESC", [dateFormat], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem getting the available tasks");
+            }
+            return response.json({
+                logged_in: true,
+                is_admin: request.decodedToken.is_admin,
+                tasks: res.rows
+            });
+        });
+    }
+    response.json({
+        logged_in: false,
         is_admin: false
     });
 }
@@ -85,6 +106,22 @@ exports.edit = (request, response, next) => {
             } else {
                 return handleNext(next, 401, "Unauthorized");
             }
+        });
+    }
+    return handleNext(next, 401, "Unauthorized");
+}
+
+exports.signUpForTask = (request, response, next) => {
+    if (request.decodedToken) {
+        let {
+            task_id
+        } = request.body;
+
+        return db.query("UPDATE task SET assigned_member = $1 WHERE task_id = $2", [request.decodedToken.evaluator_id, task_id], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem signing you up for this task");
+            }
+            successMsg(response);
         });
     }
     return handleNext(next, 401, "Unauthorized");

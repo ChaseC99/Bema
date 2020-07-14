@@ -84,6 +84,28 @@
                         <img id="assigned-groups-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                     </div>
                 </div>
+                <div class="preview col-12 standard">
+                    <div class="db-header">
+                        <p>Judging Criteria</p>
+                        <span class="admin-button" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
+                    </div>
+                    <div id="judging-criteria-table" class="preview-content">
+                        <table>
+                            <thead>
+                                <th style="width: 10%">Criteria ID</th>
+                                <th style="width: 15%">Name</th>
+                                <th style="width: 40%">Description</th>
+                                <th style="width: 10%">Active</th>
+                                <th style="width: 10%">Sort Order</th>
+                                <th style="width: 10%">Actions</th>
+                            </thead>
+                            <tbody id="judging-criteria-table-body">
+                                <!-- judging criteria -->
+                            </tbody>
+                        </table>
+                        <img id="judging-criteria-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="content-container" id="create-group-page" style="display: none">
@@ -153,6 +175,91 @@
                         <select id="group_id_input" name="group_id">
                             <!-- evaluator groups -->
                         </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <input class="admin-button" type="submit" value="Save">
+                </div>
+            </form>
+        </div>
+        <div class="content-container" id="create-judging-criteria-page" style="display: none">
+            <div class="content-header">
+                <h2>Create Judging Criteria</h2>
+            </div>
+            <form id="add-judging-criteria-form" class="admin-form" onsubmit="return addJudgingCriteria(event)">
+                <div class="row">
+                    <div class="col-10">
+                        <label for="criteria_name">Criteria Name</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="text" name="criteria_name">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="criteria_description">Criteria Description</label>
+                    </div>
+                    <div class="col-90">
+                        <textarea class="form-input" name="criteria_description" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="is_active">Active</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="checkbox" name="is_active">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="sort_order">Sort Order</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="number" name="sort_order">
+                    </div>
+                </div>
+                <div class="row">
+                    <input class="admin-button" type="submit" value="Save">
+                </div>
+            </form>
+        </div>
+        <div class="content-container" id="edit-judging-criteria-page" style="display: none">
+            <div class="content-header">
+                <h2>Edit Judging Criteria</h2>
+            </div>
+            <form id="edit-judging-criteria-form" class="admin-form" onsubmit="return editJudgingCriteria(event)">
+                <input class="form-input" type="hidden" name="criteria_id">
+                <div class="row">
+                    <div class="col-10">
+                        <label for="criteria_name">Criteria Name</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="text" name="criteria_name">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="criteria_description">Criteria Description</label>
+                    </div>
+                    <div class="col-90">
+                        <textarea class="form-input" name="criteria_description" rows="4" cols="50"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="is_active">Active</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="checkbox" name="is_active">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label for="sort_order">Sort Order</label>
+                    </div>
+                    <div class="col-90">
+                        <input class="form-input" type="number" name="sort_order">
                     </div>
                 </div>
                 <div class="row">

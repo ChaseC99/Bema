@@ -72,13 +72,13 @@ exports.oauthCallback = function(request, response, next) {
                                     // Account has been disabled, so do not allow the user to log in
                                     response.redirect("/login");
                                   } else {
-                                      db.query("UPDATE evaluator SET logged_in = true, logged_in_tstz = CURRENT_TIMESTAMP  WHERE evaluator_kaid = $1", [kaid], result => {
+                                      db.query("UPDATE evaluator SET logged_in_tstz = CURRENT_TIMESTAMP WHERE evaluator_kaid = $1", [kaid], result => {
                                           if (result.error) {
                                               return handleNext(next, 400, "There was a problem logging you in");
                                           }
                                           createJWTToken(kaid, token, tokenSecret)
                                             .then(jwtToken => {
-                                                response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 31536000000) });
+                                                response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 86400000) });
                                                 response.redirect("/");
                                             })
                                             .catch(err => handleNext(next, 400, err.message));
@@ -88,14 +88,14 @@ exports.oauthCallback = function(request, response, next) {
                                     // User doesn't exist, sign up.
                                     // Inserting this data would normally be dangerous, but Node.PG auto-sanitizes.
                                     // https://github.com/brianc/node-postgres/wiki/FAQ#8-does-node-postgres-handle-sql-injection
-                                    db.query("INSERT INTO evaluator (logged_in, logged_in_tstz, dt_term_start, dt_term_end, email, username, nickname, evaluator_name, evaluator_kaid, avatar_url) VALUES (true, CURRENT_TIMESTAMP, null, null, $1, $2, $3, $4, $5, $6)", [email, username, nickname, nickname, kaid, avatarUrl], result => {
+                                    db.query("INSERT INTO evaluator (logged_in_tstz, dt_term_start, dt_term_end, email, username, nickname, evaluator_name, evaluator_kaid, avatar_url) VALUES (CURRENT_TIMESTAMP, null, null, $1, $2, $3, $4, $5, $6)", [email, username, nickname, nickname, kaid, avatarUrl], result => {
                                         if (result.error) {
                                             return handleNext(next, 400, "There was a problem creating your account, please try again");
                                         }
                                         // This user was just created, now get their ID.
                                         createJWTToken(kaid, token, tokenSecret)
                                             .then(jwtToken => {
-                                                response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 31536000000) });
+                                                response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 86400000) });
                                                 response.redirect("/");
                                             })
                                             .catch(err => handleNext(next, 400, err.message));
@@ -116,14 +116,8 @@ exports.oauthCallback = function(request, response, next) {
 
 exports.logout = function(request, response, next) {
     if (request.decodedToken) {
-        // Get decoded user ID.
-        return db.query("UPDATE evaluator SET logged_in = false WHERE evaluator_id = $1", [request.decodedToken.evaluator_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem logging you out");
-            }
-            response.clearCookie("jwtToken");
-            return response.redirect("/login");
-        });
+        response.clearCookie("jwtToken");
+        return response.redirect("/login");
     }
     handleNext(next, 401, "You cannot logout if you are not logged in first, silly");
 }

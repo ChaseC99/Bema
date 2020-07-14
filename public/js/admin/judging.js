@@ -4,10 +4,12 @@ let judgingGroupsTable = document.querySelector("#judging-groups-table");
 let judgingGroupsTableBody = document.querySelector("#judging-groups-table-body");
 let assignedGroupsTable = document.querySelector("#assigned-groups-table");
 let assignedGroupsTableBody = document.querySelector("#assigned-groups-table-body");
+let judgingCriteriaTableBody = document.querySelector("#judging-criteria-table-body");
 let assignedGroupsList = document.querySelector("#group_id_input");
 let flaggedEntriesSpinner = document.querySelector("#flagged-entries-spinner");
 let judgingGroupsSpinner = document.querySelector("#judging-groups-spinner");
 let assignedGroupsSpinner = document.querySelector("#assigned-groups-spinner");
+let judgingCriteriaSpinner = document.querySelector("#judging-criteria-spinner");
 let tab = document.querySelector("#sidebar-judging");
 
 // Load page data
@@ -86,6 +88,29 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                 </tr>`;
             });
         }
+    } else {
+        alert(data.error.message);
+    }
+});
+
+request("get", "/api/internal/judging/allCriteria", null, data => {
+    if (!data.error) {
+        judgingCriteriaSpinner.style.display = "none";
+
+        data.judging_criteria.forEach(c => {
+            judgingCriteriaTableBody.innerHTML += `
+            <tr id="${c.criteria_id}">
+                <td>${c.criteria_id}</td>
+                <td>${c.criteria_name}</td>
+                <td style='text-align: left'>${c.criteria_description}</td>
+                <td>${c.is_active ? 'Yes' : 'No'}</td>
+                <td>${c.sort_order}</td>
+                <td>
+                    <i class="control-btn far fa-edit" onclick="showEditJudgingCriteriaForm(${c.criteria_id}, '${c.criteria_name}', '${c.criteria_description}', ${c.is_active}, ${c.sort_order})" title="Edit"></i>
+                    <i class="control-btn red far fa-trash-alt" onclick="deleteJudgingCriteria(${c.criteria_id})" title="Delete"></i>
+                </td>
+            </tr>`;
+        });
     } else {
         alert(data.error.message);
     }
@@ -202,6 +227,63 @@ let assignEvaluatorGroup = (e) => {
     });
 }
 
+let addJudgingCriteria = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        if (key.name === "is_active") {
+            body[key.name] = key.checked;
+        } else {
+            body[key.name] = key.value;
+        }
+    }
+    delete body[""];
+
+    request("post", "/api/internal/judging/criteria", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
+        }
+    });
+}
+
+let editJudgingCriteria = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        if (key.name === "is_active") {
+            body[key.name] = key.checked;
+        } else {
+            body[key.name] = key.value;
+        }
+    }
+    delete body[""];
+
+    request("put", "/api/internal/judging/criteria", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
+        }
+    });
+}
+
+let deleteJudgingCriteria = (criteria_id) => {
+    let shouldDelete = confirm("Are you sure you want to delete this judging criteria? This action cannot be undone. Make the criteria inactive to preserve its contents.");
+    if (shouldDelete) {
+        request("delete", "/api/internal/judging/criteria", {
+            criteria_id
+        }, (data) => {
+            if (!data.error) {
+                window.setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert(data.error.message);
+            }
+        });
+    }
+}
+
 // Displays forms
 let showAddEvaluatorGroupForm = () => {
     let addEvaluatorGroup = document.querySelector("#create-group-page");
@@ -241,6 +323,30 @@ let showAssignEvaluatorGroupForm = (...args) => {
     // Set form values
     for (let i = 0; i < assignEvaluatorGroupForm.length - 1; i++) {
         assignEvaluatorGroupForm[i].value = args[i];
+    }
+}
+
+let showAddJudgingCriteriaForm = () => {
+    let addJudgingCriteria = document.querySelector("#create-judging-criteria-page");
+    let judgingPage = document.querySelector("#judging-page");
+    judgingPage.style.display = "none";
+    addJudgingCriteria.style.display = "block";
+}
+
+let showEditJudgingCriteriaForm = (...args) => {
+    let editJudgingCriteria = document.querySelector("#edit-judging-criteria-page");
+    let judgingPage = document.querySelector("#judging-page");
+    let editJudgingCriteriaForm = document.querySelector("#edit-judging-criteria-form");
+    judgingPage.style.display = "none";
+    editJudgingCriteria.style.display = "block";
+
+    // Set form values
+    for (let i = 0; i < editJudgingCriteriaForm.length - 1; i++) {
+        if (editJudgingCriteriaForm[i].name === "is_active") {
+            editJudgingCriteriaForm[i].checked = args[i];
+        } else {
+            editJudgingCriteriaForm[i].value = args[i];
+        }
     }
 }
 

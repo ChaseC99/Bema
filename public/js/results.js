@@ -54,7 +54,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
             evalsPerLevelTableBody.innerHTML += `
             <tr>
                 <td>
-                    ${a.evaluation_level}
+                    ${a.entry_level}
                 </td>
                 <td>
                     ${a.cnt}
