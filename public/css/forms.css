@@ -22,6 +22,7 @@
 }
 .admin-form input[type=checkbox] {
     float: left;
+    width: 14px;
 }
 .col-10 {
     width: 10%;
