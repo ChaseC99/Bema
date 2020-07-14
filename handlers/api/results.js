@@ -24,7 +24,7 @@ exports.get = (request, response, next) => {
 
             // Private data that we don't want public.
             if (request.decodedToken) {
-                return db.query("SELECT x.evaluation_level, COUNT(x.evaluation_level) as cnt FROM evaluation x INNER JOIN entry z ON z.entry_id = x.entry_id WHERE x.evaluation_complete = true AND z.contest_id = $1 GROUP BY (x.evaluation_level) ORDER BY ( CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END);", [contest_id], res => {
+                return db.query("SELECT entry_level, COUNT(*) as cnt FROM entry WHERE contest_id = $1 AND disqualified = false GROUP BY entry_level ORDER BY entry_level", [contest_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting the evaluations per level");
                     }
