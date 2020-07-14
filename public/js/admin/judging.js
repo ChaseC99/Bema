@@ -93,7 +93,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
     }
 });
 
-request("get", "/api/internal/judging/criteria", null, data => {
+request("get", "/api/internal/judging/allCriteria", null, data => {
     if (!data.error) {
         judgingCriteriaSpinner.style.display = "none";
 

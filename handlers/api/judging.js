@@ -43,29 +43,16 @@ exports.submit = (request, response, next) => {
 exports.getJudgingCriteria = (request, response, next) => {
     if (request.decodedToken) {
         try {
-            if (request.decodedToken.is_admin) {
-                return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem getting the judging criteria");
-                    }
-                    return response.json({
-                        logged_in: true,
-                        is_admin: true,
-                        judging_criteria: res.rows
-                    });
+            return db.query("SELECT criteria_name, criteria_description FROM judging_criteria WHERE is_active = true ORDER BY sort_order LIMIT 4", [], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the judging criteria");
+                }
+                return response.json({
+                    logged_in: true,
+                    is_admin: request.decodedToken.is_admin,
+                    judging_criteria: res.rows
                 });
-            } else {
-                return db.query("SELECT criteria_name, criteria_description FROM judging_criteria WHERE is_active = true ORDER BY sort_order LIMIT 4", [], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem getting the judging criteria");
-                    }
-                    return response.json({
-                        logged_in: true,
-                        is_admin: request.decodedToken.is_admin,
-                        judging_criteria: res.rows
-                    });
-                });
-            }
+            });
         } catch (err) {
             return handleNext(next, 400, "There was a problem evaluating this entry");
         }
@@ -80,6 +67,23 @@ exports.getJudgingCriteria = (request, response, next) => {
                 {judging_criteria: "INTERPRETATION", judging_description: "Does this program portray the overall theme of the contest?"}
             ]
         });
+    }
+}
+
+exports.getAllJudgingCriteria = (request, response, next) => {
+    if (request.decodedToken.is_admin) {
+        return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem getting the judging criteria");
+            }
+            return response.json({
+                logged_in: true,
+                is_admin: true,
+                judging_criteria: res.rows
+            });
+        });
+    } else {
+        return handleNext(next, 403, "Insufficient access");
     }
 }
 

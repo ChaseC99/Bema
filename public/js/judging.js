@@ -88,6 +88,7 @@ viewerIframe.addEventListener("load", () => {
 
 // /internal/judging/criteria
 request("get", "/api/internal/judging/criteria", null, data => {
+    console.log(data.judging_criteria);
     if (!data.error) {
         let creativitySlider = new Slider({
             title: data.judging_criteria[0].criteria_name,
