@@ -3,6 +3,8 @@ header.classList.add("hero");
 let messagesContainer = document.querySelector("#messages-container");
 let messagesSpinner = document.querySelector("#messages-spinner");
 let tasksContainer = document.querySelector("#tasks-container");
+let availableTasksContainer = document.querySelector("#available-tasks-container");
+let availableTasksSection = document.querySelector("#available-tasks-section");
 
 // Get messages, and load into page.
 request("get", "/api/internal/messages", null, (data) => {
@@ -72,6 +74,29 @@ request("get", "/api/internal/tasks/user", null, data => {
                     </div>
                 `;
             });
+            availableTasksSection.style.display = "none";
+        }
+    } else {
+        alert(data.error.message);
+    }
+});
+
+request("get", "/api/internal/tasks/available", null, data => {
+    if (!data.error) {
+        if (data.tasks) {
+            if (data.tasks.length === 0) {
+                availableTasksSection.style.display = "none";
+            } else {
+                data.tasks.forEach(c => {
+                    availableTasksContainer.innerHTML += `
+                        <div class="task">
+                            <span><h3>${c.task_title}</h3></span>
+                            <p><strong>Due by: </strong>${c.due_date}</p>
+                            <span class="admin-button tasks" onclick="signUpForTask(${c.task_id})">Sign Up</span>
+                        </div>
+                    `;
+                });
+            }
         }
     } else {
         alert(data.error.message);
@@ -182,6 +207,22 @@ let deleteMessage = (message_id) => {
     if (confirm) {
         request("delete", "/api/internal/messages", {
             message_id
+        }, (data) => {
+            if (!data.error) {
+                window.setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert(data.error.message);
+            }
+        });
+    }
+}
+
+let signUpForTask = (task_id) => {
+    let confirm = window.confirm("Are you sure you want to sign up for this task?");
+
+    if (confirm) {
+        request("put", "/api/internal/tasks/signup", {
+            task_id
         }, (data) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
