@@ -325,7 +325,7 @@ const routeChecks = {
 		    .isIn(taskStatuses)
 		    .withMessage("Task status must be 'Not Started', 'Started', 'Completed'"),
 		    check("assigned_member")
-		    .isInt()
+		    .custom((assigned_member, { req }) => assigned_member === parseInt(assigned_member, 10) || assigned_member === null)
 		    .withMessage("Assigned member must be an integer")
 		],
 		edit: [
@@ -342,13 +342,18 @@ const routeChecks = {
 		    .isIn(taskStatuses)
 		    .withMessage("Task status must be 'Not Started', 'Started', 'Completed'"),
 		    check("edit_assigned_member")
-		    .isInt()
+		    .custom((assigned_member, { req }) => Number.isInteger(assigned_member) || assigned_member === null)
 		    .withMessage("Assigned member must be an integer")
 		],
 		delete: [
 		    check("task_id")
 		    .isInt()
-		    .withMessage("Task id must be an integer"),
+		    .withMessage("Task id must be an integer")
+		],
+		signup: [
+			check("task_id")
+			.isInt()
+		    .withMessage("Task id must be an integer")
 		]
 	},
 	evaluations: {
@@ -507,8 +512,10 @@ router.delete("/internal/admin/deleteEvaluatorGroup", routeChecks.admin.deleteEv
 // Tasks
 router.get("/internal/tasks", tasks.get);
 router.get("/internal/tasks/user", tasks.getForUser);
+router.get("/internal/tasks/available", tasks.getAvailable);
 router.post("/internal/tasks", routeChecks.tasks.add, wasValidated, tasks.add);
 router.put("/internal/tasks", routeChecks.tasks.edit, wasValidated, tasks.edit);
+router.put("/internal/tasks/signup", routeChecks.tasks.signup, wasValidated, tasks.signUpForTask);
 router.delete("/internal/tasks", routeChecks.tasks.delete, wasValidated, tasks.delete);
 
 // Evaluations
