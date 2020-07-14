@@ -448,6 +448,7 @@ router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messag
 router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
 
 // Judging
+router.get("/internal/judging/criteria", judging.getJudgingCriteria);
 router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated, judging.submit);
 
 // Entries

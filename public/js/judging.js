@@ -81,58 +81,65 @@ Slider.prototype.create = function() {
     container.appendChild(ticks);
 };
 
-let creativitySlider = new Slider({
-    title: "CREATIVITY",
-    name: "creativity",
-    description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?",
-    id: "creativity-slider",
-    max: 10,
-    color: "#b9e986",
-    borderColor: "#7ed320",
-    leftLabel: "Unimaginative",
-    rightLabel: "Inventive"
-});
-creativitySlider.create();
-let complexitySlider = new Slider({
-    title: "COMPLEXITY",
-    name: "complexity",
-    description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?",
-    id: "complexity-slider",
-    max: 10,
-    color: "#c6aef8",
-    borderColor: "#8e5bf4",
-    leftLabel: "Basic",
-    rightLabel: "Elaborate"
-});
-complexitySlider.create();
-let qualityCodeSlider = new Slider({
-    title: "QUALITY CODE",
-    name: "quality_code",
-    description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?",
-    id: "quality-code-slider",
-    max: 10,
-    color: "#ffc86e",
-    borderColor: "#fea839",
-    leftLabel: "Poor",
-    rightLabel: "Elegant"
-});
-qualityCodeSlider.create();
-let interpretationSlider = new Slider({
-    title: "INTERPRETATION",
-    name: "interpretation",
-    description: "Does this program portray the overall theme of the contest?",
-    id: "interpretation-slider",
-    max: 10,
-    color: "#ed8995",
-    borderColor: "#d0011b",
-    leftLabel: "Unrelated",
-    rightLabel: "Representative"
-});
-interpretationSlider.create();
-
 viewerIframe.addEventListener("load", () => {
     viewerIframe.style.display = "block";
     spinner.style.display = "none";
+});
+
+// /internal/judging/criteria
+request("get", "/api/internal/judging/criteria", null, data => {
+    if (!data.error) {
+        let creativitySlider = new Slider({
+            title: data.judging_criteria[0].criteria_name,
+            name: "creativity",
+            description: data.judging_criteria[0].criteria_description,
+            id: "creativity-slider",
+            max: 10,
+            color: "#b9e986",
+            borderColor: "#7ed320",
+            leftLabel: "Unimaginative",
+            rightLabel: "Inventive"
+        });
+        creativitySlider.create();
+        let complexitySlider = new Slider({
+            title: data.judging_criteria[1].criteria_name,
+            name: "complexity",
+            description: data.judging_criteria[1].criteria_description,
+            id: "complexity-slider",
+            max: 10,
+            color: "#c6aef8",
+            borderColor: "#8e5bf4",
+            leftLabel: "Basic",
+            rightLabel: "Elaborate"
+        });
+        complexitySlider.create();
+        let qualityCodeSlider = new Slider({
+            title: data.judging_criteria[2].criteria_name,
+            name: "quality_code",
+            description: data.judging_criteria[2].criteria_description,
+            id: "quality-code-slider",
+            max: 10,
+            color: "#ffc86e",
+            borderColor: "#fea839",
+            leftLabel: "Poor",
+            rightLabel: "Elegant"
+        });
+        qualityCodeSlider.create();
+        let interpretationSlider = new Slider({
+            title: data.judging_criteria[3].criteria_name,
+            name: "interpretation",
+            description: data.judging_criteria[3].criteria_description,
+            id: "interpretation-slider",
+            max: 10,
+            color: "#ed8995",
+            borderColor: "#d0011b",
+            leftLabel: "Unrelated",
+            rightLabel: "Representative"
+        });
+        interpretationSlider.create();
+    } else {
+        alert(data.error.message);
+    }
 });
 
 let submitEvaluation = (e) => {
