@@ -265,16 +265,6 @@ const routeChecks = {
 		]
 	},
 	users: {
-		whitelist: [
-		    check("kaid")
-		    .matches(kaidPattern)
-		    .withMessage("kaid must have correct format")
-		],
-		unwhitelist: [
-		    check("kaid")
-		    .matches(kaidPattern)
-		    .withMessage("kaid must have correct format")
-		],
 		edit: [
 		    check("edit_user_id")
 		    .isInt()
@@ -459,8 +449,6 @@ router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, win
 // Users
 router.get("/internal/users", users.get);
 router.get("/internal/users/id", users.getId);
-router.post("/internal/users/whitelist", routeChecks.users.whitelist, wasValidated, users.add);
-router.delete("/internal/users/whitelist", routeChecks.users.unwhitelist, wasValidated, users.delete);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 
