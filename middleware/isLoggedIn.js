@@ -8,7 +8,7 @@ const isLoggedIn = (request, response, next) => {
             if (err) {
                 request.decodedToken = null;
                 next();
-            } else if (decoded && decoded.token) {
+            } else if (decoded) {
                 // The user is logged in
 
                 db.query("SELECT * FROM evaluator WHERE evaluator_id = $1", [decoded.evaluator_id], res => {

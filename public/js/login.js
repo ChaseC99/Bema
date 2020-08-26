@@ -1,15 +1,16 @@
 let submitForm = e => {
     e.preventDefault();
-    fetch("/api/auth/connect", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }).then(res => {
-        return res.json();
-    }).then(data => {
-        if (data.redirect_url) {
-            window.location.href = data.redirect_url;
+
+    let body = {};
+    for (key of e.target) {
+        body[key.name] = key.value;
+    }
+    delete body[""];
+    request("post", "/api/auth/login", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
         }
     });
 };

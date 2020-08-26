@@ -12,9 +12,9 @@ exports.get = (request, response, next) => {
 
     // Get a specific user's information
     if (userId) {
-        // If getting one's own information, or user is an admin, return all user properties
+        // If getting one's own information, or user is an admin, return all user properties except password
         if (request.decodedToken && (userId === request.decodedToken.evaluator_id || request.decodedToken.is_admin)) {
-            return db.query("SELECT * FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, created_tstz, logged_in_tstz, dt_term_start, dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -28,7 +28,7 @@ exports.get = (request, response, next) => {
             });
         } else {
             // Otherwise, return only non-confidential properties
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, evaluator_nickname, dt_term_start FROM evaluator WHERE evaluator_id = $1", [userId], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -50,17 +50,13 @@ exports.get = (request, response, next) => {
                 return handleNext(next, 400, "There was a problem getting the evaluators");
             }
             evaluators = res.rows;
-            return db.query("SELECT * FROM whitelisted_kaids;", [], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the whitelisted kaids");
-                }
-                kaids = res.rows;
-                return response.json({
-                    logged_in: true,
-                    is_admin: request.decodedToken.is_admin,
-                    kaids,
-                    evaluators
-                });
+            evaluators.forEach(e => {
+                delete e.password;
+            });
+            return response.json({
+                logged_in: true,
+                is_admin: request.decodedToken.is_admin,
+                evaluators
             });
         });
     }
@@ -84,31 +80,6 @@ exports.getId = (request, response, next) => {
         });
     }
 };
-
-// Add user to whitelist.
-exports.add = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
-            let kaid = request.body.kaid;
-            let {
-                is_admin
-            } = request.decodedToken;
-            if (is_admin) {
-                return db.query("INSERT INTO whitelisted_kaids (kaid) VALUES ($1)", [kaid], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem whitelisting this user");
-                    }
-                    successMsg(response);
-                });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
-            }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem whitelisting this user");
-        }
-    }
-    return handleNext(next, 401, "Unauthorized");
-}
 
 exports.edit = (request, response, next) => {
     if (request.decodedToken) {
@@ -178,31 +149,6 @@ exports.assignToEvaluatorGroup = (request, response, next) => {
             }
         } catch (err) {
             return handleNext(next, 400, "There was a problem assigning this user to an evaluator group");
-        }
-    }
-    return handleNext(next, 401, "Unauthorized");
-}
-
-// Remove whitelisted user.
-exports.delete = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
-            let kaid = request.body.kaid;
-            let {
-                is_admin
-            } = request.decodedToken;
-            if (is_admin) {
-                return db.query("DELETE FROM whitelisted_kaids WHERE kaid = $1;", [kaid], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem removing this user");
-                    }
-                    successMsg(response);
-                });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
-            }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem removing this user");
         }
     }
     return handleNext(next, 401, "Unauthorized");

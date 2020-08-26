@@ -6,8 +6,8 @@ router.get("/ping", (req, res) => {
     res.send("Pong!");
 });
 
-router.post("/connect", handlers.connect);
-router.get("/oauth_callback", handlers.oauthCallback);
+router.post("/login", handlers.login);
 router.post("/logout", handlers.logout);
+router.put("/changePassword", handlers.changePassword)
 
 module.exports = router;
