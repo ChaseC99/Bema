@@ -24,28 +24,11 @@
             <div id="view-users-container">
                 <div class="content-header">
                     <h2>Users</h2>
-                    <% if (is_admin) { %>
-                        <span id="add-user-btn" class="admin-button" onclick="showCreateUserForm()">Add User</span>
-                    <% } %>
                 </div>
 
                 <div id="users-preview-box" class="previews-container">
                     <!-- Evaluators -->
                     <img id="users-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
-                </div>
-
-                <div class="previews-container">
-                    <div class="preview col-4 standard">
-                        <div class="db-header">
-                            <p>Whitelisted Kaids</p>
-                        </div>
-                        <div class="preview-content data">
-                            <table id="whitelisted-kaids">
-                                <!-- Kaids -->
-                                <img id="kaids-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner data">
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div id="edit-user-container">
@@ -142,17 +125,18 @@
                     </div>
                 </form>
             </div>
-            <div id="create-user-container">
+            <div id="change-password-container">
                 <div class="content-header">
-                    <h2>Add User</h2>
+                    <h2 id="change-password-title">Change password for </h2>
                 </div>
-                <form id="add-user-form" class="admin-form" onsubmit="return whitelistUser(event)">
+                <form id="change-password-form" class="admin-form" onsubmit="return changePassword(event)">
+                    <input type="hidden" id="evaluator_id" name="evaluator_id">
                     <div class="row">
                         <div class="col-10">
-                            <label for="user_kaid">User's KAID</label>
+                            <label for="new_password">New Password</label>
                         </div>
                         <div class="col-90">
-                            <input class="form-input" type="text" id="kaid" name="kaid" placeholder="kaid_xxxxxxxxxx">
+                            <input class="form-input" type="password" id="new_password" name="new_password">
                         </div>
                     </div>
                     <div class="row">
