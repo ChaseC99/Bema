@@ -46,6 +46,7 @@ let fillSection = (id) => {
                     <div class="article-preview preview col-6">
                         <i class="far fa-file"></i>
                         <a href="/kb/article/${a.article_id}">${a.article_name}</a>
+                        ${a.is_published ? "" : `<span class="draft-tag">Draft</span>`}
                     </div>
                 `;
             });

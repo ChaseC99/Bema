@@ -30,6 +30,15 @@
     text-decoration: underline;
 }
 
+.draft-tag {
+    font-size: 14px;
+    background-color: gray;
+    color: white;
+    border-radius: 5px;
+    padding: 4px 8px;
+    margin-left: 10px;
+}
+
 /***** Article page styling *****/
 #article-container .preview {
     margin: auto;
