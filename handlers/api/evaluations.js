@@ -31,7 +31,7 @@ exports.get = (request, response, next) => {
         }
         return handleNext(next, 400, "Invalid Inputs: userId and contestId expected");
     }
-    return handleNext(next, 403, "Insufficient access");
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.put = (request, response, next) => {
@@ -91,7 +91,7 @@ exports.put = (request, response, next) => {
             return handleNext(next, 400, "There was a problem editing this evaluation");
         }
     }
-    return handleNext(next, 403, "Insufficient access");
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.delete = (request, response, next) => {
@@ -118,7 +118,7 @@ exports.delete = (request, response, next) => {
             return handleNext(next, 400, "There was a problem deleting this evaluation");
         }
     }
-    return handleNext(next, 403, "Insufficient access");
+    return handleNext(next, 401, "Unauthorized");
 };
 
 module.exports = exports;
