@@ -84,20 +84,20 @@ exports.addSection = (request, response, next) => {
         section_description,
         section_visibility
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("INSERT INTO kb_section (section_name, section_description, section_visibility) VALUES ($1, $2, $3)", [section_name, section_description, section_visibility], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem creating this section");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("INSERT INTO kb_section (section_name, section_description, section_visibility) VALUES ($1, $2, $3)", [section_name, section_description, section_visibility], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem creating this section");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.editSection = (request, response, next) => {
@@ -107,20 +107,20 @@ exports.editSection = (request, response, next) => {
         section_description,
         section_visibility
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("UPDATE kb_section SET section_name = $1, section_description = $2, section_visibility = $3 WHERE section_id = $4", [section_name, section_description, section_visibility, section_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem editing this section");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("UPDATE kb_section SET section_name = $1, section_description = $2, section_visibility = $3 WHERE section_id = $4", [section_name, section_description, section_visibility, section_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this section");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 
@@ -128,20 +128,20 @@ exports.deleteSection = (request, response, next) => {
     let {
         section_id
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("DELETE FROM kb_section WHERE section_id = $1", [section_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem deleting this section");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("DELETE FROM kb_section WHERE section_id = $1", [section_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem deleting this section");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.getArticles = (request, response, next) => {
@@ -203,20 +203,20 @@ exports.addArticle = (request, response, next) => {
         article_visibility,
         article_section
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("INSERT INTO kb_article (section_id, article_name, article_content, article_author, article_last_updated, article_visibility) VALUES ($1, $2, $3, $4, $5, $6)", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem creating this article");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("INSERT INTO kb_article (section_id, article_name, article_content, article_author, article_last_updated, article_visibility) VALUES ($1, $2, $3, $4, $5, $6)", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem creating this article");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.editArticle = (request, response, next) => {
@@ -228,40 +228,40 @@ exports.editArticle = (request, response, next) => {
         article_section,
         is_published
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, is_published, article_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem editing this article");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, is_published, article_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this article");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.deleteArticle = (request, response, next) => {
     let {
         article_id
     } = request.body;
-    let {
-        is_admin
-    } = request.decodedToken;
 
-    if (is_admin) {
-        return db.query("DELETE FROM kb_article WHERE article_id = $1", [article_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem deleting this article");
-            }
-            successMsg(response);
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("DELETE FROM kb_article WHERE article_id = $1", [article_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem deleting this article");
+                }
+                successMsg(response);
+            });
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 module.exports = exports;
