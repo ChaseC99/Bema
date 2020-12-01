@@ -71,7 +71,7 @@ exports.getJudgingCriteria = (request, response, next) => {
 }
 
 exports.getAllJudgingCriteria = (request, response, next) => {
-    if (requeest.decodedToken) {
+    if (request.decodedToken) {
         if (request.decodedToken.is_admin) {
             return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
                 if (res.error) {
