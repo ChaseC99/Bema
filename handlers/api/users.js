@@ -28,7 +28,7 @@ exports.get = (request, response, next) => {
             });
         } else {
             // Otherwise, return only non-confidential properties
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, evaluator_nickname, dt_term_start FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, nickname, dt_term_start FROM evaluator WHERE evaluator_id = $1", [userId], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }

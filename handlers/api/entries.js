@@ -56,6 +56,7 @@ exports.getFlagged = (request, response, next) => {
             return handleNext(next, 403, "Insufficient access");
         }
     }
+    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.add = (request, response, next) => {
@@ -156,94 +157,97 @@ exports.delete = (request, response, next) => {
 
 exports.import = (request, response, next) => {
     if (request.decodedToken) {
-        let contest_id = request.body.contest_id;
+        if (request.decodedToken.is_admin) {
+            let contest_id = request.body.contest_id;
 
-        return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem finding this contest");
-            }
-            let program_id = res.rows[0].contest_url.split("/")[5];
-
-            return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
-                if (err) {
-                    return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+            return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem finding this contest");
                 }
+                let program_id = res.rows[0].contest_url.split("/")[5];
 
-                let data = JSON.parse(body);
-                if (data) {
-                    // Find most recently created entry for given contest
-                    try {
-                        return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = $1", [contest_id], res => {
-                            if (res.error) {
-                                return handleNext(next, 400, "There was a problem getting the entry count for this contest");
-                            }
+                return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
+                    if (err) {
+                        return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                    }
 
-                            // We only need to import some of the spin-offs, since the older ones were already imported
-                            if (res.rows[0].count > 0) {
-                                return db.query("SELECT MAX(entry_created) FROM entry WHERE contest_id = $1", [contest_id], res => {
-                                    if (res.error) {
-                                        return handleNext(next, 400, "There was a problem getting the most recent entry");
-                                    }
-                                    let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
-                                    let entryFound = false;
-                                    let entryCount = 0;
+                    let data = JSON.parse(body);
+                    if (data) {
+                        // Find most recently created entry for given contest
+                        try {
+                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = $1", [contest_id], res => {
+                                if (res.error) {
+                                    return handleNext(next, 400, "There was a problem getting the entry count for this contest");
+                                }
 
-                                    for (var i = 0; i < data.scratchpads.length; i++) {
-                                        // moment docs: http://momentjs.com/docs/#/query/
-                                        // Check to make sure this spin-off was created after the newest existing entry
-                                        if (Moment(res.rows[0].max).isBefore(data.scratchpads[i].created)) {
-                                            entryCount++;
-                                            let program = data.scratchpads[i];
+                                // We only need to import some of the spin-offs, since the older ones were already imported
+                                if (res.rows[0].count > 0) {
+                                    return db.query("SELECT MAX(entry_created) FROM entry WHERE contest_id = $1", [contest_id], res => {
+                                        if (res.error) {
+                                            return handleNext(next, 400, "There was a problem getting the most recent entry");
+                                        }
+                                        let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
+                                        let entryFound = false;
+                                        let entryCount = 0;
 
-                                            if (!entryFound) {
-                                                query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
-                                                entryFound = true;
-                                            } else {
-                                                query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
-                                            }
+                                        for (var i = 0; i < data.scratchpads.length; i++) {
+                                            // moment docs: http://momentjs.com/docs/#/query/
+                                            // Check to make sure this spin-off was created after the newest existing entry
+                                            if (Moment(res.rows[0].max).isBefore(data.scratchpads[i].created)) {
+                                                entryCount++;
+                                                let program = data.scratchpads[i];
 
-                                            if (entryFound) {
-                                                return db.query(query, [], res => {
-                                                    if (res.error) {
-                                                        return handleNext(next, 400, "There was a problem inserting this entry");
-                                                    }
-                                                    successMsg(response);
-                                                });
+                                                if (!entryFound) {
+                                                    query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                                    entryFound = true;
+                                                } else {
+                                                    query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                                }
+
+                                                if (entryFound) {
+                                                    return db.query(query, [], res => {
+                                                        if (res.error) {
+                                                            return handleNext(next, 400, "There was a problem inserting this entry");
+                                                        }
+                                                        successMsg(response);
+                                                    });
+                                                }
                                             }
                                         }
-                                    }
-                                    successMsg(response, entryCount + " entries added");
-                                });
-                            // Import all of the spin-offs
-                            } else {
-                                let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
-                                for (var i = 0; i < data.scratchpads.length; i++) {
-                                    let program = data.scratchpads[i];
+                                        successMsg(response, entryCount + " entries added");
+                                    });
+                                // Import all of the spin-offs
+                                } else {
+                                    let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
+                                    for (var i = 0; i < data.scratchpads.length; i++) {
+                                        let program = data.scratchpads[i];
 
-                                    if (i === 0) {
-                                        query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
-                                    } else {
-                                        query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                        if (i === 0) {
+                                            query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                        } else {
+                                            query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                        }
                                     }
+                                    return db.query(query, [], res => {
+                                        if (res.error) {
+                                            return handleNext(next, 400, "There was a problem inserting the entries");
+                                        }
+                                        successMsg(response, data.scratchpads.length + " entries added");
+                                    });
                                 }
-                                return db.query(query, [], res => {
-                                    if (res.error) {
-                                        return handleNext(next, 400, "There was a problem inserting the entries");
-                                    }
-                                    successMsg(response, data.scratchpads.length + " entries added");
-                                });
-                            }
-                        });
-                    } catch (err) {
-                        return handleNext(next, 400, "There was a problem logging the entry data");
+                            });
+                        } catch (err) {
+                            return handleNext(next, 400, "There was a problem logging the entry data");
+                        }
+                    } else {
+                        return handleNext(next, 400, "There is no parsed JSON data");
                     }
-                } else {
-                    return handleNext(next, 400, "There is no parsed JSON data");
-                }
+                });
             });
-        });
+        }
+        return handleNext(next, 403, "Insufficient access");
     }
-    handleNext(next, 401, "Unauthorized");
+    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.flag = (request, response, next) => {

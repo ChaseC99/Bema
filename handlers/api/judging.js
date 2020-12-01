@@ -37,7 +37,7 @@ exports.submit = (request, response, next) => {
             return handleNext(next, 400, "There was a problem evaluating this entry");
         }
     }
-    handleNext(next, 401, "Unauthorized");
+    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.getJudgingCriteria = (request, response, next) => {
@@ -71,84 +71,96 @@ exports.getJudgingCriteria = (request, response, next) => {
 }
 
 exports.getAllJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
-        return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem getting the judging criteria");
-            }
-            return response.json({
-                logged_in: true,
-                is_admin: true,
-                judging_criteria: res.rows
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the judging criteria");
+                }
+                return response.json({
+                    logged_in: true,
+                    is_admin: true,
+                    judging_criteria: res.rows
+                });
             });
-        });
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+        } else {
+            return handleNext(next, 403, "Insufficient access");
+        }
     }
+    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.addJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
-        try {
-            const {
-                criteria_name,
-                criteria_description,
-                is_active,
-                sort_order
-            } = request.body;
-            return db.query("INSERT INTO judging_criteria (criteria_name, criteria_description, is_active, sort_order) VALUES ($1, $2, $3, $4)", [criteria_name, criteria_description, is_active, sort_order], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem adding this criteria");
-                }
-                successMsg(response);
-            });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem adding this criteria");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            try {
+                const {
+                    criteria_name,
+                    criteria_description,
+                    is_active,
+                    sort_order
+                } = request.body;
+                return db.query("INSERT INTO judging_criteria (criteria_name, criteria_description, is_active, sort_order) VALUES ($1, $2, $3, $4)", [criteria_name, criteria_description, is_active, sort_order], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem adding this criteria");
+                    }
+                    successMsg(response);
+                });
+            } catch (err) {
+                return handleNext(next, 400, "There was a problem adding this criteria");
+            }
         }
+        handleNext(next, 403, "Insufficient access");
     }
-    handleNext(next, 401, "Unauthorized");
+    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.editJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
-        try {
-            const {
-                criteria_id,
-                criteria_name,
-                criteria_description,
-                is_active,
-                sort_order
-            } = request.body;
-            return db.query("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5", [criteria_name, criteria_description, is_active, sort_order, criteria_id], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem editing this criteria");
-                }
-                successMsg(response);
-            });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem editing this criteria");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            try {
+                const {
+                    criteria_id,
+                    criteria_name,
+                    criteria_description,
+                    is_active,
+                    sort_order
+                } = request.body;
+                return db.query("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5", [criteria_name, criteria_description, is_active, sort_order, criteria_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem editing this criteria");
+                    }
+                    successMsg(response);
+                });
+            } catch (err) {
+                return handleNext(next, 400, "There was a problem editing this criteria");
+            }
         }
+        handleNext(next, 403, "Insufficient access");
     }
-    handleNext(next, 401, "Unauthorized");
+    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.deleteJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
-        try {
-            const {
-                criteria_id
-            } = request.body;
-            return db.query("DELETE FROM judging_criteria WHERE criteria_id = $1", [criteria_id], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem deleting this criteria");
-                }
-                successMsg(response);
-            });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem deleting this criteria");
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            try {
+                const {
+                    criteria_id
+                } = request.body;
+                return db.query("DELETE FROM judging_criteria WHERE criteria_id = $1", [criteria_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem deleting this criteria");
+                    }
+                    successMsg(response);
+                });
+            } catch (err) {
+                return handleNext(next, 400, "There was a problem deleting this criteria");
+            }
         }
+        handleNext(next, 403, "Insufficient access");
     }
-    handleNext(next, 401, "Unauthorized");
+    return handleNext(next, 401, "Unauthorized");
 }
 
 

@@ -62,20 +62,23 @@ exports.getAvailable = (request, response, next) => {
 }
 
 exports.add = (request, response, next) => {
-    if (request.decodedToken && request.decodedToken.is_admin) {
-        let {
-            task_title,
-            due_date,
-            assigned_member,
-            task_status
-        } = request.body;
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            let {
+                task_title,
+                due_date,
+                assigned_member,
+                task_status
+            } = request.body;
 
-        return db.query("INSERT INTO task (task_title, due_date, assigned_member, task_status) VALUES ($1, $2, $3, $4)", [task_title, due_date, assigned_member, task_status], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem adding this task");
-            }
-            successMsg(response);
-        });
+            return db.query("INSERT INTO task (task_title, due_date, assigned_member, task_status) VALUES ($1, $2, $3, $4)", [task_title, due_date, assigned_member, task_status], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem adding this task");
+                }
+                successMsg(response);
+            });
+        }
+        return handleNext(next, 403, "Insufficient access");
     }
     return handleNext(next, 401, "Unauthorized");
 }
@@ -104,7 +107,7 @@ exports.edit = (request, response, next) => {
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 401, "Unauthorized");
+                return handleNext(next, 403, "Insufficient access");
             }
         });
     }
@@ -128,13 +131,16 @@ exports.signUpForTask = (request, response, next) => {
 }
 
 exports.delete = (request, response, next) => {
-    if (request.decodedToken && request.decodedToken.is_admin) {
-        return db.query("DELETE FROM task WHERE task_id = $1;", [request.body.task_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem deleting this task");
-            }
-            successMsg(response);
-        });
+    if (request.decodedToken) {
+        if (request.decodedToken.is_admin) {
+            return db.query("DELETE FROM task WHERE task_id = $1;", [request.body.task_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem deleting this task");
+                }
+                successMsg(response);
+            });
+        }
+        return handleNext(next, 403, "Insufficient access");
     }
     return handleNext(next, 401, "Unauthorized");
 }
