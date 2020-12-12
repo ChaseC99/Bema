@@ -60,80 +60,92 @@ exports.stats = (request, response, next) => {
                             } else {
                                 groupEvaluationsCount = 0;
                             }
-                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = false", [], res => {
-                                if (res.error) {
-                                    return handleNext(next, 400, "There was a problem getting the total entries for the current contest");
-                                }
-                                if (res.rows.length) {
-                                    totalEntriesCount = res.rows[0].count;
-                                } else {
-                                    totalEntriesCount = 0;
-                                }
-                                return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON ev.entry_id = en.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false GROUP BY en.entry_id;", [], res => {
+
+                            if (request.decodedToken.is_admin) {
+                                return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = false", [], res => {
                                     if (res.error) {
-                                        return handleNext(next, 400, "There was a problem getting the reviewed entries for the current contest");
+                                        return handleNext(next, 400, "There was a problem getting the total entries for the current contest");
                                     }
                                     if (res.rows.length) {
-                                        totalReviewedEntries = res.rows.length;
+                                        totalEntriesCount = res.rows[0].count;
                                     } else {
-                                        totalReviewedEntries = 0;
+                                        totalEntriesCount = 0;
                                     }
-                                    return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false", [], res => {
+                                    return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON ev.entry_id = en.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false GROUP BY en.entry_id;", [], res => {
                                         if (res.error) {
-                                            return handleNext(next, 400, "There was a problem getting the evaluation count for the current contest");
+                                            return handleNext(next, 400, "There was a problem getting the reviewed entries for the current contest");
                                         }
                                         if (res.rows.length) {
-                                            totalEvaluationsCount = res.rows[0].count;
+                                            totalReviewedEntries = res.rows.length;
                                         } else {
-                                            totalEvaluationsCount = 0;
+                                            totalReviewedEntries = 0;
                                         }
-                                        return db.query("SELECT COUNT(*) FROM evaluator ev INNER JOIN evaluator_group eg ON ev.group_id = eg.group_id WHERE ev.account_locked = false AND eg.is_active = true", [], res => {
+                                        return db.query("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND ev.evaluation_complete = true AND en.disqualified = false", [], res => {
                                             if (res.error) {
-                                                return handleNext(next, 400, "There was a problem getting the active evaluators");
+                                                return handleNext(next, 400, "There was a problem getting the evaluation count for the current contest");
                                             }
                                             if (res.rows.length) {
-                                                totalActiveEvaluators = res.rows[0].count;
+                                                totalEvaluationsCount = res.rows[0].count;
                                             } else {
-                                                totalActiveEvaluators = 0;
+                                                totalEvaluationsCount = 0;
                                             }
-                                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND flagged = true AND disqualified = false", [], res => {
+                                            return db.query("SELECT COUNT(*) FROM evaluator ev INNER JOIN evaluator_group eg ON ev.group_id = eg.group_id WHERE ev.account_locked = false AND eg.is_active = true", [], res => {
                                                 if (res.error) {
-                                                    return handleNext(next, 400, "There was a problem getting the flagged entries for the current contest");
+                                                    return handleNext(next, 400, "There was a problem getting the active evaluators");
                                                 }
                                                 if (res.rows.length) {
-                                                    totalFlaggedEntries = res.rows[0].count;
+                                                    totalActiveEvaluators = res.rows[0].count;
                                                 } else {
-                                                    totalFlaggedEntries = 0;
+                                                    totalActiveEvaluators = 0;
                                                 }
-                                                return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = true", [], res => {
+                                                return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND flagged = true AND disqualified = false", [], res => {
                                                     if (res.error) {
                                                         return handleNext(next, 400, "There was a problem getting the flagged entries for the current contest");
                                                     }
                                                     if (res.rows.length) {
-                                                        totalDisqualifiedEntries = res.rows[0].count;
+                                                        totalFlaggedEntries = res.rows[0].count;
                                                     } else {
-                                                        totalDisqualifiedEntries = 0;
+                                                        totalFlaggedEntries = 0;
                                                     }
-                                                    return response.json({
-                                                        yourReviewedEntriesCount,
-                                                        groupEntriesCount,
-                                                        groupEvaluatorCount,
-                                                        groupEvaluationsCount,
-                                                        totalEntriesCount,
-                                                        totalReviewedEntries,
-                                                        totalEvaluationsCount,
-                                                        totalActiveEvaluators,
-                                                        totalFlaggedEntries,
-                                                        totalDisqualifiedEntries,
-                                                        logged_in: true,
-                                                        is_admin: request.decodedToken.is_admin
+                                                    return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = true", [], res => {
+                                                        if (res.error) {
+                                                            return handleNext(next, 400, "There was a problem getting the flagged entries for the current contest");
+                                                        }
+                                                        if (res.rows.length) {
+                                                            totalDisqualifiedEntries = res.rows[0].count;
+                                                        } else {
+                                                            totalDisqualifiedEntries = 0;
+                                                        }
+                                                        return response.json({
+                                                            yourReviewedEntriesCount,
+                                                            groupEntriesCount,
+                                                            groupEvaluatorCount,
+                                                            groupEvaluationsCount,
+                                                            totalEntriesCount,
+                                                            totalReviewedEntries,
+                                                            totalEvaluationsCount,
+                                                            totalActiveEvaluators,
+                                                            totalFlaggedEntries,
+                                                            totalDisqualifiedEntries,
+                                                            logged_in: true,
+                                                            is_admin: request.decodedToken.is_admin
+                                                        });
                                                     });
                                                 });
                                             });
                                         });
                                     });
                                 });
-                            });
+                            } else {
+                                return response.json({
+                                    yourReviewedEntriesCount,
+                                    groupEntriesCount,
+                                    groupEvaluatorCount,
+                                    groupEvaluationsCount,
+                                    logged_in: true,
+                                    is_admin: false
+                                });
+                            }
                         });
                     });
                 });
