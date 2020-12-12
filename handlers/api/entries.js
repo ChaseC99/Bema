@@ -10,58 +10,70 @@ const Moment = require("moment");
 const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
 
 exports.get = (request, response, next) => {
-    let contest_id = request.query.contestId;
-    // Send back all entry info
-    if (request.decodedToken) {
-        return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem getting the entries");
+    try {
+        let contest_id = request.query.contestId;
+
+        if (contest_id > 0) {
+            // Send back all entry info
+            if (request.decodedToken) {
+                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the entries");
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        entries: res.rows
+                    });
+                });
             }
-            return response.json({
-                logged_in: true,
-                is_admin: request.decodedToken.is_admin,
-                entries: res.rows
+            return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the entries");
+                }
+                return response.json({
+                    logged_in: false,
+                    is_admin: false,
+                    entries: res.rows
+                });
             });
-        });
-    }
-    return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
-        if (res.error) {
-            return handleNext(next, 400, "There was a problem getting the entries");
         }
-        return response.json({
-            logged_in: false,
-            is_admin: false,
-            entries: res.rows
-        });
-    });
+        return handleNext(next, 400, "A valid contestId must be specified");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem getting the entries");
+    }
 };
 
 exports.getFlagged = (request, response, next) => {
-    if (request.decodedToken) {
-        let {
-            is_admin
-        } = request.decodedToken;
-        if (is_admin) {
-            return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the flagged entries");
-                }
-                return response.json({
-                    logged_in: true,
-                    is_admin: request.decodedToken.is_admin,
-                    flaggedEntries: res.rows
+    try {
+        if (request.decodedToken) {
+            let {
+                is_admin
+            } = request.decodedToken;
+            if (is_admin) {
+                return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the flagged entries");
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        flaggedEntries: res.rows
+                    });
                 });
-            });
-        } else {
-            return handleNext(next, 403, "Insufficient access");
+            } else {
+                return handleNext(next, 403, "Insufficient access");
+            }
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem getting the flagged entries");
     }
-    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.add = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 entry_url,
@@ -87,16 +99,16 @@ exports.add = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem adding this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem adding this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.edit = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 edit_entry_id,
                 edit_entry_title,
@@ -120,19 +132,18 @@ exports.edit = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem editing this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem editing this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.delete = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
-                entry_id,
-                contest_id
+                entry_id
             } = request.body;
             let {
                 is_admin
@@ -148,77 +159,43 @@ exports.delete = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem deleting this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem deleting this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.import = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            let contest_id = request.body.contest_id;
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let contest_id = request.body.contest_id;
 
-            return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem finding this contest");
-                }
-                let program_id = res.rows[0].contest_url.split("/")[5];
-
-                return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
-                    if (err) {
-                        return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem finding this contest");
                     }
+                    let program_id = res.rows[0].contest_url.split("/")[5];
 
-                    let data = JSON.parse(body);
-                    if (data) {
-                        // Find most recently created entry for given contest
-                        try {
-                            return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = $1", [contest_id], res => {
+                    return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
+                        if (err) {
+                            return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                        }
+
+                        let data = JSON.parse(body);
+                        if (data) {
+                            return db.query("SELECT entry_kaid FROM entry WHERE contest_id = $1", [contest_id], res => {
                                 if (res.error) {
-                                    return handleNext(next, 400, "There was a problem getting the entry count for this contest");
+                                    return handleNext(next, 400, "There was a problem getting the entry IDs for this contest");
                                 }
+                                let entries = res.rows; // A list of existing entries
 
-                                // We only need to import some of the spin-offs, since the older ones were already imported
-                                if (res.rows[0].count > 0) {
-                                    return db.query("SELECT MAX(entry_created) FROM entry WHERE contest_id = $1", [contest_id], res => {
-                                        if (res.error) {
-                                            return handleNext(next, 400, "There was a problem getting the most recent entry");
-                                        }
-                                        let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
-                                        let entryFound = false;
-                                        let entryCount = 0;
+                                let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
+                                let entryCount = 0; // Total number of new entries found
 
-                                        for (var i = 0; i < data.scratchpads.length; i++) {
-                                            // moment docs: http://momentjs.com/docs/#/query/
-                                            // Check to make sure this spin-off was created after the newest existing entry
-                                            if (Moment(res.rows[0].max).isBefore(data.scratchpads[i].created)) {
-                                                entryCount++;
-                                                let program = data.scratchpads[i];
-
-                                                if (!entryFound) {
-                                                    query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
-                                                    entryFound = true;
-                                                } else {
-                                                    query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'")}', '${program.authorNickname.replace(/\'/g,"\'\'")}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
-                                                }
-
-                                                if (entryFound) {
-                                                    return db.query(query, [], res => {
-                                                        if (res.error) {
-                                                            return handleNext(next, 400, "There was a problem inserting this entry");
-                                                        }
-                                                        successMsg(response);
-                                                    });
-                                                }
-                                            }
-                                        }
-                                        successMsg(response, entryCount + " entries added");
-                                    });
-                                // Import all of the spin-offs
-                                } else {
-                                    let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
+                                if (entries.length == 0) {
+                                    // No entries exist for this contest, so import all spin-offs
                                     for (var i = 0; i < data.scratchpads.length; i++) {
                                         let program = data.scratchpads[i];
 
@@ -227,52 +204,82 @@ exports.import = (request, response, next) => {
                                         } else {
                                             query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
                                         }
+                                        entryCount++;
                                     }
+                                } else {
+                                    // Entries exist for the current contest, so check whether or not each entry has already been added
+                                    for (var i = 0; i < data.scratchpads.length; i++) {
+                                        let program = data.scratchpads[i];
+                                        let programId = program.url.split("/")[5];
+                                        let found = false;
+
+                                        for (var j = 0; j < entries.length; j++) {
+                                            if (entries[j].entry_kaid === programId) {
+                                                found = true;
+                                            }
+                                        }
+
+                                        // Add the spin-off if it isn't already in the database
+                                        if (!found) {
+                                            if (i === 0) {
+                                                query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                            } else {
+                                                query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
+                                            }
+                                            entryCount++;
+                                        }
+                                    }
+                                }
+
+                                // If new entries were found, run the query
+                                if (entryCount > 0) {
                                     return db.query(query, [], res => {
                                         if (res.error) {
                                             return handleNext(next, 400, "There was a problem inserting the entries");
                                         }
-                                        successMsg(response, data.scratchpads.length + " entries added");
+                                        successMsg(response, entryCount + " entries added");
                                     });
+                                } else {
+                                    successMsg(response, "No new entries to import");
                                 }
                             });
-                        } catch (err) {
-                            return handleNext(next, 400, "There was a problem logging the entry data");
+                        } else {
+                            return handleNext(next, 400, "There is no parsed JSON data");
                         }
-                    } else {
-                        return handleNext(next, 400, "There is no parsed JSON data");
-                    }
+                    });
                 });
-            });
+            }
+            return handleNext(next, 403, "Insufficient access");
         }
-        return handleNext(next, 403, "Insufficient access");
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem logging the entry data");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.flag = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
 
-                return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem flagging this entry");
-                    }
-                    successMsg(response);
-                });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem flagging this entry");
+            return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem flagging this entry");
+                }
+                successMsg(response);
+            });
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem flagging this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.disqualify = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -291,16 +298,16 @@ exports.disqualify = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem disqualifying this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem disqualifying this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.approve = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -319,16 +326,16 @@ exports.approve = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem approving this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem approving this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.assignToGroups = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 assignAll
@@ -382,19 +389,19 @@ exports.assignToGroups = (request, response, next) => {
                         successMsg(response);
                     });
                 });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem assigning the entries to groups");
+            return handleNext(next, 401, "Unauthorized");
+        } else {
+            return handleNext(next, 403, "Insufficient access");
         }
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem assigning the entries to groups");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.transferEntryGroups = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 current_entry_group,
@@ -415,11 +422,11 @@ exports.transferEntryGroups = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem transfering the entry groups");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem transfering the entry groups");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 module.exports = exports;

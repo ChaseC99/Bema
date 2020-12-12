@@ -7,21 +7,21 @@ let currentContestId = (
 
 // Spinners to be soon hidden
 let sidebarSpinner = document.querySelector("#sidebar-spinner");
-let evalsPerLevelSpinner = document.querySelector("#evalsPerLevel-spinner");
-let evalsPerEvaluatorSpinner = document.querySelector("#evalsPerEvaluator-spinner");
+let entriesPerLevelSpinner = document.querySelector("#entries-per-level-spinner");
+let evalsPerEvaluatorSpinner = document.querySelector("#evals-per-evaluator-spinner");
 let winnersSpinner = document.querySelector("#winners-spinner");
-let entriesByAvgScoreSpinner = document.querySelector("#entriesByAvgScore-spinner");
+let entriesByAvgScoreSpinner = document.querySelector("#entries-by-avg-score-spinner");
 // Hidden tables to be displayed once data is received.
-let evalsPerLevelTable = document.querySelector("#evals-per-level-table");
+let entriesPerLevelTable = document.querySelector("#entries-per-level-table");
 let evalsPerEvaluatorTable = document.querySelector("#evals-per-evaluator-table");
 let winnersTable = document.querySelector("#winners-table");
 let entriesByAvgScoreTable = document.querySelector("#entries-by-avg-score-table");
 // Containers to fill
 let sidebar = document.querySelector(".side-bar");
-let evalsPerLevelTableBody = document.querySelector("#evalsPerLevel-table-body");
-let evalsPerEvaluatorTableBody = document.querySelector("#evalsPerEvaluator-table-body");
+let entriesPerLevelTableBody = document.querySelector("#entries-per-level-table-body");
+let evalsPerEvaluatorTableBody = document.querySelector("#evals-per-evaluator-table-body");
 let winnersTableBody = document.querySelector("#winners-table-body");
-let entriesByAvgScoreTableBody = document.querySelector("#entriesByAvgScore-table-body");
+let entriesByAvgScoreTableBody = document.querySelector("#entries-by-avg-score-table-body");
 
 let resultsContestName = document.querySelector("#results-contest-name");
 
@@ -48,29 +48,35 @@ request("get", "/api/internal/contests", null, (data) => {
 
 request("get", `/api/internal/results?contestId=${currentContestId}`, null, (data) => {
     if (!data.error) {
-        evalsPerLevelSpinner.style.display = "none";
-        evalsPerLevelTable.style.display = "block";
-        data.results.evaluationsPerLevel.forEach(a => {
-            evalsPerLevelTableBody.innerHTML += `
+        entriesPerLevelSpinner.style.display = "none";
+        entriesPerLevelTable.style.display = "block";
+        data.results.entriesPerLevel.forEach(a => {
+            entriesPerLevelTableBody.innerHTML += `
             <tr>
                 <td>
                     ${a.entry_level}
                 </td>
                 <td>
-                    ${a.cnt}
+                    ${a.count}
                 </td>
             </tr>`;
         });
         evalsPerEvaluatorSpinner.style.display = "none";
         evalsPerEvaluatorTable.style.display = "block";
         data.results.evaluationsPerEvaluator.forEach(a => {
+            let entriesInGroup;
+            data.results.entriesPerGroup.forEach(c => {
+                if (a.group_id === c.group_id) {
+                    entriesInGroup = c.entry_count;
+                }
+            });
             evalsPerEvaluatorTableBody.innerHTML += `
             <tr>
                 <td>
                     ${a.evaluator_name}
                 </td>
                 <td>
-                    ${a.cnt} / ${data.results.entryCount}
+                    ${a.eval_count} / ${entriesInGroup}
                 </td>
             </tr>`;
         });

@@ -141,10 +141,7 @@ const routeChecks = {
 		delete: [
 		    check("entry_id")
 		    .isInt()
-		    .withMessage("Entry ID must be an integer"),
-		    check("contest_id")
-		    .isInt()
-		    .withMessage("Contest ID must be an integer")
+		    .withMessage("Entry ID must be an integer")
 		],
 		import: [
 		    check("contest_id")
