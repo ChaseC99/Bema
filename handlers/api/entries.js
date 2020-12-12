@@ -143,8 +143,7 @@ exports.delete = (request, response, next) => {
     try {
         if (request.decodedToken) {
             let {
-                entry_id,
-                contest_id
+                entry_id
             } = request.body;
             let {
                 is_admin

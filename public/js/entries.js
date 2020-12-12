@@ -66,7 +66,7 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                 ${data.is_admin
                     ? `<td id="${a.entry_id}-actions">
                            <i class="control-btn far fa-edit" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified})"></i>
-                           <i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${a.entry_id}, ${a.contest_id})"></i>
+                           <i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${a.entry_id})"></i>
                        </td>`
                     : ""
                 }
@@ -101,13 +101,12 @@ let editEntry = (e) => {
         }
     });
 }
-let deleteEntry = (entry_id, contest_id) => {
+let deleteEntry = (entry_id) => {
     let shouldDelete = confirm("Are you sure you want to delete this entry?");
 
     if (shouldDelete) {
         request("delete", "/api/internal/entries", {
-            entry_id,
-            contest_id
+            entry_id
         }, (data) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);

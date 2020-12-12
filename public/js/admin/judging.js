@@ -31,7 +31,7 @@ request("get", "/api/internal/entries/flagged", null, data => {
                         <td id="${e.entry_id}-actions" class="flagged-entry-actions">
                             <i class="control-btn fas fa-check green" onclick="approveEntry(${e.entry_id})" title="Approve"></i>
                             <i class="control-btn fas fa-ban red" onclick="disqualifyEntry(${e.entry_id})" title="Disqualify"></i>
-                            <i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${e.entry_id}, ${e.contest_id})" title="Delete"></i>
+                            <i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${e.entry_id})" title="Delete"></i>
                         </td>
                     </tr>`;
                 });
@@ -139,13 +139,12 @@ let disqualifyEntry = (entry_id) => {
         }
     });
 }
-let deleteEntry = (entry_id, contest_id) => {
+let deleteEntry = (entry_id) => {
     let confirmDelete = confirm("Are you sure you want to delete this entry? This action cannot be undone.");
 
     if (confirmDelete) {
         request("delete", "/api/internal/entries", {
-            entry_id,
-            contest_id
+            entry_id
         }, (data) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
