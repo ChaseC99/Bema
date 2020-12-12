@@ -394,13 +394,13 @@ exports.assignToGroups = (request, response, next) => {
                         successMsg(response);
                     });
                 });
-            } catch (err) {
-                return handleNext(next, 400, "There was a problem assigning the entries to groups");
             }
+            return handleNext(next, 401, "Unauthorized");
+        } else {
+            return handleNext(next, 403, "Insufficient access");
         }
-        return handleNext(next, 401, "Unauthorized");
-    } else {
-        return handleNext(next, 403, "Insufficient access");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem assigning the entries to groups");
     }
 }
 
