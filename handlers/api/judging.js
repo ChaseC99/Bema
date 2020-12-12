@@ -61,10 +61,10 @@ exports.getJudgingCriteria = (request, response, next) => {
             logged_in: false,
             is_admin: false,
             judging_criteria: [
-                {judging_criteria: "CREATIVITY", judging_description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?"},
-                {judging_criteria: "COMPLEXITY", judging_description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?"},
-                {judging_criteria: "QUALITY CODE", judging_description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?"},
-                {judging_criteria: "INTERPRETATION", judging_description: "Does this program portray the overall theme of the contest?"}
+                {criteria_name: "CREATIVITY", criteria_description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?"},
+                {criteria_name: "COMPLEXITY", criteria_description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?"},
+                {criteria_name: "QUALITY CODE", criteria_description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?"},
+                {criteria_name: "INTERPRETATION", criteria_description: "Does this program portray the overall theme of the contest?"}
             ]
         });
     }
