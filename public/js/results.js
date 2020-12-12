@@ -64,13 +64,19 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
         evalsPerEvaluatorSpinner.style.display = "none";
         evalsPerEvaluatorTable.style.display = "block";
         data.results.evaluationsPerEvaluator.forEach(a => {
+            let entriesInGroup;
+            data.results.entriesPerGroup.forEach(c => {
+                if (a.group_id === c.group_id) {
+                    entriesInGroup = c.entry_count;
+                }
+            });
             evalsPerEvaluatorTableBody.innerHTML += `
             <tr>
                 <td>
                     ${a.evaluator_name}
                 </td>
                 <td>
-                    ${a.count} / ${data.results.entryCount}
+                    ${a.eval_count} / ${entriesInGroup}
                 </td>
             </tr>`;
         });
