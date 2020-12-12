@@ -10,58 +10,70 @@ const Moment = require("moment");
 const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
 
 exports.get = (request, response, next) => {
-    let contest_id = request.query.contestId;
-    // Send back all entry info
-    if (request.decodedToken) {
-        return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem getting the entries");
+    try {
+        let contest_id = request.query.contestId;
+
+        if (contest_id > 0) {
+            // Send back all entry info
+            if (request.decodedToken) {
+                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the entries");
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        entries: res.rows
+                    });
+                });
             }
-            return response.json({
-                logged_in: true,
-                is_admin: request.decodedToken.is_admin,
-                entries: res.rows
+            return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the entries");
+                }
+                return response.json({
+                    logged_in: false,
+                    is_admin: false,
+                    entries: res.rows
+                });
             });
-        });
-    }
-    return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
-        if (res.error) {
-            return handleNext(next, 400, "There was a problem getting the entries");
         }
-        return response.json({
-            logged_in: false,
-            is_admin: false,
-            entries: res.rows
-        });
-    });
+        return handleNext(next, 400, "A valid contestId must be specified");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem getting the entries");
+    }
 };
 
 exports.getFlagged = (request, response, next) => {
-    if (request.decodedToken) {
-        let {
-            is_admin
-        } = request.decodedToken;
-        if (is_admin) {
-            return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the flagged entries");
-                }
-                return response.json({
-                    logged_in: true,
-                    is_admin: request.decodedToken.is_admin,
-                    flaggedEntries: res.rows
+    try {
+        if (request.decodedToken) {
+            let {
+                is_admin
+            } = request.decodedToken;
+            if (is_admin) {
+                return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the flagged entries");
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        flaggedEntries: res.rows
+                    });
                 });
-            });
-        } else {
-            return handleNext(next, 403, "Insufficient access");
+            } else {
+                return handleNext(next, 403, "Insufficient access");
+            }
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem getting the flagged entries");
     }
-    return handleNext(next, 401, "Unauthorized");
 };
 
 exports.add = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 entry_url,
@@ -87,16 +99,16 @@ exports.add = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem adding this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem adding this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.edit = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 edit_entry_id,
                 edit_entry_title,
@@ -120,16 +132,16 @@ exports.edit = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem editing this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem editing this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.delete = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id,
                 contest_id
@@ -148,33 +160,33 @@ exports.delete = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem deleting this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem deleting this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.import = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            let contest_id = request.body.contest_id;
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let contest_id = request.body.contest_id;
 
-            return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem finding this contest");
-                }
-                let program_id = res.rows[0].contest_url.split("/")[5];
-
-                return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
-                    if (err) {
-                        return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem finding this contest");
                     }
+                    let program_id = res.rows[0].contest_url.split("/")[5];
 
-                    let data = JSON.parse(body);
-                    if (data) {
-                        // Find most recently created entry for given contest
-                        try {
+                    return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
+                        if (err) {
+                            return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                        }
+
+                        let data = JSON.parse(body);
+                        if (data) {
+                            // Find most recently created entry for given contest
                             return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = $1", [contest_id], res => {
                                 if (res.error) {
                                     return handleNext(next, 400, "There was a problem getting the entry count for this contest");
@@ -236,43 +248,43 @@ exports.import = (request, response, next) => {
                                     });
                                 }
                             });
-                        } catch (err) {
-                            return handleNext(next, 400, "There was a problem logging the entry data");
+                        } else {
+                            return handleNext(next, 400, "There is no parsed JSON data");
                         }
-                    } else {
-                        return handleNext(next, 400, "There is no parsed JSON data");
-                    }
+                    });
                 });
-            });
+            }
+            return handleNext(next, 403, "Insufficient access");
         }
-        return handleNext(next, 403, "Insufficient access");
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem logging the entry data");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.flag = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
 
-                return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem flagging this entry");
-                    }
-                    successMsg(response);
-                });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem flagging this entry");
+            return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem flagging this entry");
+                }
+                successMsg(response);
+            });
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem flagging this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.disqualify = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -291,16 +303,16 @@ exports.disqualify = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem disqualifying this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem disqualifying this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.approve = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -319,16 +331,16 @@ exports.approve = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem approving this entry");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem approving this entry");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.assignToGroups = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 assignAll
@@ -382,19 +394,19 @@ exports.assignToGroups = (request, response, next) => {
                         successMsg(response);
                     });
                 });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
+            } catch (err) {
+                return handleNext(next, 400, "There was a problem assigning the entries to groups");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem assigning the entries to groups");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } else {
+        return handleNext(next, 403, "Insufficient access");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.transferEntryGroups = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 contest_id,
                 current_entry_group,
@@ -415,11 +427,11 @@ exports.transferEntryGroups = (request, response, next) => {
             } else {
                 return handleNext(next, 403, "Insufficient access");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem transfering the entry groups");
         }
+        return handleNext(next, 401, "Unauthorized");
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem transfering the entry groups");
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 module.exports = exports;
