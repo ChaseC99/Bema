@@ -8,6 +8,7 @@ router.get("/ping", (req, res) => {
 
 router.post("/login", handlers.login);
 router.post("/logout", handlers.logout);
-router.put("/changePassword", handlers.changePassword)
+router.put("/changePassword", handlers.changePassword);
+router.post("/assumeUserIdentity", handlers.assumeUserIdentity);
 
 module.exports = router;
