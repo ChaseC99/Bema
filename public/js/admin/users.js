@@ -17,6 +17,7 @@ request("get", "/api/internal/users", null, data => {
                             <div class="user-options">
                                 <i class="control-btn far fa-edit" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});"></i>
                                 <i class="control-btn fas fa-key" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})"></i>
+                                <i class="control-btn fas fa-user" onclick="assumeUserIdentity('${c.evaluator_kaid}')"></i>
                             </div>
                         </div>
                         <div class="preview-content">
@@ -121,6 +122,21 @@ let changePassword = (e) => {
             alert(data.error.message);
         }
     });
+}
+let assumeUserIdentity = (evaluator_kaid) => {
+    let confirmed = window.confirm("Are you sure you want to assume this user's identity?");
+
+    if (confirmed) {
+        request("post", "/api/auth/assumeUserIdentity", {
+            evaluator_kaid
+        }, (data) => {
+            if (!data.error) {
+                window.setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert(data.error.message);
+            }
+        });
+    }
 }
 
 // Displays forms
