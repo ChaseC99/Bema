@@ -217,4 +217,20 @@ exports.kbArticle = (request, response, next) => {
     });
 }
 
+exports.evaluatorProfile = (request, response, next) => {
+    let userId = parseInt(request.params.userId);
+
+    if (request.decodedToken) {
+        response.render("pages/evaluatorProfile", {
+            evaluator_id: userId,
+            logged_in: false,
+            is_admin: false
+        });
+    }
+    response.render("pages/home", {
+        logged_in: false,
+        is_admin: false
+    });
+}
+
 module.exports = exports;
