@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Profile | Challenge Council</title>
+    <%- include ../partials/styles %>
+    <link rel="stylesheet" type="text/css" href="/static/css/evaluatorProfile.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/previews.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
+</head>
+<body>
+    <%- include ../partials/header %>
+    <div class="page-container">
+        <div class="content-container" id="view-profile-page">
+            <!-- <div id="user-profile">
+                <img class="profile-avatar" src="https://cdn.kastatic.org/images/avatars/svg/leaf-green.svg">
+                <h1 class="profile-name">Full Name (Nickname)</h1>
+            </div> -->
+            <div class="content-header" id="page-title">
+                <img id="evaluator-name-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                <!-- <h2 id="entry-contest-name">
+                    User Profile - Evan Lewis
+                </h2> -->
+            </div>
+            <div class="previews-container">
+                <div class="preview col-6 standard">
+                    <div class="db-header">
+                        <p>Evaluator Information</p>
+                    </div>
+                    <div class="preview-content" id="evaluator-information">
+                        <img id="evaluator-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                    </div>
+                </div>
+                <div class="preview col-6 standard">
+                    <div class="db-header">
+                        <p>Judging Information</p>
+                    </div>
+                    <div class="preview-content" id="judging-information">
+                        <img id="judging-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                    </div>
+                </div>
+                <% if (is_self || is_admin) { %>
+                <div class="preview col-6 standard">
+                    <div class="db-header" id="personal-information-header">
+                        <p>Personal Information</p>
+                    </div>
+                    <div class="preview-content" id="personal-information">
+                        <img id="personal-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                    </div>
+                </div>
+                <div class="preview col-6 standard">
+                    <div class="db-header">
+                        <p>Login Information</p>
+                    </div>
+                    <div class="preview-content" id="login-information">
+                        <img id="login-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (is_self) { %>
+            <div class="content-container" id="edit-personal-information-page" style="display: none;">
+                <div class="content-header">
+                    <h2>Edit Personal Information</h2>
+                </div>
+
+                <form id="edit-personal-information-form" class="admin-form" onsubmit="return editPersonalInformation(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="nickname">Display Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="nickname" name="nickname">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="email">Email</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="email" id="email" name="email">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="receive_emails">Receive Email Notifications</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="checkbox" id="receive_emails" name="receive_emails">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Submit">
+                    </div>
+                </form>
+            </div>
+
+            <div class="content-container" id="edit-login-information-page" style="display: none;">
+                <div class="content-header">
+                    <h2>Edit Login Information</h2>
+                </div>
+
+                <form id="edit-login-information-form" class="admin-form" onsubmit="return editLoginInformation(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="username">Username</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="username" name="username">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Submit">
+                    </div>
+                </form>
+            </div>
+
+            <div class="content-container" id="reset-password-page" style="display: none;">
+                <div class="content-header">
+                    <h2>Reset Password</h2>
+                </div>
+
+                <form id="reset-password-form" class="admin-form" onsubmit="return resetPassword(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="new_password">New Password</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="password" id="new_password" name="new_password">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Submit">
+                    </div>
+                </form>
+            </div>
+        <% } %>
+    </div>
+    <%- include ../partials/footer %>
+</body>
+<script src="/static/js/general.js"></script>
+<script src="/static/js/evaluatorProfile.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</html>
