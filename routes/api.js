@@ -446,6 +446,7 @@ router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, win
 // Users
 router.get("/internal/users", users.get);
 router.get("/internal/users/id", users.getId);
+router.get("/internal/users/stats", users.stats);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 

@@ -83,6 +83,35 @@ exports.getId = (request, response, next) => {
     }
 };
 
+exports.stats = (request, response, next) => {
+    let userId = parseInt(request.query.userId);
+
+    if (userId > 0) {
+        let totalEvaluations, totalContestsJudged;
+        return db.query("SELECT COUNT(*) FROM evaluation WHERE evaluator_id = $1", [userId], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem getting the total evaluations");
+            }
+            totalEvaluations = res.rows[0].count;
+
+            return db.query("SELECT c.contest_id, c.contest_name FROM contest c INNER JOIN entry en ON en.contest_id = c.contest_id INNER JOIN evaluation ev ON ev.entry_id = en.entry_id WHERE ev.evaluator_id = $1 AND ev.evaluation_complete = true GROUP BY c.contest_id ORDER BY c.contest_id DESC;", [userId], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the total evaluations");
+                }
+                totalContestsJudged = res.rows.length;
+                return response.json({
+                    logged_in: request.decodedToken ? true : false,
+                    is_admin: request.decodedToken.is_admin ? true : false,
+                    totalEvaluations,
+                    totalContestsJudged
+                });
+            });
+        });
+    }
+    return handleNext(next, 400, "A userId must be specified in the request query");
+
+};
+
 exports.edit = (request, response, next) => {
     if (request.decodedToken) {
         try {
