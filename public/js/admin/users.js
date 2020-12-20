@@ -90,6 +90,21 @@ request("get", "/api/internal/users", null, data => {
 });
 
 // Form request handlers
+let addUser = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        body[key.name] = key.value;
+    }
+    delete body[""];
+    request("post", "/api/internal/users", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
+        }
+    });
+}
 let editUser = (e) => {
     e.preventDefault();
     let body = {};
@@ -141,6 +156,13 @@ let assumeUserIdentity = (evaluator_kaid) => {
 }
 
 // Displays forms
+let showAddUserForm = () => {
+    let addUser = document.querySelector("#add-user-container");
+    let viewUsers = document.querySelector("#view-users-container");
+    viewUsers.style.display = "none";
+    addUser.style.display = "block";
+};
+
 let showEditUserForm = (...args) => {
     // id, name, kaid, username, nickname, email, start, end, is_admin, account_locked, receive_emails
     let editUser = document.querySelector("#edit-user-container");
