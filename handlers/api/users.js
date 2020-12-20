@@ -14,7 +14,7 @@ exports.get = (request, response, next) => {
     if (userId) {
         // If getting one's own information, or user is an admin, return all user properties except password
         if (request.decodedToken && (userId === request.decodedToken.evaluator_id || request.decodedToken.is_admin)) {
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, created_tstz, logged_in_tstz, dt_term_start, dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, to_char(created_tstz, $2) as created_tstz, to_char(logged_in_tstz, $2) as logged_in_tstz, to_char(dt_term_start, $2) as dt_term_start, to_char(dt_term_end, $2) as dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId, displayDateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -23,12 +23,13 @@ exports.get = (request, response, next) => {
                 return response.json({
                     logged_in: true,
                     is_admin: request.decodedToken.is_admin,
+                    is_self: userId === request.decodedToken.evaluator_id,
                     evaluator: evaluator
                 });
             });
         } else {
             // Otherwise, return only non-confidential properties
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, nickname, dt_term_start FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, nickname, to_char(dt_term_start, $2) as dt_term_start, to_char(dt_term_end, $2) as dt_term_end FROM evaluator WHERE evaluator_id = $1", [userId, displayDateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -37,6 +38,7 @@ exports.get = (request, response, next) => {
                 return response.json({
                     logged_in: request.decodedToken ? true : false,
                     is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
+                    is_self: false,
                     evaluator: evaluator
                 });
             });
