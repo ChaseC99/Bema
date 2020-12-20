@@ -224,7 +224,7 @@ exports.evaluatorProfile = (request, response, next) => {
         response.render("pages/evaluatorProfile", {
             is_self: userId === request.decodedToken.evaluator_id ? true : false,
             evaluator_id: userId,
-            logged_in: false,
+            logged_in: true,
             is_admin: request.decodedToken.is_admin
         });
     }
