@@ -18,7 +18,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
 
         // Page Title
         evaluatorNameSpinner.style.display = "none";
-        pageTitle.innerHTML = `<h2>User Profile - ${data.evaluator_name}</h2>`;
+        pageTitle.innerHTML = `<h2>User Profile - ${data.nickname}</h2>`;
 
         // Evaluator Information
         evaluatorInformationSpinner.style.display = "none";
