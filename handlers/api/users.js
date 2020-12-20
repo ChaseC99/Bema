@@ -112,6 +112,37 @@ exports.stats = (request, response, next) => {
 
 };
 
+exports.add = (request, response, next) => {
+    if (request.decodedToken) {
+        try {
+            let {
+                evaluator_name,
+                email,
+                evaluator_kaid,
+                username,
+                date_start
+            } = request.body;
+            let {
+                is_admin
+            } = request.decodedToken;
+
+            if (is_admin) {
+                return db.query("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5)", [evaluator_name, email, evaluator_kaid, username, date_start], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem adding this user");
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "Insufficient access");
+            }
+        } catch (err) {
+            return handleNext(next, 400, "There was a problem adding this user");
+        }
+    }
+    return handleNext(next, 401, "Unauthorized");
+}
+
 exports.edit = (request, response, next) => {
     if (request.decodedToken && request.decodedToken.is_admin) {
         try {

@@ -262,6 +262,20 @@ const routeChecks = {
 		]
 	},
 	users: {
+		add: [
+			check("evaluator_name")
+			.isLength(nameChars)
+			.withMessage("User's name cannot be empty or longer than 200 characters"),
+			check("email")
+			.isEmail()
+			.withMessage("User's email must be a valid email"),
+			check("evaluator_kaid")
+			.matches(kaidPattern)
+			.withMessage("User KAID must have correct format"),
+			check("username")
+			.isLength(nameChars)
+			.withMessage("User's username cannot be empty or longer than 200 characters")
+		],
 		edit: [
 			oneOf([
 			    [
@@ -469,6 +483,8 @@ router.get("/internal/users/id", users.getId);
 router.get("/internal/users/stats", users.stats);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
+router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
+
 
 // Messages
 router.get("/internal/messages", messages.get);
