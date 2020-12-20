@@ -222,9 +222,10 @@ exports.evaluatorProfile = (request, response, next) => {
 
     if (request.decodedToken) {
         response.render("pages/evaluatorProfile", {
+            is_self: userId === request.decodedToken.evaluator_id ? true : false,
             evaluator_id: userId,
             logged_in: false,
-            is_admin: false
+            is_admin: request.decodedToken.is_admin
         });
     }
     response.render("pages/home", {
