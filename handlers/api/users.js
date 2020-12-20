@@ -113,7 +113,7 @@ exports.stats = (request, response, next) => {
 };
 
 exports.edit = (request, response, next) => {
-    if (request.decodedToken) {
+    if (request.decodedToken && request.decodedToken.is_admin) {
         try {
             let edit_evaluator_id = request.body.edit_user_id;
             let edit_evaluator_name = request.body.edit_user_name;
@@ -126,9 +126,6 @@ exports.edit = (request, response, next) => {
             let edit_is_admin = request.body.edit_user_is_admin;
             let edit_user_account_locked = request.body.edit_user_account_locked;
             let edit_user_receive_emails = request.body.edit_user_receive_emails;
-            let {
-                is_admin
-            } = request.decodedToken;
 
             // Handle null dates
             if (edit_evaluator_start === "null")
@@ -140,21 +137,49 @@ exports.edit = (request, response, next) => {
                 edit_evaluator_end = null;
             }
 
-            if (is_admin) {
-                return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem editing this user");
-                    }
-                    successMsg(response);
-                });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
-            }
+            return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
         } catch (err) {
             return handleNext(next, 400, "There was a problem editing this user");
         }
     }
-    return handleNext(next, 401, "Unauthorized");
+    else if (request.decodedToken && request.body.evaluator_id === request.decodedToken.evaluator_id) {
+        if (request.body.username) {
+            // User is editing login information
+            let {
+                username,
+                evaluator_id
+            } = request.body;
+            return db.query("UPDATE evaluator SET username = $1 WHERE evaluator_id = $2;", [username, evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
+        }
+        else {
+            // User is editing personal information
+            let {
+                nickname,
+                email,
+                receive_emails,
+                evaluator_id
+            } = request.body;
+            return db.query("UPDATE evaluator SET nickname = $1, email = $2, receive_emails = $3 WHERE evaluator_id = $4;", [nickname, email, receive_emails, evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
+        }
+    }
+    else {
+        return handleNext(next, 401, "Unauthorized");
+    }
 }
 
 exports.assignToEvaluatorGroup = (request, response, next) => {
