@@ -21,7 +21,8 @@ request("get", "/api/internal/users", null, data => {
                             </div>
                         </div>
                         <div class="preview-content">
-                            <a href="https://www.khanacademy.org/profile/${c.evaluator_kaid}" target="_blank">Profile</a>
+                            <p><a href="https://www.khanacademy.org/profile/${c.evaluator_kaid}" target="_blank">KA Profile</a></p>
+                            <p><a href="/evaluator/${c.evaluator_id}" target="_blank">Bema Profile</a></p>
                             <p>
                                 <span class="bold">ID:</span>
                                 ${c.evaluator_id}
