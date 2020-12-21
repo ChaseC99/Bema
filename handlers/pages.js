@@ -217,4 +217,21 @@ exports.kbArticle = (request, response, next) => {
     });
 }
 
+exports.evaluatorProfile = (request, response, next) => {
+    let userId = parseInt(request.params.userId);
+
+    if (request.decodedToken) {
+        response.render("pages/evaluatorProfile", {
+            is_self: userId === request.decodedToken.evaluator_id ? true : false,
+            evaluator_id: userId,
+            logged_in: true,
+            is_admin: request.decodedToken.is_admin
+        });
+    }
+    response.render("pages/home", {
+        logged_in: false,
+        is_admin: false
+    });
+}
+
 module.exports = exports;

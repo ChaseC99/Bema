@@ -65,7 +65,7 @@ request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + cur
 
 request("get", "/api/internal/users?userId=" + current_evaluator_id, null, (data) => {
     if (!data.error) {
-        evaluationsContestName.textContent += `${data.evaluator.evaluator_name}`;
+        evaluationsContestName.textContent += `${data.evaluator.nickname}`;
     } else {
         alert(data.error.message);
     }

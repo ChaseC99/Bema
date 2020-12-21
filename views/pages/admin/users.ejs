@@ -24,6 +24,7 @@
             <div id="view-users-container">
                 <div class="content-header">
                     <h2>Users</h2>
+                    <span id="add-user-btn" class="admin-button" onclick="showAddUserForm()">Add User</span>
                 </div>
 
                 <div id="users-preview-box" class="previews-container">
@@ -125,6 +126,57 @@
                     </div>
                 </form>
             </div>
+            <div id="add-user-container">
+                <div class="content-header">
+                    <h2>Add User</h2>
+                </div>
+
+                <form id="add-user-form" class="admin-form" onsubmit="return addUser(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="evaluator_name">User's Full Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="evaluator_name" name="evaluator_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="email">User's email</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="email" id="email" name="email">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="evaluator_kaid">User's KAID</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="evaluator_kaid" name="evaluator_kaid" placeholder="kaid_xxxxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="username">User's username</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="username" name="username">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="user_start">Term start</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="user_start" name="user_start">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
+            </div>
             <div id="change-password-container">
                 <div class="content-header">
                     <h2 id="change-password-title">Change password for </h2>
@@ -149,14 +201,13 @@
     </div>
     <%- include ../../partials/footer %>
 </body>
-<script src="/static/js/general.js"></script>
 <script src="/static/js/admin/users.js"></script>
 <script src="/static/js/adminSidebar.js"></script>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
     $(function() {
-        $('#edit_contest_start_date, #edit_contest_end_date, #contest_start_date, #contest_end_date, #due_date, #edit_due_date, #edit_user_start, #edit_user_end').datepicker({
+        $('#edit_contest_start_date, #edit_contest_end_date, #contest_start_date, #contest_end_date, #due_date, #edit_due_date, #user_start, #edit_user_start, #edit_user_end').datepicker({
             dateFormat: "mm-dd-yy"
         });
     });

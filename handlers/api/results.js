@@ -29,7 +29,7 @@ exports.get = (request, response, next) => {
                         return handleNext(next, 400, "There was a problem getting the entries by average score");
                     }
                     entriesByAvgScore = res.rows;
-                    return db.query("SELECT y.evaluator_name, CAST(AVG(y.group_id) as int) as group_id, COUNT(x.entry_id) as eval_count FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id WHERE x.evaluation_complete = true AND z.contest_id = $1 GROUP BY (y.evaluator_name)", [contest_id], res => {
+                    return db.query("SELECT y.nickname, CAST(AVG(y.group_id) as int) as group_id, COUNT(x.entry_id) as eval_count FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id WHERE x.evaluation_complete = true AND z.contest_id = $1 GROUP BY (y.nickname)", [contest_id], res => {
                         if (res.error) {
                             return handleNext(next, 400, "There was a problem getting the evaluations per evaluator");
                         }
@@ -67,11 +67,11 @@ exports.get = (request, response, next) => {
 
             // Preferably this pulls every current Councilor from the DB.
             evaluationsPerEvaluator = [
-                { evaluator_name: 'Evaluator 1', count: '?' },
-                { evaluator_name: 'Evaluator 2', count: '?' },
-                { evaluator_name: 'Evaluator 3', count: '?' },
-                { evaluator_name: 'Evaluator 4', count: '?' },
-                { evaluator_name: 'Evaluator 5', count: '?' }
+                { nickname: 'Evaluator 1', count: '?' },
+                { nickname: 'Evaluator 2', count: '?' },
+                { nickname: 'Evaluator 3', count: '?' },
+                { nickname: 'Evaluator 4', count: '?' },
+                { nickname: 'Evaluator 5', count: '?' }
             ];
             entriesPerLevel = [
                 { entry_level: 'Beginner', count: '?' },

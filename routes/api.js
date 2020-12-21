@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
-const { check } = require('express-validator/check');
+const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
 const { nameChars, datePattern, kaidPattern, dateFormat, scoreChars, messageChars, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
 
@@ -262,22 +262,56 @@ const routeChecks = {
 		]
 	},
 	users: {
+		add: [
+			check("evaluator_name")
+			.isLength(nameChars)
+			.withMessage("User's name cannot be empty or longer than 200 characters"),
+			check("email")
+			.isEmail()
+			.withMessage("User's email must be a valid email"),
+			check("evaluator_kaid")
+			.matches(kaidPattern)
+			.withMessage("User KAID must have correct format"),
+			check("username")
+			.isLength(nameChars)
+			.withMessage("User's username cannot be empty or longer than 200 characters")
+		],
 		edit: [
-		    check("edit_user_id")
-		    .isInt()
-		    .withMessage("User ID must be an integer"),
-		    check("edit_user_name")
-		    .isLength(nameChars)
-		    .withMessage("User name cannot be empty or longer than 200 characters"),
-		    check("edit_user_kaid")
-		    .matches(kaidPattern)
-		    .withMessage("User KAID must have correct format"),
-		    check("edit_user_is_admin")
-		    .isBoolean()
-		    .withMessage("Is admin must be true or false"),
-		    check("edit_user_account_locked")
-		    .isBoolean()
-		    .withMessage("Account locked must be true or false")
+			oneOf([
+			    [
+					check("edit_user_id")
+				    .isInt()
+				    .withMessage("User ID must be an integer"),
+				    check("edit_user_name")
+				    .isLength(nameChars)
+				    .withMessage("User name cannot be empty or longer than 200 characters"),
+				    check("edit_user_kaid")
+				    .matches(kaidPattern)
+				    .withMessage("User KAID must have correct format"),
+				    check("edit_user_is_admin")
+				    .isBoolean()
+				    .withMessage("Is admin must be true or false"),
+				    check("edit_user_account_locked")
+				    .isBoolean()
+				    .withMessage("Account locked must be true or false")
+				],
+				[
+					check("nickname")
+					.not().isEmpty()
+					.withMessage("Display name cannot be empty"),
+					check("email")
+					.isEmail()
+					.withMessage("Email must be a valid email address"),
+					check("receive_emails")
+					.isBoolean()
+					.withMessage("receive_emails must be a boolean")
+				],
+				[
+					check("username")
+					.isLength(nameChars)
+					.withMessage("username is invalid")
+				]
+			])
 		],
 		assignToEvaluatorGroup: [
 			check("evaluator_id")
@@ -446,8 +480,11 @@ router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, win
 // Users
 router.get("/internal/users", users.get);
 router.get("/internal/users/id", users.getId);
+router.get("/internal/users/stats", users.stats);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
+router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
+
 
 // Messages
 router.get("/internal/messages", messages.get);

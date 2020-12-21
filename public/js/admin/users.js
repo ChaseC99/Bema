@@ -17,10 +17,12 @@ request("get", "/api/internal/users", null, data => {
                             <div class="user-options">
                                 <i class="control-btn far fa-edit" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});"></i>
                                 <i class="control-btn fas fa-key" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})"></i>
+                                <i class="control-btn fas fa-user" onclick="assumeUserIdentity('${c.evaluator_kaid}')"></i>
                             </div>
                         </div>
                         <div class="preview-content">
-                            <a href="https://www.khanacademy.org/profile/${c.evaluator_kaid}" target="_blank">Profile</a>
+                            <p><a href="https://www.khanacademy.org/profile/${c.evaluator_kaid}" target="_blank">KA Profile</a></p>
+                            <p><a href="/evaluator/${c.evaluator_id}" target="_blank">Bema Profile</a></p>
                             <p>
                                 <span class="bold">ID:</span>
                                 ${c.evaluator_id}
@@ -88,6 +90,21 @@ request("get", "/api/internal/users", null, data => {
 });
 
 // Form request handlers
+let addUser = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        body[key.name] = key.value;
+    }
+    delete body[""];
+    request("post", "/api/internal/users", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error.message);
+        }
+    });
+}
 let editUser = (e) => {
     e.preventDefault();
     let body = {};
@@ -122,8 +139,30 @@ let changePassword = (e) => {
         }
     });
 }
+let assumeUserIdentity = (evaluator_kaid) => {
+    let confirmed = window.confirm("Are you sure you want to assume this user's identity?");
+
+    if (confirmed) {
+        request("post", "/api/auth/assumeUserIdentity", {
+            evaluator_kaid
+        }, (data) => {
+            if (!data.error) {
+                window.setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert(data.error.message);
+            }
+        });
+    }
+}
 
 // Displays forms
+let showAddUserForm = () => {
+    let addUser = document.querySelector("#add-user-container");
+    let viewUsers = document.querySelector("#view-users-container");
+    viewUsers.style.display = "none";
+    addUser.style.display = "block";
+};
+
 let showEditUserForm = (...args) => {
     // id, name, kaid, username, nickname, email, start, end, is_admin, account_locked, receive_emails
     let editUser = document.querySelector("#edit-user-container");

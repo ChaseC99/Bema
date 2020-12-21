@@ -14,7 +14,7 @@ exports.get = (request, response, next) => {
     if (userId) {
         // If getting one's own information, or user is an admin, return all user properties except password
         if (request.decodedToken && (userId === request.decodedToken.evaluator_id || request.decodedToken.is_admin)) {
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, created_tstz, logged_in_tstz, dt_term_start, dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, to_char(created_tstz, $2) as created_tstz, to_char(logged_in_tstz, $2) as logged_in_tstz, to_char(dt_term_start, $2) as dt_term_start, to_char(dt_term_end, $2) as dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId, displayDateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -23,12 +23,13 @@ exports.get = (request, response, next) => {
                 return response.json({
                     logged_in: true,
                     is_admin: request.decodedToken.is_admin,
+                    is_self: userId === request.decodedToken.evaluator_id,
                     evaluator: evaluator
                 });
             });
         } else {
             // Otherwise, return only non-confidential properties
-            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, nickname, dt_term_start FROM evaluator WHERE evaluator_id = $1", [userId], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, avatar_url, nickname, to_char(dt_term_start, $2) as dt_term_start, to_char(dt_term_end, $2) as dt_term_end FROM evaluator WHERE evaluator_id = $1", [userId, displayDateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the user's information");
                 }
@@ -37,6 +38,7 @@ exports.get = (request, response, next) => {
                 return response.json({
                     logged_in: request.decodedToken ? true : false,
                     is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
+                    is_self: false,
                     evaluator: evaluator
                 });
             });
@@ -81,8 +83,68 @@ exports.getId = (request, response, next) => {
     }
 };
 
-exports.edit = (request, response, next) => {
+exports.stats = (request, response, next) => {
+    let userId = parseInt(request.query.userId);
+
+    if (userId > 0) {
+        let totalEvaluations, totalContestsJudged;
+        return db.query("SELECT COUNT(*) FROM evaluation WHERE evaluator_id = $1", [userId], res => {
+            if (res.error) {
+                return handleNext(next, 400, "There was a problem getting the total evaluations");
+            }
+            totalEvaluations = res.rows[0].count;
+
+            return db.query("SELECT c.contest_id, c.contest_name FROM contest c INNER JOIN entry en ON en.contest_id = c.contest_id INNER JOIN evaluation ev ON ev.entry_id = en.entry_id WHERE ev.evaluator_id = $1 AND ev.evaluation_complete = true GROUP BY c.contest_id ORDER BY c.contest_id DESC;", [userId], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the total evaluations");
+                }
+                totalContestsJudged = res.rows.length;
+                return response.json({
+                    logged_in: request.decodedToken ? true : false,
+                    is_admin: request.decodedToken.is_admin ? true : false,
+                    totalEvaluations,
+                    totalContestsJudged
+                });
+            });
+        });
+    }
+    return handleNext(next, 400, "A userId must be specified in the request query");
+
+};
+
+exports.add = (request, response, next) => {
     if (request.decodedToken) {
+        try {
+            let {
+                evaluator_name,
+                email,
+                evaluator_kaid,
+                username,
+                date_start
+            } = request.body;
+            let {
+                is_admin
+            } = request.decodedToken;
+
+            if (is_admin) {
+                return db.query("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5)", [evaluator_name, email, evaluator_kaid, username, date_start], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem adding this user");
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "Insufficient access");
+            }
+        } catch (err) {
+            return handleNext(next, 400, "There was a problem adding this user");
+        }
+    }
+    return handleNext(next, 401, "Unauthorized");
+}
+
+exports.edit = (request, response, next) => {
+    if (request.decodedToken && request.decodedToken.is_admin) {
         try {
             let edit_evaluator_id = request.body.edit_user_id;
             let edit_evaluator_name = request.body.edit_user_name;
@@ -95,9 +157,6 @@ exports.edit = (request, response, next) => {
             let edit_is_admin = request.body.edit_user_is_admin;
             let edit_user_account_locked = request.body.edit_user_account_locked;
             let edit_user_receive_emails = request.body.edit_user_receive_emails;
-            let {
-                is_admin
-            } = request.decodedToken;
 
             // Handle null dates
             if (edit_evaluator_start === "null")
@@ -109,21 +168,49 @@ exports.edit = (request, response, next) => {
                 edit_evaluator_end = null;
             }
 
-            if (is_admin) {
-                return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
-                    if (res.error) {
-                        return handleNext(next, 400, "There was a problem editing this user");
-                    }
-                    successMsg(response);
-                });
-            } else {
-                return handleNext(next, 403, "Insufficient access");
-            }
+            return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
         } catch (err) {
             return handleNext(next, 400, "There was a problem editing this user");
         }
     }
-    return handleNext(next, 401, "Unauthorized");
+    else if (request.decodedToken && request.body.evaluator_id === request.decodedToken.evaluator_id) {
+        if (request.body.username) {
+            // User is editing login information
+            let {
+                username,
+                evaluator_id
+            } = request.body;
+            return db.query("UPDATE evaluator SET username = $1 WHERE evaluator_id = $2;", [username, evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
+        }
+        else {
+            // User is editing personal information
+            let {
+                nickname,
+                email,
+                receive_emails,
+                evaluator_id
+            } = request.body;
+            return db.query("UPDATE evaluator SET nickname = $1, email = $2, receive_emails = $3 WHERE evaluator_id = $4;", [nickname, email, receive_emails, evaluator_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem editing this user");
+                }
+                successMsg(response);
+            });
+        }
+    }
+    else {
+        return handleNext(next, 401, "Unauthorized");
+    }
 }
 
 exports.assignToEvaluatorGroup = (request, response, next) => {

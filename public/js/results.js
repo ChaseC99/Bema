@@ -73,7 +73,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
             evalsPerEvaluatorTableBody.innerHTML += `
             <tr>
                 <td>
-                    ${a.evaluator_name}
+                    ${a.nickname}
                 </td>
                 <td>
                     ${a.eval_count} / ${entriesInGroup}

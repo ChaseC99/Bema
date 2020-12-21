@@ -84,3 +84,29 @@ exports.logout = function(request, response, next) {
     }
     handleNext(next, 401, "You cannot logout if you are not logged in first, silly");
 }
+
+exports.assumeUserIdentity = function(request, response, next) {
+    try {
+        if (request.decodedToken) {
+            let {
+                evaluator_kaid
+            } = request.body;
+
+            if (request.decodedToken.is_admin) {
+                response.clearCookie("jwtToken");
+                createJWTToken(evaluator_kaid)
+                  .then(jwtToken => {
+                      response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 86400000) });
+                      successMsg(response);
+                  })
+                  .catch(err => handleNext(next, 400, err.message));
+            } else {
+                handleNext(next, 403, "Insufficient access");
+            }
+        } else {
+            handleNext(next, 401, "Unauthorized");
+        }
+    } catch (err) {
+        return handleNext(next, 400, "There was a problem assuming this user's identity");
+    }
+}
