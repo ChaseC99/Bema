@@ -13,20 +13,22 @@ let request = (method = "post", path, data, callback) => {
 };
 
 // Dropdown accordion handler
-var collapsables = document.getElementsByClassName("collapsable");
+document.addEventListener("DOMContentLoaded", function(event){
+    var collapsables = document.getElementsByClassName("collapsable");
 
-for (var i = 0; i < collapsables.length; i++) {
-    collapsables[i].addEventListener("click", function() {
-        this.classList.toggle("expanded");
-        var panel = this.nextElementSibling;
-        panel.classList.toggle("closed");
-        if (panel.style.maxHeight) {
-            panel.style.maxHeight = null;
-        } else {
-            panel.style.maxHeight = panel.scrollHeight + "px";
-        }
-    });
-}
+    for (var i = 0; i < collapsables.length; i++) {
+        collapsables[i].addEventListener("click", function() {
+            this.classList.toggle("expanded");
+            var panel = this.nextElementSibling;
+            panel.classList.toggle("closed");
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        });
+    }
+});
 
 // Text editor settings
 var quillOptions = {
