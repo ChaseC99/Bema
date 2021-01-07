@@ -56,41 +56,39 @@ exports.get = (request, response, next) => {
                     });
                 });
             });
-        }
-
-        // Return data fine for public presentation.
-        return db.query(`SELECT REPLACE(z.entry_title,'"','') AS title, z.entry_id, z.entry_author, z.entry_url FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id WHERE x.evaluation_complete AND z.contest_id = $1 GROUP BY (z.entry_title, z.entry_id, z.entry_author, z.entry_url);`, [contest_id], res => {
-            if (res.error) {
-                return handleNext(next, 400, "There was a problem getting the entries for public presentation");
-            }
-            entriesByAvgScore = res.rows;
-
-            // Preferably this pulls every current Councilor from the DB.
-            evaluationsPerEvaluator = [
-                { nickname: 'Evaluator 1', count: '?' },
-                { nickname: 'Evaluator 2', count: '?' },
-                { nickname: 'Evaluator 3', count: '?' },
-                { nickname: 'Evaluator 4', count: '?' },
-                { nickname: 'Evaluator 5', count: '?' }
-            ];
-            entriesPerLevel = [
-                { entry_level: 'Beginner', count: '?' },
-                { entry_level: 'Intermediate', count: '?' },
-                { entry_level: 'Advanced', count: '?' }
-            ];
-            return response.json({
-                logged_in: false,
-                is_admin: false,
-                contest_id,
-                results: {
-                    entriesPerLevel,
-                    entriesByAvgScore,
-                    entryCount,
-                    evaluationsPerEvaluator,
-                    winners
+        } else {
+            // Return data fine for public presentation.
+            return db.query(`SELECT REPLACE(z.entry_title,'"','') AS title, z.entry_id, z.entry_author, z.entry_url FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id WHERE x.evaluation_complete AND z.contest_id = $1 GROUP BY (z.entry_title, z.entry_id, z.entry_author, z.entry_url);`, [contest_id], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the entries for public presentation");
                 }
+                entriesByAvgScore = res.rows;
+
+                evaluationsPerEvaluator = [
+                    { nickname: 'Evaluator 1', eval_count: '?' },
+                    { nickname: 'Evaluator 2', eval_count: '?' },
+                    { nickname: 'Evaluator 3', eval_count: '?' },
+                    { nickname: 'Evaluator 4', eval_count: '?' },
+                    { nickname: 'Evaluator 5', eval_count: '?' }
+                ];
+                entriesPerLevel = [
+                    { entry_level: 'Beginner', count: '?' },
+                    { entry_level: 'Intermediate', count: '?' },
+                    { entry_level: 'Advanced', count: '?' }
+                ];
+                return response.json({
+                    logged_in: false,
+                    is_admin: false,
+                    contest_id,
+                    results: {
+                        entriesPerLevel,
+                        entriesByAvgScore,
+                        evaluationsPerEvaluator,
+                        winners
+                    }
+                });
             });
-        });
+        }
     });
 };
 
