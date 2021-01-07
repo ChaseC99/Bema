@@ -24,12 +24,26 @@
             <div id="view-users-container">
                 <div class="content-header">
                     <h2>Users</h2>
-                    <span id="add-user-btn" class="admin-button" onclick="showAddUserForm()">Add User</span>
+                    <div>
+                        <span id="add-user-btn" class="admin-button" onclick="showAddUserForm()">Add User</span>
+                        <span id="deactivated-users-btn" class="admin-button" onclick="showDeactivatedUsersPage()">View Deactivated Users</span>
+                    </div>
                 </div>
 
                 <div id="users-preview-box" class="previews-container">
                     <!-- Evaluators -->
                     <img id="users-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
+                </div>
+            </div>
+            <div id="view-deactivated-users-container" hidden>
+                <div class="content-header">
+                    <h2>Deactivated Users</h2>
+                    <span id="active-users-btn" class="admin-button" onclick="showActiveUsersPage()">View Active Users</span>
+                </div>
+
+                <div id="deactivated-users-preview-box" class="previews-container">
+                    <!-- Evaluators -->
+                    <img id="deactivated-users-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                 </div>
             </div>
             <div id="edit-user-container">

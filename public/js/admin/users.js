@@ -1,5 +1,7 @@
 let usersSpinner = document.querySelector("#users-spinner");
+let deactivatedUsersSpinner = document.querySelector("#deactivated-users-spinner");
 let usersPreviewBox = document.querySelector("#users-preview-box");
+let deactivatedUsersPreviewBox = document.querySelector("#deactivated-users-preview-box");
 let tab = document.querySelector("#sidebar-users");
 
 // Loads page data
@@ -8,7 +10,9 @@ request("get", "/api/internal/users", null, data => {
         if (data.logged_in) {
             data.evaluators.forEach(c => {
                 usersSpinner.style.display = "none";
-                usersPreviewBox.innerHTML += `
+                deactivatedUsersSpinner.style.display = "none";
+
+                let content = `
                     <div class="user preview col-4 standard">
                         <div class="db-header">
                             <p>
@@ -82,6 +86,12 @@ request("get", "/api/internal/users", null, data => {
                         </div>
                     </div>
                 `;
+
+                if (c.account_locked) {
+                    deactivatedUsersPreviewBox.innerHTML += content;
+                } else {
+                    usersPreviewBox.innerHTML += content;
+                }
             });
         }
     } else {
@@ -156,6 +166,20 @@ let assumeUserIdentity = (evaluator_kaid) => {
 }
 
 // Displays forms
+let showDeactivatedUsersPage = () => {
+    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
+    let viewUsers = document.querySelector("#view-users-container");
+    viewUsers.style.display = "none";
+    deactivatedUsers.style.display = "block";
+};
+
+let showActiveUsersPage = () => {
+    let deactivatedUsers = document.querySelector("#add-user-container");
+    let viewUsers = document.querySelector("#view-users-container");
+    deactivatedUsers.style.display = "none";
+    viewUsers.style.display = "block";
+};
+
 let showAddUserForm = () => {
     let addUser = document.querySelector("#add-user-container");
     let viewUsers = document.querySelector("#view-users-container");
@@ -168,8 +192,10 @@ let showEditUserForm = (...args) => {
     let editUser = document.querySelector("#edit-user-container");
     let viewUsers = document.querySelector("#view-users-container");
     let editUserForm = document.querySelector("#edit-user-form");
+    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
     viewUsers.style.display = "none";
     editUser.style.display = "block";
+    deactivatedUsers.style.display = "none";
 
     // Just need to set values of inputs to provided params.
     for (let i = 0; i < editUserForm.length - 1; i++) {
@@ -183,8 +209,10 @@ let showEditUserForm = (...args) => {
 let showChangePasswordForm = (user_name, evaluator_id) => {
     let changePassword = document.querySelector("#change-password-container");
     let viewUsers = document.querySelector("#view-users-container");
+    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
     viewUsers.style.display = "none";
     changePassword.style.display = "block";
+    deactivatedUsers.style.display = "none";
 
     let title = document.querySelector("#change-password-title");
     title.innerText += (" " + user_name + ":");
