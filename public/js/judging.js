@@ -1,11 +1,6 @@
-let avatars = document.querySelectorAll(".avatar-dancer");
-avatars.forEach(el => {
-    el.style.marginBottom = Math.random()*200 + "px";
-});
-
 let viewerIframe = document.getElementById("entry-viewer-iframe");
 let spinner = document.querySelector(".loading-spinner");
-
+let allJudged = viewerIframe ? false : true;
 let Slider = function({
     title,
     name,
@@ -81,67 +76,80 @@ Slider.prototype.create = function() {
     container.appendChild(ticks);
 };
 
-viewerIframe.addEventListener("load", () => {
-    viewerIframe.style.display = "block";
-    spinner.style.display = "none";
-});
+if (allJudged) {
+    let avatars = document.querySelectorAll(".avatar-dancer");
+    avatars.forEach(el => {
+        el.style.marginBottom = Math.random()*200 + "px";
+    });
 
-// /internal/judging/criteria
-request("get", "/api/internal/judging/criteria", null, data => {
-    console.log(data.judging_criteria);
-    if (!data.error) {
-        let creativitySlider = new Slider({
-            title: data.judging_criteria[0].criteria_name,
-            name: "creativity",
-            description: data.judging_criteria[0].criteria_description,
-            id: "creativity-slider",
-            max: 10,
-            color: "#b9e986",
-            borderColor: "#7ed320",
-            leftLabel: "Unimaginative",
-            rightLabel: "Inventive"
-        });
-        creativitySlider.create();
-        let complexitySlider = new Slider({
-            title: data.judging_criteria[1].criteria_name,
-            name: "complexity",
-            description: data.judging_criteria[1].criteria_description,
-            id: "complexity-slider",
-            max: 10,
-            color: "#c6aef8",
-            borderColor: "#8e5bf4",
-            leftLabel: "Basic",
-            rightLabel: "Elaborate"
-        });
-        complexitySlider.create();
-        let qualityCodeSlider = new Slider({
-            title: data.judging_criteria[2].criteria_name,
-            name: "quality_code",
-            description: data.judging_criteria[2].criteria_description,
-            id: "quality-code-slider",
-            max: 10,
-            color: "#ffc86e",
-            borderColor: "#fea839",
-            leftLabel: "Poor",
-            rightLabel: "Elegant"
-        });
-        qualityCodeSlider.create();
-        let interpretationSlider = new Slider({
-            title: data.judging_criteria[3].criteria_name,
-            name: "interpretation",
-            description: data.judging_criteria[3].criteria_description,
-            id: "interpretation-slider",
-            max: 10,
-            color: "#ed8995",
-            borderColor: "#d0011b",
-            leftLabel: "Unrelated",
-            rightLabel: "Representative"
-        });
-        interpretationSlider.create();
-    } else {
-        alert(data.error.message);
-    }
-});
+    request("get", "/api/internal/contests/getCurrentContest", null, data => {
+        let resultsLink = document.getElementById("results-page-link");
+        resultsLink.setAttribute("href", "/results/" + data.currentContest.contest_id);
+        console.log(resultsLink);
+    });
+} else {
+    viewerIframe.addEventListener("load", () => {
+        viewerIframe.style.display = "block";
+        spinner.style.display = "none";
+    });
+
+    // /internal/judging/criteria
+    request("get", "/api/internal/judging/criteria", null, data => {
+        console.log(data.judging_criteria);
+        if (!data.error) {
+            let creativitySlider = new Slider({
+                title: data.judging_criteria[0].criteria_name,
+                name: "creativity",
+                description: data.judging_criteria[0].criteria_description,
+                id: "creativity-slider",
+                max: 10,
+                color: "#b9e986",
+                borderColor: "#7ed320",
+                leftLabel: "Unimaginative",
+                rightLabel: "Inventive"
+            });
+            creativitySlider.create();
+            let complexitySlider = new Slider({
+                title: data.judging_criteria[1].criteria_name,
+                name: "complexity",
+                description: data.judging_criteria[1].criteria_description,
+                id: "complexity-slider",
+                max: 10,
+                color: "#c6aef8",
+                borderColor: "#8e5bf4",
+                leftLabel: "Basic",
+                rightLabel: "Elaborate"
+            });
+            complexitySlider.create();
+            let qualityCodeSlider = new Slider({
+                title: data.judging_criteria[2].criteria_name,
+                name: "quality_code",
+                description: data.judging_criteria[2].criteria_description,
+                id: "quality-code-slider",
+                max: 10,
+                color: "#ffc86e",
+                borderColor: "#fea839",
+                leftLabel: "Poor",
+                rightLabel: "Elegant"
+            });
+            qualityCodeSlider.create();
+            let interpretationSlider = new Slider({
+                title: data.judging_criteria[3].criteria_name,
+                name: "interpretation",
+                description: data.judging_criteria[3].criteria_description,
+                id: "interpretation-slider",
+                max: 10,
+                color: "#ed8995",
+                borderColor: "#d0011b",
+                leftLabel: "Unrelated",
+                rightLabel: "Representative"
+            });
+            interpretationSlider.create();
+        } else {
+            alert(data.error.message);
+        }
+    });
+}
 
 let submitEvaluation = (e) => {
     e.preventDefault();

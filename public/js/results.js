@@ -65,11 +65,15 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
         evalsPerEvaluatorTable.style.display = "block";
         data.results.evaluationsPerEvaluator.forEach(a => {
             let entriesInGroup;
-            data.results.entriesPerGroup.forEach(c => {
-                if (a.group_id === c.group_id) {
-                    entriesInGroup = c.entry_count;
-                }
-            });
+            if (data.logged_in) {
+                data.results.entriesPerGroup.forEach(c => {
+                    if (a.group_id === c.group_id) {
+                        entriesInGroup = c.entry_count;
+                    }
+                });
+            } else {
+                entriesInGroup = 50;
+            }
             evalsPerEvaluatorTableBody.innerHTML += `
             <tr>
                 <td>
