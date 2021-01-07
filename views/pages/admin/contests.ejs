@@ -33,129 +33,131 @@
                     <img id="contests-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                 </div>
             </div>
-            <div id="edit-contest-container">
-                <div class="content-header">
-                    <h2>Edit Contest</h2>
-                </div>
+            <% if (is_admin) { %>
+                <div id="edit-contest-container" hidden>
+                    <div class="content-header">
+                        <h2>Edit Contest</h2>
+                    </div>
 
-                <form id="edit-contest-form" class="admin-form" onsubmit="return editContest(event)">
-                    <div class='row'>
-                        <div class='col-90'>
-                            <input type='hidden' id='edit_contest_id' name='edit_contest_id'>
+                    <form id="edit-contest-form" class="admin-form" onsubmit="return editContest(event)">
+                        <div class='row'>
+                            <div class='col-90'>
+                                <input type='hidden' id='edit_contest_id' name='edit_contest_id'>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_name">Name</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_name">Name</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_contest_name" name="edit_contest_name">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_contest_name" name="edit_contest_name">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_url">URL</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_contest_url" name="edit_contest_url">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_url">URL</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_author">Author</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_contest_author" name="edit_contest_author">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_contest_url" name="edit_contest_url">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_start_date">Start Date</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_contest_start_date" name="edit_contest_start_date">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_author">Author</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_end_date">End Date</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_contest_end_date" name="edit_contest_end_date">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_contest_author" name="edit_contest_author">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contest_current">Current</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="checkbox" id="edit_contest_current" name="edit_contest_current">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_start_date">Start Date</label>
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_contest_start_date" name="edit_contest_start_date">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_end_date">End Date</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_contest_end_date" name="edit_contest_end_date">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_contest_current">Current</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="checkbox" id="edit_contest_current" name="edit_contest_current">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
-                    </div>
-                </form>
-            </div>
-            <div id="create-contest-container">
-                <div class="content-header">
-                    <h2>Add Contest</h2>
+                    </form>
                 </div>
+                <div id="create-contest-container" hidden>
+                    <div class="content-header">
+                        <h2>Add Contest</h2>
+                    </div>
 
-                <form id="add-contest-form" class="admin-form" onSubmit="return addContest(event)">
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_name">Name</label>
+                    <form id="add-contest-form" class="admin-form" onSubmit="return addContest(event)">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_name">Name</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="contest_name" name="contest_name" value="Contest: ">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="contest_name" name="contest_name" value="Contest: ">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_url">URL</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="contest_url" name="contest_url" placeholder="URL">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_url">URL</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_author">Author</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="contest_author" name="contest_author" placeholder="Name">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="contest_url" name="contest_url" placeholder="URL">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_start_date">Start Date</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="contest_start_date" name="contest_start_date" placeholder="MM-DD-YYYY">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_author">Author</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_end_date">End Date</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="contest_end_date" name="contest_end_date" placeholder="MM-DD-YYYY">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="contest_author" name="contest_author" placeholder="Name">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="contest_current">Current</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="checkbox" id="contest_current" name="contest_current">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_start_date">Start Date</label>
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="contest_start_date" name="contest_start_date" placeholder="MM-DD-YYYY">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_end_date">End Date</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="contest_end_date" name="contest_end_date" placeholder="MM-DD-YYYY">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="contest_current">Current</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="checkbox" id="contest_current" name="contest_current">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            <% } %>
         </div>
     </div>
     <%- include ../../partials/footer %>

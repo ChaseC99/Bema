@@ -174,7 +174,7 @@ let showDeactivatedUsersPage = () => {
 };
 
 let showActiveUsersPage = () => {
-    let deactivatedUsers = document.querySelector("#add-user-container");
+    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
     let viewUsers = document.querySelector("#view-users-container");
     deactivatedUsers.style.display = "none";
     viewUsers.style.display = "block";

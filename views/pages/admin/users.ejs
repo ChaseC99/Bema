@@ -19,7 +19,6 @@
     <div class="page-container">
         <%- include ../../partials/adminSidebar %>
 
-        <% if (is_admin) { %>
         <div class="content-container" id="users-page">
             <div id="view-users-container">
                 <div class="content-header">
@@ -46,7 +45,7 @@
                     <img id="deactivated-users-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                 </div>
             </div>
-            <div id="edit-user-container">
+            <div id="edit-user-container" hidden>
                 <div class="content-header">
                     <h2>Edit User</h2>
                 </div>
@@ -140,7 +139,7 @@
                     </div>
                 </form>
             </div>
-            <div id="add-user-container">
+            <div id="add-user-container" hidden>
                 <div class="content-header">
                     <h2>Add User</h2>
                 </div>
@@ -191,7 +190,7 @@
                     </div>
                 </form>
             </div>
-            <div id="change-password-container">
+            <div id="change-password-container" hidden>
                 <div class="content-header">
                     <h2 id="change-password-title">Change password for </h2>
                 </div>
@@ -211,7 +210,6 @@
                 </form>
             </div>
         </div>
-        <% } %>
     </div>
     <%- include ../../partials/footer %>
 </body>
