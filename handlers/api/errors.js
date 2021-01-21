@@ -3,11 +3,12 @@ const {
     successMsg
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
+const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
 
 exports.get = (request, response, next) => {
     try {
         if (request.decodedToken && request.decodedToken.is_admin) {
-            return db.query("SELECT * FROM error ORDER BY error_id DESC", [], res => {
+            return db.query("SELECT *, to_char(error_tstz, $1) as error_tstz FROM error ORDER BY error_id DESC", [displayFancyDateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting all the logged errors.", res.error);
                 }
