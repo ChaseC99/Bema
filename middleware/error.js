@@ -1,7 +1,7 @@
 const db = require("../util/db");
 
 const errorHandler = (data, request, response, next) => {
-	if (data.status !== 401 && data.status !== 403) {
+	if (data.status !== 401 && data.status !== 403 && data.status !== 404) {
 		return db.query("SELECT log_error($1, $2, $3, $4, $5, $6);", [data.message, data.error.stack, request.decodedToken ? request.decodedToken.evaluator_id : null, request.headers.origin, request.headers.referer, request.headers['user-agent']], res => {
 			return response.status(data.status || 500).json({
 				error: {
