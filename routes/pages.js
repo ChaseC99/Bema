@@ -13,6 +13,7 @@ router.get("/admin/tasks", handlers.adminTasks);
 router.get("/admin/users", handlers.adminUsers);
 router.get("/admin/judging", handlers.adminJudging);
 router.get("/admin/evaluations/:userId/:contestId", handlers.adminEvaluations);
+router.get("/admin/errors", handlers.adminErrors);
 router.get("/kb", handlers.kbHome);
 router.get("/kb/article/:articleId", handlers.kbArticle);
 router.get("/evaluator/:userId", handlers.evaluatorProfile);

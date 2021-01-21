@@ -136,6 +136,18 @@ exports.adminEvaluations = (request, response, next) => {
     }
 }
 
+exports.adminErrors = (request, response, next) => {
+    if (request.decodedToken && request.decodedToken.is_admin) {
+        return response.render("pages/admin/errors", {
+            logged_in: true,
+            is_admin: true,
+            evaluator_id: request.decodedToken.evaluator_id
+        });
+    } else {
+        response.redirect("/admin/dashboard");
+    }
+}
+
 exports.results = (request, response, next) => {
     if (request.decodedToken) {
         return response.render("pages/results", {
