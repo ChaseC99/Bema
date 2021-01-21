@@ -16,6 +16,7 @@ const winners = require(process.cwd() + "/handlers/api/winners");
 const tasks = require(process.cwd() + "/handlers/api/tasks");
 const evaluations = require(process.cwd() + "/handlers/api/evaluations");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
+const errors = require(process.cwd() + "/handlers/api/errors");
 
 const routeChecks = {
 	admin: {
@@ -464,6 +465,13 @@ const routeChecks = {
 			.isInt()
 			.withMessage("article_id must be an integer")
 		]
+	},
+	errors: {
+		delete: [
+			check("error_id")
+			.isInt()
+			.withMessage("error_id must be an integer")
+		]
 	}
 };
 
@@ -555,5 +563,9 @@ router.get("/internal/kb/articles", kb.getArticles);
 router.post("/internal/kb/articles", routeChecks.kb.addArticle, wasValidated, kb.addArticle);
 router.put("/internal/kb/articles", routeChecks.kb.editArticle, wasValidated, kb.editArticle);
 router.delete("/internal/kb/articles", routeChecks.kb.deleteArticle, wasValidated, kb.deleteArticle);
+
+// Errors
+router.get("/internal/errors", errors.get);
+router.delete("/internal/errors", routeChecks.errors.delete, wasValidated, errors.delete);
 
 module.exports = router;
