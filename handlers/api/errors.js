@@ -28,7 +28,7 @@ exports.get = (request, response, next) => {
 
 exports.delete = (request, response, next) => {
     try {
-        let error_id = request.body;
+        let error_id = request.body.error_id;
         if (request.decodedToken && request.decodedToken.is_admin) {
             return db.query("DELETE FROM error WHERE error_id = $1", [error_id], res => {
                 if (res.error) {
