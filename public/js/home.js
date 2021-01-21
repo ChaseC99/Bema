@@ -49,7 +49,7 @@ request("get", "/api/internal/messages", null, (data) => {
             </div>`;
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 // Get tasks for user, load into its container.
@@ -77,7 +77,7 @@ request("get", "/api/internal/tasks/user", null, data => {
             availableTasksSection.style.display = "none";
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -99,7 +99,7 @@ request("get", "/api/internal/tasks/available", null, data => {
             }
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -149,7 +149,7 @@ let editTask = (edit_task_id, edit_task_title, edit_due_date, edit_assigned_memb
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -174,7 +174,7 @@ let addMessage = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -196,7 +196,7 @@ let editMessage = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -211,7 +211,7 @@ let deleteMessage = (message_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -227,7 +227,7 @@ let signUpForTask = (task_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

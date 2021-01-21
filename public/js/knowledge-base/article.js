@@ -33,7 +33,7 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
                 </div>
             `;
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 });
@@ -47,7 +47,7 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             `;
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -68,7 +68,7 @@ let editArticle = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -80,7 +80,7 @@ let deleteArticle = (id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

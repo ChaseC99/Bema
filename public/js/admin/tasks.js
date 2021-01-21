@@ -42,7 +42,7 @@ request("get", "/api/internal/tasks", null, data => {
             });
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -63,7 +63,7 @@ request("get", "/api/internal/users", null, data => {
             });
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -86,7 +86,7 @@ let addTask = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -108,7 +108,7 @@ let editTask = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -121,7 +121,7 @@ let deleteTask = (task_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

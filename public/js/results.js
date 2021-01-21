@@ -42,7 +42,7 @@ request("get", "/api/internal/contests", null, (data) => {
         let navButton = document.querySelector(`#contest-tab-${currentContestId}`);
         navButton.classList.add("selected");
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -147,7 +147,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
             </tr>`;
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -158,7 +158,7 @@ let addWinner = (entry_id) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 };
@@ -173,7 +173,7 @@ let deleteWinner = entry_id => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

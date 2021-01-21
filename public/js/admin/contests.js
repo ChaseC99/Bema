@@ -36,7 +36,7 @@ request("get", "/api/internal/contests", null, (data) => {
             `;
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -56,7 +56,7 @@ let addContest = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -75,7 +75,7 @@ let editContest = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -88,7 +88,7 @@ let deleteContest = (contest_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
