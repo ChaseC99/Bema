@@ -53,3 +53,18 @@ var quillOptions = {
     },
     theme: 'snow'
 };
+
+// Popup modal functions
+let showErrorModal = (error) => {
+    var modal = document.querySelector("#main-modal");
+    var modalHeader = document.querySelector("#main-modal .modal-header");
+    var modalBody = document.querySelector("#main-modal .modal-body");
+    modalHeader.innerHTML += `<h2>Oops! We've encountered an error.</h2>`;
+    modalBody.innerHTML += `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>`;
+    modal.style.display = "block";
+}
+
+let hideModal = (modalId) => {
+    var modal = document.querySelector("#" + modalId);
+    modal.style.display = "none";
+}
