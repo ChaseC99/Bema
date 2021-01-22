@@ -25,7 +25,7 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
             evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 3%">Actions</th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -59,7 +59,7 @@ request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + cur
             evaluationsTable.innerHTML = "<p>This user has not evaluated any entries!</p>";
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -67,7 +67,7 @@ request("get", "/api/internal/users?userId=" + current_evaluator_id, null, (data
     if (!data.error) {
         evaluationsContestName.textContent += `${data.evaluator.nickname}`;
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -111,7 +111,7 @@ request("get", `/api/internal/evaluations?contestId=${current_contest_id}&userId
         });
         evaluationsSpinner.style.display = "none";
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -128,7 +128,7 @@ let editEvaluation = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -142,7 +142,7 @@ let deleteEvaluation = (evaluation_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

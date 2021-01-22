@@ -29,7 +29,7 @@ request("get", "/api/internal/contests", null, (data) => {
         let navButton = document.querySelector(`#contest-tab-${currentContestId}`);
         navButton.classList.add("selected");
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -74,7 +74,7 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
         });
         entriesSpinner.style.display = "none";
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -97,7 +97,7 @@ let editEntry = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -111,7 +111,7 @@ let deleteEntry = (entry_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -121,10 +121,10 @@ const updateEntries = (contest_id) => {
         contest_id
     }, (data) => {
         if (!data.error) {
-            alert(data.message);
+            displayError(data.message);
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 };
@@ -160,7 +160,7 @@ const addEntry = (e) => {
                 if (!data.error) {
                     window.setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    alert(data.error.message);
+                    displayError(data.error);
                 }
             });
         });
@@ -178,7 +178,7 @@ const assignEntries = (contest_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -197,7 +197,7 @@ const assignNewEntries = (contest_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -216,7 +216,7 @@ const transferEntries = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }

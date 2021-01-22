@@ -145,7 +145,7 @@
                 `;
             });
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 
@@ -167,12 +167,12 @@
                         if (!data.error) {
                             window.location.replace("/admin/evaluations/" + body.evaluator_id + "/" + data.currentContest.contest_id);
                         } else {
-                            alert(data.error.message);
+                            displayError(data.error);
                         }
                     });
                 }
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

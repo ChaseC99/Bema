@@ -32,7 +32,7 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             fillSection(s.section_id);
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -51,7 +51,7 @@ let fillSection = (id) => {
                 `;
             });
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -69,7 +69,7 @@ let createSection = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -85,7 +85,7 @@ let editSection = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -99,7 +99,7 @@ let deleteSection = (id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -117,7 +117,7 @@ let createArticle = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }

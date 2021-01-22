@@ -59,7 +59,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
             }
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -70,7 +70,7 @@ request("get", "/api/internal/users/stats?userId="+userId, null, (data) => {
             <p><strong>Total Entries Scored:</strong> ${data.totalEvaluations}</p>
         `;
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -91,7 +91,7 @@ let editPersonalInformation = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -108,7 +108,7 @@ let editLoginInformation = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -125,7 +125,7 @@ let resetPassword = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }

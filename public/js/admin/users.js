@@ -95,7 +95,7 @@ request("get", "/api/internal/users", null, data => {
             });
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -111,7 +111,7 @@ let addUser = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -130,7 +130,7 @@ let editUser = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -145,7 +145,7 @@ let changePassword = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -159,7 +159,7 @@ let assumeUserIdentity = (evaluator_kaid) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

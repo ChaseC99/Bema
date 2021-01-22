@@ -38,7 +38,7 @@ request("get", "/api/internal/entries/flagged", null, data => {
             }
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -89,7 +89,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
             });
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -112,7 +112,7 @@ request("get", "/api/internal/judging/allCriteria", null, data => {
             </tr>`;
         });
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -124,7 +124,7 @@ let approveEntry = (entry_id) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -135,7 +135,7 @@ let disqualifyEntry = (entry_id) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -149,7 +149,7 @@ let deleteEntry = (entry_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -168,7 +168,7 @@ let addEvaluatorGroup = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -189,7 +189,7 @@ let editEvaluatorGroup = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -203,7 +203,7 @@ let deleteEvaluatorGroup = (group_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }
@@ -221,7 +221,7 @@ let assignEvaluatorGroup = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -242,7 +242,7 @@ let addJudgingCriteria = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -263,7 +263,7 @@ let editJudgingCriteria = (e) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert(data.error.message);
+            displayError(data.error);
         }
     });
 }
@@ -277,7 +277,7 @@ let deleteJudgingCriteria = (criteria_id) => {
             if (!data.error) {
                 window.setTimeout(() => window.location.reload(), 1000);
             } else {
-                alert(data.error.message);
+                displayError(data.error);
             }
         });
     }

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Admin | Challenge Council</title>
+    <%- include ../../partials/styles %>
+    <link rel="stylesheet" type="text/css" href="/static/css/admin.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/previews.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/sidebar.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/tables.css">
+</head>
+<body>
+    <%- include ../../partials/header %>
+    <div class="page-container">
+        <%- include ../../partials/adminSidebar %>
+        <div class="content-container" id="errors-page">
+            <div id="view-errors-container">
+                <div class="content-header">
+                    <h2>Errors</h2>
+                </div>
+                <div class="preview col-12 standard">
+                    <div class="db-header">
+                    </div>
+                    <div id="errors-table" class="preview-content">
+                        <table>
+                            <thead>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Message</th>
+                                <th>Actions</th>
+                            </thead>
+                            <tbody id="errors-table-body">
+                                <!-- incomplete tasks -->
+                                <img id="errors-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="content-container" id="detailed-error-page" hidden>
+            <div id="view-detailed-error-container">
+                <div class="content-header" id="detailed-error-header">
+                </div>
+                <div class="preview col-12 standard">
+                    <div class="db-header">
+                    </div>
+                    <div id="detailed-error-container" class="preview-content">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include ../../partials/footer %>
+</body>
+<script src="/static/js/admin/errors.js"></script>
+<script src="/static/js/adminSidebar.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</html>

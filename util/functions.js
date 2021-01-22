@@ -54,10 +54,11 @@ exports.getJWTToken = req => {
 }
 
 // Reduce repeated next() code.
-exports.handleNext = (next, status, message) => {
+exports.handleNext = (next, status, message = "", error = "") => {
     return next({
         status,
-        message
+        message,
+        error
     });
 }
 

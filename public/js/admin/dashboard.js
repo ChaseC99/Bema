@@ -19,7 +19,7 @@ request("get", "/api/internal/admin/stats", null, (data) => {
                 Total Entries: ${data.totalEntriesCount}`;
         }
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 

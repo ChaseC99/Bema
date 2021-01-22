@@ -9,7 +9,7 @@ request("get", "/api/internal/contests/getCurrentContest", null, (data) => {
         entriesTab.href = "/entries/" + data.currentContest.contest_id;
         resultsTab.href = "/results/" + data.currentContest.contest_id;
     } else {
-        alert(data.error.message);
+        displayError(data.error);
     }
 });
 
@@ -25,11 +25,11 @@ request("get", "/api/internal/users/id", null, (d) => {
                         evaluationsTab.href += ("/" + currentContest);
                     }
                 } else {
-                    alert(data.error.message);
+                    displayError(data.error);
                 }
             });
         }
     } else {
-        alert(d.error.message);
+        displayError(d.error.message);
     }
 });

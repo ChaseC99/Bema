@@ -7,8 +7,8 @@ const {
 const db = require(process.cwd() + "/util/db");
 
 exports.submit = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             const {
                 entry_id,
                 creativity,
@@ -24,28 +24,28 @@ exports.submit = (request, response, next) => {
             const values = [entry_id, evaluator_id, (creativity / 2), (complexity / 2), (quality_code / 2), (interpretation / 2), skill_level]
             return db.query("SELECT evaluate($1, $2, $3, $4, $5, $6, $7)", values, res => {
                 if (res.error) {
-                    return handleNext(next, 400, "There was a problem evaluating this entry");
+                    return handleNext(next, 400, "There was a problem evaluating this entry.", res.error);
                 }
                 return db.query("SELECT update_entry_level($1)", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem updating the entry's skill level");
+                        return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
                     }
                     successMsg(response);
                 });
             });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem evaluating this entry");
         }
+        return handleNext(next, 401, "You must log in to submit evaluations.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while evaluating this entry.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.getJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             return db.query("SELECT criteria_name, criteria_description FROM judging_criteria WHERE is_active = true ORDER BY sort_order LIMIT 4", [], res => {
                 if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the judging criteria");
+                    return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
                 }
                 return response.json({
                     logged_in: true,
@@ -53,47 +53,51 @@ exports.getJudgingCriteria = (request, response, next) => {
                     judging_criteria: res.rows
                 });
             });
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem evaluating this entry");
+        } else {
+            return response.json({
+                logged_in: false,
+                is_admin: false,
+                judging_criteria: [
+                    {criteria_name: "CREATIVITY", criteria_description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?"},
+                    {criteria_name: "COMPLEXITY", criteria_description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?"},
+                    {criteria_name: "QUALITY CODE", criteria_description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?"},
+                    {criteria_name: "INTERPRETATION", criteria_description: "Does this program portray the overall theme of the contest?"}
+                ]
+            });
         }
-    } else {
-        return response.json({
-            logged_in: false,
-            is_admin: false,
-            judging_criteria: [
-                {criteria_name: "CREATIVITY", criteria_description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?"},
-                {criteria_name: "COMPLEXITY", criteria_description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?"},
-                {criteria_name: "QUALITY CODE", criteria_description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?"},
-                {criteria_name: "INTERPRETATION", criteria_description: "Does this program portray the overall theme of the contest?"}
-            ]
-        });
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving the judging criteria.", error);
     }
 }
 
 exports.getAllJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the judging criteria");
-                }
-                return response.json({
-                    logged_in: true,
-                    is_admin: true,
-                    judging_criteria: res.rows
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
+                    if (res.error) {
+                        return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: true,
+                        judging_criteria: res.rows
+                    });
                 });
-            });
-        } else {
-            return handleNext(next, 403, "Insufficient access");
+            } else {
+                return handleNext(next, 403, "You're not authorized to access the judging criteria.");
+            }
         }
+        return handleNext(next, 401, "You must log in to access the judging criteria.");
+    } catch (error) {
+        handleNext(next, 500, "Unexpected error while retrieving the judging criteria.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.addJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            try {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_name,
                     criteria_description,
@@ -102,23 +106,23 @@ exports.addJudgingCriteria = (request, response, next) => {
                 } = request.body;
                 return db.query("INSERT INTO judging_criteria (criteria_name, criteria_description, is_active, sort_order) VALUES ($1, $2, $3, $4)", [criteria_name, criteria_description, is_active, sort_order], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem adding this criteria");
+                        return handleNext(next, 400, "There was a problem adding this criterium.", res.error);
                     }
                     successMsg(response);
                 });
-            } catch (err) {
-                return handleNext(next, 400, "There was a problem adding this criteria");
             }
+            return handleNext(next, 403, "You're not authorized to create judging criteria.");
         }
-        handleNext(next, 403, "Insufficient access");
+        return handleNext(next, 401, "You must log in to create judging criteria.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while adding a judging criterium.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.editJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            try {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_id,
                     criteria_name,
@@ -128,39 +132,39 @@ exports.editJudgingCriteria = (request, response, next) => {
                 } = request.body;
                 return db.query("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5", [criteria_name, criteria_description, is_active, sort_order, criteria_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem editing this criteria");
+                        return handleNext(next, 400, "There was a problem editing this criterium.", res.error);
                     }
                     successMsg(response);
                 });
-            } catch (err) {
-                return handleNext(next, 400, "There was a problem editing this criteria");
             }
+            return handleNext(next, 403, "You're not authorized to edit judging criteria.");
         }
-        handleNext(next, 403, "Insufficient access");
+        return handleNext(next, 401, "You must log in to edit judging criteria.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while editing judging criteria.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.deleteJudgingCriteria = (request, response, next) => {
-    if (request.decodedToken) {
-        if (request.decodedToken.is_admin) {
-            try {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_id
                 } = request.body;
                 return db.query("DELETE FROM judging_criteria WHERE criteria_id = $1", [criteria_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem deleting this criteria");
+                        return handleNext(next, 400, "There was a problem deleting this criterium.", res.error);
                     }
                     successMsg(response);
                 });
-            } catch (err) {
-                return handleNext(next, 400, "There was a problem deleting this criteria");
             }
+            return handleNext(next, 403, "You're not authorized to delete judging criteria.");
         }
-        handleNext(next, 403, "Insufficient access");
+        return handleNext(next, 401, "You must log in to delete judging criteria.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while deleting judging criteria.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 

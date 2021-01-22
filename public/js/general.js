@@ -53,3 +53,35 @@ var quillOptions = {
     },
     theme: 'snow'
 };
+
+let displayError = (error) => {
+    if (error.status === 401 || error.status === 403) {
+        showUnautorizedModal(error);
+    } else {
+        showErrorModal(error);
+    }
+}
+
+// Popup modal functions
+let showErrorModal = (error) => {
+    var modal = document.querySelector("#main-modal");
+    var modalHeader = document.querySelector("#main-modal .modal-header");
+    var modalBody = document.querySelector("#main-modal .modal-body");
+    modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>Oops! We've encountered an error.</h2>`;
+    modalBody.innerHTML = `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>`;
+    modal.style.display = "block";
+}
+
+let showUnautorizedModal = (error) => {
+    var modal = document.querySelector("#main-modal");
+    var modalHeader = document.querySelector("#main-modal .modal-header");
+    var modalBody = document.querySelector("#main-modal .modal-body");
+    modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>Unauthorized</h2>`;
+    modalBody.innerHTML = `<p>${error.message}</p>`;
+    modal.style.display = "block";
+}
+
+let hideModal = (modalId) => {
+    var modal = document.querySelector("#" + modalId);
+    modal.style.display = "none";
+}
