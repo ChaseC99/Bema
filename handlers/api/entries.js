@@ -18,7 +18,7 @@ exports.get = (request, response, next) => {
             if (request.decodedToken) {
                 return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem getting the entries");
+                        return handleNext(next, 400, "There was a problem getting the list of entries.", res.error);
                     }
                     return response.json({
                         logged_in: true,
@@ -29,7 +29,7 @@ exports.get = (request, response, next) => {
             }
             return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
                 if (res.error) {
-                    return handleNext(next, 400, "There was a problem getting the entries");
+                    return handleNext(next, 400, "There was a problem getting the list of entries.", res.error);
                 }
                 return response.json({
                     logged_in: false,
@@ -38,9 +38,9 @@ exports.get = (request, response, next) => {
                 });
             });
         }
-        return handleNext(next, 400, "A valid contestId must be specified");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem getting the entries");
+        return handleNext(next, 400, "A valid contestId must be specified.", new Error("contestId is not valid."));
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving the list of entries.", error);
     }
 };
 
@@ -53,7 +53,7 @@ exports.getFlagged = (request, response, next) => {
             if (is_admin) {
                 return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem getting the flagged entries");
+                        return handleNext(next, 500, "There was a problem getting the flagged entries.", res.error);
                     }
                     return response.json({
                         logged_in: true,
@@ -62,12 +62,12 @@ exports.getFlagged = (request, response, next) => {
                     });
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to access the list of flagged entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem getting the flagged entries");
+        return handleNext(next, 401, "You must log in to access the list of flagged entries.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving the list of flagged entries.", error);
     }
 };
 
@@ -92,17 +92,17 @@ exports.add = (request, response, next) => {
             if (is_admin) {
                 return db.query("INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9);", [contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem adding this entry");
+                        return handleNext(next, 400, "There was a problem adding this entry.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to add new entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem adding this entry");
+        return handleNext(next, 401, "You must log in to add new entries.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while adding a new entry.", error);
     }
 }
 
@@ -125,17 +125,17 @@ exports.edit = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET entry_title = $1, entry_author = $2, entry_level = $3, assigned_group_id = $4, flagged = $5, disqualified = $6 WHERE entry_id = $7", [edit_entry_title, edit_entry_author, edit_entry_level, edit_entry_group, edit_flagged, edit_disqualified, edit_entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem editing this entry");
+                        return handleNext(next, 400, "There was a problem editing this entry.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to edit entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem editing this entry");
+        return handleNext(next, 401, "You must log in to edit entries.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while editing an entry.", error);
     }
 }
 
@@ -152,17 +152,17 @@ exports.delete = (request, response, next) => {
             if (is_admin) {
                 return db.query("DELETE FROM entry WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem deleting this entry");
+                        return handleNext(next, 400, "There was a problem deleting this entry.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to delete entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem deleting this entry");
+        return handleNext(next, 401, "You must log in to delete an entry.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while deleting an entry.", error);
     }
 }
 
@@ -174,20 +174,20 @@ exports.import = (request, response, next) => {
 
                 return db.query("SELECT * FROM contest WHERE contest_id = $1", [contest_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem finding this contest");
+                        return handleNext(next, 400, "There was a problem finding this contest.", res.error);
                     }
                     let program_id = res.rows[0].contest_url.split("/")[5];
 
                     return Request(`https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:${program_id}/top-forks?sort=2&page=0&limit=1000`, (err, res, body) => {
                         if (err) {
-                            return handleNext(next, 400, "There was a problem retrieving the contest spin-offs");
+                            return handleNext(next, 500, "There was a problem retrieving the contest spin-offs.", err);
                         }
 
                         let data = JSON.parse(body);
                         if (data) {
                             return db.query("SELECT entry_kaid FROM entry WHERE contest_id = $1", [contest_id], res => {
                                 if (res.error) {
-                                    return handleNext(next, 400, "There was a problem getting the entry IDs for this contest");
+                                    return handleNext(next, 400, "There was a problem getting the entry IDs for this contest.", res.error);
                                 }
                                 let entries = res.rows; // A list of existing entries
 
@@ -235,7 +235,7 @@ exports.import = (request, response, next) => {
                                 if (entryCount > 0) {
                                     return db.query(query, [], res => {
                                         if (res.error) {
-                                            return handleNext(next, 400, "There was a problem inserting the entries");
+                                            return handleNext(next, 400, "There was a problem inserting the entries.", res.error);
                                         }
                                         successMsg(response, entryCount + " entries added");
                                     });
@@ -244,16 +244,16 @@ exports.import = (request, response, next) => {
                                 }
                             });
                         } else {
-                            return handleNext(next, 400, "There is no parsed JSON data");
+                            return handleNext(next, 500, "No spin-off data was returned from Khan Academy.", new Error("No data returned."));
                         }
                     });
                 });
             }
-            return handleNext(next, 403, "Insufficient access");
+            return handleNext(next, 403, "You're not authorized to import entries.");
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem logging the entry data");
+        return handleNext(next, 401, "You must log in to import entries.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while importing entries.", error);
     }
 }
 
@@ -266,14 +266,14 @@ exports.flag = (request, response, next) => {
 
             return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
                 if (res.error) {
-                    return handleNext(next, 400, "There was a problem flagging this entry");
+                    return handleNext(next, 400, "There was a problem flagging this entry.", res.error);
                 }
                 successMsg(response);
             });
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem flagging this entry");
+        return handleNext(next, 401, "You must log in to flag an entry.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while flagging an entry.", error);
     }
 }
 
@@ -291,17 +291,17 @@ exports.disqualify = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET disqualified = true WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem disqualifying this entry");
+                        return handleNext(next, 400, "There was a problem disqualifying this entry.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to disqualify entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem disqualifying this entry");
+        return handleNext(next, 401, "You must log in to disqualify an entry.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while disqualifying an entry.", error);
     }
 }
 
@@ -319,17 +319,17 @@ exports.approve = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET disqualified = false, flagged = false WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem approving this entry");
+                        return handleNext(next, 400, "There was a problem approving this entry.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to approve flagged entries.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem approving this entry");
+        return handleNext(next, 401, "You must log in to approve a flagged entry.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while approving a flagged entry.", error);
     }
 }
 
@@ -348,7 +348,7 @@ exports.assignToGroups = (request, response, next) => {
             if (is_admin) {
                 return db.query("SELECT group_id FROM evaluator_group WHERE is_active = true ORDER BY group_id", [], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem assigning the entries to groups");
+                        return handleNext(next, 500, "There was a problem selecting the evaluator groups.", res.error);
                     }
                     let groups = res.rows;
                     let query;
@@ -360,7 +360,7 @@ exports.assignToGroups = (request, response, next) => {
                     }
                     return db.query(query, [contest_id], res => {
                         if (res.error) {
-                            return handleNext(next, 400, "There was a problem selecting the entries for this contest");
+                            return handleNext(next, 400, "There was a problem selecting the entries for this contest.", res.error);
                         }
                         let entries = res.rows;
 
@@ -371,7 +371,7 @@ exports.assignToGroups = (request, response, next) => {
                             for (var entry = 0 + entriesPerGroup * group; entry < entriesPerGroup * (group + 1); entry++) {
                                 db.query("UPDATE entry SET assigned_group_id = $1 WHERE entry_id = $2", [groups[group].group_id, entries[entry].entry_id], res => {
                                     if (res.error) {
-                                        return handleNext(next, 400, "There was a problem setting this entry's group");
+                                        return handleNext(next, 400, "There was a problem setting an entry's assigned group.", res.error);
                                     }
                                 });
                             }
@@ -381,7 +381,7 @@ exports.assignToGroups = (request, response, next) => {
                         for (var entry = entriesPerGroup * groups.length; entry < entries.length; entry++) {
                             db.query("UPDATE entry SET assigned_group_id = $1 WHERE entry_id = $2", [groups[groups.length - 1].group_id, entries[entry].entry_id], res => {
                                 if (res.error) {
-                                    return handleNext(next, 400, "There was a problem setting this entry's group");
+                                    return handleNext(next, 400, "There was a problem setting an entry's assigned group.", res.error);
                                 }
                             });
                         }
@@ -390,12 +390,12 @@ exports.assignToGroups = (request, response, next) => {
                     });
                 });
             }
-            return handleNext(next, 401, "Unauthorized");
+            return handleNext(next, 403, "You're not authorized to assign entries to groups.");
         } else {
-            return handleNext(next, 403, "Insufficient access");
+            return handleNext(next, 401, "You must log in to assign entries to groups.");
         }
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem assigning the entries to groups");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while assigning entries to groups.", error);
     }
 }
 
@@ -415,17 +415,17 @@ exports.transferEntryGroups = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET assigned_group_id = $1 WHERE assigned_group_id = $2 AND contest_id = $3", [new_entry_group, current_entry_group, contest_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem transfering the entry groups");
+                        return handleNext(next, 400, "There was a problem transfering the entry groups.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to transfer entry groups.");
             }
         }
-        return handleNext(next, 401, "Unauthorized");
-    } catch (err) {
-        return handleNext(next, 400, "There was a problem transfering the entry groups");
+        return handleNext(next, 401, "You must log in to transfer entry groups.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while transferring entry groups.", error);
     }
 }
 

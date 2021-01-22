@@ -7,8 +7,8 @@ const {
 const db = require(process.cwd() + "/util/db");
 
 exports.add = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -19,23 +19,23 @@ exports.add = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET is_winner = true WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem adding this winner");
+                        return handleNext(next, 400, "There was a problem adding this winner.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to add winners.");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem adding this winner");
         }
+        return handleNext(next, 401, "You must log in to add winners.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while adding a winner.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 exports.delete = (request, response, next) => {
-    if (request.decodedToken) {
-        try {
+    try {
+        if (request.decodedToken) {
             let {
                 entry_id
             } = request.body;
@@ -46,18 +46,18 @@ exports.delete = (request, response, next) => {
             if (is_admin) {
                 return db.query("UPDATE entry SET is_winner = false WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem deleting this winner");
+                        return handleNext(next, 400, "There was a problem deleting this winner.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "Insufficient access");
+                return handleNext(next, 403, "You're not authorized to delete winners.");
             }
-        } catch (err) {
-            return handleNext(next, 400, "There was a problem deleting this winner");
         }
+        return handleNext(next, 401, "You must log in to delete winners.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while deleting a winner.", error);
     }
-    return handleNext(next, 401, "Unauthorized");
 }
 
 module.exports = exports;
