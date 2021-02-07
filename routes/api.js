@@ -489,6 +489,7 @@ router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, win
 router.get("/internal/users", users.get);
 router.get("/internal/users/id", users.getId);
 router.get("/internal/users/stats", users.stats);
+router.get("/internal/users/permissions", users.getPermissions);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);

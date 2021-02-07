@@ -252,4 +252,35 @@ exports.assignToEvaluatorGroup = (request, response, next) => {
     }
 }
 
+exports.getPermissions = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            let userId = parseInt(request.query.userId);
+            if (userId > 0) {
+                if (request.decodedToken.is_admin || request.decodedToken.evaluator_id === userId) {
+                    let permissions;
+                    return db.query("SELECT * FROM evaluator_permissions WHERE evaluator_id = $1", [userId], res => {
+                        if (res.error) {
+                            return handleNext(next, 400, "There was a problem getting the user's permissions.", res.error);
+                        }
+                        permissions = res.rows[0];
+                        delete permissions["evaluator_id"];
+
+                        return response.json({
+                            logged_in: request.decodedToken ? true : false,
+                            is_admin: request.decodedToken.is_admin ? true : false,
+                            permissions
+                        });
+                    });
+                }
+                return handleNext(next, 401, "You're not authorized to access this user's permission set.");
+            }
+            return handleNext(next, 400, "A userId must be specified in the request query.", new Error("userId is invalid."));
+        }
+        return handleNext(next, 401, "You must log in to get a user's permissions.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving user permissions.", error);
+    }
+};
+
 module.exports = exports;
