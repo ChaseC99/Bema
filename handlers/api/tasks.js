@@ -6,7 +6,7 @@ const dateFormat = "FMMM-FMDD-YYYY";
 
 exports.get = (request, response, next) => {
     try {
-        if (request.decodedToken && request.decodedToken.is_admin) {
+        if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
             return db.query("SELECT t.task_id, t.task_title, t.task_status, t.assigned_member, evaluator.evaluator_name, to_char(t.due_date, $1) as due_date FROM task t LEFT JOIN evaluator ON t.assigned_member = evaluator.evaluator_id;", [dateFormat], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting all the tasks.", res.error);
@@ -76,7 +76,7 @@ exports.getAvailable = (request, response, next) => {
 exports.add = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.edit_all_tasks || request.decodedToken.is_admin) {
                 let {
                     task_title,
                     due_date,
@@ -116,7 +116,7 @@ exports.edit = (request, response, next) => {
                 }
                 let evaluator_id = res.rows[0].assigned_member;
 
-                if (request.decodedToken.evauator_id = evaluator_id || request.decodedToken.is_admin) {
+                if (request.decodedToken.evauator_id = evaluator_id || request.decodedToken.permissions.edit_all_tasks || request.decodedToken.is_admin) {
                     return db.query("UPDATE task SET task_title = $1, due_date = $2, assigned_member = $3, task_status = $4 WHERE task_id = $5", [edit_task_title, edit_due_date, edit_assigned_member, edit_task_status, edit_task_id], res => {
                         if (res.error) {
                             return handleNext(next, 400, "There was a problem editing this task.", res.error);
@@ -157,7 +157,7 @@ exports.signUpForTask = (request, response, next) => {
 exports.delete = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.delete_all_tasks || request.decodedToken.is_admin) {
                 return db.query("DELETE FROM task WHERE task_id = $1;", [request.body.task_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this task.", res.error);

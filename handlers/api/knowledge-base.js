@@ -95,7 +95,7 @@ exports.addSection = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
                 return db.query("INSERT INTO kb_section (section_name, section_description, section_visibility) VALUES ($1, $2, $3)", [section_name, section_description, section_visibility], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem creating this section.", res.error);
@@ -122,7 +122,7 @@ exports.editSection = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
                 return db.query("UPDATE kb_section SET section_name = $1, section_description = $2, section_visibility = $3 WHERE section_id = $4", [section_name, section_description, section_visibility, section_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this section.", res.error);
@@ -147,7 +147,7 @@ exports.deleteSection = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.delete_kb_content || request.decodedToken.is_admin) {
                 return db.query("DELETE FROM kb_section WHERE section_id = $1", [section_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this section.", res.error);
@@ -230,7 +230,7 @@ exports.addArticle = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
                 return db.query("INSERT INTO kb_article (section_id, article_name, article_content, article_author, article_last_updated, article_visibility) VALUES ($1, $2, $3, $4, $5, $6)", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem creating this article.", res.error);
@@ -259,12 +259,21 @@ exports.editArticle = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
-                return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, is_published, article_id], res => {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+                return db.query("SELECT article_visibility FROM kb_article WHERE article_id = $1", [article_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this article.", res.error);
                     }
-                    successMsg(response);
+                    let current_visibility = res.rows[0].article_visibility;
+
+                    if ((current_visibility === "Public" || current_visibility === "Evaluators Only") || request.decodedToken.is_admin) {
+                        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, request.decodedToken.permissions.publish_kb_content ? is_published : false, article_id], res => {
+                            if (res.error) {
+                                return handleNext(next, 400, "There was a problem editing this article.", res.error);
+                            }
+                            successMsg(response);
+                        });
+                    }
                 });
             } else {
                 return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
@@ -283,7 +292,7 @@ exports.deleteArticle = (request, response, next) => {
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.delete_kb_content || request.decodedToken.is_admin) {
                 return db.query("DELETE FROM kb_article WHERE article_id = $1", [article_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this article.", res.error);

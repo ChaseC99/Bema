@@ -14,7 +14,7 @@ exports.get = (request, response, next) => {
         // Get a specific user's information
         if (userId) {
             // If getting one's own information, or user is an admin, return all user properties except password
-            if (request.decodedToken && (userId === request.decodedToken.evaluator_id || request.decodedToken.is_admin)) {
+            if (request.decodedToken && (userId === request.decodedToken.evaluator_id || request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
                 return db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, to_char(created_tstz, $2) as created_tstz, to_char(logged_in_tstz, $2) as logged_in_tstz, to_char(dt_term_start, $2) as dt_term_start, to_char(dt_term_end, $2) as dt_term_end, account_locked, email, username, nickname, avatar_url, receive_emails, group_id FROM evaluator WHERE evaluator_id = $1", [userId, displayDateFormat], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting this user's information.", res.error);
@@ -46,7 +46,7 @@ exports.get = (request, response, next) => {
             }
         }
         // Get all user information
-        else if (request.decodedToken && request.decodedToken.is_admin) {
+        else if (request.decodedToken && (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
             let evaluators, kaids;
             return db.query("SELECT *, to_char(e.logged_in_tstz, $1) as logged_in_tstz, to_char(e.dt_term_start, $1) as dt_term_start, to_char(e.dt_term_end, $1) as dt_term_end FROM evaluator e ORDER BY evaluator_id ASC;", [displayDateFormat], res => {
                 if (res.error) {
@@ -137,7 +137,7 @@ exports.add = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (is_admin) {
+            if (request.decodedToken.permissions.add_users || is_admin) {
                 return db.query("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5)", [evaluator_name, email, evaluator_kaid, username, date_start], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem adding this user.", res.error);
@@ -161,7 +161,7 @@ exports.add = (request, response, next) => {
 
 exports.edit = (request, response, next) => {
     try {
-        if (request.decodedToken && request.decodedToken.is_admin) {
+        if (request.decodedToken && (request.decodedToken.permissions.edit_user_profiles || request.decodedToken.is_admin)) {
             let edit_evaluator_id = request.body.edit_user_id;
             let edit_evaluator_name = request.body.edit_user_name;
             let edit_evaluator_kaid = request.body.edit_user_kaid;
@@ -240,7 +240,7 @@ exports.assignToEvaluatorGroup = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (is_admin) {
+            if (request.decodedToken.permissions.assign_evaluator_groups || is_admin) {
                 return db.query("UPDATE evaluator SET group_id = $1 WHERE evaluator_id = $2", [group_id, evaluator_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem assigning this user to an evaluator group.", res.error);
