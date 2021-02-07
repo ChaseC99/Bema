@@ -149,7 +149,8 @@ exports.adminErrors = (request, response, next) => {
         return response.render("pages/admin/errors", {
             logged_in: true,
             is_admin: true,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         response.redirect("/admin/dashboard");
@@ -161,7 +162,8 @@ exports.results = (request, response, next) => {
         return response.render("pages/results", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/results", {
@@ -176,7 +178,8 @@ exports.entries = (request, response, next) => {
             logged_in: true,
             contest_id: request.params.contestId,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/entries", {
@@ -190,7 +193,8 @@ exports.kbHome = (request, response, next) => {
         return response.render("pages/knowledge-base/home", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/knowledge-base/home", {
@@ -229,7 +233,8 @@ exports.kbArticle = (request, response, next) => {
                     article_id: articleId,
                     logged_in: true,
                     is_admin: request.decodedToken.is_admin,
-                    evaluator_id: request.decodedToken.evaluator_id
+                    evaluator_id: request.decodedToken.evaluator_id,
+                    permissions: request.decodedToken.permissions
                 });
             }
             response.render("pages/knowledge-base/article", {
@@ -250,7 +255,8 @@ exports.evaluatorProfile = (request, response, next) => {
             evaluator_id: userId,
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/home", {
