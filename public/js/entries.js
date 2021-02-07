@@ -120,7 +120,6 @@ const updateEntries = (contest_id) => {
         contest_id
     }, (data) => {
         if (!data.error) {
-            displayError(data.message);
             window.setTimeout(() => window.location.reload(), 1000);
         } else {
             displayError(data.error);
