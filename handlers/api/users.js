@@ -63,7 +63,7 @@ exports.get = (request, response, next) => {
                 });
             });
         }
-        else if (request.decodedToken && request.decodedToken.permissions.view_all_evaluations) {
+        else if (request.decodedToken && (request.decodedToken.permissions.view_all_evaluations || request.decodedToken.permissions.edit_all_tasks)) {
             let evaluators;
             return db.query("SELECT evaluator_id, evaluator_name, nickname", [], res => {
                 if (res.error) {

@@ -11,7 +11,7 @@ request("get", "/api/internal/admin/stats", null, (data) => {
         yourReviewedEntriesCount.innerText = `${data.yourReviewedEntriesCount} / ${data.groupEntriesCount}`;
         yourGroupTotalEvaluationsCount.innerText = `${data.groupEvaluationsCount} / ${data.groupEntriesCount * data.groupEvaluatorCount}`;
 
-        if (data.is_admin) {
+        if (data.is_admin || permissions.view_admin_stats) {
             totalReviewedEntries.innerText = `${data.totalReviewedEntries} / ${data.totalEntriesCount}`;
             totalEvaluationsCount.innerText = `${data.totalEvaluationsCount} / ${data.totalActiveEvaluators * data.totalEntriesCount}`;
             entryStats.innerText = `Flagged Entries: ${data.totalFlaggedEntries}\n

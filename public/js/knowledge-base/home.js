@@ -15,13 +15,12 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             <div class="preview col-12 standard">
                 <div class="db-header">
                     <p>${s.section_name}</p>
-                    ${data.is_admin
-                        ?`<span class="admin-controls">
-                            <i class="control-btn far fa-edit" onclick="showEditSectionForm(${s.section_id})"></i>
-                            <i class="control-btn red far fa-trash-alt" onclick="deleteSection(${s.section_id})"></i>
-                        </span>`
-                        : ""
-                    }
+                    ${data.is_admin || permissions.edit_kb_content || permissions.delete_kb_content ? `
+                        <span class="admin-controls">
+                            ${permissions.edit_kb_content || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditSectionForm(${s.section_id})"></i>` : ""}
+                            ${permissions.delete_kb_content || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteSection(${s.section_id})"></i>` : ""}
+                        </span>
+                    ` : "" }
                 </div>
                 <div class="preview-content article-section" id="section-${s.section_id}">
                 </div>

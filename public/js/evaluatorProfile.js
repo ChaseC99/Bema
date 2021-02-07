@@ -35,7 +35,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
             <p><strong>Judging Group:</strong> ${data.group_id}</p>
         ` + judgingInformation.innerHTML;
 
-        if (is_self || is_admin) {
+        if (is_self || is_admin || permissions.view_all_users) {
             // Personal Information
             personalInformationSpinner.style.display = "none";
             personalInformation.innerHTML = `

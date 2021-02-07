@@ -63,13 +63,12 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                     ${a.entry_created}
                 </td>
                 ${data.logged_in ? `<td>${a.assigned_group_id ? a.assigned_group_id : "None"}</td>`: ""}
-                ${data.is_admin
-                    ? `<td id="${a.entry_id}-actions">
-                           <i class="control-btn far fa-edit" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified})"></i>
-                           <i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${a.entry_id})"></i>
-                       </td>`
-                    : ""
-                }
+                ${data.is_admin || permissions.edit_entries || permissions.delete_entries? `
+                    <td id="${a.entry_id}-actions">
+                        ${permissions.edit_entries || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified})"></i>` : ""}
+                        ${permissions.delete_entries || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${a.entry_id})"></i>` : ""}
+                     </td>
+                ` : "" }
             </tr>`;
         });
         entriesSpinner.style.display = "none";
