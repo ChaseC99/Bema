@@ -3,7 +3,7 @@ const {
     jsonMessage
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const { displayDateFormat, displayFancyDateFormat } = require(process.cwd() + "/util/variables");
+const { displayDateFormat, displayFancyDateFormat, publicPermissions } = require(process.cwd() + "/util/variables");
 
 exports.home = (request, response, next) => {
     if (request.decodedToken) {
@@ -15,7 +15,8 @@ exports.home = (request, response, next) => {
     }
     response.render("pages/home", {
         logged_in: false,
-        is_admin: false
+        is_admin: false,
+        permissions: publicPermissions
     });
 }
 
@@ -24,7 +25,8 @@ exports.login = (request, response) => {
         return response.redirect("/");
     }
     response.render("pages/login", {
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -49,7 +51,8 @@ exports.judging = (request, response, next) => {
             o_entry_url: 'https://www.khanacademy.org/computer-programming/example-entry/6586620957786112',
             o_entry_title: 'Example entry',
             o_entry_height: 400
-        }
+        },
+        permissions: publicPermissions
     });
 }
 
@@ -64,7 +67,8 @@ exports.adminDashboard = (request, response, next) => {
     } else {
         return response.render("pages/admin/dashboard", {
             logged_in: false,
-            is_admin: false
+            is_admin: false,
+            permissions: publicPermissions
         });
     }
 }
@@ -80,13 +84,14 @@ exports.adminContests = (request, response, next) => {
     } else {
         return response.render("pages/admin/contests", {
             logged_in: false,
-            is_admin: false
+            is_admin: false,
+            permissions: publicPermissions
         });
     }
 }
 
 exports.adminTasks = (request, response, next) => {
-    if (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin) {
+    if (requeset.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
         return response.render("pages/admin/tasks", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
@@ -99,7 +104,7 @@ exports.adminTasks = (request, response, next) => {
 }
 
 exports.adminUsers = (request, response, next) => {
-    if (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
         return response.render("pages/admin/users", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
@@ -112,7 +117,7 @@ exports.adminUsers = (request, response, next) => {
 }
 
 exports.adminJudging = (request, response, next) => {
-    if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin)) {
         return response.render("pages/admin/judging", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
@@ -168,7 +173,8 @@ exports.results = (request, response, next) => {
     }
     response.render("pages/results", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -184,7 +190,8 @@ exports.entries = (request, response, next) => {
     }
     response.render("pages/entries", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -199,7 +206,8 @@ exports.kbHome = (request, response, next) => {
     }
     response.render("pages/knowledge-base/home", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -240,7 +248,8 @@ exports.kbArticle = (request, response, next) => {
             response.render("pages/knowledge-base/article", {
                 article_id: articleId,
                 logged_in: false,
-                is_admin: false
+                is_admin: false,
+                permissions: publicPermissions
             });
         });
     });
@@ -261,7 +270,8 @@ exports.evaluatorProfile = (request, response, next) => {
     }
     response.render("pages/home", {
         logged_in: false,
-        is_admin: false
+        is_admin: false,
+        permissions: publicPermissions
     });
 }
 

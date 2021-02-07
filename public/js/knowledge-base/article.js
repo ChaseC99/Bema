@@ -42,12 +42,14 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
 
 request("get", "/api/internal/kb/sections", null, (data) => {
     if (!data.error) {
-        data.sections.forEach((s, idx) => {
-            // Fill forms with sections
-            editArticleSectionDropdown.innerHTML += `
-                <option value="${s.section_id}">${s.section_name}</option>
-            `;
-        });
+        if (permissions.edit_kb_content || data.is_admin) {
+            data.sections.forEach((s, idx) => {
+                // Fill forms with sections
+                editArticleSectionDropdown.innerHTML += `
+                    <option value="${s.section_id}">${s.section_name}</option>
+                `;
+            });
+        }
     } else {
         displayError(data.error);
     }
