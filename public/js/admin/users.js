@@ -19,16 +19,18 @@ request("get", "/api/internal/users", null, data => {
                                 ${c.evaluator_name}
                             </p>
                             <div class="user-options">
-                                <div class="actions-dropdown">
-                                    <i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>
-                                    <div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">`;
-                                    if (data.is_admin || data.permissions.edit_user_profiles) {
+                                <div class="actions-dropdown">`
+                                    if (data.is_admin || permissions.edit_user_profiles || permissions.change_user_passwords || permissions.assume_user_identities) {
+                                        content += `<i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>`
+                                    }
+                                    content += `<div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">`;
+                                    if (data.is_admin || permissions.edit_user_profiles) {
                                         content += `<a href="#" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit Profile</a>`;
                                     }
-                                    if (data.is_admin || data.permissions.change_user_passwords) {
+                                    if (data.is_admin || permissions.change_user_passwords) {
                                         content += `<a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>`;
                                     }
-                                    if (data.is_admin || data.permissions.assume_user_identities) {
+                                    if (data.is_admin || permissions.assume_user_identities) {
                                         content += `<a href="#" onclick="assumeUserIdentity('${c.evaluator_kaid}')">Assume Identity</a>`;
                                     }
                                     if (data.is_admin) {

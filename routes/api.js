@@ -288,13 +288,7 @@ const routeChecks = {
 				    .withMessage("User name cannot be empty or longer than 200 characters"),
 				    check("edit_user_kaid")
 				    .matches(kaidPattern)
-				    .withMessage("User KAID must have correct format"),
-				    check("edit_user_is_admin")
-				    .isBoolean()
-				    .withMessage("Is admin must be true or false"),
-				    check("edit_user_account_locked")
-				    .isBoolean()
-				    .withMessage("Account locked must be true or false")
+				    .withMessage("User KAID must have correct format")
 				],
 				[
 					check("nickname")
