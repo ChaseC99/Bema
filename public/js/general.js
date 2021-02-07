@@ -12,7 +12,7 @@ let request = (method = "post", path, data, callback) => {
     .catch(err => alert(err)); // Will change later.
 };
 
-// Dropdown accordion handler
+// Accordion handler
 document.addEventListener("DOMContentLoaded", function(event){
     var collapsables = document.getElementsByClassName("collapsable");
 
@@ -29,6 +29,25 @@ document.addEventListener("DOMContentLoaded", function(event){
         });
     }
 });
+
+// Dropdown action menu handler
+let showActionDropdown = (id) => {
+    let dropdownContent = document.getElementById(id);
+    if (dropdownContent.hidden) {
+        dropdownContent.hidden = false;
+    } else {
+        dropdownContent.hidden = true;
+    }
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.actions-dropdown-btn')) {
+    let dropdowns = document.querySelectorAll(".actions-dropdown-content");
+    for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].hidden = true;
+    }
+  }
+}
 
 // Text editor settings
 var quillOptions = {
@@ -78,6 +97,22 @@ let showUnautorizedModal = (error) => {
     var modalBody = document.querySelector("#main-modal .modal-body");
     modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>Unauthorized</h2>`;
     modalBody.innerHTML = `<p>${error.message}</p>`;
+    modal.style.display = "block";
+}
+
+let showConfirmModal = (title, message, action, isDestructive, actionText) => {
+    var modal = document.querySelector("#main-modal");
+    var modalHeader = document.querySelector("#main-modal .modal-header");
+    var modalBody = document.querySelector("#main-modal .modal-body");
+    var modalFooter = document.querySelector("#main-modal .modal-footer");
+    modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>${title}</h2>`;
+    modalBody.innerHTML = `<p>${message}</p>`;
+    modalFooter.innerHTML = `
+    <span>
+        <a href="#" class="btn-tertiary" onclick="hideModal('main-modal')">Cancel</a>
+        <a href="#" class="${isDestructive ? 'btn-destructive-primary' : 'btn-primary'}" onclick=${action}>${actionText}</a>
+    </span>
+    `;
     modal.style.display = "block";
 }
 

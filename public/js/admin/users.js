@@ -19,9 +19,14 @@ request("get", "/api/internal/users", null, data => {
                                 ${c.evaluator_name}
                             </p>
                             <div class="user-options">
-                                <i class="control-btn far fa-edit" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});"></i>
-                                <i class="control-btn fas fa-key" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})"></i>
-                                <i class="control-btn fas fa-user" onclick="assumeUserIdentity('${c.evaluator_kaid}')"></i>
+                                <div class="actions-dropdown">
+                                    <i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>
+                                    <div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">
+                                        <a href="#" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit</a>
+                                        <a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>
+                                        <a href="#" onclick="assumeUserIdentity('${c.evaluator_kaid}')">Assume Identity</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="preview-content">
