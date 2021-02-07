@@ -142,7 +142,12 @@ exports.add = (request, response, next) => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem adding this user.", res.error);
                     }
-                    successMsg(response);
+                    return db.query("INSERT INTO evaluator_permissions (evaluator_id, judge_entries) VALUES ($1, true)", [evaluator_id], res => {
+                        if (res.error) {
+                            return handleNext(next, 400, "There was a problem adding this user's default permissions.", res.error);
+                        }
+                        successMsg(response);
+                    });
                 });
             } else {
                 return handleNext(next, 403, "You're not authorized to create new users.");
