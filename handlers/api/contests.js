@@ -31,7 +31,7 @@ exports.getCurrentContest = (request, response, next) => {
             }
             response.json({
                 logged_in: true,
-                is_admin: request.decodedToken.is_admin,
+                is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
                 currentContest: res.rows[0]
             });
         });
