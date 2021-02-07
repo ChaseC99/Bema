@@ -63,6 +63,20 @@ exports.get = (request, response, next) => {
                 });
             });
         }
+        else if (request.decodedToken && request.decodedToken.permissions.view_all_evaluations) {
+            let evaluators;
+            return db.query("SELECT evaluator_id, evaluator_name, nickname", [], res => {
+                if (res.error) {
+                    return handleNext(next, 400, "There was a problem getting the list of users.", res.error);
+                }
+                evaluators = res.rows;
+                return response.json({
+                    logged_in: true,
+                    is_admin: request.decodedToken.is_admin,
+                    evaluators
+                });
+            });
+        }
         response.json({
             is_admin: false
         });
