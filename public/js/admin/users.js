@@ -21,11 +21,20 @@ request("get", "/api/internal/users", null, data => {
                             <div class="user-options">
                                 <div class="actions-dropdown">
                                     <i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>
-                                    <div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">
-                                        <a href="#" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit</a>
-                                        <a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>
-                                        <a href="#" onclick="assumeUserIdentity('${c.evaluator_kaid}')">Assume Identity</a>
-                                    </div>
+                                    <div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">`;
+                                    if (data.is_admin || data.permissions.edit_user_profiles) {
+                                        content += `<a href="#" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit Profile</a>`;
+                                    }
+                                    if (data.is_admin || data.permissions.change_user_passwords) {
+                                        content += `<a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>`;
+                                    }
+                                    if (data.is_admin || data.permissions.assume_user_identities) {
+                                        content += `<a href="#" onclick="assumeUserIdentity('${c.evaluator_kaid}')">Assume Identity</a>`;
+                                    }
+                                    if (data.is_admin) {
+                                        content += `<a href="#" onclick="showEditUserPermissionsForm('${c.evaluator_id}')">Edit Permissions</a>`;
+                                    }
+                    content += `    </div>
                                 </div>
                             </div>
                         </div>
@@ -139,6 +148,25 @@ let editUser = (e) => {
         }
     });
 }
+let editUserPermissions = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        if (key.name === "evaluator_id") {
+            body[key.name] = key.value;
+        } else {
+            body[key.name] = key.checked;
+        }
+    }
+    delete body[""];
+    request("put", "/api/internal/users/permissions", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
+}
 let changePassword = (e) => {
     e.preventDefault();
     let evaluator_id = e.target[0].value;
@@ -210,6 +238,29 @@ let showEditUserForm = (...args) => {
             editUserForm[i].value = args[i];
         }
     }
+};
+let showEditUserPermissionsForm = (evaluator_id) => {
+    let editUser = document.querySelector("#edit-user-permissions-container");
+    let viewUsers = document.querySelector("#view-users-container");
+    let editUserForm = document.querySelector("#edit-user-permissions-form");
+    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
+    viewUsers.style.display = "none";
+    editUser.style.display = "block";
+    deactivatedUsers.style.display = "none";
+
+    request("get", "/api/internal/users/permissions?userId="+evaluator_id, null, (data) => {
+        if (!data.error) {
+            let keys = Object.keys(data.permissions);
+            for (let i = 0; i < keys.length; i++) {
+                if (data.permissions[keys[i]]) {
+                    editUserForm[keys[i]].checked = true;
+                }
+            }
+            editUserForm["evaluator_id"].value = evaluator_id;
+        } else {
+            displayError(data.error);
+        }
+    });
 };
 let showChangePasswordForm = (user_name, evaluator_id) => {
     let changePassword = document.querySelector("#change-password-container");
