@@ -38,7 +38,9 @@
                                 <th style="width: 10%">Due Date</th>
                                 <th style="width: 10%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="incomplete-tasks-table-body">
                                 <!-- incomplete tasks -->
@@ -57,7 +59,9 @@
                                 <th style="width: 10%">Due Date</th>
                                 <th style="width: 10%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="completed-tasks-table-body">
                                 <!-- completed tasks -->

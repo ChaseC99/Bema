@@ -80,7 +80,7 @@ exports.getAllJudgingCriteria = (request, response, next) => {
                     }
                     return response.json({
                         logged_in: true,
-                        is_admin: true,
+                        is_admin: request.decodedToken.is_admin,
                         judging_criteria: res.rows
                     });
                 });

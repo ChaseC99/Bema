@@ -65,7 +65,7 @@ exports.get = (request, response, next) => {
         }
         else if (request.decodedToken && (request.decodedToken.permissions.view_all_evaluations || request.decodedToken.permissions.edit_all_tasks)) {
             let evaluators;
-            return db.query("SELECT evaluator_id, evaluator_name, nickname", [], res => {
+            return db.query("SELECT evaluator_id, evaluator_name, nickname FROM evaluator", [], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting the list of users.", res.error);
                 }
@@ -184,8 +184,8 @@ exports.edit = (request, response, next) => {
             let edit_evaluator_email = request.body.edit_user_email;
             let edit_evaluator_start = request.body.edit_user_start;
             let edit_evaluator_end = request.body.edit_user_end;
-            let edit_is_admin = request.body.edit_user_is_admin;
-            let edit_user_account_locked = request.body.edit_user_account_locked;
+            let edit_is_admin = request.decodedToken.is_admin ? request.body.edit_user_is_admin : false;
+            let edit_user_account_locked = request.decodedToken.is_admin ? request.body.edit_user_account_locked : false;
             let edit_user_receive_emails = request.body.edit_user_receive_emails;
 
             // Handle null dates
@@ -198,12 +198,21 @@ exports.edit = (request, response, next) => {
                 edit_evaluator_end = null;
             }
 
-            return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
-                if (res.error) {
-                    return handleNext(next, 400, "There was a problem editing this user.", res.error);
-                }
-                successMsg(response);
-            });
+            if (request.decodedToken.is_admin) {
+                return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, account_locked = $8, is_admin = $9, receive_emails = $10 WHERE evaluator_id = $11;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_account_locked, edit_is_admin, edit_user_receive_emails, edit_evaluator_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem editing this user.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return db.query("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, username = $3, nickname = $4, email = $5, dt_term_start = $6, dt_term_end = $7, receive_emails = $8 WHERE evaluator_id = $9;", [edit_evaluator_name, edit_evaluator_kaid, edit_evaluator_username, edit_evaluator_nickname, edit_evaluator_email, edit_evaluator_start, edit_evaluator_end, edit_user_receive_emails, edit_evaluator_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem editing this user.", res.error);
+                    }
+                    successMsg(response);
+                });
+            }
         }
         else if (request.decodedToken && request.body.evaluator_id === request.decodedToken.evaluator_id) {
             if (request.body.username) {

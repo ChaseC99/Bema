@@ -28,13 +28,15 @@ request("get", "/api/internal/entries/flagged", null, data => {
                         <td><a href="${e.entry_url}" target="_blank">${e.entry_title}</a></td>
                         <td>${e.entry_author}</td>
                         <td>${e.entry_created}</td>
-                        <td id="${e.entry_id}-actions" class="flagged-entry-actions">
-                            ${permissions.edit_entries || data.is_admin ? `
-                                <i class="control-btn fas fa-check green" onclick="approveEntry(${e.entry_id})" title="Approve"></i>
-                                <i class="control-btn fas fa-ban red" onclick="disqualifyEntry(${e.entry_id})" title="Disqualify"></i>`
-                            : ""}
-                            ${permissions.delete_entries || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${e.entry_id})" title="Delete"></i>` : ""}
-                        </td>
+                        ${permissions.edit_entries || permissions.delete_entries || data.is_admin ? `
+                            <td id="${e.entry_id}-actions" class="flagged-entry-actions">
+                                ${permissions.edit_entries || data.is_admin ? `
+                                    <i class="control-btn fas fa-check green" onclick="approveEntry(${e.entry_id})" title="Approve"></i>
+                                    <i class="control-btn fas fa-ban red" onclick="disqualifyEntry(${e.entry_id})" title="Disqualify"></i>`
+                                    : ""}
+                                    ${permissions.delete_entries || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${e.entry_id})" title="Delete"></i>` : ""}
+                            </td>`
+                        : ""}
                     </tr>`;
                 });
             }
@@ -66,7 +68,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                         : ""}
                     </tr>`;
 
-                    if (g.is_active) {
+                    if (g.is_active && permissions.assign_evaluator_groups) {
                         assignedGroupsList.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
                     }
                 });
@@ -85,10 +87,12 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                 <tr>
                     <td>${e.evaluator_id}</td>
                     <td>${e.evaluator_name}</td>
-                    <td>${e.group_id}${groupName}</td>
-                    <td class="judging-group-actions">
-                    ${permissions.assign_evaluator_groups || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id})" title="Edit"></i>` : ""}
-                    </td>
+                    <td>${e.group_id ? e.group_id : "None"}${groupName}</td>
+                    ${permissions.assign_evaluator_groups || data.is_admin ? `
+                        <td class="judging-group-actions">
+                            <i class="control-btn far fa-edit" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id})" title="Edit"></i>
+                        </td>
+                    ` : ""}
                 </tr>`;
             });
         }

@@ -48,7 +48,7 @@ request("get", "/api/internal/tasks", null, data => {
 
 request("get", "/api/internal/users", null, data => {
     if (!data.error) {
-        if (data.logged_in) {
+        if (data.is_admin || permissions.edit_all_tasks) {
             data.evaluators.forEach(c => {
                 taskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `

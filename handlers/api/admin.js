@@ -170,7 +170,7 @@ exports.stats = (request, response, next) => {
 exports.getEvaluatorGroups = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.permissions.assign_entry_groups || request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.permissions.edit_entries || request.decodedToken.permissions.assign_entry_groups || request.decodedToken.is_admin) {
                 return db.query("SELECT * FROM evaluator_group ORDER BY group_id", [], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem getting the evaluator groups", res.error);
@@ -184,7 +184,7 @@ exports.getEvaluatorGroups = (request, response, next) => {
                             logged_in: true,
                             is_admin: request.decodedToken.is_admin,
                             evaluatorGroups: evaluatorGroups,
-                            evaluators: res.rows
+                            evaluators: request.decodedToken.permissions.view_judging_settings ? res.rows : null
                         });
                     });
                 });

@@ -56,7 +56,7 @@
                                 <% if (logged_in) { %>
                                 <th style="width: 5%">Group</th>
                                 <% } %>
-                                <% if (is_admin) { %>
+                                <% if (is_admin || permissions.edit_entries || permissions.delete_entries) { %>
                                 <th style="width: 3%">Actions</th>
                                 <% } %>
                             </thead>
@@ -222,22 +222,24 @@
     <%- include ../partials/footer %>
 </body>
 <script src="/static/js/entries.js"></script>
-<% if (permissions.assign_entry_groups || is_admin) { %>
+<% if (permissions.assign_entry_groups || permissions.edit_entries || is_admin) { %>
     <script>
         let groupDropdown = document.querySelector("#assigned-group-dropdown");
         let currentGroupDropdown = document.querySelector("#current-group-dropdown");
         let newGroupDropdown = document.querySelector("#new-group-dropdown");
         request("get", "/api/internal/admin/getEvaluatorGroups", null, (data) => {
             if (!data.error) {
-                if (data.is_admin) {
-                    data.evaluatorGroups.forEach(g => {
-                        if (g.is_active) {
+                data.evaluatorGroups.forEach(g => {
+                    if (g.is_active) {
+                        if (permissions.edit_entries || data.is_admin) {
                             groupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
+                        }
+                        if (permissions.assign_entry_groups || data.is_admin) {
                             currentGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
                             newGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
                         }
-                    });
-                }
+                    }
+                });
             } else {
                 displayError(data.error);
             }

@@ -91,7 +91,7 @@ exports.adminContests = (request, response, next) => {
 }
 
 exports.adminTasks = (request, response, next) => {
-    if (requeset.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
         return response.render("pages/admin/tasks", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
@@ -232,7 +232,7 @@ exports.kbArticle = (request, response, next) => {
 
             if ((!request.decodedToken && res.rows[0].article_visibility !== "Public") ||
                 (!is_admin && res.rows[0].article_visibility === "Admins Only") ||
-                (!is_admin && !res.rows[0].is_published)) {
+                (!is_admin && !request.decodedToken.permissions.edit_kb_content && !res.rows[0].is_published)) {
                 response.redirect("/kb");
             }
 

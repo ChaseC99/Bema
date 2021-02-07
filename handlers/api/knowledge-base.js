@@ -177,6 +177,10 @@ exports.getArticles = (request, response, next) => {
                 // If user is admin, return all articles in the section_name
                 query = "SELECT * FROM kb_article WHERE section_id = $1 ORDER BY article_name";
             }
+            else if (request.decodedToken && !is_admin && request.decodedToken.permissions.edit_kb_content) {
+                // If user is evaluator, but not an admin, return all articles that are public or restricted to evaluators
+                query = "SELECT * FROM kb_article WHERE (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND section_id = $1 ORDER BY article_name";
+            }
             else if (request.decodedToken && !is_admin) {
                 // If user is evaluator, but not an admin, return all articles that are public or restricted to evaluators
                 query = "SELECT * FROM kb_article WHERE (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND section_id = $1 AND is_published = true ORDER BY article_name";
@@ -267,7 +271,7 @@ exports.editArticle = (request, response, next) => {
                     let current_visibility = res.rows[0].article_visibility;
 
                     if ((current_visibility === "Public" || current_visibility === "Evaluators Only") || request.decodedToken.is_admin) {
-                        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, request.decodedToken.permissions.publish_kb_content ? is_published : false, article_id], res => {
+                        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin ? is_published : false, article_id], res => {
                             if (res.error) {
                                 return handleNext(next, 400, "There was a problem editing this article.", res.error);
                             }

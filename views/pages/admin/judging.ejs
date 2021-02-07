@@ -36,7 +36,9 @@
                                 <th style="width: 10%">Name</th>
                                 <th style="width: 10%">Author</th>
                                 <th style="width: 10%">Created</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.edit_entries || permissions.delete_entries || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="flagged-entries-table-body">
                                 <!-- flagged entries -->
@@ -58,7 +60,9 @@
                                 <th style="width: 10%">Group ID</th>
                                 <th style="width: 70%">Group Name</th>
                                 <th style="width: 10%">Status</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.manage_judging_groups || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="judging-groups-table-body">
                                 <!-- judging groups -->
@@ -77,7 +81,9 @@
                                 <th style="width: 10%">Evaluator ID</th>
                                 <th style="width: 40%">Evaluator Name</th>
                                 <th style="width: 40%">Assigned Group</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.assign_evaluator_groups || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="assigned-groups-table-body">
                                 <!-- assigned evaluator groups -->
@@ -101,7 +107,9 @@
                                 <th style="width: 40%">Description</th>
                                 <th style="width: 10%">Active</th>
                                 <th style="width: 10%">Sort Order</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.manage_judging_criteria || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="judging-criteria-table-body">
                                 <!-- judging criteria -->
