@@ -5,8 +5,9 @@ exports.createJWTToken = (kaid) => {
     return new Promise((resolve, reject) => {
         db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, account_locked, email, username, nickname, avatar_url FROM evaluator WHERE evaluator_kaid = $1", [kaid], result => {
             if (result.error) {
-                throw new Error("There was a problem while searching for this evaluator_kaid, please try again");
+                throw new Error("There was a problem while searching for this evaluator_kaid, please try again.");
             }
+
             let {
                 evaluator_id,
                 evaluator_name,
@@ -18,18 +19,28 @@ exports.createJWTToken = (kaid) => {
                 nickname,
                 avatarUrl
             } = result.rows[0];
-            let jwtToken = jwt.sign({
-                evaluator_id,
-                evaluator_name,
-                evaluator_kaid,
-                is_admin,
-                account_locked,
-                email,
-                username,
-                nickname,
-                avatarUrl
-            }, process.env.SECRET_KEY);
-            resolve(jwtToken);
+
+            db.query("SELECT * FROM evaluator_permissions WHERE evaluator_id = $1", [evaluator_id], result => {
+                if (result.error) {
+                    throw new Error("There was a problem while getting this user's permissions.");
+                }
+                let permissions = result.rows[0];
+                delete permissions.evaluator_id;
+
+                let jwtToken = jwt.sign({
+                    evaluator_id,
+                    evaluator_name,
+                    evaluator_kaid,
+                    is_admin,
+                    account_locked,
+                    email,
+                    username,
+                    nickname,
+                    avatarUrl,
+                    permissions
+                }, process.env.SECRET_KEY);
+                resolve(jwtToken);
+            });
         });
     });
 }
