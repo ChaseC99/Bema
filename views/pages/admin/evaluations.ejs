@@ -27,7 +27,7 @@
                     <img id="title-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
                     <!-- contest name -->
                 </h2>
-                <% if (is_admin) { %>
+                <% if (is_admin || permissions.view_all_evaluations) { %>
                     <form id="select-user-form" onsubmit="return changeUser(event)">
                         <select id="user-selection-dropdown" name="evaluator_id">
 
@@ -132,7 +132,7 @@
     <%- include ../../partials/footer %>
 </body>
 <script src="/static/js/admin/evaluations.js"></script>
-<% if (is_admin) { %>
+<% if (is_admin || permissions.view_all_evaluations) { %>
     <script>
     let userDropdown = document.getElementById("user-selection-dropdown");
     request("get", "/api/internal/users", null, data => {

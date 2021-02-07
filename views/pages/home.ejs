@@ -45,124 +45,126 @@
                 </section>
             <% } %>
             <section id="message-section">
-                <div id="create-message-container">
-                    <div class="message-form-heading">
-                        <h2>New Announcement:</h2>
-                    </div>
-                    <form id='create-message-form' class="admin-form" onSubmit="return addMessage(event)">
-                        <div class='row'>
-                            <div class='col-90'>
-                                <input type='text' id='new_message_date' class="form-input datepicker" name='message_date' hidden>
-                            </div>
+                <% if (permissions.manage_announcements || is_admin) { %>
+                    <div id="create-message-container">
+                        <div class="message-form-heading">
+                            <h2>New Announcement:</h2>
                         </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='new_message_title'>Announcement Title</label>
-                            </div>
-                            <div class='col-90'>
-                                <input type='text' id='new_message_title' class="form-input" name='message_title'>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='new_message_content'>Message</label>
-                            </div>
-                            <div  class="text-editor">
-                                <div id="new-announcement-editor">
+                        <form id='create-message-form' class="admin-form" onSubmit="return addMessage(event)">
+                            <div class='row'>
+                                <div class='col-90'>
+                                    <input type='text' id='new_message_date' class="form-input datepicker" name='message_date' hidden>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="new_public">Public</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="checkbox" id="new_public" name="public">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="new_send_email">Send Email</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="checkbox" id="new_send_email" name="send_email">
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='new_email_address'>Your Email</label>
-                            </div>
-                            <div class='col-90'>
-                                <input type='text' id='new_email_address' class="form-input" name='email_address'>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='new_password'>Password</label>
-                            </div>
-                            <div class='col-90'>
-                                <input type='password' id='new_password' class="form-input" name='password'>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <input class="admin-button" type='submit' value='Save'>
-                        </div>
-                    </form>
-                </div>
-                <div id="edit-message-container">
-                    <div class='message-form-heading'>
-                        <h2>Edit Announcement:</h2>
-                    </div>
-                    <form id='edit-message-form' class="admin-form" onSubmit="return editMessage(event)">
-                        <div class='row'>
-                            <div class='col-10'>
-                                <input type='hidden' id='edit_message_id' name='message_id'>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='edit_message_date'>Date</label>
-                            </div>
-                            <div class='col-90'>
-                                <input type='text' id='edit_message_date' class="form-input datepicker" name='message_date' placeholder='MM-DD-YYYY' required>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='edit_message_title'>Title</label>
-                            </div>
-                            <div class='col-90'>
-                                <input type='text' id='edit_message_title' class="form-input" name='message_title'>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <div class='col-10'>
-                                <label for='edit_message_content'>Message</label>
-                            </div>
-                            <div  class="text-editor">
-                                <div id="edit-announcement-editor">
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='new_message_title'>Announcement Title</label>
+                                </div>
+                                <div class='col-90'>
+                                    <input type='text' id='new_message_title' class="form-input" name='message_title'>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="edit_public">Make Public</label>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='new_message_content'>Message</label>
+                                </div>
+                                <div  class="text-editor">
+                                    <div id="new-announcement-editor">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-90">
-                                <input class="form-input" type="checkbox" id="edit_public" name="public">
+                            <div class="row">
+                                <div class="col-10">
+                                    <label for="new_public">Public</label>
+                                </div>
+                                <div class="col-90">
+                                    <input class="form-input" type="checkbox" id="new_public" name="public">
+                                </div>
                             </div>
+                            <div class="row">
+                                <div class="col-10">
+                                    <label for="new_send_email">Send Email</label>
+                                </div>
+                                <div class="col-90">
+                                    <input class="form-input" type="checkbox" id="new_send_email" name="send_email">
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='new_email_address'>Your Email</label>
+                                </div>
+                                <div class='col-90'>
+                                    <input type='text' id='new_email_address' class="form-input" name='email_address'>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='new_password'>Password</label>
+                                </div>
+                                <div class='col-90'>
+                                    <input type='password' id='new_password' class="form-input" name='password'>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <input class="admin-button" type='submit' value='Save'>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="edit-message-container">
+                        <div class='message-form-heading'>
+                            <h2>Edit Announcement:</h2>
                         </div>
-                        <div class='row'>
-                            <input type='submit' class="admin-button" value='Save'>
-                        </div>
-                    </form>
-                </div>
+                        <form id='edit-message-form' class="admin-form" onSubmit="return editMessage(event)">
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <input type='hidden' id='edit_message_id' name='message_id'>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='edit_message_date'>Date</label>
+                                </div>
+                                <div class='col-90'>
+                                    <input type='text' id='edit_message_date' class="form-input datepicker" name='message_date' placeholder='MM-DD-YYYY' required>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='edit_message_title'>Title</label>
+                                </div>
+                                <div class='col-90'>
+                                    <input type='text' id='edit_message_title' class="form-input" name='message_title'>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-10'>
+                                    <label for='edit_message_content'>Message</label>
+                                </div>
+                                <div  class="text-editor">
+                                    <div id="edit-announcement-editor">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-10">
+                                    <label for="edit_public">Make Public</label>
+                                </div>
+                                <div class="col-90">
+                                    <input class="form-input" type="checkbox" id="edit_public" name="public">
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <input type='submit' class="admin-button" value='Save'>
+                            </div>
+                        </form>
+                    </div>
+                <% } %>
                 <div id="view-messages-container">
                     <div class="previews-container">
                         <div class="preview col-12 standard">
                             <div class="db-header">
                                 <p>Announcements</p>
-                                <%if (is_admin) { %>
+                                <% if (permissions.manage_announcements || is_admin) { %>
                                     <p class="admin-button" onclick="showCreateMessageForm()">New Announcement</p>
                                 <% } %>
                             </div>
