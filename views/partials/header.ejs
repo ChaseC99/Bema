@@ -15,11 +15,9 @@
 				<span>
 					<a href="/admin/dashboard">Admin</a>
 				</span>
-				<% if (permissions.judge_entries) { %>
-					<span>
-						<a href="/judging">Judge</a>
-					</span>
-				<% } %>
+				<span>
+					<a href="/judging">Judge</a>
+				</span>
 				<span>
 					<a href="/kb">Resources</a>
 				</span>
@@ -43,13 +41,12 @@
 </div>
 <div id="main-modal" class="modal">
 	<div class="modal-content">
-		<div class="modal-header"></div>
-		<div class="modal-body"></div>
-		<div class="modal-footer"></div>
+		<div class="modal-header">
+      		
+    	</div>
+		<div class="modal-body">
+		</div>
   </div>
 </div>
 <script src="/static/js/general.js"></script>
 <script src="/static/js/header.js"></script>
-<script>
-	let permissions = <%- JSON.stringify(permissions) %>
-</script>

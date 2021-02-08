@@ -54,7 +54,7 @@ exports.add = (request, response, next) => {
                 evaluator_name
             } = request.decodedToken;
 
-            if (request.decodedToken.permissions.manage_announcements || is_admin) {
+            if (is_admin) {
 
                 return db.query("INSERT INTO messages (message_author, message_date, message_title, message_content, public) VALUES ($1, $2, $3, $4, $5);", [evaluator_name, message_date, message_title, message_content, public], res => {
                     if (res.error) {
@@ -128,7 +128,7 @@ exports.edit = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (request.decodedToken.permissions.manage_announcements || is_admin) {
+            if (is_admin) {
                 return db.query("UPDATE messages SET message_date = $1, message_title = $2, message_content = $3, public = $4 WHERE message_id = $5", [message_date, message_title, message_content, public, message_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this message.", res.error);
@@ -155,7 +155,7 @@ exports.delete = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (request.decodedToken.permissions.manage_announcements || is_admin) {
+            if (is_admin) {
                 return db.query("DELETE FROM messages WHERE message_id = $1", [message_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this message.");

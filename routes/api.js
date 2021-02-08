@@ -288,7 +288,13 @@ const routeChecks = {
 				    .withMessage("User name cannot be empty or longer than 200 characters"),
 				    check("edit_user_kaid")
 				    .matches(kaidPattern)
-				    .withMessage("User KAID must have correct format")
+				    .withMessage("User KAID must have correct format"),
+				    check("edit_user_is_admin")
+				    .isBoolean()
+				    .withMessage("Is admin must be true or false"),
+				    check("edit_user_account_locked")
+				    .isBoolean()
+				    .withMessage("Account locked must be true or false")
 				],
 				[
 					check("nickname")
@@ -307,101 +313,6 @@ const routeChecks = {
 					.withMessage("username is invalid")
 				]
 			])
-		],
-		editPermissions: [
-			check("evaluator_id")
-			.isInt()
-			.withMessage("evaluator_id must be an integer"),
-			check("view_admin_stats")
-			.isBoolean()
-			.withMessage("view_admin_stats must be a boolean"),
-			check("edit_contests")
-			.isBoolean()
-			.withMessage("edit_contests must be a boolean"),
-			check("delete_contests")
-			.isBoolean()
-			.withMessage("delete_contests must be a boolean"),
-			check("edit_entries")
-			.isBoolean()
-			.withMessage("edit_entries must be a boolean"),
-			check("delete_entries")
-			.isBoolean()
-			.withMessage("delete_entries must be a boolean"),
-			check("add_entries")
-			.isBoolean()
-			.withMessage("add_entries must be a boolean"),
-			check("assign_entry_groups")
-			.isBoolean()
-			.withMessage("assign_entry_groups must be a boolean"),
-			check("view_all_evaluations")
-			.isBoolean()
-			.withMessage("view_all_evaluations must be a boolean"),
-			check("edit_all_evaluations")
-			.isBoolean()
-			.withMessage("edit_all_evaluations must be a boolean"),
-			check("delete_all_evaluations")
-			.isBoolean()
-			.withMessage("delete_all_evaluations must be a boolean"),
-			check("manage_winners")
-			.isBoolean()
-			.withMessage("manage_winners must be a boolean"),
-			check("view_all_tasks")
-			.isBoolean()
-			.withMessage("view_all_tasks must be a boolean"),
-			check("edit_all_tasks")
-			.isBoolean()
-			.withMessage("edit_all_tasks must be a boolean"),
-			check("delete_all_tasks")
-			.isBoolean()
-			.withMessage("delete_all_tasks must be a boolean"),
-			check("view_judging_settings")
-			.isBoolean()
-			.withMessage("view_judging_settings must be a boolean"),
-			check("manage_judging_groups")
-			.isBoolean()
-			.withMessage("manage_judging_groups must be a boolean"),
-			check("assign_evaluator_groups")
-			.isBoolean()
-			.withMessage("assign_evaluator_groups must be a boolean"),
-			check("manage_judging_criteria")
-			.isBoolean()
-			.withMessage("manage_judging_criteria must be a boolean"),
-			check("view_all_users")
-			.isBoolean()
-			.withMessage("view_all_users must be a boolean"),
-			check("edit_user_profiles")
-			.isBoolean()
-			.withMessage("edit_user_profiles must be a boolean"),
-			check("change_user_passwords")
-			.isBoolean()
-			.withMessage("change_user_passwords must be a boolean"),
-			check("assume_user_identities")
-			.isBoolean()
-			.withMessage("assume_user_identities must be a boolean"),
-			check("add_users")
-			.isBoolean()
-			.withMessage("add_users must be a boolean"),
-			check("view_errors")
-			.isBoolean()
-			.withMessage("view_errors must be a boolean"),
-			check("delete_errors")
-			.isBoolean()
-			.withMessage("delete_errors must be a boolean"),
-			check("judge_entries")
-			.isBoolean()
-			.withMessage("judge_entries must be a boolean"),
-			check("edit_kb_content")
-			.isBoolean()
-			.withMessage("edit_kb_content must be a boolean"),
-			check("delete_kb_content")
-			.isBoolean()
-			.withMessage("delete_kb_content must be a boolean"),
-			check("publish_kb_content")
-			.isBoolean()
-			.withMessage("publish_kb_content must be a boolean"),
-			check("manage_announcements")
-			.isBoolean()
-			.withMessage("manage_announcements must be a boolean")
 		],
 		assignToEvaluatorGroup: [
 			check("evaluator_id")
@@ -578,8 +489,6 @@ router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, win
 router.get("/internal/users", users.get);
 router.get("/internal/users/id", users.getId);
 router.get("/internal/users/stats", users.stats);
-router.get("/internal/users/permissions", users.getPermissions);
-router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);

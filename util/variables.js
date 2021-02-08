@@ -31,37 +31,4 @@ exports.skillLevels = ["Advanced", "Intermediate", "Beginner", "TBD"];
 exports.taskStatuses = ["Not Started", "Started", "Completed"];
 exports.visibilities = ["Public", "Evaluators Only", "Admins Only"];
 
-exports.publicPermissions = {
-    view_admin_stats: false,
-    edit_contests: false,
-    delete_contests: false,
-    edit_entries: false,
-    delete_entries: false,
-    add_entries: false,
-    assign_entry_groups: false,
-    view_all_evaluations: false,
-    edit_all_evaluations: false,
-    delete_all_evaluations: false,
-    manage_winners: false,
-    view_all_tasks: false,
-    edit_all_tasks: false,
-    delete_all_tasks: false,
-    view_judging_settings: false,
-    manage_judging_groups: false,
-    assign_evaluator_groups: false,
-    manage_judging_criteria: false,
-    view_all_users: false,
-    edit_user_profiles: false,
-    change_user_passwords: false,
-    assume_user_identities: false,
-    add_users: false,
-    view_errors: false,
-    delete_errors: false,
-    judge_entries: false,
-    edit_kb_content: false,
-    delete_kb_content: false,
-    publish_kb_content: false,
-    manage_announcements: false
-};
-
 module.exports = exports;

@@ -39,23 +39,23 @@
                         <img id="judging-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
                     </div>
                 </div>
-                <% if (is_self || is_admin || permissions.view_all_users) { %>
-                    <div class="preview col-6 standard">
-                        <div class="db-header" id="personal-information-header">
-                            <p>Personal Information</p>
-                        </div>
-                        <div class="preview-content" id="personal-information">
-                            <img id="personal-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
-                        </div>
+                <% if (is_self || is_admin) { %>
+                <div class="preview col-6 standard">
+                    <div class="db-header" id="personal-information-header">
+                        <p>Personal Information</p>
                     </div>
-                    <div class="preview col-6 standard">
-                        <div class="db-header">
-                            <p>Login Information</p>
-                        </div>
-                        <div class="preview-content" id="login-information">
-                            <img id="login-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
-                        </div>
+                    <div class="preview-content" id="personal-information">
+                        <img id="personal-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
                     </div>
+                </div>
+                <div class="preview col-6 standard">
+                    <div class="db-header">
+                        <p>Login Information</p>
+                    </div>
+                    <div class="preview-content" id="login-information">
+                        <img id="login-information-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
+                    </div>
+                </div>
                 <% } %>
             </div>
         </div>

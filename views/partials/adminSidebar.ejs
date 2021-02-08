@@ -21,25 +21,19 @@
         <i class="fas fa-award"></i>
         <p>Results</p>
     </a>
-    <% if (permissions.view_all_tasks || is_admin) { %>
+    <% if (is_admin) { %>
         <a class="nav-button" id="sidebar-tasks" href="/admin/tasks">
             <i class="fas fa-tasks"></i>
             <p>Tasks</p>
         </a>
-    <% } %>
-    <% if (permissions.view_judging_settings || is_admin) { %>
         <a class="nav-button" id="sidebar-judging" href="/admin/judging">
 	        <i class="fas fa-gavel"></i>
 	        <p>Judging</p>
 	    </a>
-    <% } %>
-    <% if (permissions.view_all_users || is_admin) { %>
 	    <a class="nav-button" id="sidebar-users" href="/admin/users">
 	        <i class="fas fa-users"></i>
 	        <p>Users</p>
 	    </a>
-    <% } %>
-    <% if (permissions.view_errors || is_admin) { %>
         <a class="nav-button" id="sidebar-errors" href="/admin/errors">
 	        <i class="fas fa-bug"></i>
 	        <p>Errors</p>

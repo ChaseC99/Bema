@@ -15,12 +15,10 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
                 <div class="preview col-8 standard">
                     <div class="db-header">
                         <p>${a.article_name}</p>
-                            ${data.is_admin || permissions.edit_kb_content || permissions.delete_kb_content ? `
-                                <span class="admin-controls">
-                                    ${permissions.edit_kb_content || permissions.publish_kb_content || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditArticleForm(${a.article_id})"></i>` : ""}
-                                    ${permissions.delete_kb_content || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteArticle(${a.article_id})"></i>` : ""}
-                                </span>
-                            ` : ``}
+                            ${data.is_admin ? `<span class="admin-controls">
+                                <i class="control-btn far fa-edit" onclick="showEditArticleForm(${a.article_id})"></i>
+                                <i class="control-btn red far fa-trash-alt" onclick="deleteArticle(${a.article_id})"></i>
+                            </span>` : ``}
                     </div>
                     <div class="preview-content">
                         ${a.article_content}
@@ -28,7 +26,7 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
                          <div class="article-meta">
                             <p>Last updated: ${a.last_updated}</p>
                             <p>Created by: ${author_name}</p>
-                            ${data.is_admin || permissions.edit_kb_content || permissions.publish_kb_content ? `<p>Published: ${a.is_published ? "<span style='color: green'>True</span>" : "<span style='color: red'>False</span>"}</p>
+                            ${data.is_admin ? `<p>Published: ${a.is_published ? "<span style='color: green'>True</span>" : "<span style='color: red'>False</span>"}</p>
                             <p>Visibility: ${a.article_visibility}</p>
                         </div>` : ``}
                     </div>
@@ -42,14 +40,12 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
 
 request("get", "/api/internal/kb/sections", null, (data) => {
     if (!data.error) {
-        if (permissions.edit_kb_content || data.is_admin) {
-            data.sections.forEach((s, idx) => {
-                // Fill forms with sections
-                editArticleSectionDropdown.innerHTML += `
-                    <option value="${s.section_id}">${s.section_name}</option>
-                `;
-            });
-        }
+        data.sections.forEach((s, idx) => {
+            // Fill forms with sections
+            editArticleSectionDropdown.innerHTML += `
+                <option value="${s.section_id}">${s.section_name}</option>
+            `;
+        });
     } else {
         displayError(data.error);
     }
