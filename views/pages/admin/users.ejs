@@ -24,7 +24,9 @@
                 <div class="content-header">
                     <h2>Users</h2>
                     <div>
-                        <span id="add-user-btn" class="admin-button" onclick="showAddUserForm()">Add User</span>
+                        <% if (is_admin || permissions.add_users) { %>
+                            <span id="add-user-btn" class="admin-button" onclick="showAddUserForm()">Add User</span>
+                        <% } %>
                         <span id="deactivated-users-btn" class="admin-button" onclick="showDeactivatedUsersPage()">View Deactivated Users</span>
                     </div>
                 </div>
@@ -45,170 +47,445 @@
                     <img id="deactivated-users-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                 </div>
             </div>
-            <div id="edit-user-container" hidden>
-                <div class="content-header">
-                    <h2>Edit User</h2>
-                </div>
+            <% if (is_admin || permissions.edit_user_profiles) { %>
+                <div id="edit-user-container" hidden>
+                    <div class="content-header">
+                        <h2>Edit User</h2>
+                    </div>
 
-                <form id="edit-user-form" class="admin-form" onsubmit="return editUser(event)">
-                    <div class="row">
-                        <input type="hidden" id="edit_user_id" name="edit_user_id">
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_name">User's Name</label>
+                    <form id="edit-user-form" class="admin-form" onsubmit="return editUser(event)">
+                        <div class="row">
+                            <input type="hidden" id="edit_user_id" name="edit_user_id">
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_name" name="edit_user_name">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_name">User's Name</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_name" name="edit_user_name">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_kaid">User's KAID</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_kaid">User's KAID</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_kaid" name="edit_user_kaid" placeholder="kaid_xxxxxxxxxx">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_kaid" name="edit_user_kaid" placeholder="kaid_xxxxxxxxxx">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_username">User's username</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_username" name="edit_user_username">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_username">User's username</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_nickname">User's nickname</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_nickname" name="edit_user_nickname">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_username" name="edit_user_username">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_email">User's email</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_email" name="edit_user_email">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_nickname">User's nickname</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_start">Term start</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_start" name="edit_user_start">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_nickname" name="edit_user_nickname">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_end">Term end</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="edit_user_end" name="edit_user_end">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_email">User's email</label>
+                        <% if (is_admin) { %>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_is_admin">Administrator</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_user_is_admin" name="edit_user_is_admin">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_email" name="edit_user_email">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_account_locked">Account Disabled</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_account_locked" name="edit_user_account_locked">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_start">Term start</label>
+                        <% } %>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_receive_emails">Receive emails</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_receive_emails" name="edit_user_receive_emails">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_start" name="edit_user_start">
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_end">Term end</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="edit_user_end" name="edit_user_end">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_user_is_admin">Make an admin</label>
-                        </div>
-                        <div class="col-10">
-                            <input type="checkbox" id="edit_user_is_admin" name="edit_user_is_admin">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_account_locked">Lock account</label>
-                        </div>
-                        <div class="col-10">
-                            <input type="checkbox" id="edit_account_locked" name="edit_user_account_locked">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="edit_receive_emails">Receive emails</label>
-                        </div>
-                        <div class="col-10">
-                            <input type="checkbox" id="edit_receive_emails" name="edit_user_receive_emails">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
-                    </div>
-                </form>
-            </div>
-            <div id="add-user-container" hidden>
-                <div class="content-header">
-                    <h2>Add User</h2>
+                    </form>
                 </div>
+            <% } %>
+            <% if (is_admin) { %>
+                <div id="edit-user-permissions-container" hidden>
+                    <div class="content-header">
+                        <h2>Edit User Permissions</h2>
+                    </div>
 
-                <form id="add-user-form" class="admin-form" onsubmit="return addUser(event)">
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="evaluator_name">User's Full Name</label>
+                    <form id="edit-user-permissions-form" class="admin-form" onsubmit="return editUserPermissions(event)">
+                        <div class="row">
+                            <input type="hidden" id="evaluator_id" name="evaluator_id">
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="evaluator_name" name="evaluator_name">
+                        <h3>Basic Permissions</h3>
+                        <div class="row">
+                            <div class="col-1-">
+                                <label for="judge_entries">Can judge entries</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="judge_entries" name="judge_entries">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="email">User's email</label>
+                        <h3>Announcements</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="manage_announcements">Can manage announcements</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="manage_announcements" name="manage_announcements">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="email" id="email" name="email">
+                        <h3>Admin Dashboard</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_admin_stats">Can view admin stats</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_admin_stats" name="view_admin_stats">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="evaluator_kaid">User's KAID</label>
+                        <h3>Contests</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_contests">Can add/edit contests</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_contests" name="edit_contests">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="evaluator_kaid" name="evaluator_kaid" placeholder="kaid_xxxxxxxxxx">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_contests">Can delete contests</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_contests" name="delete_contests">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="username">User's username</label>
+                        <h3>Entries</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="add_entries">Can add/import entries</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="add_entries" name="add_entries">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="username" name="username">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_entries">Can edit entries</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_entries" name="edit_entries">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="user_start">Term start</label>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_entries">Can delete entries</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_entries" name="delete_entries">
+                            </div>
                         </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="user_start" name="user_start">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="assign_entry_groups">Can assign entries to groups</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="assign_entry_groups" name="assign_entry_groups">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
-                    </div>
-                </form>
-            </div>
-            <div id="change-password-container" hidden>
-                <div class="content-header">
-                    <h2 id="change-password-title">Change password for </h2>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="manage_winners">Can manage winners</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="manage_winners" name="manage_winners">
+                            </div>
+                        </div>
+                        <h3>Evaluations</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_all_evaluations">Can view all evaluations</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_all_evaluations" name="view_all_evaluations">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_all_evaluations">Can edit all evaluations</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_all_evaluations" name="edit_all_evaluations">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_all_evaluations">Can delete all evaluations</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_all_evaluations" name="delete_all_evaluations">
+                            </div>
+                        </div>
+                        <h3>Tasks</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_all_tasks">Can view all tasks</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_all_tasks" name="view_all_tasks">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_all_tasks">Can edit all tasks</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_all_tasks" name="edit_all_tasks">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_all_tasks">Can delete all tasks</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_all_tasks" name="delete_all_tasks">
+                            </div>
+                        </div>
+                        <h3>Judging Settings</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_judging_settings">Can view judging settings</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_judging_settings" name="view_judging_settings">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="manage_judging_groups">Can add/edit judging groups</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="manage_judging_groups" name="manage_judging_groups">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="assign_evaluator_groups">Can assign evaluators to groups</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="assign_evaluator_groups" name="assign_evaluator_groups">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="manage_judging_criteria">Can manage judging criteria</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="manage_judging_criteria" name="manage_judging_criteria">
+                            </div>
+                        </div>
+                        <h3>Knowledge Base</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_kb_content">Can edit KB content</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_kb_content" name="edit_kb_content">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="publish_kb_content">Can publish KB content</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="publish_kb_content" name="publish_kb_content">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_kb_content">Can delete KB content</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_kb_content" name="delete_kb_content">
+                            </div>
+                        </div>
+                        <h3>Users</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_all_users">Can view all users</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_all_users" name="view_all_users">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="add_users">Can add users</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="add_users" name="add_users">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="edit_user_profiles">Can edit user profiles</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="edit_user_profiles" name="edit_user_profiles">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="change_user_passwords">Can change user passwords</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="change_user_passwords" name="change_user_passwords">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="assume_user_identities">Can assume user identities</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="assume_user_identities" name="assume_user_identities">
+                            </div>
+                        </div>
+                        <h3>Development</h3>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="view_errors">Can view errors</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="view_errors" name="view_errors">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="delete_errors">Can delete errors</label>
+                            </div>
+                            <div class="col-10">
+                                <input type="checkbox" id="delete_errors" name="delete_errors">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
+                        </div>
+                    </form>
                 </div>
-                <form id="change-password-form" class="admin-form" onsubmit="return changePassword(event)">
-                    <input type="hidden" id="evaluator_id" name="evaluator_id">
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="new_password">New Password</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="password" id="new_password" name="new_password">
-                        </div>
+            <% } %>
+            <% if (is_admin || permissions.add_users) { %>
+                <div id="add-user-container" hidden>
+                    <div class="content-header">
+                        <h2>Add User</h2>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+
+                    <form id="add-user-form" class="admin-form" onsubmit="return addUser(event)">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="evaluator_name">User's Full Name</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="evaluator_name" name="evaluator_name">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="email">User's email</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="email" id="email" name="email">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="evaluator_kaid">User's KAID</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="evaluator_kaid" name="evaluator_kaid" placeholder="kaid_xxxxxxxxxx">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="username">User's username</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="username" name="username">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="user_start">Term start</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="text" id="user_start" name="user_start">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
+                        </div>
+                    </form>
+                </div>
+            <% } %>
+            <% if (is_admin || permissions.change_user_passwords) { %>
+                <div id="change-password-container" hidden>
+                    <div class="content-header">
+                        <h2 id="change-password-title">Change password for </h2>
                     </div>
-                </form>
-            </div>
+                    <form id="change-password-form" class="admin-form" onsubmit="return changePassword(event)">
+                        <input type="hidden" id="evaluator_id" name="evaluator_id">
+                        <div class="row">
+                            <div class="col-10">
+                                <label for="new_password">New Password</label>
+                            </div>
+                            <div class="col-90">
+                                <input class="form-input" type="password" id="new_password" name="new_password">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <input class="admin-button" type="submit" value="Save">
+                        </div>
+                    </form>
+                </div>
+            <% } %>
         </div>
     </div>
     <%- include ../../partials/footer %>

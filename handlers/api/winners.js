@@ -16,7 +16,7 @@ exports.add = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (is_admin) {
+            if (request.decodedToken.permissions.manage_winners || is_admin) {
                 return db.query("UPDATE entry SET is_winner = true WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem adding this winner.", res.error);
@@ -43,7 +43,7 @@ exports.delete = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (is_admin) {
+            if (request.decodedToken.permissions.manage_winners || is_admin) {
                 return db.query("UPDATE entry SET is_winner = false WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this winner.", res.error);

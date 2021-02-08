@@ -62,9 +62,9 @@
                 <option class="skill-option" value="Beginner">Beginner</option>
             </select>
 
-            <input type="submit" class="admin-button" <%= !logged_in ? 'disabled' : '' %> value="Submit"></input>
+            <input type="submit" class="admin-button" <%= !logged_in || !permissions.judge_entries ? 'disabled' : '' %> value="Submit"></input>
 
-            <% if (logged_in) { %>
+            <% if (logged_in && permissions.judge_entries) { %>
                 <div class="admin-button warning-button" onclick="flagEntry(<%= entry.o_entry_id %>)">Flag</div>
             <% } %>
         </div>

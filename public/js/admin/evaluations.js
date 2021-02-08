@@ -21,7 +21,7 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
     if (!data.error) {
         editable_contest = data.currentContest.contest_id;
 
-        if (editable_contest === current_contest_id && !data.is_admin) {
+        if (editable_contest === current_contest_id && !data.is_admin && !permissions.edit_all_evaluations && !permissions.delete_all_evaluations) {
             evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 3%">Actions</th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
         }
     } else {
@@ -105,8 +105,11 @@ request("get", `/api/internal/evaluations?contestId=${current_contest_id}&userId
                 <td>
                     ${e.evaluation_level}
                 </td>
-                    ${editable_contest === current_contest_id && !data.is_admin ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
-                    ${data.is_admin ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i><i class="control-btn red far fa-trash-alt" onclick="deleteEvaluation(${e.evaluation_id})"></i></td>` : ""}
+                    ${editable_contest === current_contest_id && !data.is_admin && !permissions.delete_all_evaluations && !permissions.edit_all_evaluations ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
+                    ${data.is_admin || permissions.edit_all_evaluations || permissions.delete_all_evaluations ? `<td id="${e.evaluation_id}-actions">
+                        ${permissions.edit_all_evaluations || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i>` : ""}
+                        ${permissions.delete_all_evaluations || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEvaluation(${e.evaluation_id})"></i>` : ""}
+                    </td>` : ""}
             </tr>`;
         });
         evaluationsSpinner.style.display = "none";

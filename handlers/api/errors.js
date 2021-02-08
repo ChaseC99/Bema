@@ -8,7 +8,7 @@ const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
 exports.get = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.view_errors || request.decodedToken.is_admin) {
                 return db.query("SELECT *, to_char(error_tstz, $1) as error_tstz FROM error ORDER BY error_id DESC", [displayFancyDateFormat], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting all the logged errors.", res.error);
@@ -34,7 +34,7 @@ exports.delete = (request, response, next) => {
     try {
         let error_id = request.body.error_id;
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.delete_errors || request.decodedToken.is_admin) {
                 return db.query("DELETE FROM error WHERE error_id = $1", [error_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem deleting this logged error.", res.error);

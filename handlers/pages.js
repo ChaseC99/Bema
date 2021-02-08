@@ -3,18 +3,20 @@ const {
     jsonMessage
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const { displayDateFormat, displayFancyDateFormat } = require(process.cwd() + "/util/variables");
+const { displayDateFormat, displayFancyDateFormat, publicPermissions } = require(process.cwd() + "/util/variables");
 
 exports.home = (request, response, next) => {
     if (request.decodedToken) {
         return response.render("pages/home", {
             logged_in: true,
-            is_admin: request.decodedToken.is_admin
+            is_admin: request.decodedToken.is_admin,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/home", {
         logged_in: false,
-        is_admin: false
+        is_admin: false,
+        permissions: publicPermissions
     });
 }
 
@@ -23,19 +25,21 @@ exports.login = (request, response) => {
         return response.redirect("/");
     }
     response.render("pages/login", {
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
 exports.judging = (request, response, next) => {
-    if (request.decodedToken) {
+    if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
         return db.query("SELECT * FROM get_entry_and_create_placeholder($1)", [request.decodedToken.evaluator_id], res => {
             if (res.error) {
                 return handleNext(next, 400, "There was a problem getting an entry");
             }
             return response.render("pages/judging", {
                 entry: res.rows[0],
-                logged_in: true
+                logged_in: true,
+                permissions: request.decodedToken.permissions
             });
         });
     }
@@ -47,7 +51,8 @@ exports.judging = (request, response, next) => {
             o_entry_url: 'https://www.khanacademy.org/computer-programming/example-entry/6586620957786112',
             o_entry_title: 'Example entry',
             o_entry_height: 400
-        }
+        },
+        permissions: publicPermissions
     });
 }
 
@@ -56,12 +61,14 @@ exports.adminDashboard = (request, response, next) => {
         return response.render("pages/admin/dashboard", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         return response.render("pages/admin/dashboard", {
             logged_in: false,
-            is_admin: false
+            is_admin: false,
+            permissions: publicPermissions
         });
     }
 }
@@ -71,22 +78,25 @@ exports.adminContests = (request, response, next) => {
         return response.render("pages/admin/contests", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         return response.render("pages/admin/contests", {
             logged_in: false,
-            is_admin: false
+            is_admin: false,
+            permissions: publicPermissions
         });
     }
 }
 
 exports.adminTasks = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
         return response.render("pages/admin/tasks", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         response.redirect("/admin/dashboard");
@@ -94,11 +104,12 @@ exports.adminTasks = (request, response, next) => {
 }
 
 exports.adminUsers = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
         return response.render("pages/admin/users", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         response.redirect("/admin/dashboard");
@@ -106,11 +117,12 @@ exports.adminUsers = (request, response, next) => {
 }
 
 exports.adminJudging = (request, response, next) => {
-    if (request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin)) {
         return response.render("pages/admin/judging", {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         response.redirect("/admin/dashboard");
@@ -120,12 +132,13 @@ exports.adminJudging = (request, response, next) => {
 exports.adminEvaluations = (request, response, next) => {
     if (request.decodedToken) {
         let userId = parseInt(request.params.userId);
-        if (request.decodedToken.evaluator_id === userId || request.decodedToken.is_admin) {
+        if (request.decodedToken.evaluator_id === userId || request.decodedToken.permissions.view_all_evaluations || request.decodedToken.is_admin) {
             return response.render("pages/admin/evaluations", {
                 logged_in: true,
                 is_admin: request.decodedToken.is_admin,
                 current_contest_id: parseInt(request.params.contestId),
-                current_evaluator_id: userId
+                current_evaluator_id: userId,
+                permissions: request.decodedToken.permissions
             });
         } else {
             response.redirect("/admin/dashboard");
@@ -137,11 +150,12 @@ exports.adminEvaluations = (request, response, next) => {
 }
 
 exports.adminErrors = (request, response, next) => {
-    if (request.decodedToken && request.decodedToken.is_admin) {
+    if (request.decodedToken && (request.decodedToken.permissions.view_errors || request.decodedToken.is_admin)) {
         return response.render("pages/admin/errors", {
             logged_in: true,
             is_admin: true,
-            evaluator_id: request.decodedToken.evaluator_id
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     } else {
         response.redirect("/admin/dashboard");
@@ -152,12 +166,15 @@ exports.results = (request, response, next) => {
     if (request.decodedToken) {
         return response.render("pages/results", {
             logged_in: true,
-            is_admin: request.decodedToken.is_admin
+            is_admin: request.decodedToken.is_admin,
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/results", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -166,12 +183,15 @@ exports.entries = (request, response, next) => {
         return response.render("pages/entries", {
             logged_in: true,
             contest_id: request.params.contestId,
-            is_admin: request.decodedToken.is_admin
+            is_admin: request.decodedToken.is_admin,
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/entries", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -179,12 +199,15 @@ exports.kbHome = (request, response, next) => {
     if (request.decodedToken) {
         return response.render("pages/knowledge-base/home", {
             logged_in: true,
-            is_admin: request.decodedToken.is_admin
+            is_admin: request.decodedToken.is_admin,
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/knowledge-base/home", {
         is_admin: false,
-        logged_in: false
+        logged_in: false,
+        permissions: publicPermissions
     });
 }
 
@@ -209,7 +232,7 @@ exports.kbArticle = (request, response, next) => {
 
             if ((!request.decodedToken && res.rows[0].article_visibility !== "Public") ||
                 (!is_admin && res.rows[0].article_visibility === "Admins Only") ||
-                (!is_admin && !res.rows[0].is_published)) {
+                (!is_admin && !request.decodedToken.permissions.edit_kb_content && !res.rows[0].is_published)) {
                 response.redirect("/kb");
             }
 
@@ -217,13 +240,16 @@ exports.kbArticle = (request, response, next) => {
                 return response.render("pages/knowledge-base/article", {
                     article_id: articleId,
                     logged_in: true,
-                    is_admin: request.decodedToken.is_admin
+                    is_admin: request.decodedToken.is_admin,
+                    evaluator_id: request.decodedToken.evaluator_id,
+                    permissions: request.decodedToken.permissions
                 });
             }
             response.render("pages/knowledge-base/article", {
                 article_id: articleId,
                 logged_in: false,
-                is_admin: false
+                is_admin: false,
+                permissions: publicPermissions
             });
         });
     });
@@ -237,12 +263,15 @@ exports.evaluatorProfile = (request, response, next) => {
             is_self: userId === request.decodedToken.evaluator_id ? true : false,
             evaluator_id: userId,
             logged_in: true,
-            is_admin: request.decodedToken.is_admin
+            is_admin: request.decodedToken.is_admin,
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions
         });
     }
     response.render("pages/home", {
         logged_in: false,
-        is_admin: false
+        is_admin: false,
+        permissions: publicPermissions
     });
 }
 

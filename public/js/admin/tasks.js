@@ -16,10 +16,10 @@ request("get", "/api/internal/tasks", null, data => {
                         <td>${t.due_date}</td>
                         <td>${t.evaluator_name !== null ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
-                        ${data.is_admin ? `
+                        ${permissions.edit_all_tasks || permissions.delete_all_tasks || data.is_admin ? `
                             <td id="${t.task_id}-actions">
-                                <i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>
-                                <i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>
+                                ${permissions.edit_all_tasks || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>` : ""}
+                                ${permissions.delete_all_tasks || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>` : "" }
                             </td>
                         ` : ""}
                     </tr>`;
@@ -31,10 +31,10 @@ request("get", "/api/internal/tasks", null, data => {
                         <td>${t.due_date}</td>
                         <td>${t.evaluator_name !== null  ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
-                        ${data.is_admin ? `
+                        ${permissions.edit_all_tasks || permissions.delete_all_tasks || data.is_admin ? `
                             <td id="${t.task_id}-actions">
-                                <i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>
-                                <i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>
+                                ${permissions.edit_all_tasks || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>` : ""}
+                                ${permissions.delete_all_tasks || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>` : "" }
                             </td>
                         ` : ""}
                     </tr>`;
@@ -48,7 +48,7 @@ request("get", "/api/internal/tasks", null, data => {
 
 request("get", "/api/internal/users", null, data => {
     if (!data.error) {
-        if (data.logged_in) {
+        if (data.is_admin || permissions.edit_all_tasks) {
             data.evaluators.forEach(c => {
                 taskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `
