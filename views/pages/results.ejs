@@ -40,7 +40,7 @@
                             <th>Title</th>
                             <th>Author</th>
                             <th>Skill Level</th>
-                            <% if (permissions.manage_winners || is_admin) { %>
+                            <% if (is_admin) { %>
                                 <th style="width: 3%">Actions</th>
                             <% } %>
                         </thead>
@@ -108,7 +108,7 @@
                                 <th>Skill Level</th>
                                 <th>Avg Score</th>
                                 <% } %>
-                                <% if (permissions.manage_winners || is_admin) { %>
+                                <% if (is_admin) { %>
                                 <th>Actions</th>
                                 <% } %>
                             </thead>

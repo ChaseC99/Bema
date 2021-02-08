@@ -19,13 +19,12 @@
     <div class="page-container">
         <%- include ../../partials/adminSidebar %>
 
+        <% if (is_admin) { %>
         <div class="content-container" id="tasks-page">
             <div id="view-tasks-container">
                 <div class="content-header">
                     <h2>Tasks</h2>
-                    <% if (permissions.edit_all_tasks || is_admin) { %>
-                        <span id="add-task-btn" class="admin-button" onclick="showCreateTaskForm();">Add Task</span>
-                    <% } %>
+                    <span id="add-task-btn" class="admin-button" onclick="showCreateTaskForm();">Add Task</span>
                 </div>
                 <div class="preview col-12 standard">
                     <div class="db-header">
@@ -38,9 +37,7 @@
                                 <th style="width: 10%">Due Date</th>
                                 <th style="width: 10%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
-                                <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
-                                <% } %>
+                                <th style="width: 10%">Actions</th>
                             </thead>
                             <tbody id="incomplete-tasks-table-body">
                                 <!-- incomplete tasks -->
@@ -59,9 +56,7 @@
                                 <th style="width: 10%">Due Date</th>
                                 <th style="width: 10%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
-                                <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
-                                <% } %>
+                                <th style="width: 10%">Actions</th>
                             </thead>
                             <tbody id="completed-tasks-table-body">
                                 <!-- completed tasks -->
@@ -70,111 +65,110 @@
                     </div>
                 </div>
             </div>
-            <% if (permissions.edit_all_tasks || is_admin) { %>
-                <div id="create-task-container" hidden>
-                    <div class="content-header">
-                        <h2>Add Task</h2>
-                    </div>
-                    <form id="add-task-form" class="admin-form" onSubmit="return addTask(event)">
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="task_title">Task</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="task_title" name="task_title">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="due_date">Due Date</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="due_date" name="due_date" placeholder="MM-DD-YYYY">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="assigned_member">Assigned Member</label>
-                            </div>
-                            <div class="col-90">
-                                <select id="assigned_member" name="assigned_member">
-                                    <!-- evaluators -->
-                                    <option value="null">Available for Sign Up</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="task_status">Status</label>
-                            </div>
-                            <div class="col-90">
-                                <select id="task_status" name="task_status">
-                                    <option value="Not Started">Not Started</option>
-                                    <option value="Started">Started</option>
-                                    <option value="Completed">Completed</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
-                        </div>
-                    </form>
+            <div id="create-task-container" hidden>
+                <div class="content-header">
+                    <h2>Add Task</h2>
                 </div>
-                <div id="edit-task-container" hidden>
-                    <div class="content-header">
-                        <h2>Edit Task</h2>
+                <form id="add-task-form" class="admin-form" onSubmit="return addTask(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="task_title">Task</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="task_title" name="task_title">
+                        </div>
                     </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="due_date">Due Date</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="due_date" name="due_date" placeholder="MM-DD-YYYY">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="assigned_member">Assigned Member</label>
+                        </div>
+                        <div class="col-90">
+                            <select id="assigned_member" name="assigned_member">
+                                <!-- evaluators -->
+                                <option value="null">Available for Sign Up</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="task_status">Status</label>
+                        </div>
+                        <div class="col-90">
+                            <select id="task_status" name="task_status">
+                                <option value="Not Started">Not Started</option>
+                                <option value="Started">Started</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
+            </div>
+            <div id="edit-task-container" hidden>
+                <div class="content-header">
+                    <h2>Edit Task</h2>
+                </div>
 
-                    <form id="edit-task-form" class="admin-form" onsubmit="return editTask(event)">
-                        <div class="row">
-                            <input type="hidden" id="edit_task_id" name="edit_task_id">
+                <form id="edit-task-form" class="admin-form" onsubmit="return editTask(event)">
+                    <div class="row">
+                        <input type="hidden" id="edit_task_id" name="edit_task_id">
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="edit_task_title">Task</label>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="edit_task_title">Task</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="edit_task_title" name="edit_task_title">
-                            </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="edit_task_title" name="edit_task_title">
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="edit_due_date">Due Date</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="edit_due_date" name="edit_due_date" placeholder="MM-DD-YYYY">
-                            </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="edit_due_date">Due Date</label>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="edit_assigned_member">Assigned Member</label>
-                            </div>
-                            <div class="col-90">
-                                <select id="edit_assigned_member" name="edit_assigned_member">
-                                    <!-- evaluators -->
-                                    <option value="null">Available for Sign Up</option>
-                                </select>
-                            </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="edit_due_date" name="edit_due_date" placeholder="MM-DD-YYYY">
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="edit_task_status">Status</label>
-                            </div>
-                            <div class="col-90">
-                                <select id="edit_task_status" name="edit_task_status">
-                                    <option value="Not Started">Not Started</option>
-                                    <option value="Started">Started</option>
-                                    <option value="Completed">Completed</option>
-                                </select>
-                            </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="edit_assigned_member">Assigned Member</label>
                         </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
+                        <div class="col-90">
+                            <select id="edit_assigned_member" name="edit_assigned_member">
+                                <!-- evaluators -->
+                                <option value="null">Available for Sign Up</option>
+                            </select>
                         </div>
-                    </form>
-                </div>
-            <% } %>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="edit_task_status">Status</label>
+                        </div>
+                        <div class="col-90">
+                            <select id="edit_task_status" name="edit_task_status">
+                                <option value="Not Started">Not Started</option>
+                                <option value="Started">Started</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
+            </div>
         </div>
+        <% } %>
     </div>
     <%- include ../../partials/footer %>
 </body>

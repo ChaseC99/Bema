@@ -8,7 +8,7 @@ const db = require(process.cwd() + "/util/db");
 
 exports.submit = (request, response, next) => {
     try {
-        if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
+        if (request.decodedToken) {
             const {
                 entry_id,
                 creativity,
@@ -42,7 +42,7 @@ exports.submit = (request, response, next) => {
 
 exports.getJudgingCriteria = (request, response, next) => {
     try {
-        if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
+        if (request.decodedToken) {
             return db.query("SELECT criteria_name, criteria_description FROM judging_criteria WHERE is_active = true ORDER BY sort_order LIMIT 4", [], res => {
                 if (res.error) {
                     return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
@@ -73,14 +73,14 @@ exports.getJudgingCriteria = (request, response, next) => {
 exports.getAllJudgingCriteria = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin) {
+            if (request.decodedToken.is_admin) {
                 return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
                     }
                     return response.json({
                         logged_in: true,
-                        is_admin: request.decodedToken.is_admin,
+                        is_admin: true,
                         judging_criteria: res.rows
                     });
                 });
@@ -97,7 +97,7 @@ exports.getAllJudgingCriteria = (request, response, next) => {
 exports.addJudgingCriteria = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.manage_judging_criteria || request.decodedToken.is_admin) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_name,
                     criteria_description,
@@ -122,7 +122,7 @@ exports.addJudgingCriteria = (request, response, next) => {
 exports.editJudgingCriteria = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.manage_judging_criteria || request.decodedToken.is_admin) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_id,
                     criteria_name,
@@ -148,7 +148,7 @@ exports.editJudgingCriteria = (request, response, next) => {
 exports.deleteJudgingCriteria = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.manage_judging_criteria || request.decodedToken.is_admin) {
+            if (request.decodedToken.is_admin) {
                 const {
                     criteria_id
                 } = request.body;

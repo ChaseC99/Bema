@@ -23,7 +23,7 @@
             <div id="view-contests-container">
                 <div class="content-header">
                     <h2>Contests</h2>
-                    <% if (is_admin || permissions.edit_contests) { %>
+                    <% if (is_admin) { %>
                         <span id="add-contest-btn" class="admin-button" onclick="showCreateContestForm()">Add Contest</span>
                     <% } %>
                 </div>
@@ -33,7 +33,7 @@
                     <img id="contests-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                 </div>
             </div>
-            <% if (is_admin || permissions.edit_contests) { %>
+            <% if (is_admin) { %>
                 <div id="edit-contest-container" hidden>
                     <div class="content-header">
                         <h2>Edit Contest</h2>

@@ -35,7 +35,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
             <p><strong>Judging Group:</strong> ${data.group_id}</p>
         ` + judgingInformation.innerHTML;
 
-        if (is_self || is_admin || permissions.view_all_users) {
+        if (is_self || is_admin) {
             // Personal Information
             personalInformationSpinner.style.display = "none";
             personalInformation.innerHTML = `
@@ -43,7 +43,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
                 <p><strong>Email:</strong> ${data.email}</p>
                 <p><strong>Receive email notifications:</strong> ${data.receive_emails ? "Yes" : "No"}</p>
             `;
-            if (is_self && !is_admin && !permissions.edit_user_profiles) {
+            if (is_self && !is_admin) {
                 personalInformation.parentNode.firstElementChild.innerHTML += `<i class="control-btn far fa-edit" onclick="showEditPersonalInformationForm('${data.nickname}', '${data.email}', ${data.receive_emails});"></i>`;
             }
 
@@ -54,7 +54,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
                 <p><strong>Last login:</strong> ${data.logged_in_tstz}</p>
                 <p><span class="admin-button" onclick="showResetPasswordForm();">Reset Password</span></p>
             `;
-            if (is_self && !is_admin && !permissions.edit_user_profiles) {
+            if (is_self && !is_admin) {
                 loginInformation.parentNode.firstElementChild.innerHTML += `<i class="control-btn far fa-edit" onclick="showEditLoginInformationForm('${data.username}');"></i>`;
             }
         }

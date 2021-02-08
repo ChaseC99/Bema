@@ -40,7 +40,7 @@ let showError = (id) => {
             <h2>Error #${e.error_id}</h2>
             <div>
                 <span id="back-btn" class="admin-button" onclick="showAllErrors()">View All Errors</span>
-                ${permissions.delete_errors ? `<span id="delete-error-btn" class="admin-button warning-button" onclick="deleteError(${e.error_id})">Delete Error</span>` : ""}
+                <span id="delete-error-btn" class="admin-button warning-button" onclick="deleteError(${e.error_id})">Delete Error</span>
             </div>
         `;
 

@@ -21,7 +21,7 @@
             <div id="view-sections-container">
                 <div class="content-header">
                     <h1 id="main-header">Bema Resources</h1>
-                    <%if (permissions.edit_kb_content || is_admin) { %>
+                    <%if (is_admin) { %>
                         <span class="admin-controls">
                             <span class="admin-button" onclick="showCreateSectionForm()">New Section</span>
                             <span class="admin-button" onclick="showCreateArticleForm()">New Article</span>
@@ -32,135 +32,133 @@
 
                 </div>
             </div>
-            <%if (permissions.edit_kb_content || is_admin) { %>
-                <div id="create-section-container">
-                    <div class="content-header">
-                        <h2>Create Section</h2>
-                    </div>
+            <div id="create-section-container">
+                <div class="content-header">
+                    <h2>Create Section</h2>
+                </div>
 
-                    <form id="create-section-form" class="admin-form" onsubmit="return createSection(event)">
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_name">Section Name</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="section_name" name="section_name">
-                            </div>
+                <form id="create-section-form" class="admin-form" onsubmit="return createSection(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_name">Section Name</label>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_description">Description</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input tall-message-input" type="text" id="section_description" name="section_description">
-                            </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="section_name" name="section_name">
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_visibility">Visibility</label>
-                            </div>
-                            <div class="col-90">
-                                <select name="section_visibility">
-                                    <option value="Public">Public</option>
-                                    <option value="Evaluators Only">Evaluators Only</option>
-                                    <option value="Admins Only">Admins Only</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <input type='submit' class="admin-button" value='Save'>
-                        </div>
-                    </form>
-                </div>
-                <div id="edit-section-container">
-                    <div class="content-header">
-                        <h2>Edit Section</h2>
                     </div>
-                    <form id="edit-section-form" class="admin-form" onsubmit="return editSection(event)">
-                        <input class="form-input" type="hidden" id="section_id" name="section_id">
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_name">Section Name</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="section_name" name="section_name">
-                            </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_description">Description</label>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_description">Description</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input tall-message-input" type="text" id="section_description" name="section_description">
-                            </div>
+                        <div class="col-90">
+                            <input class="form-input tall-message-input" type="text" id="section_description" name="section_description">
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="section_visibility">Visibility</label>
-                            </div>
-                            <div class="col-90">
-                                <select name="section_visibility">
-                                    <option value="Public">Public</option>
-                                    <option value="Evaluators Only">Evaluators Only</option>
-                                    <option value="Admins Only">Admins Only</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class='row'>
-                            <input type='submit' class="admin-button" value='Save'>
-                        </div>
-                    </form>
-                </div>
-                <div id="create-article-container">
-                    <div class="content-header">
-                        <h2>Create Article</h2>
                     </div>
-                    <form id="create-article-form" class="admin-form" onsubmit="return createArticle(event)">
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="article_name">Article Name</label>
-                            </div>
-                            <div class="col-90">
-                                <input class="form-input" type="text" id="article_name" name="article_name">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_visibility">Visibility</label>
+                        </div>
+                        <div class="col-90">
+                            <select name="section_visibility">
+                                <option value="Public">Public</option>
+                                <option value="Evaluators Only">Evaluators Only</option>
+                                <option value="Admins Only">Admins Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <input type='submit' class="admin-button" value='Save'>
+                    </div>
+                </form>
+            </div>
+            <div id="edit-section-container">
+                <div class="content-header">
+                    <h2>Edit Section</h2>
+                </div>
+                <form id="edit-section-form" class="admin-form" onsubmit="return editSection(event)">
+                    <input class="form-input" type="hidden" id="section_id" name="section_id">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_name">Section Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="section_name" name="section_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_description">Description</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input tall-message-input" type="text" id="section_description" name="section_description">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="section_visibility">Visibility</label>
+                        </div>
+                        <div class="col-90">
+                            <select name="section_visibility">
+                                <option value="Public">Public</option>
+                                <option value="Evaluators Only">Evaluators Only</option>
+                                <option value="Admins Only">Admins Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <input type='submit' class="admin-button" value='Save'>
+                    </div>
+                </form>
+            </div>
+            <div id="create-article-container">
+                <div class="content-header">
+                    <h2>Create Article</h2>
+                </div>
+                <form id="create-article-form" class="admin-form" onsubmit="return createArticle(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="article_name">Article Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="article_name" name="article_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="article_content">Content</label>
+                        </div>
+                        <div  class="text-editor">
+                            <div id="new-article-editor">
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="article_content">Content</label>
-                            </div>
-                            <div  class="text-editor">
-                                <div id="new-article-editor">
-                                </div>
-                            </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="article_visibility">Visibility</label>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="article_visibility">Visibility</label>
-                            </div>
-                            <div class="col-90">
-                                <select name="article_visibility">
-                                    <option value="Public">Public</option>
-                                    <option value="Evaluators Only">Evaluators Only</option>
-                                    <option value="Admins Only">Admins Only</option>
-                                </select>
-                            </div>
+                        <div class="col-90">
+                            <select name="article_visibility">
+                                <option value="Public">Public</option>
+                                <option value="Evaluators Only">Evaluators Only</option>
+                                <option value="Admins Only">Admins Only</option>
+                            </select>
                         </div>
-                        <div class="row">
-                            <div class="col-10">
-                                <label for="article_section">Section</label>
-                            </div>
-                            <div class="col-90">
-                                <select name="article_section" id="create-article-section-dropdown">
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="article_section">Section</label>
+                        </div>
+                        <div class="col-90">
+                            <select name="article_section" id="create-article-section-dropdown">
 
-                                </select>
-                            </div>
+                            </select>
                         </div>
-                        <div class='row'>
-                            <input type='submit' class="admin-button" value='Save'>
-                        </div>
-                    </form>
-                </div>
-            <% } %>
+                    </div>
+                    <div class='row'>
+                        <input type='submit' class="admin-button" value='Save'>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     <%- include ../../partials/footer %>
