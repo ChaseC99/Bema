@@ -61,7 +61,7 @@ exports.publicPermissions = {
     edit_kb_content: false,
     delete_kb_content: false,
     publish_kb_content: false,
-    manage_announcements: false,
+    manage_announcements: false
 };
 
 module.exports = exports;
