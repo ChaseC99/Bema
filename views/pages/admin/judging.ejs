@@ -36,7 +36,9 @@
                                 <th style="width: 10%">Name</th>
                                 <th style="width: 10%">Author</th>
                                 <th style="width: 10%">Created</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.edit_entries || permissions.delete_entries || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="flagged-entries-table-body">
                                 <!-- flagged entries -->
@@ -48,7 +50,9 @@
                 <div class="preview col-12 standard">
                     <div class="db-header">
                         <p>Judging Groups</p>
-                        <span class="admin-button" onclick="showAddEvaluatorGroupForm()">Create Group</span>
+                        <% if (permissions.manage_judging_groups || is_admin) { %>
+                            <span class="admin-button" onclick="showAddEvaluatorGroupForm()">Create Group</span>
+                        <% } %>
                     </div>
                     <div id="judging-groups-table" class="preview-content">
                         <table>
@@ -56,7 +60,9 @@
                                 <th style="width: 10%">Group ID</th>
                                 <th style="width: 70%">Group Name</th>
                                 <th style="width: 10%">Status</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.manage_judging_groups || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="judging-groups-table-body">
                                 <!-- judging groups -->
@@ -75,7 +81,9 @@
                                 <th style="width: 10%">Evaluator ID</th>
                                 <th style="width: 40%">Evaluator Name</th>
                                 <th style="width: 40%">Assigned Group</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.assign_evaluator_groups || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="assigned-groups-table-body">
                                 <!-- assigned evaluator groups -->
@@ -87,7 +95,9 @@
                 <div class="preview col-12 standard">
                     <div class="db-header">
                         <p>Judging Criteria</p>
-                        <span class="admin-button" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
+                        <% if (permissions.manage_judging_criteria || is_admin) { %>
+                            <span class="admin-button" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
+                        <% } %>
                     </div>
                     <div id="judging-criteria-table" class="preview-content">
                         <table>
@@ -97,7 +107,9 @@
                                 <th style="width: 40%">Description</th>
                                 <th style="width: 10%">Active</th>
                                 <th style="width: 10%">Sort Order</th>
-                                <th style="width: 10%">Actions</th>
+                                <% if (permissions.manage_judging_criteria || is_admin) { %>
+                                    <th style="width: 10%">Actions</th>
+                                <% } %>
                             </thead>
                             <tbody id="judging-criteria-table-body">
                                 <!-- judging criteria -->
@@ -108,165 +120,171 @@
                 </div>
             </div>
         </div>
-        <div class="content-container" id="create-group-page" hidden>
-            <div class="content-header">
-                <h2>Create Judging Group</h2>
+        <% if (permissions.manage_judging_groups || is_admin) { %>
+            <div class="content-container" id="create-group-page" hidden>
+                <div class="content-header">
+                    <h2>Create Judging Group</h2>
+                </div>
+                <form id="add-judging-group-form" class="admin-form" onsubmit="return addEvaluatorGroup(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="group_name">Group Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="group_name" name="group_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
             </div>
-            <form id="add-judging-group-form" class="admin-form" onsubmit="return addEvaluatorGroup(event)">
-                <div class="row">
-                    <div class="col-10">
-                        <label for="group_name">Group Name</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="text" id="group_name" name="group_name">
-                    </div>
+            <div class="content-container" id="edit-group-page" hidden>
+                <div class="content-header">
+                    <h2>Edit Judging Group</h2>
                 </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
-                </div>
-            </form>
-        </div>
-        <div class="content-container" id="edit-group-page" hidden>
-            <div class="content-header">
-                <h2>Edit Judging Group</h2>
+                <form id="edit-judging-group-form" class="admin-form" onsubmit="return editEvaluatorGroup(event)">
+                    <input class="form-input" type="hidden" id="group_id" name="group_id" value="">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="group_name">Group Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="group_name" name="group_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="is_active">Group is active?</label>
+                        </div>
+                        <div class="col-90">
+                            <input type="checkbox" id="is_active" name="is_active">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
             </div>
-            <form id="edit-judging-group-form" class="admin-form" onsubmit="return editEvaluatorGroup(event)">
-                <input class="form-input" type="hidden" id="group_id" name="group_id" value="">
-                <div class="row">
-                    <div class="col-10">
-                        <label for="group_name">Group Name</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="text" id="group_name" name="group_name">
-                    </div>
+        <% } %>
+        <% if (permissions.assign_evaluator_groups || is_admin) { %>
+            <div class="content-container" id="assign-group-page" hidden>
+                <div class="content-header">
+                    <h2>Assign Judging Group</h2>
                 </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="is_active">Group is active?</label>
+                <form id="assign-judging-group-form" class="admin-form" onsubmit="return assignEvaluatorGroup(event)">
+                    <input class="form-input" type="hidden" id="evaluator_id" name="evaluator_id" value="">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="evaluator_name">Evaluator Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" id="evaluator_name" name="evaluator_name" disabled>
+                        </div>
                     </div>
-                    <div class="col-90">
-                        <input type="checkbox" id="is_active" name="is_active">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="group_id">Assigned Group</label>
+                        </div>
+                        <div class="col-90">
+                            <select id="group_id_input" name="group_id">
+                                <!-- evaluator groups -->
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
-                </div>
-            </form>
-        </div>
-        <div class="content-container" id="assign-group-page" hidden>
-            <div class="content-header">
-                <h2>Assign Judging Group</h2>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
             </div>
-            <form id="assign-judging-group-form" class="admin-form" onsubmit="return assignEvaluatorGroup(event)">
-                <input class="form-input" type="hidden" id="evaluator_id" name="evaluator_id" value="">
-                <div class="row">
-                    <div class="col-10">
-                        <label for="evaluator_name">Evaluator Name</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="text" id="evaluator_name" name="evaluator_name" disabled>
-                    </div>
+        <% } %>
+        <% if (permissions.manage_judging_criteria || is_admin) { %>
+            <div class="content-container" id="create-judging-criteria-page" hidden>
+                <div class="content-header">
+                    <h2>Create Judging Criteria</h2>
                 </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="group_id">Assigned Group</label>
+                <form id="add-judging-criteria-form" class="admin-form" onsubmit="return addJudgingCriteria(event)">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="criteria_name">Criteria Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" name="criteria_name">
+                        </div>
                     </div>
-                    <div class="col-90">
-                        <select id="group_id_input" name="group_id">
-                            <!-- evaluator groups -->
-                        </select>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="criteria_description">Criteria Description</label>
+                        </div>
+                        <div class="col-90">
+                            <textarea class="form-input" name="criteria_description" rows="4"></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
-                </div>
-            </form>
-        </div>
-        <div class="content-container" id="create-judging-criteria-page" hidden>
-            <div class="content-header">
-                <h2>Create Judging Criteria</h2>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="is_active">Active</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="checkbox" name="is_active">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="sort_order">Sort Order</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="number" name="sort_order">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
+                    </div>
+                </form>
             </div>
-            <form id="add-judging-criteria-form" class="admin-form" onsubmit="return addJudgingCriteria(event)">
-                <div class="row">
-                    <div class="col-10">
-                        <label for="criteria_name">Criteria Name</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="text" name="criteria_name">
-                    </div>
+            <div class="content-container" id="edit-judging-criteria-page" hidden>
+                <div class="content-header">
+                    <h2>Edit Judging Criteria</h2>
                 </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="criteria_description">Criteria Description</label>
+                <form id="edit-judging-criteria-form" class="admin-form" onsubmit="return editJudgingCriteria(event)">
+                    <input class="form-input" type="hidden" name="criteria_id">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="criteria_name">Criteria Name</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="text" name="criteria_name">
+                        </div>
                     </div>
-                    <div class="col-90">
-                        <textarea class="form-input" name="criteria_description" rows="4"></textarea>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="criteria_description">Criteria Description</label>
+                        </div>
+                        <div class="col-90">
+                            <textarea class="form-input" name="criteria_description" rows="4" cols="50"></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="is_active">Active</label>
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="is_active">Active</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="checkbox" name="is_active">
+                        </div>
                     </div>
-                    <div class="col-90">
-                        <input class="form-input" type="checkbox" name="is_active">
+                    <div class="row">
+                        <div class="col-10">
+                            <label for="sort_order">Sort Order</label>
+                        </div>
+                        <div class="col-90">
+                            <input class="form-input" type="number" name="sort_order">
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="sort_order">Sort Order</label>
+                    <div class="row">
+                        <input class="admin-button" type="submit" value="Save">
                     </div>
-                    <div class="col-90">
-                        <input class="form-input" type="number" name="sort_order">
-                    </div>
-                </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
-                </div>
-            </form>
-        </div>
-        <div class="content-container" id="edit-judging-criteria-page" hidden>
-            <div class="content-header">
-                <h2>Edit Judging Criteria</h2>
+                </form>
             </div>
-            <form id="edit-judging-criteria-form" class="admin-form" onsubmit="return editJudgingCriteria(event)">
-                <input class="form-input" type="hidden" name="criteria_id">
-                <div class="row">
-                    <div class="col-10">
-                        <label for="criteria_name">Criteria Name</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="text" name="criteria_name">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="criteria_description">Criteria Description</label>
-                    </div>
-                    <div class="col-90">
-                        <textarea class="form-input" name="criteria_description" rows="4" cols="50"></textarea>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="is_active">Active</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="checkbox" name="is_active">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <label for="sort_order">Sort Order</label>
-                    </div>
-                    <div class="col-90">
-                        <input class="form-input" type="number" name="sort_order">
-                    </div>
-                </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
-                </div>
-            </form>
-        </div>
+        <% } %>
     </div>
     <%- include ../../partials/footer %>
 </body>

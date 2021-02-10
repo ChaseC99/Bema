@@ -61,7 +61,7 @@ exports.changePassword = function(request, response, next) {
             } = request.body;
             evaluator_id = parseInt(evaluator_id);
             // Check that user is modifying own password or is an admin user
-            if (evaluator_id === request.decodedToken.evaluator_id || request.decodedToken.is_admin) {
+            if (evaluator_id === request.decodedToken.evaluator_id || request.decodedToken.permissions.change_user_passwords || request.decodedToken.is_admin) {
                 bcrypt.hash(new_password, saltRounds, function(err, hash) {
                     if (err) {
                         handleNext(next, 400, "Error while changing password.", err);
@@ -103,7 +103,7 @@ exports.assumeUserIdentity = function(request, response, next) {
                 evaluator_kaid
             } = request.body;
 
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.assume_user_identities || request.decodedToken.is_admin) {
                 response.clearCookie("jwtToken");
                 createJWTToken(evaluator_kaid)
                   .then(jwtToken => {

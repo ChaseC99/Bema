@@ -103,7 +103,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                 <td>
                     ${a.entry_level}
                 </td>
-                ${data.is_admin
+                ${data.is_admin || permissions.manage_winners
                     ? `<td id="${a.entry_id}-actions">
                            <i class="control-btn red far fa-trash-alt" onclick="deleteWinner(${a.entry_id})"></i>
                        </td>`
@@ -138,7 +138,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                         ${a.avg_score}
                     </td>` : ""
                 }
-                ${data.is_admin ? `
+                ${data.is_admin || permissions.manage_winners ? `
                     <td>
                         <i class="fas fa-trophy" onclick="addWinner(${a.entry_id})"></i>
                     </td>

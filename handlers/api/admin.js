@@ -62,7 +62,7 @@ exports.stats = (request, response, next) => {
                                     groupEvaluationsCount = 0;
                                 }
 
-                                if (request.decodedToken.is_admin) {
+                                if (request.decodedToken.permissions.view_admin_stats || request.decodedToken.is_admin) {
                                     return db.query("SELECT COUNT(*) FROM entry WHERE contest_id = (SELECT MAX(a.contest_id) FROM contest a) AND disqualified = false", [], res => {
                                         if (res.error) {
                                             return handleNext(next, 400, "There was a problem getting the total entries for the current contest.", res.error);
@@ -170,7 +170,7 @@ exports.stats = (request, response, next) => {
 exports.getEvaluatorGroups = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.permissions.edit_entries || request.decodedToken.permissions.assign_entry_groups || request.decodedToken.is_admin) {
                 return db.query("SELECT * FROM evaluator_group ORDER BY group_id", [], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem getting the evaluator groups", res.error);
@@ -184,7 +184,7 @@ exports.getEvaluatorGroups = (request, response, next) => {
                             logged_in: true,
                             is_admin: request.decodedToken.is_admin,
                             evaluatorGroups: evaluatorGroups,
-                            evaluators: res.rows
+                            evaluators: request.decodedToken.permissions.view_judging_settings ? res.rows : null
                         });
                     });
                 });
@@ -204,7 +204,7 @@ exports.addEvaluatorGroup = (request, response, next) => {
             let {
                 group_name
             } = request.body;
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.manage_judging_groups || request.decodedToken.is_admin) {
                 return db.query("INSERT INTO evaluator_group (group_name, is_active) VALUES ($1, true)", [group_name], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem creating the evaluator groups.", res.error);
@@ -229,7 +229,7 @@ exports.editEvaluatorGroup = (request, response, next) => {
                 group_name,
                 is_active
             } = request.body;
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.manage_judging_groups || request.decodedToken.is_admin) {
                 return db.query("UPDATE evaluator_group SET group_name = $1, is_active = $2 WHERE group_id = $3", [group_name, is_active, group_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this evaluator group.", res.error);
@@ -252,7 +252,7 @@ exports.deleteEvaluatorGroup = (request, response, next) => {
             let {
                 group_id
             } = request.body;
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.manage_judging_groups || request.decodedToken.is_admin) {
                 // Unassign all entries and users assigned to this group
                 return db.query("UPDATE entry SET assigned_group_id = null WHERE assigned_group_id = $1", [group_id], res => {
                     if (res.error) {

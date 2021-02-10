@@ -13,13 +13,15 @@ request("get", "/api/internal/contests", null, (data) => {
                     <p>
                         ${c.contest_name} - #${c.contest_id}
                     </p>
-                    ${data.is_admin
-                        ? `<div class="contest-options">
-                                <i class="control-btn far fa-edit" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});"></i>
-                                <i class="control-btn red far fa-trash-alt" onclick="deleteContest(${c.contest_id})"></i>
-                            </div>`
-                        : ""
-                    }
+                    <div class="contest-options">
+                        ${permissions.edit_contests || permissions.delete_contests ? `
+                            <i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
+                            <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
+                                ${permissions.edit_contests ? `<a href="#" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
+                                ${permissions.delete_contests ? `<a href="#" onclick="deleteContest(${c.contest_id})">Delete</a>` : ""}
+                            </div>
+                        ` : ""}
+                    </div>
                 </div>
                 <div class="preview-content">
                     <a href="${c.contest_url}" target="_blank">

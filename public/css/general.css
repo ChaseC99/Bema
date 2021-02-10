@@ -43,7 +43,6 @@ body {
 }
 /* Any red that is needed will use this class */
 .red {
-    /* color: #a94442; */
     color: firebrick;
 }
 /* Any green that is needed will use this class */
@@ -53,6 +52,73 @@ body {
 }
 .bold {
 	font-weight: bold;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #1865f2 !important;
+    color: #ffffff !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+}
+.btn-primary:hover {
+    box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1b50b3 !important;
+}
+.btn-secondary {
+    color: #1865f2 !important;
+    border: 1px solid rgba(33,36,44,0.50) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+}
+.btn-secondary:hover {
+    border: 1px solid #1865f2 !important;
+}
+.btn-tertiary {
+    color: #1865f2 !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+    font-weight: 400 !important;
+}
+.btn-tertiary:hover {
+    text-decoration: underline !important;
+}
+.btn-destructive-primary {
+    background-color: #d92916 !important;
+    color: #ffffff !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+}
+.btn-destructive-primary:hover {
+    box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #d92916 !important;
+}
+.btn-destructive-secondary {
+    color: #d92916 !important;
+    border: 1px solid rgba(33,36,44,0.50) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+}
+.btn-destructive-secondary:hover {
+    border: 2px solid #d92916 !important;
+}
+.btn-destructive-tertiary {
+    color: #d92916 !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    margin-right: 10px !important;
+    cursor: pointer !important;
+}
+.btn-destructive-tertiary:hover {
+    text-decoration: underline !important;
 }
 
 /*  Solid green buttons for admin actions */
@@ -174,6 +240,26 @@ body {
     border: 1px solid #ddd;
     width: 40%;
 }
+.modal-actions {
+    width: 100%;
+    margin-bottom: 10px;
+}
+.modal-footer {
+    overflow: hidden;
+    padding: 16px 16px;
+    border-top: 1px solid #ddd;
+}
+.modal-footer span {
+	float: right;
+}
+.modal-footer a {
+    color: black;
+	padding: 8px 10px;
+	border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+}
 .modal-header {
     padding: 2px 16px;
     border-bottom: 1px solid #ddd;
@@ -190,6 +276,36 @@ body {
 .modal-close:hover {
     cursor: pointer;
     color: black;
+}
+
+/* Actions menu styling */
+.actions-dropdown {
+    float: right;
+    position: relative;
+    display: inline-block;
+}
+.actions-dropdown-btn {
+    font-size: 20px;
+    cursor: pointer;
+}
+.actions-dropdown-content {
+    position: absolute;
+    right: -12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+.actions-dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+.actions-dropdown-content a:hover {
+    background-color: #ddd
 }
 
 /* Footer style, not really enough for its own file yet. */

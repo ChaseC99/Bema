@@ -30,8 +30,8 @@ exports.getCurrentContest = (request, response, next) => {
                 return handleNext(next, 500, "There was a problem getting the current contest.", res.error);
             }
             response.json({
-                logged_in: true,
-                is_admin: request.decodedToken.is_admin,
+                logged_in: request.decodedToken ? true : false,
+                is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
                 currentContest: res.rows[0]
             });
         });
@@ -46,7 +46,7 @@ exports.getContestsEvaluatedByUser = (request, response, next) => {
 
         if (userId) {
             if (request.decodedToken) {
-                if (request.decodedToken.evaluator_id === userId || request.decodedToken.is_admin) {
+                if (request.decodedToken.evaluator_id === userId || request.decodedToken.permissions.view_all_evaluations || request.decodedToken.is_admin) {
                     return db.query("SELECT c.contest_id, c.contest_name FROM contest c INNER JOIN entry en ON en.contest_id = c.contest_id INNER JOIN evaluation ev ON ev.entry_id = en.entry_id WHERE ev.evaluator_id = $1 AND ev.evaluation_complete = true GROUP BY c.contest_id ORDER BY c.contest_id DESC;", [userId], res => {
                         if (res.error) {
                             return handleNext(next, 400, "There was a problem getting the contests this user has evaluated.", res.error);
@@ -82,7 +82,7 @@ exports.add = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
 
-            if (is_admin) {
+            if (request.decodedToken.permissions.edit_contests || is_admin) {
                 return db.query("INSERT INTO contest (contest_name, contest_url, contest_author, date_start, date_end, current) VALUES ($1, $2, $3, $4, $5, $6)", [contest_name, contest_url, contest_author, contest_start_date, contest_end_date, contest_current], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem creating a new contest.", res.error);
@@ -102,7 +102,7 @@ exports.add = (request, response, next) => {
 exports.edit = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.edit_contests || request.decodedToken.is_admin) {
                 let {
                     edit_contest_id,
                     edit_contest_name,
@@ -132,7 +132,7 @@ exports.edit = (request, response, next) => {
 exports.delete = (request, response, next) => {
     try {
         if (request.decodedToken) {
-            if (request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.delete_contests || request.decodedToken.is_admin) {
                 let {
                     contest_id
                 } = request.body;
