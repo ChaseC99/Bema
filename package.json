@@ -4,7 +4,7 @@
     "description": "An open source tool used to judge official contests on Khan Academy",
     "main": "index.js",
     "engines": {
-    	"node": "12.20.1"
+        "node": "14.15.4"
     },
     "scripts": {
         "start": "nodemon index.js"
@@ -22,7 +22,7 @@
         "newrelic": "^7.1.1",
         "nodemailer": "^6.4.17",
         "oauth-1-client": "^0.2.4",
-        "pg": "^7.18.2",
+        "pg": "^8.0.3",
         "request": "^2.88.2"
     },
     "repository": {
