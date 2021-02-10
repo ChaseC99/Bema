@@ -1,6 +1,6 @@
 {
-    "name": "Contest-judging-tool",
-    "version": "0.1.0",
+    "name": "bema",
+    "version": "1.0.0",
     "description": "An open source tool used to judge official contests on Khan Academy",
     "main": "index.js",
     "engines": {
