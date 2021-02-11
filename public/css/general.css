@@ -7,7 +7,13 @@ body {
     background-color: #ffffff;
     color: #21242c;
 }
-
+a {
+    color: #1865f2;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
 /* Everything on the page under the header */
 .page-container {
     display: flex;
