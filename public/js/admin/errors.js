@@ -16,7 +16,7 @@ request("get", "/api/internal/errors", null, data => {
                 <td>${e.evaluator_id}</td>
                 <td>${e.error_tstz}</td>
                 <td>${e.error_message}</td>
-                <td><span style="cursor: pointer" onclick="showError(${e.error_id})">View</span></td>
+                <td><span class="btn-tertiary" onclick="showError(${e.error_id})">View</span></td>
             </tr>`;
         });
 
@@ -37,10 +37,9 @@ let showError = (id) => {
     }
     if (e) {
         detailedErrorHeader.innerHTML = `
-            <h2>Error #${e.error_id}</h2>
+            <h2><a href="#" onclick="showAllErrors()">Errors</a> > Error #${e.error_id}</h2>
             <div>
-                <span id="back-btn" class="admin-button" onclick="showAllErrors()">View All Errors</span>
-                ${permissions.delete_errors ? `<span id="delete-error-btn" class="admin-button warning-button" onclick="deleteError(${e.error_id})">Delete Error</span>` : ""}
+                ${permissions.delete_errors ? `<span id="delete-error-btn" class="btn-destructive-primary" onclick="showConfirmModal('Delete error?', 'Are you sure you want to delete this error? This action cannot be undone.', 'deleteError(${e.error_id})', true, 'Delete');">Delete Error</span>` : ""}
             </div>
         `;
 
@@ -51,11 +50,13 @@ let showError = (id) => {
             <p><strong>Request Referer: </strong>${e.request_referer}</p>
             <p><strong>User Agent: </strong>${e.user_agent}</p>
             <p><strong>Error Message: </strong>${e.error_message}</p>
-            <p><strong>Call Stack:</strong></p>
+            ${e.error_stack ? "<p><strong>Call Stack:</strong></p>" : "<p><strong>Call Stack:</strong> None</p>"}
         `;
-        let stack = e.error_stack.split(")");
-        for (var i = 0; i < stack.length - 1; i++) {
-            detailedErrorContainer.innerHTML += `<p>${stack[i]})</p>`;
+        if (e.error_stack) {
+            let stack = e.error_stack.split(")");
+            for (var i = 0; i < stack.length - 1; i++) {
+                detailedErrorContainer.innerHTML += `<p>${stack[i]})</p>`;
+            }
         }
 
         errorsPage.style.display = "none";
@@ -69,16 +70,13 @@ let showAllErrors = () => {
 }
 
 let deleteError = (error_id) => {
-    let confirm = window.confirm("Are you sure you want to delete this error?");
-    if (confirm) {
-        request("delete", "/api/internal/errors", {
-            error_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/errors", {
+        error_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
