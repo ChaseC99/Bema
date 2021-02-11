@@ -194,12 +194,12 @@ exports.import = (request, response, next) => {
                                 let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
                                 let entryCount = 0; // Total number of new entries found
 
-                                if (entries.length == 0) {
+                                if (entries.length === 0) {
                                     // No entries exist for this contest, so import all spin-offs
                                     for (var i = 0; i < data.scratchpads.length; i++) {
                                         let program = data.scratchpads[i];
 
-                                        if (i === 0) {
+                                        if (entryCount === 0) {
                                             query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
                                         } else {
                                             query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
@@ -221,7 +221,7 @@ exports.import = (request, response, next) => {
 
                                         // Add the spin-off if it isn't already in the database
                                         if (!found) {
-                                            if (i === 0) {
+                                            if (entryCount === 0) {
                                                 query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
                                             } else {
                                                 query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
