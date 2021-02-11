@@ -1,12 +1,8 @@
-/* Boxes inside previews container */
-
 .previews-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
 }
-
-/* Boxes inside page container */
 .preview {
     background: white;
     display: inline-block;
@@ -33,12 +29,6 @@
 .preview.standard {
     border: 2px solid rgb(238, 238, 238);
 }
-.preview.current-contest {
-    border: 3px solid green;
-}
-.preview.warning {
-    border: 1px solid #ebccd1;
-}
 .preview .db-header {
     display: flex;
     padding: 10px 15px;
@@ -46,11 +36,6 @@
     border-radius: 4px 4px 0px 0px;
     justify-content: space-between;
     align-items: center;
-}
-.preview.warning .db-header {
-    color: #a94442;
-    background: #f2dede;
-    border-bottom: 1px solid #ebccd1;
 }
 .preview.standard .db-header {
     color: #21242c;
@@ -61,20 +46,10 @@
     margin: 0px;
     font-size: 14px;
 }
-.contest-options {
-    float: right;
-}
 .preview-content {
     padding: 20px;
     margin: 0px;
 }
 .preview-thumb {
     max-width: 200px;
-}
-/* Temporary */
-.large-stat {
-    font-size: 48px;
-    margin: auto;
-    text-align: center;
-    margin-top: 4%;
 }
