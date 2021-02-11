@@ -15,3 +15,12 @@
 .flagged-entry-actions i:first-child {
     margin-left: 0px;
 }
+
+/* Contests page styling */
+.current-contest-tag {
+    background-color: #1865f2;
+    color: #ffffff;
+    padding: 5px 10px;
+    margin-left: 10px;
+    border-radius: 5px;
+}

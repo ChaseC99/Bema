@@ -39,7 +39,7 @@
                         <h2>Edit Contest</h2>
                     </div>
 
-                    <form id="edit-contest-form" class="admin-form" onsubmit="return editContest(event)">
+                    <form id="edit-contest-form" onsubmit="return editContest(event)">
                         <div class='row'>
                             <div class='col-90'>
                                 <input type='hidden' id='edit_contest_id' name='edit_contest_id'>
@@ -93,8 +93,9 @@
                                 <input class="form-input" type="checkbox" id="edit_contest_current" name="edit_contest_current">
                             </div>
                         </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
+                        <div class="row form-actions">
+                            <a href="#" class="btn-secondary" onclick="showViewContests();">Cancel</a>
+                            <input class="btn-primary" type="submit" value="Save">
                         </div>
                     </form>
                 </div>
@@ -103,7 +104,7 @@
                         <h2>Add Contest</h2>
                     </div>
 
-                    <form id="add-contest-form" class="admin-form" onSubmit="return addContest(event)">
+                    <form id="add-contest-form" onSubmit="return addContest(event)">
                         <div class="row">
                             <div class="col-10">
                                 <label for="contest_name">Name</label>
@@ -152,8 +153,9 @@
                                 <input class="form-input" type="checkbox" id="contest_current" name="contest_current">
                             </div>
                         </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
+                        <div class="row form-actions">
+                            <a href="#" class="btn-secondary" onclick="showViewContests();">Cancel</a>
+                            <input class="btn-primary" type="submit" value="Save">
                         </div>
                     </form>
                 </div>

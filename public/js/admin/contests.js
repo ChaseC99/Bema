@@ -8,17 +8,17 @@ request("get", "/api/internal/contests", null, (data) => {
         contestsSpinner.style.display = "none";
         data.contests.forEach((c, idx) => {
             contestPreviewBox.innerHTML += `
-            <div class="preview col-4 standard ${c.current ? "current-contest" : ""}">
+            <div class="preview col-4 standard">
                 <div class="db-header">
                     <p>
-                        ${c.contest_name} - #${c.contest_id}
+                        ${c.contest_name} - #${c.contest_id} ${c.current ? '<span class="current-contest-tag">Active</span>' : ""}
                     </p>
                     <div class="contest-options">
                         ${permissions.edit_contests || permissions.delete_contests ? `
                             <i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
                                 ${permissions.edit_contests ? `<a href="#" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
-                                ${permissions.delete_contests ? `<a href="#" onclick="deleteContest(${c.contest_id})">Delete</a>` : ""}
+                                ${permissions.delete_contests ? `<a href="#" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
                             </div>
                         ` : ""}
                     </div>
@@ -82,21 +82,27 @@ let editContest = (e) => {
     });
 }
 let deleteContest = (contest_id) => {
-    let confirm = window.confirm("Are you sure you want to delete this contest?");
-    if (confirm) {
-        request("delete", "/api/internal/contests", {
-            contest_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/contests", {
+        contest_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 };
 
 // Displays forms
+let showViewContests = () => {
+    let createContest = document.querySelector("#create-contest-container");
+    let editContest = document.querySelector("#edit-contest-container");
+    let viewContests = document.querySelector("#view-contests-container");
+
+    viewContests.style.display = "block";
+    editContest.style.display = "none";
+    createContest.style.display = "none";
+}
 let showCreateContestForm = () => {
     let createContest = document.querySelector("#create-contest-container");
     let viewContests = document.querySelector("#view-contests-container");
