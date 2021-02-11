@@ -45,8 +45,11 @@ body {
     border-radius: 4px;
     border: none !important;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
+    text-decoration: none;
+    height: 40px;
+    box-sizing: border-box;
 }
 .btn-primary:hover {
     box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1b50b3 !important;
@@ -57,18 +60,22 @@ body {
     padding: 10px 16px !important;
     border-radius: 4px;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
+    text-decoration: none;
+    height: 40px;
+    box-sizing: border-box;
 }
 .btn-secondary:hover {
-    border: 2px solid #1865f2 !important;
+    border: 1px solid #1865f2 !important;
+    box-shadow:inset 0px 0px 0px 1px #1865f2;
 }
 .btn-tertiary {
     color: #1865f2 !important;
     padding: 10px 16px !important;
     border-radius: 4px;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
     font-weight: 400 !important;
     text-decoration: none !important;
@@ -83,8 +90,11 @@ body {
     border-radius: 4px;
     border: none !important;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
+    text-decoration: none;
+    height: 40px;
+    box-sizing: border-box;
 }
 .btn-destructive-primary:hover {
     box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #d92916 !important;
@@ -95,8 +105,11 @@ body {
     padding: 10px 16px !important;
     border-radius: 4px;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
+    text-decoration: none;
+    height: 40px;
+    box-sizing: border-box;
 }
 .btn-destructive-secondary:hover {
     border: 2px solid #d92916 !important;
@@ -106,8 +119,9 @@ body {
     padding: 10px 16px !important;
     border-radius: 4px;
     font-size: 16px;
-    margin-right: 10px !important;
+    margin-right: 10px;
     cursor: pointer !important;
+    text-decoration: none;
 }
 .btn-destructive-tertiary:hover {
     text-decoration: underline !important;
@@ -281,23 +295,27 @@ body {
     cursor: pointer;
 }
 .actions-dropdown-content {
+    padding: 5px 0px;
     position: absolute;
     right: -12px;
-    border: 1px solid #ddd;
+    top: 35px;
+    border: 1px solid rgba(33, 36, 44, 0.16);
     border-radius: 5px;
-    background-color: white;
+    background-color: #ffffff;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: rgb(0 0 0 / 5%) 1px 2px 2px;
     z-index: 1;
 }
 .actions-dropdown-content a {
-  color: black;
+  color: #21242c;
+  font-weight: 400;
   padding: 12px 16px;
   text-decoration: none;
   display: block;
 }
 .actions-dropdown-content a:hover {
-    background-color: #ddd
+    background-color: #1865f2;
+    color: #ffffff;
 }
 
 /* Footer style, not really enough for its own file yet. */
