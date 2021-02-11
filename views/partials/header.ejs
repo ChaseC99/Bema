@@ -11,34 +11,31 @@
 				<h1>Bema</h1>
 			</a>
 		</div>
-			<div class="links">
+		<div class="links">
+			<span>
+				<a href="/admin/dashboard">Admin</a>
+			</span>
+			<% if (permissions.judge_entries) { %>
 				<span>
-					<a href="/admin/dashboard">Admin</a>
+					<a href="/judging">Judge</a>
 				</span>
-				<% if (permissions.judge_entries) { %>
-					<span>
-						<a href="/judging">Judge</a>
-					</span>
-				<% } %>
+			<% } %>
+			<span>
+				<a href="/kb">Resources</a>
+			</span>
+			<% if (logged_in) { %>
 				<span>
-					<a href="/kb">Resources</a>
+					<a href="#" id="profile-page-link">Profile</a>
 				</span>
-				<% if (logged_in) { %>
-					<span>
-						<a href="#" id="profile-page-link">Profile</a>
-					</span>
-					<span>
-						<a onclick="logout(event)">Logout</a>
-					</span>
-				<% } else { %>
-					<span>
-						<a href="/login">Login</a>
-					</span>
-				<% } %>
-			</div>
-	</div>
-	<div class="heading">
-		<h1>Khan Academy Challenge Council</h1>
+				<span>
+					<a onclick="logout(event)">Logout</a>
+				</span>
+			<% } else { %>
+				<span>
+					<a href="/login">Login</a>
+				</span>
+			<% } %>
+		</div>
 	</div>
 </div>
 <div id="main-modal" class="modal">
