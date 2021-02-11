@@ -14,6 +14,12 @@ a {
 a:hover {
     text-decoration: underline;
 }
+.red {
+    color: #d92916;
+}
+.green {
+    color: #00a60e;
+}
 /* Everything on the page under the header */
 .page-container {
     display: flex;
@@ -296,15 +302,17 @@ a:hover {
     position: relative;
     display: inline-block;
 }
-.actions-dropdown-btn {
-    font-size: 20px;
+.actions-dropdown-btn:after {
+    content: "\2807";
+    font-size: 30px;
     cursor: pointer;
+    font-style: normal;
 }
 .actions-dropdown-content {
     padding: 5px 0px;
     position: absolute;
     right: -12px;
-    top: 35px;
+    top: 45px;
     border: 1px solid rgba(33, 36, 44, 0.16);
     border-radius: 5px;
     background-color: #ffffff;
@@ -322,6 +330,7 @@ a:hover {
 .actions-dropdown-content a:hover {
     background-color: #1865f2;
     color: #ffffff;
+    text-decoration: none;
 }
 
 /* Footer style, not really enough for its own file yet. */
