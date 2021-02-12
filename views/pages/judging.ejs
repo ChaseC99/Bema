@@ -6,6 +6,7 @@
     <title>Judging | Challenge Council</title>
     <%- include ../partials/styles %>
     <link rel="stylesheet" type="text/css" href="/static/css/judging.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
 </head>
 
 <body>
@@ -56,16 +57,20 @@
             </div>
         </div>
         <div id="form-options">
-            <select id="skill-selector" name="skill_level">
-                <option class="skill-option" value="Advanced">Advanced</option>
-                <option class="skill-option" value="Intermediate">Intermediate</option>
-                <option class="skill-option" value="Beginner">Beginner</option>
-            </select>
+            <input type="hidden" id="skill-level-input" name="skill_level" value="Advanced" hidden>
+            <div class="custom-select" id="skill-level-dropdown">
+                <div class="custom-select-btn" onclick="showSelectDropdown('skill-level-dropdown');">Advanced<i class="fas fa-angle-down"></i></div>
+                <div class="select-dropdown-content" hidden>
+                    <span onclick="setSelectValue('skill-level', 'Advanced', 'Advanced');">Advanced</span>
+                    <span onclick="setSelectValue('skill-level', 'Intermediate', 'Intermediate');">Intermediate</span>
+                    <span onclick="setSelectValue('skill-level', 'Beginner', 'Beginner');">Beginner</span>
+                </div>
+            </div>
 
-            <input type="submit" class="admin-button" <%= !logged_in || !permissions.judge_entries ? 'disabled' : '' %> value="Submit"></input>
+            <input type="submit" class="btn-primary" style="margin-left: 20px;" <%= !logged_in || !permissions.judge_entries ? 'disabled' : '' %> value="Submit"></input>
 
             <% if (logged_in && permissions.judge_entries) { %>
-                <div class="admin-button warning-button" onclick="flagEntry(<%= entry.o_entry_id %>)">Flag</div>
+                <div class="btn-destructive-primary" style="position: absolute; right: 0px;" onclick="showConfirmModal('Flag Entry', 'Are you sure you want to flag this entry?', 'flagEntry(<%= entry.o_entry_id %>)', true, 'Flag')">Flag Entry</div>
             <% } %>
         </div>
     </form>

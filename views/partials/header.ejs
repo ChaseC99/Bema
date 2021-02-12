@@ -15,7 +15,7 @@
 			<span>
 				<a href="/admin/dashboard">Admin</a>
 			</span>
-			<% if (permissions.judge_entries) { %>
+			<% if (permissions.judge_entries || !logged_in) { %>
 				<span>
 					<a href="/judging">Judge</a>
 				</span>
