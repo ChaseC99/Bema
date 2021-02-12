@@ -51,7 +51,7 @@ exports.getFlagged = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
             if (request.decodedToken.permissions.view_judging_settings || is_admin) {
-                return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
+                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [displayFancyDateFormat], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem getting the flagged entries.", res.error);
                     }

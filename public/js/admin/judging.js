@@ -5,7 +5,7 @@ let judgingGroupsTableBody = document.querySelector("#judging-groups-table-body"
 let assignedGroupsTable = document.querySelector("#assigned-groups-table");
 let assignedGroupsTableBody = document.querySelector("#assigned-groups-table-body");
 let judgingCriteriaTableBody = document.querySelector("#judging-criteria-table-body");
-let assignedGroupsList = document.querySelector("#group_id_input");
+let assignedGroupsList = document.querySelector("#group-id-dropdown .select-dropdown-content");
 let flaggedEntriesSpinner = document.querySelector("#flagged-entries-spinner");
 let judgingGroupsSpinner = document.querySelector("#judging-groups-spinner");
 let assignedGroupsSpinner = document.querySelector("#assigned-groups-spinner");
@@ -29,12 +29,14 @@ request("get", "/api/internal/entries/flagged", null, data => {
                         <td>${e.entry_author}</td>
                         <td>${e.entry_created}</td>
                         ${permissions.edit_entries || permissions.delete_entries || data.is_admin ? `
-                            <td id="${e.entry_id}-actions" class="flagged-entry-actions">
+                            <td id="${e.entry_id}-actions" class="flagged-entry-actions actions">
                                 ${permissions.edit_entries || data.is_admin ? `
-                                    <i class="control-btn fas fa-check green" onclick="approveEntry(${e.entry_id})" title="Approve"></i>
-                                    <i class="control-btn fas fa-ban red" onclick="disqualifyEntry(${e.entry_id})" title="Disqualify"></i>`
-                                    : ""}
-                                    ${permissions.delete_entries || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${e.entry_id})" title="Delete"></i>` : ""}
+                                    <a class="btn-tertiary" onclick="approveEntry(${e.entry_id})">Approve</a>
+                                    <a class="btn-destructive-tertiary" onclick="disqualifyEntry(${e.entry_id})">Disqualify</a>
+                                ` : ""}
+                                ${permissions.delete_entries || data.is_admin ? `
+                                    <a class="btn-destructive-tertiary" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${e.entry_id})', true, 'Delete')">Delete</a>
+                                ` : ""}
                             </td>`
                         : ""}
                     </tr>`;
@@ -61,19 +63,21 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                         <td>${g.group_name}</td>
                         <td>${g.is_active ? "Active" : "Inactive"}</td>
                         ${permissions.manage_judging_groups || data.is_admin ? `
-                            <td class="judging-group-actions">
-                                <i class="control-btn far fa-edit" onclick="showEditEvaluatorGroupForm(${g.group_id}, '${g.group_name}', ${g.is_active})" title="Edit"></i>
-                                <i class="control-btn red far fa-trash-alt" onclick="deleteEvaluatorGroup(${g.group_id})" title="Delete"></i>
+                            <td class="judging-group-actions actions">
+                                <i class="actions-dropdown-btn" onclick="showActionDropdown('judging-group-dropdown-${g.group_id}');"></i>
+                                <div class="actions-dropdown-content" hidden id="judging-group-dropdown-${g.group_id}">
+                                    <a href="#" onclick="showEditEvaluatorGroupForm(${g.group_id}, '${g.group_name}', ${g.is_active})">Edit</a>
+                                    <a href="#" onclick="showConfirmModal('Delete Group?', 'Are you sure you want to delete this judging group? This action cannot be undone, and any evaluators or entries assigned to the group will be unassigned.', 'deleteEvaluatorGroup(${g.group_id})', true, 'Delete')">Delete</a>
+                                </div>
                             </td>`
                         : ""}
                     </tr>`;
 
                     if (g.is_active && permissions.assign_evaluator_groups) {
-                        assignedGroupsList.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
+                        assignedGroupsList.innerHTML += `<a href="#" onclick="setSelectValue('group-id', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
                     }
                 });
             }
-
             assignedGroupsSpinner.style.display = "none";
             data.evaluators.forEach(e => {
                 let groupName = "";
@@ -89,8 +93,8 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     <td>${e.evaluator_name}</td>
                     <td>${e.group_id ? e.group_id : "None"}${groupName}</td>
                     ${permissions.assign_evaluator_groups || data.is_admin ? `
-                        <td class="judging-group-actions">
-                            <i class="control-btn far fa-edit" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id})" title="Edit"></i>
+                        <td class="assigned-group-actions actions">
+                            <a href="#" class="btn-tertiary" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id}, '${groupName}')">Change Group</a>
                         </td>
                     ` : ""}
                 </tr>`;
@@ -114,9 +118,12 @@ request("get", "/api/internal/judging/allCriteria", null, data => {
                 <td>${c.is_active ? 'Yes' : 'No'}</td>
                 <td>${c.sort_order}</td>
                 ${permissions.manage_judging_criteria || data.is_admin ? `
-                    <td>
-                        <i class="control-btn far fa-edit" onclick="showEditJudgingCriteriaForm(${c.criteria_id}, '${c.criteria_name}', '${c.criteria_description}', ${c.is_active}, ${c.sort_order})" title="Edit"></i>
-                        <i class="control-btn red far fa-trash-alt" onclick="deleteJudgingCriteria(${c.criteria_id})" title="Delete"></i>
+                    <td class="actions">
+                        <i class="actions-dropdown-btn" onclick="showActionDropdown('judging-criteria-dropdown-${c.criteria_id}');"></i>
+                        <div class="actions-dropdown-content" hidden id="judging-criteria-dropdown-${c.criteria_id}">
+                            <a href="#" onclick="showEditJudgingCriteriaForm(${c.criteria_id}, '${c.criteria_name}', '${c.criteria_description}', ${c.is_active}, ${c.sort_order})">Edit</a>
+                            <a href="#" onclick="showConfirmModal('Delete Criteria?', 'Are you sure you want to delete this judging criteria? This action cannot be undone. Make the criteria inactive instead to preserve its contents.', 'deleteJudgingCriteria(${c.criteria_id})', true, 'Delete')">Delete</a>
+                        </div>
                     </td>`
                 : "" }
             </tr>`;
@@ -150,19 +157,15 @@ let disqualifyEntry = (entry_id) => {
     });
 }
 let deleteEntry = (entry_id) => {
-    let confirmDelete = confirm("Are you sure you want to delete this entry? This action cannot be undone.");
-
-    if (confirmDelete) {
-        request("delete", "/api/internal/entries", {
-            entry_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/entries", {
+        entry_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 // Handle group action requests
@@ -205,18 +208,15 @@ let editEvaluatorGroup = (e) => {
 }
 
 let deleteEvaluatorGroup = (group_id) => {
-    let shouldDelete = confirm("Are you sure you want to delete this group? This action cannot be undone, and any evaluators or entries assigned to the group will be unassigned.");
-    if (shouldDelete) {
-        request("delete", "/api/internal/admin/deleteEvaluatorGroup", {
-            group_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/admin/deleteEvaluatorGroup", {
+        group_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 let assignEvaluatorGroup = (e) => {
@@ -279,21 +279,27 @@ let editJudgingCriteria = (e) => {
 }
 
 let deleteJudgingCriteria = (criteria_id) => {
-    let shouldDelete = confirm("Are you sure you want to delete this judging criteria? This action cannot be undone. Make the criteria inactive to preserve its contents.");
-    if (shouldDelete) {
-        request("delete", "/api/internal/judging/criteria", {
-            criteria_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/judging/criteria", {
+        criteria_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 // Displays forms
+let showJudgingSettings = () => {
+    let pages = document.querySelectorAll(".content-container");
+    for (let i = 0; i < pages.length; i++) {
+        pages[i].style.display = "none";
+    }
+
+    document.querySelector("#judging-page").style.display = "block";
+}
+
 let showAddEvaluatorGroupForm = () => {
     let addEvaluatorGroup = document.querySelector("#create-group-page");
     let judgingPage = document.querySelector("#judging-page");
@@ -321,7 +327,7 @@ let showEditEvaluatorGroupForm = (...args) => {
 }
 
 let showAssignEvaluatorGroupForm = (...args) => {
-    // args: evaluator_id, evaluator_name, group_id
+    // args: evaluator_id, evaluator_name, group_id, group_name
 
     let assignEvaluatorGroup = document.querySelector("#assign-group-page");
     let judgingPage = document.querySelector("#judging-page");
@@ -333,6 +339,8 @@ let showAssignEvaluatorGroupForm = (...args) => {
     for (let i = 0; i < assignEvaluatorGroupForm.length - 1; i++) {
         assignEvaluatorGroupForm[i].value = args[i];
     }
+
+    document.querySelector("#group-id-dropdown .custom-select-btn").innerHTML = `${args[2] ? '${args[2]} ${args[3]}' : 'None'}<i class="fas fa-angle-down"></i>`;
 }
 
 let showAddJudgingCriteriaForm = () => {

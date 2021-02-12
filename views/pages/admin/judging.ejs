@@ -33,11 +33,11 @@
                         <table>
                             <thead>
                                 <th style="width: 5%">ID</th>
-                                <th style="width: 10%">Name</th>
+                                <th style="width: 15%">Name</th>
                                 <th style="width: 10%">Author</th>
                                 <th style="width: 10%">Created</th>
                                 <% if (permissions.edit_entries || permissions.delete_entries || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 15%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="flagged-entries-table-body">
@@ -51,17 +51,17 @@
                     <div class="db-header">
                         <p>Judging Groups</p>
                         <% if (permissions.manage_judging_groups || is_admin) { %>
-                            <span class="admin-button" onclick="showAddEvaluatorGroupForm()">Create Group</span>
+                            <span class="btn-tertiary" onclick="showAddEvaluatorGroupForm()">Create Group</span>
                         <% } %>
                     </div>
                     <div id="judging-groups-table" class="preview-content">
                         <table>
                             <thead>
-                                <th style="width: 10%">Group ID</th>
-                                <th style="width: 70%">Group Name</th>
-                                <th style="width: 10%">Status</th>
+                                <th style="width: 15%">Group ID</th>
+                                <th style="width: 20%">Group Name</th>
+                                <th style="width: 65%">Status</th>
                                 <% if (permissions.manage_judging_groups || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="judging-groups-table-body">
@@ -79,10 +79,10 @@
                         <table>
                             <thead>
                                 <th style="width: 10%">Evaluator ID</th>
-                                <th style="width: 40%">Evaluator Name</th>
-                                <th style="width: 40%">Assigned Group</th>
+                                <th style="width: 25%">Evaluator Name</th>
+                                <th style="width: 25%">Assigned Group</th>
                                 <% if (permissions.assign_evaluator_groups || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 60%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="assigned-groups-table-body">
@@ -96,7 +96,7 @@
                     <div class="db-header">
                         <p>Judging Criteria</p>
                         <% if (permissions.manage_judging_criteria || is_admin) { %>
-                            <span class="admin-button" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
+                            <span class="btn-tertiary" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
                         <% } %>
                     </div>
                     <div id="judging-criteria-table" class="preview-content">
@@ -108,7 +108,7 @@
                                 <th style="width: 10%">Active</th>
                                 <th style="width: 10%">Sort Order</th>
                                 <% if (permissions.manage_judging_criteria || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="judging-criteria-table-body">
@@ -125,7 +125,7 @@
                 <div class="content-header">
                     <h2>Create Judging Group</h2>
                 </div>
-                <form id="add-judging-group-form" class="admin-form" onsubmit="return addEvaluatorGroup(event)">
+                <form id="add-judging-group-form" onsubmit="return addEvaluatorGroup(event)">
                     <div class="row">
                         <div class="col-10">
                             <label for="group_name">Group Name</label>
@@ -134,8 +134,9 @@
                             <input class="form-input" type="text" id="group_name" name="group_name">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
@@ -143,7 +144,7 @@
                 <div class="content-header">
                     <h2>Edit Judging Group</h2>
                 </div>
-                <form id="edit-judging-group-form" class="admin-form" onsubmit="return editEvaluatorGroup(event)">
+                <form id="edit-judging-group-form" onsubmit="return editEvaluatorGroup(event)">
                     <input class="form-input" type="hidden" id="group_id" name="group_id" value="">
                     <div class="row">
                         <div class="col-10">
@@ -158,11 +159,12 @@
                             <label for="is_active">Group is active?</label>
                         </div>
                         <div class="col-90">
-                            <input type="checkbox" id="is_active" name="is_active">
+                            <input type="checkbox" class="form-input" id="is_active" name="is_active">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
@@ -172,7 +174,7 @@
                 <div class="content-header">
                     <h2>Assign Judging Group</h2>
                 </div>
-                <form id="assign-judging-group-form" class="admin-form" onsubmit="return assignEvaluatorGroup(event)">
+                <form id="assign-judging-group-form" onsubmit="return assignEvaluatorGroup(event)">
                     <input class="form-input" type="hidden" id="evaluator_id" name="evaluator_id" value="">
                     <div class="row">
                         <div class="col-10">
@@ -187,13 +189,17 @@
                             <label for="group_id">Assigned Group</label>
                         </div>
                         <div class="col-90">
-                            <select id="group_id_input" name="group_id">
-                                <!-- evaluator groups -->
-                            </select>
+                            <input type="hidden" id="group-id-input" name="group_id" value="null" hidden>
+                            <div class="custom-select" id="group-id-dropdown">
+                                <div class="custom-select-btn" onclick="showSelectDropdown('group-id-dropdown');">None<i class="fas fa-angle-down"></i></div>
+                                <div class="select-dropdown-content" hidden>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
@@ -203,7 +209,7 @@
                 <div class="content-header">
                     <h2>Create Judging Criteria</h2>
                 </div>
-                <form id="add-judging-criteria-form" class="admin-form" onsubmit="return addJudgingCriteria(event)">
+                <form id="add-judging-criteria-form" onsubmit="return addJudgingCriteria(event)">
                     <div class="row">
                         <div class="col-10">
                             <label for="criteria_name">Criteria Name</label>
@@ -236,8 +242,9 @@
                             <input class="form-input" type="number" name="sort_order">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
@@ -279,8 +286,9 @@
                             <input class="form-input" type="number" name="sort_order">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>

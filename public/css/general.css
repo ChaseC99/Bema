@@ -37,7 +37,7 @@ span.label {
 .content-container {
     background: #ffffff;
     min-height: 100vh;
-    padding: 0px 30px;
+    padding: 0px 30px 50px 30px;
     flex-grow: 1;
     flex-direction: column;
 }
