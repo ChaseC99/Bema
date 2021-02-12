@@ -16,7 +16,7 @@ exports.get = (request, response, next) => {
         if (contest_id > 0) {
             // Send back all entry info
             if (request.decodedToken) {
-                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                return db.query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_author, e.entry_level, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, g.group_name, to_char(entry_created, $1) as entry_created FROM entry e LEFT JOIN evaluator_group g ON e.assigned_group_id = g.group_id WHERE e.contest_id = $2 ORDER BY e.entry_id", [displayFancyDateFormat, contest_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting the list of entries.", res.error);
                     }
