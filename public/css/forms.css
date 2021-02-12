@@ -86,14 +86,15 @@ form h3:first-child {
     box-shadow: rgb(0 0 0 / 5%) 1px 2px 2px;
     z-index: 1;
 }
-.select-dropdown-content a {
+.select-dropdown-content a, .select-dropdown-content span {
     color: #21242c;
     font-weight: 400;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
+    cursor: pointer;
 }
-.select-dropdown-content a:hover {
+.select-dropdown-content a:hover, .select-dropdown-content span:hover {
     background-color: #1865f2;
     color: #ffffff;
     text-decoration: none;
