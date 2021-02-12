@@ -1,3 +1,4 @@
+let tab = document.querySelector("#sidebar-errors");
 let errorsTableBody = document.querySelector("#errors-table-body");
 let errorsSpinner = document.querySelector("#errors-spinner");
 let errorsPage = document.querySelector("#errors-page");
@@ -16,7 +17,7 @@ request("get", "/api/internal/errors", null, data => {
                 <td>${e.evaluator_id}</td>
                 <td>${e.error_tstz}</td>
                 <td>${e.error_message}</td>
-                <td><span class="btn-tertiary" onclick="showError(${e.error_id})">View</span></td>
+                <td class="actions"><span class="btn-tertiary" onclick="showError(${e.error_id})">View</span></td>
             </tr>`;
         });
 
@@ -80,3 +81,6 @@ let deleteError = (error_id) => {
         }
     });
 }
+
+// Update navbar highlighting
+tab.classList.add("selected");
