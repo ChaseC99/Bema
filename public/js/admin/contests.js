@@ -27,10 +27,10 @@ request("get", "/api/internal/contests", null, (data) => {
                     <a href="${c.contest_url}" target="_blank">
                         <img class="preview-thumb" src="${c.contest_url}/latest.png">
                     </a>
-                    <p>Start:
+                    <p><span class="label">Start:</span>
                         ${c.date_start}
                     </p>
-                    <p>End:
+                    <p><span class="label">End:</span>
                         ${c.date_end}
                     </p>
                 </div>
