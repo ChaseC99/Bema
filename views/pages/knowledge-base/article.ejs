@@ -26,11 +26,11 @@
                 </div>
             </div>
             <% if (permissions.edit_kb_content || is_admin) { %>
-                <div id="edit-article-container">
+                <div id="edit-article-container" hidden>
                     <div class="content-header">
                         <h2>Edit Article</h2>
                     </div>
-                    <form id="edit-article-form" class="admin-form" onsubmit="return editArticle(event)">
+                    <form id="edit-article-form" onsubmit="return editArticle(event)">
                         <input class="form-input" type="hidden" id="article_id" name="article_id">
                         <div class="row">
                             <div class="col-10">
@@ -44,7 +44,7 @@
                             <div class="col-10">
                                 <label for="article_content">Content</label>
                             </div>
-                            <div  class="text-editor">
+                            <div  class="text-editor col-90">
                                 <div id="edit-article-editor">
                                 </div>
                             </div>
@@ -54,11 +54,15 @@
                                 <label for="article_visibility">Visibility</label>
                             </div>
                             <div class="col-90">
-                                <select name="article_visibility">
-                                    <option value="Public">Public</option>
-                                    <option value="Evaluators Only">Evaluators Only</option>
-                                    <option value="Admins Only">Admins Only</option>
-                                </select>
+                                <input type="hidden" id="article-visibility-input" name="article_visibility" value="Admins Only" hidden>
+                                <div class="custom-select" id="article-visibility-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('article-visibility-dropdown');">Admins Only<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
+                                        <a href="#" onclick="setSelectValue('article-visibility', 'Public', 'Public');">Public</a>
+                                        <a href="#" onclick="setSelectValue('article-visibility', 'Evaluators Only', 'Evaluators Only');">Evaluators Only</a>
+                                        <a href="#" onclick="setSelectValue('article-visibility', 'Admins Only', 'Admins Only');">Admins Only</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -66,9 +70,13 @@
                                 <label for="article_section">Section</label>
                             </div>
                             <div class="col-90">
-                                <select name="article_section" id="edit-article-section-dropdown">
+                                <input type="hidden" id="article-section-input" name="article_section" value="null" hidden>
+                                <div class="custom-select" id="article-section-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('article-section-dropdown');">Choose Section<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
 
-                                </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -79,8 +87,9 @@
                                 <input type="checkbox" name="is_published">
                             </div>
                         </div>
-                        <div class='row'>
-                            <input type='submit' class="admin-button" value='Save'>
+                        <div class='row form-actions'>
+                            <a href="#" class="btn-secondary" onclick="showArticle()">Cancel</a>
+                            <input type='submit' class="btn-primary" value='Save'>
                         </div>
                     </form>
                 </div>
