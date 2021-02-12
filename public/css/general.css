@@ -65,10 +65,12 @@ a:hover {
 }
 .btn-primary:hover {
     box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1b50b3 !important;
+    text-decoration: none;
 }
 .btn-secondary {
     color: #1865f2 !important;
     border: 1px solid rgba(33,36,44,0.50) !important;
+    background-color: #ffffff;
     padding: 10px 16px !important;
     border-radius: 4px;
     font-size: 16px;
@@ -81,6 +83,7 @@ a:hover {
 .btn-secondary:hover {
     border: 1px solid #1865f2 !important;
     box-shadow:inset 0px 0px 0px 1px #1865f2;
+    text-decoration: none;
 }
 .btn-tertiary {
     color: #1865f2 !important;
@@ -110,9 +113,11 @@ a:hover {
 }
 .btn-destructive-primary:hover {
     box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #d92916 !important;
+    text-decoration: none;
 }
 .btn-destructive-secondary {
     color: #d92916 !important;
+    background-color: #ffffff;
     border: 1px solid rgba(33,36,44,0.50) !important;
     padding: 10px 16px !important;
     border-radius: 4px;
@@ -125,6 +130,7 @@ a:hover {
 }
 .btn-destructive-secondary:hover {
     border: 2px solid #d92916 !important;
+    text-decoration: none;
 }
 .btn-destructive-tertiary {
     color: #d92916 !important;
