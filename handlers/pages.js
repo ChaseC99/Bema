@@ -230,7 +230,10 @@ exports.kbArticle = (request, response, next) => {
                 return handleNext(next, 400, "There was a problem getting the article");
             }
 
-            if ((!request.decodedToken && res.rows[0].article_visibility !== "Public") ||
+            if (res.rows[0].article_visibility === "Public" && res.rows[0].is_published) {
+                // Do nothing, this article is public
+            }
+            else if ((!request.decodedToken && res.rows[0].article_visibility !== "Public") ||
                 (!is_admin && res.rows[0].article_visibility === "Admins Only") ||
                 (!is_admin && !request.decodedToken.permissions.edit_kb_content && !res.rows[0].is_published)) {
                 response.redirect("/kb");

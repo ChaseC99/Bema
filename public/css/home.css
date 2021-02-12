@@ -37,7 +37,7 @@
     width: fit-content;
     position: absolute;
     right: 10px;
-    bottom: 20px;
+    bottom: 0px;
 }
 .message-meta {
     display: flex;

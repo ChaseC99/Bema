@@ -184,7 +184,7 @@ exports.getEvaluatorGroups = (request, response, next) => {
                             logged_in: true,
                             is_admin: request.decodedToken.is_admin,
                             evaluatorGroups: evaluatorGroups,
-                            evaluators: request.decodedToken.permissions.view_judging_settings ? res.rows : null
+                            evaluators: request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin ? res.rows : null
                         });
                     });
                 });
