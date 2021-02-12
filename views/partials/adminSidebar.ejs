@@ -1,47 +1,42 @@
 <div class="side-bar">
+    <h3>Info</h3>
     <a class="nav-button" id="sidebar-dashboard" href="/admin/dashboard">
-        <i class="fas fa-th-large"></i>
         <p>Dashboard</p>
     </a>
     <a class="nav-button" id="sidebar-contests" href="/admin/contests">
-        <i class="fas fa-trophy"></i>
         <p>Contests</p>
     </a>
     <a class="nav-button" id="sidebar-entries" href="">
-        <i class="fas fa-list"></i>
         <p>Entries</p>
     </a>
     <% if (logged_in) { %>
         <a class="nav-button" id="sidebar-evaluations" href="/admin/evaluations/<%= evaluator_id %>">
-            <i class="fas fa-list-alt"></i>
             <p>Evaluations</p>
         </a>
     <% } %>
     <a class="nav-button" id="sidebar-results" href="">
-        <i class="fas fa-award"></i>
         <p>Results</p>
     </a>
+    <% if (permissions.view_all_tasks || permissions.view_judging_settings || permissions.view_all_users || permissions.view_errors || is_admin) { %>
+        <h3>Admin</h3>
+    <% } %>
     <% if (permissions.view_all_tasks || is_admin) { %>
         <a class="nav-button" id="sidebar-tasks" href="/admin/tasks">
-            <i class="fas fa-tasks"></i>
             <p>Tasks</p>
         </a>
     <% } %>
     <% if (permissions.view_judging_settings || is_admin) { %>
         <a class="nav-button" id="sidebar-judging" href="/admin/judging">
-	        <i class="fas fa-gavel"></i>
 	        <p>Judging</p>
 	    </a>
     <% } %>
     <% if (permissions.view_all_users || is_admin) { %>
 	    <a class="nav-button" id="sidebar-users" href="/admin/users">
-	        <i class="fas fa-users"></i>
 	        <p>Users</p>
 	    </a>
     <% } %>
     <% if (permissions.view_errors || is_admin) { %>
         <a class="nav-button" id="sidebar-errors" href="/admin/errors">
-	        <i class="fas fa-bug"></i>
 	        <p>Errors</p>
 	    </a>
     <% } %>
