@@ -21,7 +21,7 @@ request("get", "/api/internal/users", null, data => {
                             <div class="user-options">
                                 <div class="actions-dropdown">`
                                     if (data.is_admin || permissions.edit_user_profiles || permissions.change_user_passwords || permissions.assume_user_identities) {
-                                        content += `<i class="fas fa-ellipsis-v actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>`
+                                        content += `<i class="actions-dropdown-btn" onclick="showActionDropdown('user-dropdown-${c.evaluator_id}');"></i>`
                                     }
                                     content += `<div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">`;
                                     if (data.is_admin || permissions.edit_user_profiles) {
@@ -31,7 +31,7 @@ request("get", "/api/internal/users", null, data => {
                                         content += `<a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>`;
                                     }
                                     if (data.is_admin || permissions.assume_user_identities) {
-                                        content += `<a href="#" onclick="assumeUserIdentity('${c.evaluator_kaid}')">Assume Identity</a>`;
+                                        content += `<a href="#" onclick="showConfirmModal('Assume Identity?', 'Are you sure you want to assume this user\\\'s identity?', 'assumeUserIdentity(\`${c.evaluator_kaid}\`)', false, 'Assume Identity')">Assume Identity</a>`;
                                     }
                                     if (data.is_admin) {
                                         content += `<a href="#" onclick="showEditUserPermissionsForm('${c.evaluator_id}')">Edit Permissions</a>`;
@@ -44,59 +44,59 @@ request("get", "/api/internal/users", null, data => {
                             <p><a href="https://www.khanacademy.org/profile/${c.evaluator_kaid}" target="_blank">KA Profile</a></p>
                             <p><a href="/evaluator/${c.evaluator_id}" target="_blank">Bema Profile</a></p>
                             <p>
-                                <span class="bold">ID:</span>
+                                <span class="label">ID:</span>
                                 ${c.evaluator_id}
                             </p>
                             <p>
-                                <span class="bold">KAID:</span>
+                                <span class="label">KAID:</span>
                                 ${c.evaluator_kaid}
                             </p>
                             <p>
-                                <span class="bold">Username:</span>
+                                <span class="label">Username:</span>
                                 ${c.username}
                             </p>
                             <p>
-                                <span class="bold">Nickname:</span>
+                                <span class="label">Nickname:</span>
                                 ${c.nickname}
                             </p>
                             <p>
-                                <span class="bold">Email:</span>
+                                <span class="label">Email:</span>
                                 ${c.email}
                             </p>
                             <p>
-                                <span class="bold">Receive emails:</span>
+                                <span class="label">Receive emails:</span>
                                 ${c.receive_emails ? `Yes` : `No`}
                             </p>
                             <p>
-                                <span class="bold">Term start:</span>
+                                <span class="label">Term start:</span>
                                 ${c.dt_term_start ?
                                     c.dt_term_start :
                                     `N/A`
                                 }
                             </p>
                             <p>
-                                <span class="bold">Term end:</span>
+                                <span class="label">Term end:</span>
                                 ${c.dt_term_end ?
                                     c.dt_term_end :
                                     `N/A`
                                 }
                             </p>
                             <p>
-                                <span class="bold">Last login:</span>
+                                <span class="label">Last login:</span>
                                 ${c.logged_in_tstz}
                             </p>
                             ${c.account_locked ? `
                             <p>
-                                <span class="bold">Status:</span>
+                                <span class="label">Status:</span>
                                 <span class="red">Deactivated</span>
                             </p>` : `
                             <p>
-                                <span class="bold">Status:</span>
+                                <span class="label">Status:</span>
                                 <span class="green">Active</span>
                             </p>`
                             }
                             <p>
-                                <span class="bold">Permission Level:</span>
+                                <span class="label">Permission Level:</span>
                                 ${c.is_admin ? "Admin" : "Standard User"}
                             </p>
                         </div>
@@ -185,19 +185,15 @@ let changePassword = (e) => {
     });
 }
 let assumeUserIdentity = (evaluator_kaid) => {
-    let confirmed = window.confirm("Are you sure you want to assume this user's identity?");
-
-    if (confirmed) {
-        request("post", "/api/auth/assumeUserIdentity", {
-            evaluator_kaid
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("post", "/api/auth/assumeUserIdentity", {
+        evaluator_kaid
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 // Displays forms
@@ -210,8 +206,16 @@ let showDeactivatedUsersPage = () => {
 
 let showActiveUsersPage = () => {
     let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
+    let addUser = document.querySelector("#add-user-container");
+    let editUserPermissions = document.querySelector("#edit-user-permissions-container");
+    let editUser = document.querySelector("#edit-user-container");
+    let changePassword = document.querySelector("#change-password-container");
     let viewUsers = document.querySelector("#view-users-container");
     deactivatedUsers.style.display = "none";
+    editUserPermissions.style.display = "none";
+    editUser.style.display = "none";
+    addUser.style.display = "none";
+    changePassword.style.display = "none";
     viewUsers.style.display = "block";
 };
 

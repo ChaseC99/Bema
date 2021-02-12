@@ -36,15 +36,22 @@ form input[type=checkbox] {
     margin: 0px;
 }
 form .col-10 {
-    width: 15%;
+    width: 20%;
 }
 form .col-90 {
-    width: 80%;
+    width: 75%;
     margin-left: 5%;
 }
 form select {
     height: 33px;
     font-size: 16px;
+}
+form h3 {
+    margin-top: 40px;
+    margin-bottom: 10px;
+}
+form h3:first-child {
+    margin-top: 0px;
 }
 .custom-select {
     position: relative;

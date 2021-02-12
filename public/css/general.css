@@ -20,6 +20,14 @@ a:hover {
 .green {
     color: #00a60e;
 }
+.bold {
+    font-weight: 700;
+}
+span.label {
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-right: 5px;
+}
 /* Everything on the page under the header */
 .page-container {
     display: flex;
