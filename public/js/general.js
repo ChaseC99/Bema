@@ -40,13 +40,38 @@ let showActionDropdown = (id) => {
     }
 }
 
-window.onclick = function(event) {
-  if (!event.target.matches('.actions-dropdown-btn')) {
-    let dropdowns = document.querySelectorAll(".actions-dropdown-content");
-    for (let i = 0; i < dropdowns.length; i++) {
-        dropdowns[i].hidden = true;
+let showSelectDropdown = (id) => {
+    let dropdownContent = document.querySelector("#" + id + " .select-dropdown-content");
+    if (dropdownContent.hidden) {
+        dropdownContent.hidden = false;
+    } else {
+        dropdownContent.hidden = true;
     }
-  }
+}
+
+window.onclick = function(event) {
+    if (!event.target.matches('.actions-dropdown-btn') && !event.target.matches('.custom-select-btn')) {
+        let dropdowns = document.querySelectorAll(".actions-dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            dropdowns[i].hidden = true;
+        }
+    }
+
+    if (!event.target.matches('.custom-select-btn')) {
+        let dropdowns = document.querySelectorAll(".select-dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            dropdowns[i].hidden = true;
+        }
+    }
+}
+
+// Custom select functionality
+function setSelectValue(selectId, value, text) {
+    var input = document.getElementById(selectId + '-input');
+    input.value = value;
+
+    var selectBtn = document.querySelector("#" + selectId + '-dropdown .custom-select-btn');
+    selectBtn.innerHTML = text + '<i class="fas fa-angle-down">';
 }
 
 // Text editor settings
