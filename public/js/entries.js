@@ -16,12 +16,12 @@ request("get", "/api/internal/contests", null, (data) => {
     if (!data.error) {
         sidebarSpinner.style.display = "none";
         entryContestName.textContent = `Entries for ${data.contests.filter(c => c.contest_id == currentContestId)[0].contest_name}`;
+        sidebar.innerHTML += `<h3>Contest</h3>`;
         data.contests.forEach((c, idx) => {
             sidebar.innerHTML += `
                 <a class="nav-button" href="/entries/${c.contest_id}" id="contest-tab-${c.contest_id}">
-                    <i class="fas fa-trophy"></i>
                     <p>
-                        ${c.contest_name}
+                        ${c.contest_name.split("Contest: ")[1]}
                     </p>
                 </a>
             `;
