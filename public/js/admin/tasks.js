@@ -1,7 +1,7 @@
 let incompleteTasksTableBody = document.querySelector("#incomplete-tasks-table-body");
 let completedTasksTableBody = document.querySelector("#completed-tasks-table-body");
-let taskAssignedMember = document.querySelector("#assigned_member");
-let editTaskAssignedMember = document.querySelector("#edit_assigned_member");
+let taskAssignedMember = document.querySelector("#assigned-member-dropdown .select-dropdown-content");
+let editTaskAssignedMember = document.querySelector("#edit-assigned-member-dropdown .select-dropdown-content");
 let tab = document.querySelector("#sidebar-tasks");
 
 // Load page data
@@ -17,9 +17,12 @@ request("get", "/api/internal/tasks", null, data => {
                         <td>${t.evaluator_name !== null ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
                         ${permissions.edit_all_tasks || permissions.delete_all_tasks || data.is_admin ? `
-                            <td id="${t.task_id}-actions">
-                                ${permissions.edit_all_tasks || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>` : ""}
-                                ${permissions.delete_all_tasks || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>` : "" }
+                            <td class="actions">
+                                <i class="actions-dropdown-btn" onclick="showActionDropdown('task-dropdown-${t.task_id}');"></i>
+                                <div class="actions-dropdown-content" hidden id="task-dropdown-${t.task_id}">
+                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="#" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
+                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
+                                </div>
                             </td>
                         ` : ""}
                     </tr>`;
@@ -32,9 +35,12 @@ request("get", "/api/internal/tasks", null, data => {
                         <td>${t.evaluator_name !== null  ? t.evaluator_name : "Available for Sign Up"}</td>
                         <td>${t.task_status}</td>
                         ${permissions.edit_all_tasks || permissions.delete_all_tasks || data.is_admin ? `
-                            <td id="${t.task_id}-actions">
-                                ${permissions.edit_all_tasks || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}');"></i>` : ""}
-                                ${permissions.delete_all_tasks || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteTask(${t.task_id});"></i>` : "" }
+                            <td class="actions">
+                                <i class="actions-dropdown-btn" onclick="showActionDropdown('task-dropdown-${t.task_id}');"></i>
+                                <div class="actions-dropdown-content" hidden id="task-dropdown-${t.task_id}">
+                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="#" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
+                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
+                                </div>
                             </td>
                         ` : ""}
                     </tr>`;
@@ -52,12 +58,12 @@ request("get", "/api/internal/users", null, data => {
             data.evaluators.forEach(c => {
                 taskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `
-                        <option value="${c.evaluator_id}">${c.evaluator_name}</option>
+                        <a href="#" onclick="setSelectValue('assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
                     ` : ""}
                 `;
                 editTaskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `
-                        <option value="${c.evaluator_id}">${c.evaluator_name}</option>
+                        <a href="#" onclick="setSelectValue('edit-assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
                     ` : ""}
                 `;
             });
@@ -113,21 +119,27 @@ let editTask = (e) => {
     });
 }
 let deleteTask = (task_id) => {
-    let confirm = window.confirm("Are you sure you want to delete this task?");
-    if (confirm) {
-        request("delete", "/api/internal/tasks", {
-            task_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/tasks", {
+        task_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 // Shows task forms
+let showViewTasks = () => {
+    let viewTasks = document.querySelector("#view-tasks-container");
+    let createTask = document.querySelector("#create-task-container");
+    let editTask = document.querySelector("#edit-task-container");
+
+    createTask.style.display = "none";
+    editTask.style.display = "none";
+    viewTasks.style.display = "block";
+}
 let showCreateTaskForm = () => {
     let createTask = document.querySelector("#create-task-container");
     let viewTasks = document.querySelector("#view-tasks-container");
@@ -150,6 +162,9 @@ let showEditTaskForm = (...args) => {
     for (let i = 0; i < editTaskForm.length - 1; i++) {
         editTaskForm[i].value = args[i];
     }
+
+    setSelectValue('edit-assigned-member', `${args[3]}`, `${args[5]}`)
+    setSelectValue('edit-status', `${args[4]}`, `${args[4]}`);
 }
 
 // Update navbar highlighting
