@@ -134,8 +134,8 @@ let showConfirmModal = (title, message, action, isDestructive, actionText) => {
     modalBody.innerHTML = `<p>${message}</p>`;
     modalFooter.innerHTML = `
     <span>
-        <a href="#" class="btn-tertiary" onclick="hideModal('main-modal')">Cancel</a>
-        <a href="#" class="${isDestructive ? 'btn-destructive-primary' : 'btn-primary'}" onclick=${action}>${actionText}</a>
+        <a href="javascript:void(0);" class="btn-tertiary" onclick="hideModal('main-modal')">Cancel</a>
+        <a href="javascript:void(0);" class="${isDestructive ? 'btn-destructive-primary' : 'btn-primary'}" onclick=\"${action}\">${actionText}</a>
     </span>
     `;
     modal.style.display = "block";

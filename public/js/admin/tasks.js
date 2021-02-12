@@ -163,7 +163,7 @@ let showEditTaskForm = (...args) => {
         editTaskForm[i].value = args[i];
     }
 
-    setSelectValue('edit-assigned-member', `${args[3]}`, `${args[5]}`)
+    setSelectValue('edit-assigned-member', `${args[3]}`, `${args[5] === 'null' ? 'Available for Sign Up' : args[5]}`)
     setSelectValue('edit-status', `${args[4]}`, `${args[4]}`);
 }
 
