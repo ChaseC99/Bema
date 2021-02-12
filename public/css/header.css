@@ -15,26 +15,6 @@
     align-items: center;
     height: 60px;
 }
-.page-header.hero {
-    background-image: url("/static/images/volunteers.png");
-    height: 400px;
-    background-position: center top;
-    background-size: cover;
-    color: #fff;
-}
-.page-header.hero .heading {
-    display: block;
-}
-.page-header.hero .nav {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-.page-header.hero .nav:hover {
-    background-color: #fff;
-    color: #333;
-}
-.page-header.hero .nav .logo-container {
-    background: none;
-}
 .logo-container {
     display: flex;
     align-items: center;
@@ -65,6 +45,7 @@
 }
 .logo:hover {
     cursor: pointer;
+    text-decoration: none !important;
 }
 .links span a {
     color: inherit;
