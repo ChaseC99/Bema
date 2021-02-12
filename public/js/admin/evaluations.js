@@ -22,7 +22,7 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
         editable_contest = data.currentContest.contest_id;
 
         if (editable_contest === current_contest_id && !data.is_admin && !permissions.edit_all_evaluations && !permissions.delete_all_evaluations) {
-            evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 1%">Actions</th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
+            evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 1%"></th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
         }
     } else {
         displayError(data.error);
@@ -105,7 +105,7 @@ request("get", `/api/internal/evaluations?contestId=${current_contest_id}&userId
                 <td>
                     ${e.evaluation_level}
                 </td>
-                    ${editable_contest === current_contest_id && !data.is_admin && !permissions.delete_all_evaluations && !permissions.edit_all_evaluations ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
+                    ${editable_contest === current_contest_id && !data.is_admin && !permissions.delete_all_evaluations && !permissions.edit_all_evaluations ? `<td class="actions"><a class="btn-tertiary" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')">Edit</a></td>` : ""}
                     ${data.is_admin || permissions.edit_all_evaluations || permissions.delete_all_evaluations ? `<td class="actions">
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('evaluation-dropdown-${e.evaluation_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="evaluation-dropdown-${e.evaluation_id}">

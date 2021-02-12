@@ -1,4 +1,4 @@
-let userId = document.location.href.split("/")[4];
+let userId = document.location.href.split("/")[4].split("#")[0];
 let pageTitle = document.querySelector("#page-title");
 let evaluatorNameSpinner = document.querySelector("#evaluator-name-spinner");
 let evaluatorInformation = document.querySelector("#evaluator-information");
@@ -44,7 +44,12 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
                 <p><strong>Receive email notifications:</strong> ${data.receive_emails ? "Yes" : "No"}</p>
             `;
             if (is_self && !is_admin && !permissions.edit_user_profiles) {
-                personalInformation.parentNode.firstElementChild.innerHTML += `<i class="control-btn far fa-edit" onclick="showEditPersonalInformationForm('${data.nickname}', '${data.email}', ${data.receive_emails});"></i>`;
+                personalInformation.parentNode.firstElementChild.innerHTML += `
+                    <i class="actions-dropdown-btn" onclick="showActionDropdown('edit-personal-info-dropdown');"></i>
+                    <div class="actions-dropdown-content" hidden id="edit-personal-info-dropdown">
+                        <a href="#" onclick="showEditPersonalInformationForm('${data.nickname}', '${data.email}', ${data.receive_emails});">Edit</a>
+                    </div>
+                `;
             }
 
             // Login Information
@@ -52,11 +57,14 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
             loginInformation.innerHTML = `
                 <p><strong>Username:</strong> ${data.username}</p>
                 <p><strong>Last login:</strong> ${data.logged_in_tstz}</p>
-                <p><span class="admin-button" onclick="showResetPasswordForm();">Reset Password</span></p>
             `;
-            if (is_self && !is_admin && !permissions.edit_user_profiles) {
-                loginInformation.parentNode.firstElementChild.innerHTML += `<i class="control-btn far fa-edit" onclick="showEditLoginInformationForm('${data.username}');"></i>`;
-            }
+            loginInformation.parentNode.firstElementChild.innerHTML += `
+                <i class="actions-dropdown-btn" onclick="showActionDropdown('edit-login-info-dropdown');"></i>
+                <div class="actions-dropdown-content" hidden id="edit-login-info-dropdown">
+                    ${is_self && !is_admin && !permissions.edit_user_profiles ? `<a href="#" onclick="showEditLoginInformationForm('${data.username}')">Change Username</a>` : ''}
+                    <a href="#" onclick="showResetPasswordForm()">Change Password</a>
+                </div>
+            `;
         }
     } else {
         displayError(data.error);
@@ -65,6 +73,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
 
 request("get", "/api/internal/users/stats?userId="+userId, null, (data) => {
     if (!data.error) {
+        judgingInformationSpinner.style.display = "none";
         judgingInformation.innerHTML += `
             <p><strong>Contests Judged:</strong> ${data.totalContestsJudged}</p>
             <p><strong>Total Entries Scored:</strong> ${data.totalEvaluations}</p>
@@ -131,6 +140,14 @@ let resetPassword = (e) => {
 }
 
 // Show page forms
+let showViewProfile = () => {
+    let pages = document.querySelectorAll(".content-container");
+    for (let i = 0; i < pages.length; i++) {
+        pages[i].style.display = "none";
+    }
+
+    document.querySelector("#view-profile-page").style.display = "block";
+}
 let showEditPersonalInformationForm = (...args) => {
     // nickname, email, receive_emails
     let formPage = document.querySelector("#edit-personal-information-page");

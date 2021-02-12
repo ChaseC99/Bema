@@ -12,15 +12,8 @@
     <%- include ../partials/header %>
     <div class="page-container">
         <div class="content-container" id="view-profile-page">
-            <!-- <div id="user-profile">
-                <img class="profile-avatar" src="https://cdn.kastatic.org/images/avatars/svg/leaf-green.svg">
-                <h1 class="profile-name">Full Name (Nickname)</h1>
-            </div> -->
             <div class="content-header" id="page-title">
                 <img id="evaluator-name-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner small">
-                <!-- <h2 id="entry-contest-name">
-                    User Profile - Evan Lewis
-                </h2> -->
             </div>
             <div class="previews-container">
                 <div class="preview col-6 standard">
@@ -91,8 +84,9 @@
                             <input class="form-input" type="checkbox" id="receive_emails" name="receive_emails">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Submit">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showViewProfile();">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Submit">
                     </div>
                 </form>
             </div>
@@ -102,7 +96,7 @@
                     <h2>Edit Login Information</h2>
                 </div>
 
-                <form id="edit-login-information-form" class="admin-form" onsubmit="return editLoginInformation(event)">
+                <form id="edit-login-information-form" class="admin-form" style="width: 35%" onsubmit="return editLoginInformation(event)">
                     <div class="row">
                         <div class="col-10">
                             <label for="username">Username</label>
@@ -111,8 +105,9 @@
                             <input class="form-input" type="text" id="username" name="username">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Submit">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showViewProfile();">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Submit">
                     </div>
                 </form>
             </div>
@@ -121,8 +116,7 @@
                 <div class="content-header">
                     <h2>Reset Password</h2>
                 </div>
-
-                <form id="reset-password-form" class="admin-form" onsubmit="return resetPassword(event)">
+                <form id="reset-password-form" class="admin-form" style="width: 35%" onsubmit="return resetPassword(event)">
                     <div class="row">
                         <div class="col-10">
                             <label for="new_password">New Password</label>
@@ -131,8 +125,9 @@
                             <input class="form-input" type="password" id="new_password" name="new_password">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Submit">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showViewProfile();">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Submit">
                     </div>
                 </form>
             </div>
