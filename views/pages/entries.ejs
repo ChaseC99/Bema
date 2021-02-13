@@ -29,26 +29,23 @@
                 </h2>
                 <div>
                     <% if (permissions.add_entries || is_admin) { %>
-                        <span id="import-entries-btn" class="admin-button" onclick="updateEntries(<%= contest_id %>)">Import Entries</span>
-                        <span id="add-entry-btn" class="admin-button" onclick="showAddEntryForm()">Add Single Entry</span>
+                        <span id="import-entries-btn" class="btn-primary" onclick="updateEntries(<%= contest_id %>)">Import Entries</span>
+                        <span id="add-entry-btn" class="btn-primary" onclick="showAddEntryForm()">Add Single Entry</span>
                     <% } %>
                     <% if (permissions.assign_entry_groups || is_admin) { %>
-                        <span id="transfer-entries-btn" class="admin-button" onclick="showUpdateGroupsForm()">Update Groups</span>
+                        <span id="transfer-entries-btn" class="btn-primary" onclick="showUpdateGroupsForm()">Update Groups</span>
                     <% } %>
                 </div>
             </div>
             <div class="previews-container">
                 <div class="preview col-12 standard">
-                    <div class="db-header">
-                        <p>Entry stats</p>
-                    </div>
                     <div class="preview-content">
                         <img id="entries-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                         <table id="entries-table">
                             <thead>
-                                <th style="width: 8%">ID</th>
-                                <th style="width: 20%">Title</th>
-                                <th style="width: 20%">Author</th>
+                                <th style="width: 5%">ID</th>
+                                <th style="width: 25%">Title</th>
+                                <th style="width: 15%">Author</th>
                                 <% if (logged_in) { %>
                                 <th style="width: 5%">Skill Level</th>
                                 <% } %>
@@ -57,7 +54,7 @@
                                 <th style="width: 5%">Group</th>
                                 <% } %>
                                 <% if (is_admin || permissions.edit_entries || permissions.delete_entries) { %>
-                                <th style="width: 3%">Actions</th>
+                                <th class="actions" style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="entries-table-body">
@@ -84,8 +81,9 @@
                             <input class="form-input" type="text" id="entry_kaid" name="entry_kaid">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Submit">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showViewEntries()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Submit">
                     </div>
                 </form>
             </div>
@@ -121,12 +119,16 @@
                             <label for="edit_entry_level">Skill Level</label>
                         </div>
                         <div class="col-90">
-                            <select name="edit_entry_level">
-                                <option value="TBD">TBD</option>
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
-                            </select>
+                            <input type="hidden" id="edit-entry-level-input" name="edit_entry_level" value="TBD" hidden>
+                            <div class="custom-select" id="edit-entry-level-dropdown">
+                                <div class="custom-select-btn" onclick="showSelectDropdown('edit-entry-level-dropdown');">TBD<i class="fas fa-angle-down"></i></div>
+                                <div class="select-dropdown-content" hidden>
+                                    <a href="#" onclick="setSelectValue('edit-entry-level', 'TBD', 'TBD');">TBD</a>
+                                    <a href="#" onclick="setSelectValue('edit-entry-level', 'Beginner', 'Beginner');">Beginner</a>
+                                    <a href="#" onclick="setSelectValue('edit-entry-level', 'Intermediate', 'Intermediate');">Intermediate</a>
+                                    <a href="#" onclick="setSelectValue('edit-entry-level', 'Advanced', 'Advanced');">Advanced</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
@@ -134,29 +136,34 @@
                             <label for="edit_entry_group">Assigned Group</label>
                         </div>
                         <div class="col-90">
-                            <select name="edit_entry_group" id="assigned-group-dropdown">
-                                <option value="null">None</option>
-                            </select>
+                            <input type="hidden" id="assigned-group-input" name="edit_entry_group" value="null" hidden>
+                            <div class="custom-select" id="assigned-group-dropdown">
+                                <div class="custom-select-btn" onclick="showSelectDropdown('assigned-group-dropdown');">None<i class="fas fa-angle-down"></i></div>
+                                <div class="select-dropdown-content" hidden>
+
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-10">
                             <label for="edit_flagged">Flagged</label>
                         </div>
-                        <div class="col-10">
-                            <input type="checkbox" id="edit_flagged" name="edit_flagged">
+                        <div class="col-90">
+                            <input class="form-input" type="checkbox" id="edit_flagged" name="edit_flagged">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-10">
                             <label for="edit_disqualified">Disqualified</label>
                         </div>
-                        <div class="col-10">
-                            <input type="checkbox" id="edit_disqualified" name="edit_disqualified">
+                        <div class="col-90">
+                            <input class="form-input" type="checkbox" id="edit_disqualified" name="edit_disqualified">
                         </div>
                     </div>
-                    <div class="row">
-                        <input class="admin-button" type="submit" value="Save">
+                    <div class="row form-actions">
+                        <a href="#" class="btn-secondary" onclick="showViewEntries()">Cancel</a>
+                        <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
@@ -164,17 +171,17 @@
         <% if (permissions.assign_entry_groups || is_admin) { %>
             <div class="content-container" id="update-entry-groups-page">
                 <div class="content-header">
-                    <h2>Update Entry Groups</h2>
+                    <h2><a href="#" onclick="showViewEntries()">Entries</a> > Update Entry Groups</h2>
                 </div>
 
                 <div class="previews-container">
                     <div class="preview col-12 standard">
                         <div class="db-header">
-                            <p>Create new group assignments</p>
+                            <p>New Group Assignments</p>
                         </div>
                         <div class="preview-content">
-                            <span id="assign-entries-btn" class="admin-button" onclick="assignEntries(<%= contest_id %>)">Assign All Entries To Groups</span>
-                            <span id="assign-new-entries-btn" class="admin-button" onclick="assignNewEntries(<%= contest_id %>)">Assign New Entries To Groups</span>
+                            <span id="assign-entries-btn" class="btn-secondary" onclick="showConfirmModal('Assign all entries?', 'Are you sure you want to assign all entries to groups? Any entries that are currently assigned may be reassigned. If you need to assign a few entries, edit them individually instead.', 'assignEntries(<%= contest_id %>)', false, 'Assign');">Assign All Entries To Groups</span>
+                            <span id="assign-new-entries-btn" class="btn-secondary" onclick="showConfirmModal('Assign new entries?', 'Are you sure you want to assign new entries to groups? Any entries that are currently unassigned will be assigned a group. If you need to assign a few entries, edit them individually instead.', 'assignNewEntries(<%= contest_id %>)', false, 'Assign');">Assign New Entries To Groups</span>
                         </div>
                     </div>
                 </div>
@@ -182,19 +189,22 @@
                 <div class="previews-container">
                     <div class="preview col-12 standard">
                         <div class="db-header">
-                            <p>Manage existing group assignments</p>
+                            <p>Transfer Groups</p>
                         </div>
                         <div class="preview-content">
-                            <form id="transfer-entries-form" class="admin-form" onsubmit="return transferEntries(event)">
+                            <form id="transfer-entries-form" onsubmit="return transferEntries(event)">
                                 <input type="hidden" name="contest_id" value="<%= contest_id %>"></input>
                                 <div class="row">
                                     <div class="col-10">
                                         <label for="current_entry_group">Current Group</label>
                                     </div>
                                     <div class="col-90">
-                                        <select name="current_entry_group" id="current-group-dropdown">
-                                            <option value="null">None</option>
-                                        </select>
+                                        <input type="hidden" id="current-group-input" name="current_entry_group" value="null" hidden>
+                                        <div class="custom-select" id="current-group-dropdown">
+                                            <div class="custom-select-btn" onclick="showSelectDropdown('current-group-dropdown');">None<i class="fas fa-angle-down"></i></div>
+                                            <div class="select-dropdown-content" hidden>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -202,13 +212,16 @@
                                         <label for="new_entry_group">New Group</label>
                                     </div>
                                     <div class="col-90">
-                                        <select name="new_entry_group" id="new-group-dropdown">
-                                            <option value="null">None</option>
-                                        </select>
+                                        <input type="hidden" id="new-group-input" name="new_entry_group" value="null" hidden>
+                                        <div class="custom-select" id="new-group-dropdown">
+                                            <div class="custom-select-btn" onclick="showSelectDropdown('new-group-dropdown');">None<i class="fas fa-angle-down"></i></div>
+                                            <div class="select-dropdown-content" hidden>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <input class="admin-button" type="submit" value="Transfer Entry Groups">
+                                    <input class="btn-secondary" type="submit" value="Transfer">
                                 </div>
                             </form>
                         </div>
@@ -224,19 +237,19 @@
 <script src="/static/js/entries.js"></script>
 <% if (permissions.assign_entry_groups || permissions.edit_entries || is_admin) { %>
     <script>
-        let groupDropdown = document.querySelector("#assigned-group-dropdown");
-        let currentGroupDropdown = document.querySelector("#current-group-dropdown");
-        let newGroupDropdown = document.querySelector("#new-group-dropdown");
+        let groupDropdown = document.querySelector("#assigned-group-dropdown .select-dropdown-content");
+        let currentGroupDropdown = document.querySelector("#current-group-dropdown .select-dropdown-content");
+        let newGroupDropdown = document.querySelector("#new-group-dropdown .select-dropdown-content");
         request("get", "/api/internal/admin/getEvaluatorGroups", null, (data) => {
             if (!data.error) {
                 data.evaluatorGroups.forEach(g => {
                     if (g.is_active) {
                         if (permissions.edit_entries || data.is_admin) {
-                            groupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
+                            groupDropdown.innerHTML += `<a href="#" onclick="setSelectValue('assigned-group', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
                         }
                         if (permissions.assign_entry_groups || data.is_admin) {
-                            currentGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
-                            newGroupDropdown.innerHTML += `<option value="${g.group_id}">${g.group_id} - ${g.group_name}</option>`;
+                            currentGroupDropdown.innerHTML += `<a href="#" onclick="setSelectValue('current-group', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
+                            newGroupDropdown.innerHTML += `<a href="#" onclick="setSelectValue('new-group', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
                         }
                     }
                 });

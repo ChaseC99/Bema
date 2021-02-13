@@ -41,7 +41,7 @@
                             <th>Author</th>
                             <th>Skill Level</th>
                             <% if (permissions.manage_winners || is_admin) { %>
-                                <th style="width: 3%">Actions</th>
+                                <th style="width: 1%"></th>
                             <% } %>
                         </thead>
                         <tbody id="winners-table-body">
@@ -54,14 +54,14 @@
             <div class="previews-container">
                 <div class="preview col-6 standard">
                     <div class="db-header">
-                        <p>Entries scored per judge</p>
+                        <p>Entries Scored Per Judge</p>
                     </div>
                     <div class="preview-content">
                         <img id="evals-per-evaluator-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
                         <table id="evals-per-evaluator-table">
                             <thead>
-                                <th>Judge Name</th>
-                                <th>Entries Scored</th>
+                                <th style="width: 50%;">Judge Name</th>
+                                <th style="width: 50%;">Entries Scored</th>
                             </thead>
                             <tbody id="evals-per-evaluator-table-body">
                                 <!-- evaluationsPerEvaluator -->
@@ -72,7 +72,7 @@
 
                 <div class="preview col-6 standard">
                     <div class="db-header">
-                        <p>Entries scored per level</p>
+                        <p>Entries Scored Per Level</p>
                     </div>
                     <div class="preview-content">
                         <img id="entries-per-level-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
@@ -91,9 +91,9 @@
                 <div class="preview col-12 standard wide-box">
                     <div class="db-header">
                         <% if (logged_in) { %>
-                            <p>Entries by average score</p>
+                            <p>Entries By Average Score</p>
                         <% } else { %>
-                            <p>All entries in this contest</p>
+                            <p>All Submitted Entries</p>
                         <% } %>
                     </div>
                     <div class="preview-content">
@@ -104,12 +104,12 @@
                                 <th>Title</th>
                                 <th>Author</th>
                                 <% if (logged_in) { %>
-                                <th>Evaluations</th>
-                                <th>Skill Level</th>
-                                <th>Avg Score</th>
+                                <th style="width: 5%">Evaluations</th>
+                                <th style="width: 10%">Skill Level</th>
+                                <th style="width: 10%">Avg Score</th>
                                 <% } %>
                                 <% if (permissions.manage_winners || is_admin) { %>
-                                <th>Actions</th>
+                                <th style="width: 1%;"></th>
                                 <% } %>
                             </thead>
                             <tbody id="entries-by-avg-score-table-body">

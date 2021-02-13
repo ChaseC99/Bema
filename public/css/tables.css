@@ -1,28 +1,33 @@
-/* Data tables */
 table {
-    text-align: center;
+    text-align: left;
     margin: auto;
     border-collapse: collapse;
     width: 100%;
+    color: #21242c;
+    font-size: 16px;
+    margin-bottom: 10px;
 }
-
+tr {
+    border-bottom: 1px solid rgba(33, 36, 44, 0.16);
+}
 table a {
     text-decoration: none;
-    color: black;
 }
-
+table a:hover {
+    text-decoration: underline;
+}
 td, th {
-    border: 1px solid #ddd;
-    padding: 8px;
+    padding: 16px 8px;
 }
-
-tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
 th {
     padding-top: 12px;
     padding-bottom: 12px;
-    background-color: rgb(100, 160, 100);
-    color: white;
+    /* background-color: rgb(100, 160, 100); */
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 400;
+}
+td.actions {
+    padding: 0px;
+    position: relative;
 }

@@ -22,7 +22,7 @@ request("get", `/api/internal/contests/getCurrentContest`, null, (data) => {
         editable_contest = data.currentContest.contest_id;
 
         if (editable_contest === current_contest_id && !data.is_admin && !permissions.edit_all_evaluations && !permissions.delete_all_evaluations) {
-            evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 3%">Actions</th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
+            evaluationsTableHead.innerHTML = evaluationsTableHead.innerHTML.split("</tr>")[0] + '<th style="width: 1%"></th>' + evaluationsTableHead.innerHTML.split("</tr>")[1];
         }
     } else {
         displayError(data.error);
@@ -34,15 +34,15 @@ request("get", "/api/internal/contests/getContestsEvaluatedByUser?userId=" + cur
     if (!data.error) {
         if (data.contests.length > 0) {
             titleSpinner.style.display = "none";
-            evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} - Evaluations For ` + evaluationsContestName.textContent;
+            evaluationsContestName.textContent = `${data.contests.filter(c => c.contest_id == current_contest_id)[0].contest_name} --- Evaluations For ` + evaluationsContestName.textContent;
 
             sidebarSpinner.style.display = "none";
+            sidebar.innerHTML += `<h3>Contest</h3>`;
             data.contests.forEach((c, idx) => {
                 sidebar.innerHTML += `
                     <a class="nav-button" href="/admin/evaluations/${current_evaluator_id}/${c.contest_id}" id="contest-tab-${c.contest_id}">
-                        <i class="fas fa-trophy"></i>
                         <p>
-                            ${c.contest_name}
+                            ${c.contest_name.split("Contest: ")[1]}
                         </p>
                     </a>
                 `;
@@ -105,10 +105,13 @@ request("get", `/api/internal/evaluations?contestId=${current_contest_id}&userId
                 <td>
                     ${e.evaluation_level}
                 </td>
-                    ${editable_contest === current_contest_id && !data.is_admin && !permissions.delete_all_evaluations && !permissions.edit_all_evaluations ? `<td id="${e.evaluation_id}-actions"><i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i></td>` : ""}
-                    ${data.is_admin || permissions.edit_all_evaluations || permissions.delete_all_evaluations ? `<td id="${e.evaluation_id}-actions">
-                        ${permissions.edit_all_evaluations || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')"></i>` : ""}
-                        ${permissions.delete_all_evaluations || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEvaluation(${e.evaluation_id})"></i>` : ""}
+                    ${editable_contest === current_contest_id && !data.is_admin && !permissions.delete_all_evaluations && !permissions.edit_all_evaluations ? `<td class="actions"><a class="btn-tertiary" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')">Edit</a></td>` : ""}
+                    ${data.is_admin || permissions.edit_all_evaluations || permissions.delete_all_evaluations ? `<td class="actions">
+                        <i class="actions-dropdown-btn" onclick="showActionDropdown('evaluation-dropdown-${e.evaluation_id}');"></i>
+                        <div class="actions-dropdown-content" hidden id="evaluation-dropdown-${e.evaluation_id}">
+                            ${permissions.edit_all_evaluations || data.is_admin ? `<a href="#" onclick="showEditEvaluationForm(${e.evaluation_id}, ${e.entry_id}, ${e.creativity}, ${e.complexity}, ${e.execution}, ${e.interpretation}, '${e.evaluation_level}')">Edit</a>` : ""}
+                            ${permissions.delete_all_evaluations || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Evaluation?', 'Are you sure you want to delete this evaluation? This action cannot be undone.', 'deleteEvaluation(${e.evaluation_id})', true, 'Delete')">Delete</a>` : ""}
+                        </div>
                     </td>` : ""}
             </tr>`;
         });
@@ -136,22 +139,25 @@ let editEvaluation = (e) => {
     });
 }
 let deleteEvaluation = (evaluation_id) => {
-    let shouldDelete = confirm("Are you sure you want to delete this evaluation?");
-
-    if (shouldDelete) {
-        request("delete", "/api/internal/evaluations", {
-            evaluation_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/evaluations", {
+        evaluation_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 ///// HTML modifier functions (like displaying forms) /////
+let showViewEvaluations = () => {
+    let editEvaluationPage = document.querySelector("#edit-evaluation-page");
+    let viewEvaluationsPage = document.querySelector("#evaluation-list");
+
+    editEvaluationPage.style.display = "none";
+    viewEvaluationsPage.style.display = "block";
+}
 let showEditEvaluationForm = (...args) => {
     // evaluation id, creativity, complexity, quality, interpretation, skill level
     let editEvaluationPage = document.querySelector("#edit-evaluation-page");
@@ -164,4 +170,6 @@ let showEditEvaluationForm = (...args) => {
     for (let i = 0; i < editEvaluationForm.length - 1; i++) {
         editEvaluationForm[i].value = args[i];
     }
+
+    setSelectValue('evaluation-level', args[6], args[6]);
 };

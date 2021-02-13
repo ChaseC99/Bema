@@ -16,12 +16,12 @@ request("get", "/api/internal/contests", null, (data) => {
     if (!data.error) {
         sidebarSpinner.style.display = "none";
         entryContestName.textContent = `Entries for ${data.contests.filter(c => c.contest_id == currentContestId)[0].contest_name}`;
+        sidebar.innerHTML += `<h3>Contest</h3>`;
         data.contests.forEach((c, idx) => {
             sidebar.innerHTML += `
                 <a class="nav-button" href="/entries/${c.contest_id}" id="contest-tab-${c.contest_id}">
-                    <i class="fas fa-trophy"></i>
                     <p>
-                        ${c.contest_name}
+                        ${c.contest_name.split("Contest: ")[1]}
                     </p>
                 </a>
             `;
@@ -41,7 +41,7 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
             <tr id="${a.entry_id}">
                 <td>
                     ${a.entry_id}
-                    ${data.logged_in ? a.flagged ? "<i class='fas fa-flag red' title='Flagged'></i>" : "" : ""}
+                    ${data.logged_in ? a.flagged && !a.disqualified ? "<i class='fas fa-flag red' title='Flagged'></i>" : "" : ""}
                     ${data.logged_in ? a.disqualified ? "<i class='fas fa-ban red' title='Disqualified'></i>" : "" : ""}
                 </td>
                 <td>
@@ -64,9 +64,14 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                 </td>
                 ${data.logged_in ? `<td>${a.assigned_group_id ? a.assigned_group_id : "None"}</td>`: ""}
                 ${data.is_admin || permissions.edit_entries || permissions.delete_entries? `
-                    <td id="${a.entry_id}-actions">
-                        ${permissions.edit_entries || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified})"></i>` : ""}
-                        ${permissions.delete_entries || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteEntry(${a.entry_id})"></i>` : ""}
+                    <td id="${a.entry_id}-actions" class="actions">
+                    <div>
+                        <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
+                        <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
+                            ${permissions.edit_entries || data.is_admin ? `<a href="#" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
+                            ${permissions.delete_entries || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
+                        </div>
+                    </div>
                      </td>
                 ` : "" }
             </tr>`;
@@ -101,19 +106,15 @@ let editEntry = (e) => {
     });
 }
 let deleteEntry = (entry_id) => {
-    let shouldDelete = confirm("Are you sure you want to delete this entry?");
-
-    if (shouldDelete) {
-        request("delete", "/api/internal/entries", {
-            entry_id
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("delete", "/api/internal/entries", {
+        entry_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 const updateEntries = (contest_id) => {
     request("post", "/api/internal/entries/import", {
@@ -166,39 +167,30 @@ const addEntry = (e) => {
 }
 
 const assignEntries = (contest_id) => {
-    let shouldAssign = confirm("Are you sure you want to assign all entries to groups? Any entries that are currently assigned may be reassigned. If you need to assign a few entries, edit them individually instead.");
-
-    if (shouldAssign) {
-        request("put", "/api/internal/entries/assignToGroups", {
-            contest_id,
-            assignAll: true
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("put", "/api/internal/entries/assignToGroups", {
+        contest_id,
+        assignAll: true
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 const assignNewEntries = (contest_id) => {
     let assignAll = false;
-
-    let shouldAssign = confirm("Are you sure you want to assign new entries to groups? Any entries that are currently unassigned will be assigned a group. If you need to assign a few entries, edit them individually instead.");
-
-    if (shouldAssign) {
-        request("put", "/api/internal/entries/assignToGroups", {
-            contest_id,
-            assignAll
-        }, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    request("put", "/api/internal/entries/assignToGroups", {
+        contest_id,
+        assignAll
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 const transferEntries = (e) => {
@@ -220,6 +212,17 @@ const transferEntries = (e) => {
 }
 
 ///// HTML modifier functions (like displaying forms) /////
+let showViewEntries = () => {
+    let viewEntryPage = document.querySelector("#entry-list");
+    let addEntryForm = document.querySelector("#add-entry-page");
+    let editEntryPage = document.querySelector("#edit-entry-page");
+    let updateGroupspage = document.querySelector("#update-entry-groups-page");
+
+    viewEntryPage.style.display = "block";
+    addEntryForm.style.display = "none";
+    editEntryPage.style.display = "none";
+    updateGroupspage.style.display = "none";
+}
 let showAddEntryForm = () => {
     let addEntryForm = document.querySelector("#add-entry-page");
     let viewEntryPage = document.querySelector("#entry-list");
@@ -243,6 +246,9 @@ let showEditEntryForm = (...args) => {
             editEntryForm[i].value = args[i];
         }
     }
+
+    document.querySelector("#edit-entry-level-dropdown .custom-select-btn").innerHTML = `${args[3]} <i class="fas fa-angle-down"></i>`;
+    document.querySelector("#assigned-group-dropdown .custom-select-btn").innerHTML = `${args[7] === 'null' ? "None" : args[7]} <i class="fas fa-angle-down"></i>`;
 };
 
 let showUpdateGroupsForm = () => {

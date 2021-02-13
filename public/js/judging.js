@@ -87,6 +87,8 @@ if (allJudged) {
         resultsLink.setAttribute("href", "/results/" + data.currentContest.contest_id);
         console.log(resultsLink);
     });
+
+    document.querySelector(".footer").setAttribute("style", "position: fixed; bottom: 0px; width: 100%;");
 } else {
     viewerIframe.addEventListener("load", () => {
         viewerIframe.style.display = "block";
@@ -95,7 +97,6 @@ if (allJudged) {
 
     // /internal/judging/criteria
     request("get", "/api/internal/judging/criteria", null, data => {
-        console.log(data.judging_criteria);
         if (!data.error) {
             let creativitySlider = new Slider({
                 title: data.judging_criteria[0].criteria_name,
@@ -103,7 +104,7 @@ if (allJudged) {
                 description: data.judging_criteria[0].criteria_description,
                 id: "creativity-slider",
                 max: 10,
-                color: "#b9e986",
+                color: "#00a60e",
                 borderColor: "#7ed320",
                 leftLabel: "Unimaginative",
                 rightLabel: "Inventive"
@@ -115,7 +116,7 @@ if (allJudged) {
                 description: data.judging_criteria[1].criteria_description,
                 id: "complexity-slider",
                 max: 10,
-                color: "#c6aef8",
+                color: "#9059ff",
                 borderColor: "#8e5bf4",
                 leftLabel: "Basic",
                 rightLabel: "Elaborate"
@@ -127,7 +128,7 @@ if (allJudged) {
                 description: data.judging_criteria[2].criteria_description,
                 id: "quality-code-slider",
                 max: 10,
-                color: "#ffc86e",
+                color: "#ffb100",
                 borderColor: "#fea839",
                 leftLabel: "Poor",
                 rightLabel: "Elegant"
@@ -139,7 +140,7 @@ if (allJudged) {
                 description: data.judging_criteria[3].criteria_description,
                 id: "interpretation-slider",
                 max: 10,
-                color: "#ed8995",
+                color: "#fa50ae",
                 borderColor: "#d0011b",
                 leftLabel: "Unrelated",
                 rightLabel: "Representative"
@@ -155,11 +156,7 @@ let submitEvaluation = (e) => {
     e.preventDefault();
     let body = {};
     for (key of e.target) {
-        if (key.name === "edit_contest_current") {
-            body[key.name] = key.checked;
-        } else {
-            body[key.name] = key.value;
-        }
+        body[key.name] = key.value;
     }
     delete body[""];
     request("post", "/api/internal/judging/submit", body, (data) => {
@@ -172,14 +169,12 @@ let submitEvaluation = (e) => {
 }
 
 let flagEntry = (id) => {
-    if (confirm("Are you sure you want to flag this entry?")) {
-        let body = {entry_id: id};
-        request("put", "/api/internal/entries/flag", body, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    let body = {entry_id: id};
+    request("put", "/api/internal/entries/flag", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }

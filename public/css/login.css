@@ -5,7 +5,6 @@ body {
     background-size: cover;
     height: 100vh;
     overflow-y: hidden;
-    font-family: "Lato", Arial;
     margin: 0;
 }
 .center.vertical {
@@ -46,7 +45,7 @@ body {
     font-weight: 80;
 }
 #login-form {
-    width: 80%;
+    width: 90%;
     margin: auto;
 }
 .login-row {
@@ -67,17 +66,6 @@ body {
     cursor: pointer;
     border: none;
 }
-.error {
-    color: red;
-}
-#links {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-}
-#links a {
-    color: #71B307;
-}
-#links a:hover {
-    color: #518005;
+.login-input {
+    width: 60% !important;
 }

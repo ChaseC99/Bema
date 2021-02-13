@@ -110,14 +110,28 @@ exports.edit = (request, response, next) => {
                 edit_task_status
             } = request.body;
 
-            return db.query("SELECT assigned_member FROM task WHERE task_id = $1", [edit_task_id], res => {
+            return db.query("SELECT assigned_member, task_status FROM task WHERE task_id = $1", [edit_task_id], res => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem getting this task's owner.", res.error);
                 }
                 let evaluator_id = res.rows[0].assigned_member;
+                let currentStatus = res.rows[0].task_status;
 
-                if (request.decodedToken.evauator_id = evaluator_id || request.decodedToken.permissions.edit_all_tasks || request.decodedToken.is_admin) {
+                if (edit_task_title && (request.decodedToken.permissions.edit_all_tasks || request.decodedToken.is_admin)) {
                     return db.query("UPDATE task SET task_title = $1, due_date = $2, assigned_member = $3, task_status = $4 WHERE task_id = $5", [edit_task_title, edit_due_date, edit_assigned_member, edit_task_status, edit_task_id], res => {
+                        if (res.error) {
+                            return handleNext(next, 400, "There was a problem editing this task.", res.error);
+                        }
+                        successMsg(response);
+                    });
+                } else if (evaluator_id === null || evaluator_id === request.decodedToken.evaluator_id || request.decodedToken.permissions.edit_all_tasks || request.decodedToken.is_admin) {
+                    let newStatus = "Completed";
+                    if (evaluator_id === null) {
+                        newStatus = "Not Started";
+                    } else if (currentStatus === "Not Started") {
+                        newStatus = "Started";
+                    }
+                    return db.query("UPDATE task SET task_status = $1, assigned_member = $2 WHERE task_id = $3", [newStatus, request.decodedToken.evaluator_id, edit_task_id], res => {
                         if (res.error) {
                             return handleNext(next, 400, "There was a problem editing this task.", res.error);
                         }

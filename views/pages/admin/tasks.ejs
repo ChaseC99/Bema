@@ -24,7 +24,7 @@
                 <div class="content-header">
                     <h2>Tasks</h2>
                     <% if (permissions.edit_all_tasks || is_admin) { %>
-                        <span id="add-task-btn" class="admin-button" onclick="showCreateTaskForm();">Add Task</span>
+                        <span id="add-task-btn" class="btn-primary" onclick="showCreateTaskForm();">Create Task</span>
                     <% } %>
                 </div>
                 <div class="preview col-12 standard">
@@ -34,12 +34,12 @@
                     <div id="incomplete-tasks-table" class="preview-content">
                         <table>
                             <thead>
-                                <th>Task</th>
+                                <th>Task Description</th>
                                 <th style="width: 10%">Due Date</th>
-                                <th style="width: 10%">Assigned Member</th>
+                                <th style="width: 15%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
                                 <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="incomplete-tasks-table-body">
@@ -55,12 +55,12 @@
                     <div id="completed-tasks-table" class="collapsable-content closed preview-content">
                         <table>
                             <thead>
-                                <th>Task</th>
+                                <th>Task Description</th>
                                 <th style="width: 10%">Due Date</th>
-                                <th style="width: 10%">Assigned Member</th>
+                                <th style="width: 15%">Assigned Member</th>
                                 <th style="width: 10%">Status</th>
                                 <% if (permissions.edit_all_tasks || permissions.delete_all_tasks || is_admin) { %>
-                                    <th style="width: 10%">Actions</th>
+                                    <th style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="completed-tasks-table-body">
@@ -75,7 +75,7 @@
                     <div class="content-header">
                         <h2>Add Task</h2>
                     </div>
-                    <form id="add-task-form" class="admin-form" onSubmit="return addTask(event)">
+                    <form id="add-task-form" onSubmit="return addTask(event)">
                         <div class="row">
                             <div class="col-10">
                                 <label for="task_title">Task</label>
@@ -97,10 +97,13 @@
                                 <label for="assigned_member">Assigned Member</label>
                             </div>
                             <div class="col-90">
-                                <select id="assigned_member" name="assigned_member">
-                                    <!-- evaluators -->
-                                    <option value="null">Available for Sign Up</option>
-                                </select>
+                                <input type="hidden" id="assigned-member-input" name="assigned_member" value="null" hidden>
+                                <div class="custom-select" id="assigned-member-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('assigned-member-dropdown');">Available for Sign Up<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
+                                        <a href="#" onclick="setSelectValue('assigned-member', 'null', 'Available for Sign Up');">Available for Sign Up</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -108,15 +111,20 @@
                                 <label for="task_status">Status</label>
                             </div>
                             <div class="col-90">
-                                <select id="task_status" name="task_status">
-                                    <option value="Not Started">Not Started</option>
-                                    <option value="Started">Started</option>
-                                    <option value="Completed">Completed</option>
-                                </select>
+                                <input type="hidden" id="status-input" name="task_status" value="null" hidden>
+                                <div class="custom-select" id="status-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('status-dropdown');">Not Started<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
+                                        <a href="#" onclick="setSelectValue('status', 'Not Started', 'Not Started');">Not Started</a>
+                                        <a href="#" onclick="setSelectValue('status', 'Started', 'Started');">Started</a>
+                                        <a href="#" onclick="setSelectValue('status', 'Completed', 'Completed');">Completed</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
+                        <div class="row form-actions">
+                            <a href="#" class="btn-secondary" onclick="showViewTasks()">Cancel</a>
+                            <input class="btn-primary" type="submit" value="Save">
                         </div>
                     </form>
                 </div>
@@ -125,7 +133,7 @@
                         <h2>Edit Task</h2>
                     </div>
 
-                    <form id="edit-task-form" class="admin-form" onsubmit="return editTask(event)">
+                    <form id="edit-task-form" onsubmit="return editTask(event)">
                         <div class="row">
                             <input type="hidden" id="edit_task_id" name="edit_task_id">
                         </div>
@@ -150,10 +158,13 @@
                                 <label for="edit_assigned_member">Assigned Member</label>
                             </div>
                             <div class="col-90">
-                                <select id="edit_assigned_member" name="edit_assigned_member">
-                                    <!-- evaluators -->
-                                    <option value="null">Available for Sign Up</option>
-                                </select>
+                                <input type="hidden" id="edit-assigned-member-input" name="edit_assigned_member" value="null" hidden>
+                                <div class="custom-select" id="edit-assigned-member-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('edit-assigned-member-dropdown');">Available for Sign Up<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
+                                        <a href="#" onclick="setSelectValue('edit-assigned-member', 'null', 'Available for Sign Up');">Available for Sign Up</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -161,15 +172,20 @@
                                 <label for="edit_task_status">Status</label>
                             </div>
                             <div class="col-90">
-                                <select id="edit_task_status" name="edit_task_status">
-                                    <option value="Not Started">Not Started</option>
-                                    <option value="Started">Started</option>
-                                    <option value="Completed">Completed</option>
-                                </select>
+                                <input type="hidden" id="edit-status-input" name="edit_task_status" value="null" hidden>
+                                <div class="custom-select" id="edit-status-dropdown">
+                                    <div class="custom-select-btn" onclick="showSelectDropdown('edit-status-dropdown');">Not Started<i class="fas fa-angle-down"></i></div>
+                                    <div class="select-dropdown-content" hidden>
+                                        <a href="#" onclick="setSelectValue('edit-status', 'Not Started', 'Not Started');">Not Started</a>
+                                        <a href="#" onclick="setSelectValue('edit-status', 'Started', 'Started');">Started</a>
+                                        <a href="#" onclick="setSelectValue('edit-status', 'Completed', 'Completed');">Completed</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <input class="admin-button" type="submit" value="Save">
+                        <div class="row form-actions">
+                            <a href="#" class="btn-secondary" onclick="showViewTasks()">Cancel</a>
+                            <input class="btn-primary" type="submit" value="Save">
                         </div>
                     </form>
                 </div>
@@ -184,7 +200,7 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
     $(function() {
-        $('#edit_contest_start_date, #edit_contest_end_date, #contest_start_date, #contest_end_date, #due_date, #edit_due_date, #edit_user_start, #edit_user_end').datepicker({
+        $('#due_date, #edit_due_date').datepicker({
             dateFormat: "mm-dd-yy"
         });
     });

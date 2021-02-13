@@ -46,7 +46,7 @@
             <% } %>
             <section id="message-section">
                 <% if (permissions.manage_announcements || is_admin) { %>
-                    <div id="create-message-container">
+                    <div id="create-message-container" hidden>
                         <div class="message-form-heading">
                             <h2>New Announcement:</h2>
                         </div>
@@ -68,7 +68,7 @@
                                 <div class='col-10'>
                                     <label for='new_message_content'>Message</label>
                                 </div>
-                                <div  class="text-editor">
+                                <div  class="text-editor col-90">
                                     <div id="new-announcement-editor">
                                     </div>
                                 </div>
@@ -105,12 +105,13 @@
                                     <input type='password' id='new_password' class="form-input" name='password'>
                                 </div>
                             </div>
-                            <div class='row'>
-                                <input class="admin-button" type='submit' value='Save'>
+                            <div class='row form-actions'>
+                                <a href="#" class="btn-secondary" onclick="viewHome()">Cancel</a>
+                                <input class="btn-primary" type='submit' value='Save'>
                             </div>
                         </form>
                     </div>
-                    <div id="edit-message-container">
+                    <div id="edit-message-container" hidden>
                         <div class='message-form-heading'>
                             <h2>Edit Announcement:</h2>
                         </div>
@@ -140,7 +141,7 @@
                                 <div class='col-10'>
                                     <label for='edit_message_content'>Message</label>
                                 </div>
-                                <div  class="text-editor">
+                                <div  class="text-editor col-90">
                                     <div id="edit-announcement-editor">
                                     </div>
                                 </div>
@@ -153,8 +154,9 @@
                                     <input class="form-input" type="checkbox" id="edit_public" name="public">
                                 </div>
                             </div>
-                            <div class='row'>
-                                <input type='submit' class="admin-button" value='Save'>
+                            <div class='row form-actions'>
+                                <a href="#" class="btn-secondary" onclick="viewHome()">Cancel</a>
+                                <input type='submit' class="btn-primary" value='Save'>
                             </div>
                         </form>
                     </div>
@@ -165,7 +167,7 @@
                             <div class="db-header">
                                 <p>Announcements</p>
                                 <% if (permissions.manage_announcements || is_admin) { %>
-                                    <p class="admin-button" onclick="showCreateMessageForm()">New Announcement</p>
+                                    <a href="#" class="btn-tertiary" onclick="showCreateMessageForm()">New Announcement</a>
                                 <% } %>
                             </div>
                             <div id="messages-container" class="preview-content">
@@ -180,8 +182,6 @@
     <%- include ../partials/footer %>
 </body>
 <script src="/static/js/home.js"></script>
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>

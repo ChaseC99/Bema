@@ -1,17 +1,16 @@
 .content-container {
     padding: 0 10%;
 }
-#create-message-container, #edit-message-container {
-    display: none;
-}
 #message-section {
     margin-top: 50px;
 }
 .message-container {
-    border-bottom: 1px solid gray;
+    border-bottom: 1px solid rgba(33, 36, 44, 0.16);
     display: flex;
     flex-direction: column;
     padding-top: 30px;
+    padding-bottom: 20px;
+    position: relative;
 }
 .message-container:first-child, .task:first-child {
     padding-top: 0;
@@ -25,14 +24,25 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
 }
 .message-header h3 {
-    margin: 0 0 15px;
+    margin: 0px;
+}
+.message-content {
+    width: 85%;
+    min-height: 100px;
 }
 .message-bottom {
+    width: fit-content;
+    position: absolute;
+    right: 10px;
+    bottom: 0px;
+}
+.message-meta {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    flex-direction: column;
 }
 .message-author, .message-date, .message-public {
     font-size: 14px;
@@ -42,13 +52,6 @@
     margin-top: 50px;
 }
 .task {
-    border-bottom: 1px solid gray;
-    padding-bottom: 10px;
-}
-.admin-button.tasks {
-    display: inline-flex;
-    align-items: center;
-}
-.control-btn.tasks {
-    margin-right: 7px;
+    border-bottom: 1px solid rgba(33, 36, 44, 0.16);
+    padding-bottom: 20px;
 }

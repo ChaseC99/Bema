@@ -16,7 +16,7 @@ exports.get = (request, response, next) => {
         if (contest_id > 0) {
             // Send back all entry info
             if (request.decodedToken) {
-                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE contest_id = $2 ORDER BY entry_id", [displayFancyDateFormat, contest_id], res => {
+                return db.query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_author, e.entry_level, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, g.group_name, to_char(entry_created, $1) as entry_created FROM entry e LEFT JOIN evaluator_group g ON e.assigned_group_id = g.group_id WHERE e.contest_id = $2 ORDER BY e.entry_id", [displayFancyDateFormat, contest_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting the list of entries.", res.error);
                     }
@@ -51,7 +51,7 @@ exports.getFlagged = (request, response, next) => {
                 is_admin
             } = request.decodedToken;
             if (request.decodedToken.permissions.view_judging_settings || is_admin) {
-                return db.query("SELECT * FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [], res => {
+                return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [displayFancyDateFormat], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem getting the flagged entries.", res.error);
                     }
@@ -194,12 +194,12 @@ exports.import = (request, response, next) => {
                                 let query = "INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_level, entry_votes, entry_created, entry_height) VALUES"; // Query to be ran later
                                 let entryCount = 0; // Total number of new entries found
 
-                                if (entries.length == 0) {
+                                if (entries.length === 0) {
                                     // No entries exist for this contest, so import all spin-offs
                                     for (var i = 0; i < data.scratchpads.length; i++) {
                                         let program = data.scratchpads[i];
 
-                                        if (i === 0) {
+                                        if (entryCount === 0) {
                                             query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
                                         } else {
                                             query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
@@ -221,7 +221,7 @@ exports.import = (request, response, next) => {
 
                                         // Add the spin-off if it isn't already in the database
                                         if (!found) {
-                                            if (i === 0) {
+                                            if (entryCount === 0) {
                                                 query += `(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;
                                             } else {
                                                 query += `,(${contest_id}, '${program.url}', '${program.url.split("/")[5]}', '${program.title.replace(/\'/g,"\'\'").substring(0, 256)}', '${program.authorNickname.replace(/\'/g,"\'\'").substring(0, 256)}', 'TBD', ${program.sumVotesIncremented}, '${program.created}', 600)`;

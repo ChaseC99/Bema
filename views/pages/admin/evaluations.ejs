@@ -28,19 +28,20 @@
                     <!-- contest name -->
                 </h2>
                 <% if (is_admin || permissions.view_all_evaluations) { %>
-                    <form id="select-user-form" onsubmit="return changeUser(event)">
-                        <select id="user-selection-dropdown" name="evaluator_id">
+                    <form style="width: auto;" onsubmit="return changeUser(event)">
+                        <input type="hidden" id="user-selection-input" name="evaluator_id" value="null" hidden>
+                        <div class="custom-select" id="user-selection-dropdown">
+                            <div class="custom-select-btn" onclick="showSelectDropdown('user-selection-dropdown');">Change User<i class="fas fa-angle-down"></i></div>
+                            <div class="select-dropdown-content" hidden>
 
-                        </select>
-                        <button type="submit">Go</button>
+                            </div>
+                        </div>
+                        <button id="change-user-btn" type="submit" hidden>Go</button>
                     </form>
                 <% } %>
             </div>
             <div class="previews-container">
                 <div class="preview col-12 standard">
-                    <div class="db-header" id="page-title">
-                        <!-- Ccontest: NAME Evaluations For USER -->
-                    </div>
                     <div class="preview-content">
                         <table id="evaluations-table" style="display: none">
                             <thead id="evaluations-table-head">
@@ -54,7 +55,7 @@
                                 <th style="width: 3%">Total</th>
                                 <th style="width: 5%">Skill Level</th>
                                 <% if (is_admin || permissions.edit_all_evaluations || permissions.delete_all_evaluations) { %>
-                                    <th style="width: 3%">Actions</th>
+                                    <th style="width: 1%"></th>
                                 <% } %>
                             </thead>
                             <tbody id="evaluations-table-body">
@@ -72,7 +73,7 @@
                 <h2>Edit Evaluation</h2>
             </div>
 
-            <form id="edit-evaluation-form" class="admin-form" onsubmit="return editEvaluation(event)">
+            <form id="edit-evaluation-form" onsubmit="return editEvaluation(event)">
                 <div class="row">
                     <input type="hidden" id="edit_evaluation_id" name="edit_evaluation_id">
                 </div>
@@ -116,15 +117,20 @@
                         <label for="edit_evaluation_level">Skill Level</label>
                     </div>
                     <div class="col-90">
-                        <select name="edit_evaluation_level">
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
-                        </select>
+                        <input type="hidden" id="evaluation-level-input" name="edit_evaluation_level" value="null" hidden>
+                        <div class="custom-select" id="evaluation-level-dropdown">
+                            <div class="custom-select-btn" onclick="showSelectDropdown('evaluation-level-dropdown');">TBD<i class="fas fa-angle-down"></i></div>
+                            <div class="select-dropdown-content" hidden>
+                                <a href="#" onclick="setSelectValue('evaluation-level', 'Beginner', 'Beginner');">Beginner</a>
+                                <a href="#" onclick="setSelectValue('evaluation-level', 'Intermediate', 'Intermediate');">Intermediate</a>
+                                <a href="#" onclick="setSelectValue('evaluation-level', 'Advanced', 'Advanced');">Advanced</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <input class="admin-button" type="submit" value="Save">
+                <div class="row form-actions">
+                    <a href="#" class="btn-secondary" onclick="showViewEvaluations()">Cancel</a>
+                    <input class="btn-primary" type="submit" value="Save">
                 </div>
             </form>
         </div>
@@ -136,13 +142,13 @@
 <script src="/static/js/admin/evaluations.js"></script>
 <% if (is_admin || permissions.view_all_evaluations) { %>
     <script>
-    let userDropdown = document.getElementById("user-selection-dropdown");
+    let userDropdown = document.querySelector("#user-selection-dropdown .select-dropdown-content");
     request("get", "/api/internal/users", null, data => {
         if (!data.error) {
             data.evaluators.forEach(c => {
                 userDropdown.innerHTML += `
                     ${!c.account_locked ? `
-                        <option value="${c.evaluator_id}">${c.evaluator_name}</option>
+                        <a href="#" onclick="setSelectValue('user-selection', ${c.evaluator_id}, '${c.evaluator_name}'); document.getElementById('change-user-btn').click();">${c.evaluator_name}</a>
                     ` : ""}
                 `;
             });

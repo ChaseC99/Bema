@@ -1,5 +1,5 @@
 let sectionsContainer = document.getElementById("sections-container");
-let createArticleSectionDropdown = document.getElementById("create-article-section-dropdown");
+let createArticleSectionDropdown = document.querySelector("#create-article-section-dropdown .select-dropdown-content");
 
 /***** Loads page data *****/
 request("get", "/api/internal/kb/sections", null, (data) => {
@@ -8,7 +8,7 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             // Fill forms with sections
             if (permissions.edit_kb_content || data.is_admin) {
                 createArticleSectionDropdown.innerHTML += `
-                    <option value="${s.section_id}">${s.section_name}</option>
+                    <a href="#" onclick="setSelectValue('create-article-section', ${s.section_id}, '${s.section_name}');">${s.section_name}</a>
                 `;
             }
 
@@ -18,10 +18,11 @@ request("get", "/api/internal/kb/sections", null, (data) => {
                 <div class="db-header">
                     <p>${s.section_name}</p>
                     ${data.is_admin || permissions.edit_kb_content || permissions.delete_kb_content ? `
-                        <span class="admin-controls">
-                            ${permissions.edit_kb_content || data.is_admin ? `<i class="control-btn far fa-edit" onclick="showEditSectionForm(${s.section_id})"></i>` : ""}
-                            ${permissions.delete_kb_content || data.is_admin ? `<i class="control-btn red far fa-trash-alt" onclick="deleteSection(${s.section_id})"></i>` : ""}
-                        </span>
+                        <i class="actions-dropdown-btn" onclick="showActionDropdown('sections-dropdown-${s.section_id}');"></i>
+                        <div class="actions-dropdown-content" hidden id="sections-dropdown-${s.section_id}">
+                            ${permissions.edit_kb_content || data.is_admin ? `<a href="#" onclick="showEditSectionForm(${s.section_id})">Edit</a>` : ""}
+                            ${permissions.delete_kb_content || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Section?', 'Are you sure you want to delete this section? This action cannot be undone.', 'deleteSection(${s.section_id})', true, 'Delete')">Delete</a>` : ""}
+                        </div>
                     ` : "" }
                 </div>
                 <div class="preview-content article-section" id="section-${s.section_id}">
@@ -92,18 +93,14 @@ let editSection = (e) => {
 }
 
 let deleteSection = (id) => {
-    let shouldDelete = confirm("Are you sure you want to delete this section?");
-
-    if (shouldDelete) {
-        let body = {section_id: id};
-        request("delete", "/api/internal/kb/sections", body, (data) => {
-            if (!data.error) {
-                window.setTimeout(() => window.location.reload(), 1000);
-            } else {
-                displayError(data.error);
-            }
-        });
-    }
+    let body = {section_id: id};
+    request("delete", "/api/internal/kb/sections", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 let createArticle = (e) => {
@@ -124,6 +121,13 @@ let createArticle = (e) => {
 }
 
 // Displays forms
+let showHome = () => {
+    let pages = document.querySelectorAll(".content-container");
+    for (let i = 0; i < pages.length; i++) {
+        pages[i].style.display = "none";
+    }
+    document.querySelector("#view-sections-container").style.display = "block";
+}
 let showCreateSectionForm = () => {
     let createSection = document.querySelector("#create-section-container");
     let viewSections = document.querySelector("#view-sections-container");
@@ -144,6 +148,7 @@ let showEditSectionForm = (id) => {
         editSectionForm[1].value = data.section_name;
         editSectionForm[2].value = data.section_description;
         editSectionForm[3].value = data.section_visibility;
+        setSelectValue('edit-section', data.section_visibility, data.section_visibility);
     });
 }
 
