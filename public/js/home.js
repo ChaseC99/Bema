@@ -64,9 +64,9 @@ request("get", "/api/internal/tasks/user", null, data => {
                         <p><strong>Due by: </strong>${c.due_date}</p>
                         <p><strong>Status: </strong>${c.task_status}</p>
                         ${c.task_status === "Not Started" ? `
-                            <p><span style="padding-left: 0px !important;" class="btn-tertiary" onclick="editTask(${c.task_id}, '${c.task_title}', '${c.due_date}', ${c.assigned_member}, 'Started');">Mark as Started</span></p>
+                            <p><span style="padding-left: 0px !important;" class="btn-tertiary" onclick="showConfirmModal('Mark as started?', 'Are you sure you want to mark this task as started? This action cannot be undone.', 'editTask(${c.task_id})', false, 'Start Task')">Mark as Started</span></p>
                         ` : c.task_status === "Started" ? `
-                            <p><span style="padding-left: 0px !important;" class="btn-tertiary" onclick="showConfirmModal('Mark as completed?', 'Are you sure you want to mark this task as completed? You will lose access to this task after it is completed.', 'editTask(1, 1)', false, 'Complete Task')">Mark as Completed</span></p>
+                            <p><span style="padding-left: 0px !important;" class="btn-tertiary" onclick="showConfirmModal('Mark as completed?', 'Are you sure you want to mark this task as completed? You will lose access to this task after it is completed.', 'editTask(${c.task_id})', false, 'Complete Task')">Mark as Completed</span></p>
                         ` : ""}
                     </div>
                 `;
@@ -148,17 +148,16 @@ let showEditMessageForm = (...args) => {
     document.querySelector("#edit-announcement-editor").firstChild.innerHTML = args[3];
 }
 
-let editTask = (edit_task_id, edit_task_status) => {
-    window.alert("Success!");
-    // request("put", "/api/internal/tasks", {
-    //     edit_task_id, edit_task_title, edit_due_date, edit_assigned_member, edit_task_status
-    // }, (data) => {
-    //     if (!data.error) {
-    //         window.setTimeout(() => window.location.reload(), 1000);
-    //     } else {
-    //         displayError(data.error);
-    //     }
-    // });
+let editTask = (edit_task_id) => {
+    request("put", "/api/internal/tasks", {
+        edit_task_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
 }
 
 ///// These send form post requests /////
