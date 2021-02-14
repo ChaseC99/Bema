@@ -422,6 +422,14 @@ const routeChecks = {
 		    check("entry_id")
 		    .isInt()
 		    .withMessage("Entry ID must be an integer")
+		],
+		addVote: [
+			check("entry_id")
+		    .isInt()
+		    .withMessage("Entry ID must be an integer"),
+			check("feedback")
+		    .isLength(contentChars)
+		    .withMessage("Feedback must be between 1 and 5000 characters")
 		]
 	},
 	tasks: {
@@ -580,6 +588,7 @@ router.get("/ping", admin.ping);
 // Winners
 router.post("/internal/winners", routeChecks.winners.add, wasValidated, winners.add);
 router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, winners.delete);
+router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated, winners.addVote);
 
 // Users
 router.get("/internal/users", users.get);

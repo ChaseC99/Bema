@@ -60,4 +60,29 @@ exports.delete = (request, response, next) => {
     }
 }
 
+exports.addVote = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            let {
+                entry_id,
+                feedback
+            } = request.body;
+
+            if (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin) {
+                return db.query("INSERT INTO entry_vote (entry_id, evaluator_id, feedback) VALUES ($1, $2, $3);", [entry_id, request.decodedToken.evaluator_id, feedback], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem submitting your vote.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to vote for winners.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to vote for winners.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while adding a vote.", error);
+    }
+}
+
 module.exports = exports;
