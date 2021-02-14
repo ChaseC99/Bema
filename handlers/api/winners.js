@@ -60,6 +60,43 @@ exports.delete = (request, response, next) => {
     }
 }
 
+exports.getVotes = (request, response, next) => {
+    try {
+        let entryId = parseInt(request.query.entryId);
+        let contestId = parseInt(request.query.contestId);
+
+        if (request.decodedToken) {
+            if (contestId > 0) {
+                return db.query("SELECT v.vote_id, v.entry_id, v.evaluator_id, v.feedback, z.nickname FROM entry_vote v INNER JOIN entry e ON e.entry_id = v.entry_id INNER JOIN evaluator z ON z.evaluator_id = v.evaluator_id WHERE e.contest_id = $1;", [contestId], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the entry votes for this contest.", res.error);
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        votes: res.rows
+                    });
+                });
+            } else if (entryId > 0) {
+                return db.query("SELECT v.vote_id, v.entry_id, v.evaluator_id, v.feedback, z.nickname FROM entry_vote v INNER JOIN evaluator z ON z.evaluator_id = v.evaluator_id WHERE v.entry_id = $1;", [entryId], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the votes for this entry.", res.error);
+                    }
+                    return response.json({
+                        logged_in: true,
+                        is_admin: request.decodedToken.is_admin,
+                        votes: res.rows
+                    });
+                });
+            }
+            return handleNext(next, 400, "Invalid Input: entryId or contestId must be specified.", new Error("entryId and contestId were not specified."));
+        }
+        return handleNext(next, 401, "You must log in to retrieve entry votes.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving entry votes.", error);
+    }
+};
+
 exports.addVote = (request, response, next) => {
     try {
         if (request.decodedToken) {
