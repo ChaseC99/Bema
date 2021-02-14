@@ -69,14 +69,58 @@ exports.addVote = (request, response, next) => {
             } = request.body;
 
             if (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin) {
-                return db.query("INSERT INTO entry_vote (entry_id, evaluator_id, feedback) VALUES ($1, $2, $3);", [entry_id, request.decodedToken.evaluator_id, feedback], res => {
+                return db.query("SELECT COUNT(*) FROM entry_vote WHERE entry_id = $1 AND evaluator_id = $2", [entry_id, request.decodedToken.evaluator_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem submitting your vote.", res.error);
+                    }
+                    let count = res.rows[0].count;
+
+                    if (count < 1) {
+                        return db.query("INSERT INTO entry_vote (entry_id, evaluator_id, feedback) VALUES ($1, $2, $3);", [entry_id, request.decodedToken.evaluator_id, feedback], res => {
+                            if (res.error) {
+                                return handleNext(next, 400, "There was a problem submitting your vote.", res.error);
+                            }
+                            successMsg(response);
+                        });
+                    } else {
+                        return handleNext(next, 403, "You can't vote for the same entry more than once.");
+                    }
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to vote for winners.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to vote for winners.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while adding a vote.", error);
+    }
+}
+
+exports.deleteVote = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            let {
+                vote_id,
+                entry_id
+            } = request.body;
+
+            if (vote_id > 0 && request.decodedToken.is_admin) {
+                return db.query("DELETE FROM entry_vote WHERE vote_id = $1", [vote_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem deleting this vote.", res.error);
+                    }
+                    successMsg(response);
+                });
+            }
+            else if (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin) {
+                return db.query("DELETE FROM entry_vote WHERE entry_id = $1 AND evaluator_id = $2", [entry_id, request.decodedToken.evaluator_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem deleting your vote.", res.error);
                     }
                     successMsg(response);
                 });
             } else {
-                return handleNext(next, 403, "You're not authorized to vote for winners.");
+                return handleNext(next, 403, "You're not authorized to delete votes.");
             }
         }
         return handleNext(next, 401, "You must log in to vote for winners.");

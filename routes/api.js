@@ -430,7 +430,19 @@ const routeChecks = {
 			check("feedback")
 		    .isLength(contentChars)
 		    .withMessage("Feedback must be between 1 and 5000 characters")
-		]
+		],
+		deleteVote: oneOf([
+			[
+				check("entry_id")
+			    .isInt()
+			    .withMessage("Entry ID must be an integer")
+			],
+			[
+				check("vote_id")
+			    .isInt()
+			    .withMessage("Vote ID must be an integer")
+			]
+		])
 	},
 	tasks: {
 		add: [
@@ -589,6 +601,7 @@ router.get("/ping", admin.ping);
 router.post("/internal/winners", routeChecks.winners.add, wasValidated, winners.add);
 router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, winners.delete);
 router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated, winners.addVote);
+router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 
 // Users
 router.get("/internal/users", users.get);
