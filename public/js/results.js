@@ -122,6 +122,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
             <tr>
                 <td>
                     ${a.entry_id}
+                    ${a.voted_by_user > 0 ? `<i class="far fa-thumbs-up" style="margin-left: 3px; color: #1865f2"></i>` : ''}
                 </td>
                 <td>
                     <a href="${a.entry_url}" target="_blank">
@@ -140,13 +141,21 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                     </td>
                     <td>
                         ${a.avg_score}
-                    </td>` : ""
+                    </td>
+                    <td>
+                        ${a.vote_count > 0 ? `
+                            <a href="javascript:void(0)" onclick="showVotes(${a.entry_id})">${a.vote_count}</a>
+                        ` : '0'}
+                    </td>
+                ` : ""
                 }
-                ${data.is_admin || permissions.manage_winners ? `
+                ${data.is_admin || permissions.manage_winners || permissions.judge_entries ? `
                     <td class="actions">
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            <a href="#" onclick="addWinner(${a.entry_id})">Mark as winner</a>
+                            ${(data.is_admin || permissions.judge_entries) && a.voted_by_user == 0 ? `<a href="#" onclick="showVoteForm(${a.entry_id}, '${a.title}')">Vote for entry</a>` : ""}
+                            ${(data.is_admin || permissions.judge_entries) && a.voted_by_user > 0 ? `<a href="#" onclick="showConfirmModal('Delete vote?', 'Are you sure you want to delete your vote for this entry? This action cannot be undone.', 'deleteVote(${a.entry_id})', true, 'Delete Vote')">Remove vote</a>` : ""}
+                            ${data.is_admin || permissions.manage_winners ? `<a href="#" onclick="addWinner(${a.entry_id})">Mark as winner</a>` : ""}
                         </div>
                     </td>
                     ` : ""
@@ -158,6 +167,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
     }
 });
 
+/* Form and action request handlers */
 let addWinner = (entry_id) => {
     request("post", "/api/internal/winners", {
         entry_id
@@ -169,7 +179,6 @@ let addWinner = (entry_id) => {
         }
     });
 };
-
 let deleteWinner = entry_id => {
     request("delete", "/api/internal/winners", {
         entry_id
@@ -181,3 +190,58 @@ let deleteWinner = entry_id => {
         }
     });
 };
+let submitVote = (e) => {
+    e.preventDefault();
+    let body = {};
+    for (key of e.target) {
+        body[key.name] = key.value;
+    }
+    delete body[""];
+    request("post", "/api/internal/winners/votes", body, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
+}
+let deleteVote = (entry_id, vote_id) => {
+    request("delete", "/api/internal/winners/votes", {
+        entry_id,
+        vote_id
+    }, (data) => {
+        if (!data.error) {
+            window.setTimeout(() => window.location.reload(), 1000);
+        } else {
+            displayError(data.error);
+        }
+    });
+};
+let showVotes = (entry_id) => {
+    request("get", "/api/internal/winners/votes?entryId="+entry_id, null, (data) => {
+        if (!data.error) {
+            let body = "";
+            data.votes.forEach(a => {
+                body += `
+                    <h3>${a.nickname} ${data.is_admin ? `<span class="btn-destructive-tertiary" onclick="deleteVote(0, ${a.vote_id})">Delete</span>` : ''}</h3>
+                    <p>${a.feedback.replace("\n", "<br><br>")}</p>
+                `;
+            });
+
+            showInfoModal("Votes for Entry #"+entry_id, body);
+        } else {
+            displayError(data.error);
+        }
+    });
+}
+
+
+let showVoteForm = (entry_id, entry_name) => {
+    let header = document.getElementById("vote-form-header");
+    header.innerHTML = `Vote for Entry #${entry_id} -- ${entry_name}`;
+
+    let form = document.getElementById("vote-form");
+    form[0].value = entry_id;
+
+    showPage("vote-form-page");
+}
