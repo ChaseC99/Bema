@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="/static/css/sidebar.css">
     <link rel="stylesheet" type="text/css" href="/static/css/previews.css">
     <link rel="stylesheet" type="text/css" href="/static/css/tables.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
 </head>
 
 <body>
@@ -106,9 +107,10 @@
                                 <% if (logged_in) { %>
                                 <th style="width: 5%">Evaluations</th>
                                 <th style="width: 10%">Skill Level</th>
-                                <th style="width: 10%">Avg Score</th>
+                                <th style="width: 8%">Avg Score</th>
+                                <th style="width: 5%">Votes</th>
                                 <% } %>
-                                <% if (permissions.manage_winners || is_admin) { %>
+                                <% if (permissions.manage_winners || permissions.judge_entries || is_admin) { %>
                                 <th style="width: 1%;"></th>
                                 <% } %>
                             </thead>
@@ -119,10 +121,32 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-        </div> <!-- Page content -->
+        <div class="content-container" id="vote-form-page" hidden>
+            <div class="content-header">
+                <h2 id="vote-form-header">
+                    <!-- Vote for entry NAME -->
+                </h2>
+            </div>
+            <form id="vote-form" onsubmit="return submitVote(event)">
+                <input type="hidden" name="entry_id">
+                <div class="row">
+                    <div class="col-10">
+                        <label for="feedback">Why you chose this entry</label>
+                    </div>
+                    <div class="col-90">
+                        <textarea class="form-input" name="feedback" required></textarea>
+                    </div>
+                </div>
+                <div class="row form-actions">
+                    <a href="#" class="btn-secondary" onclick="showPage('contest-results')">Cancel</a>
+                    <input class="btn-primary" type="submit" value="Submit">
+                </div>
+            </form>
+        </div>
 
-    </div> <!-- Page container -->
+    </div>
     <%- include ../partials/footer %>
 </body>
 <script src="/static/js/results.js"></script>
