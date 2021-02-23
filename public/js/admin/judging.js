@@ -73,7 +73,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                         : ""}
                     </tr>`;
 
-                    if (g.is_active && permissions.assign_evaluator_groups) {
+                    if (g.is_active && (permissions.assign_evaluator_groups || data.is_admin)) {
                         assignedGroupsList.innerHTML += `<a href="#" onclick="setSelectValue('group-id', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
                     }
                 });
@@ -340,7 +340,7 @@ let showAssignEvaluatorGroupForm = (...args) => {
         assignEvaluatorGroupForm[i].value = args[i];
     }
 
-    document.querySelector("#group-id-dropdown .custom-select-btn").innerHTML = `${args[2] ? '${args[2]} ${args[3]}' : 'None'}<i class="fas fa-angle-down"></i>`;
+    document.querySelector("#group-id-dropdown .custom-select-btn").innerHTML = `${args[2] ? `${args[2]} ${args[3]}` : 'None'}<i class="fas fa-angle-down"></i>`;
 }
 
 let showAddJudgingCriteriaForm = () => {
