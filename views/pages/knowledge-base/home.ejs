@@ -17,13 +17,13 @@
 <body>
     <%- include ../../partials/header %>
     <div class="page-container">
-        <div class="content-container" id="view-sections-container">
+        <div class="content-container" id="view-sections-page">
             <div class="content-header">
                 <h1 id="main-header">Bema Resources</h1>
                 <%if (permissions.edit_kb_content || is_admin) { %>
                     <span class="admin-controls">
-                        <span class="btn-primary" onclick="showCreateSectionForm()">New Section</span>
-                        <span class="btn-primary" onclick="showCreateArticleForm()">New Article</span>
+                        <span class="btn-primary" onclick="showPage('create-section-page')">New Section</span>
+                        <span class="btn-primary" onclick="showPage('create-article-page')">New Article</span>
                     </span>
                 <% } %>
             </div>
@@ -32,7 +32,7 @@
             </div>
         </div>
         <%if (permissions.edit_kb_content || is_admin) { %>
-            <div class="content-container" id="create-section-container" hidden>
+            <div class="content-container" id="create-section-page" hidden>
                 <div class="content-header">
                     <h2>Create Section</h2>
                 </div>
@@ -71,12 +71,12 @@
                         </div>
                     </div>
                     <div class='row form-actions'>
-                        <a href="#" class="btn-secondary" onclick="showHome()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('view-sections-page')">Cancel</a>
                         <input type='submit' class="btn-primary" value='Save'>
                     </div>
                 </form>
             </div>
-            <div class="content-container" id="edit-section-container" hidden>
+            <div class="content-container" id="edit-section-page" hidden>
                 <div class="content-header">
                     <h2>Edit Section</h2>
                 </div>
@@ -115,12 +115,12 @@
                         </div>
                     </div>
                     <div class='row form-actions'>
-                        <a href="#" class="btn-secondary" onclick="showHome()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('view-sections-page')">Cancel</a>
                         <input type='submit' class="btn-primary" value='Save'>
                     </div>
                 </form>
             </div>
-            <div class="content-container" id="create-article-container" hidden>
+            <div class="content-container" id="create-article-page" hidden>
                 <div class="content-header">
                     <h2>Create Article</h2>
                 </div>
@@ -173,7 +173,7 @@
                         </div>
                     </div>
                     <div class='row form-actions'>
-                        <a href="#" class="btn-secondary" onclick="showHome()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('view-sections-page')">Cancel</a>
                         <input type='submit' class="btn-primary" value='Save'>
                     </div>
                 </form>

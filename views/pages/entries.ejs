@@ -30,10 +30,10 @@
                 <div>
                     <% if (permissions.add_entries || is_admin) { %>
                         <span id="import-entries-btn" class="btn-primary" onclick="updateEntries(<%= contest_id %>)">Import Entries</span>
-                        <span id="add-entry-btn" class="btn-primary" onclick="showAddEntryForm()">Add Single Entry</span>
+                        <span id="add-entry-btn" class="btn-primary" onclick="showPage('add-entry-page')">Add Single Entry</span>
                     <% } %>
                     <% if (permissions.assign_entry_groups || is_admin) { %>
-                        <span id="transfer-entries-btn" class="btn-primary" onclick="showUpdateGroupsForm()">Update Groups</span>
+                        <span id="transfer-entries-btn" class="btn-primary" onclick="showPage('update-entry-groups-page')">Update Groups</span>
                     <% } %>
                 </div>
             </div>
@@ -41,7 +41,7 @@
                 <div class="preview col-12 standard">
                     <div class="preview-content">
                         <img id="entries-spinner" src="/static/images/new-loading-spinner.svg" class="loading-spinner">
-                        <table id="entries-table">
+                        <table id="entries-table" style="display: none">
                             <thead>
                                 <th style="width: 5%">ID</th>
                                 <th style="width: 25%">Title</th>
@@ -67,7 +67,7 @@
         </div>
 
         <% if (permissions.add_entries || is_admin) { %>
-            <div class="content-container" id="add-entry-page">
+            <div class="content-container" id="add-entry-page" hidden>
                 <div class="content-header">
                     <h2>Add Entry</h2>
                 </div>
@@ -82,14 +82,14 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showViewEntries()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('entry-list')">Cancel</a>
                         <input class="btn-primary" type="submit" value="Submit">
                     </div>
                 </form>
             </div>
         <% } %>
         <% if (permissions.edit_entries || is_admin) { %>
-            <div class="content-container" id="edit-entry-page">
+            <div class="content-container" id="edit-entry-page" hidden>
                 <div class="content-header">
                     <h2>Edit Entry</h2>
                 </div>
@@ -162,16 +162,16 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showViewEntries()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('entry-list')">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
             </div>
         <% } %>
         <% if (permissions.assign_entry_groups || is_admin) { %>
-            <div class="content-container" id="update-entry-groups-page">
+            <div class="content-container" id="update-entry-groups-page" hidden>
                 <div class="content-header">
-                    <h2><a href="#" onclick="showViewEntries()">Entries</a> > Update Entry Groups</h2>
+                    <h2><a href="#" onclick="showPage('entry-list')">Entries</a> > Update Entry Groups</h2>
                 </div>
 
                 <div class="previews-container">

@@ -95,27 +95,10 @@ let deleteContest = (contest_id) => {
 
 // Displays forms
 let showViewContests = () => {
-    let createContest = document.querySelector("#create-contest-container");
-    let editContest = document.querySelector("#edit-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
-
-    viewContests.style.display = "block";
-    editContest.style.display = "none";
-    createContest.style.display = "none";
-}
-let showCreateContestForm = () => {
-    let createContest = document.querySelector("#create-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
-    viewContests.style.display = "none";
-    createContest.style.display = "block";
+    showPage("view-contests-page");
 }
 let showEditContestForm = (...args) => {
-    let editContest = document.querySelector("#edit-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
     let editContestForm = document.querySelector("#edit-contest-form");
-    viewContests.style.display = "none";
-    editContest.style.display = "block";
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editContestForm.length - 1; i++) {
         if (editContestForm[i].name === "edit_contest_current") {
             editContestForm[i].checked = args[i];
@@ -123,6 +106,8 @@ let showEditContestForm = (...args) => {
             editContestForm[i].value = args[i];
         }
     }
+
+    showPage("edit-contest-page");
 };
 
 // Update navbar highlighting

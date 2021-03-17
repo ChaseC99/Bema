@@ -121,26 +121,7 @@ let createArticle = (e) => {
 }
 
 // Displays forms
-let showHome = () => {
-    let pages = document.querySelectorAll(".content-container");
-    for (let i = 0; i < pages.length; i++) {
-        pages[i].style.display = "none";
-    }
-    document.querySelector("#view-sections-container").style.display = "block";
-}
-let showCreateSectionForm = () => {
-    let createSection = document.querySelector("#create-section-container");
-    let viewSections = document.querySelector("#view-sections-container");
-    viewSections.style.display = "none";
-    createSection.style.display = "block";
-}
-
 let showEditSectionForm = (id) => {
-    let editSection = document.querySelector("#edit-section-container");
-    let viewSections = document.querySelector("#view-sections-container");
-    viewSections.style.display = "none";
-    editSection.style.display = "block";
-
     let editSectionForm = document.querySelector("#edit-section-form");
     request("get", "/api/internal/kb/getSection?sectionId=" + id, null, (data) => {
         data = data.section;
@@ -150,13 +131,8 @@ let showEditSectionForm = (id) => {
         editSectionForm[3].value = data.section_visibility;
         setSelectValue('edit-section', data.section_visibility, data.section_visibility);
     });
-}
 
-let showCreateArticleForm = () => {
-    let createArticle = document.querySelector("#create-article-container");
-    let viewSections = document.querySelector("#view-sections-container");
-    viewSections.style.display = "none";
-    createArticle.style.display = "block";
+    showPage("edit-section-page");
 }
 
 /***** Create text editors *****/

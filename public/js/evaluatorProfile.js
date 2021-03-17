@@ -62,7 +62,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
                 <i class="actions-dropdown-btn" onclick="showActionDropdown('edit-login-info-dropdown');"></i>
                 <div class="actions-dropdown-content" hidden id="edit-login-info-dropdown">
                     ${is_self && !is_admin && !permissions.edit_user_profiles ? `<a href="#" onclick="showEditLoginInformationForm('${data.username}')">Change Username</a>` : ''}
-                    <a href="#" onclick="showResetPasswordForm()">Change Password</a>
+                    <a href="#" onclick="showPage('reset-password-page')">Change Password</a>
                 </div>
             `;
         }
@@ -140,22 +140,9 @@ let resetPassword = (e) => {
 }
 
 // Show page forms
-let showViewProfile = () => {
-    let pages = document.querySelectorAll(".content-container");
-    for (let i = 0; i < pages.length; i++) {
-        pages[i].style.display = "none";
-    }
-
-    document.querySelector("#view-profile-page").style.display = "block";
-}
 let showEditPersonalInformationForm = (...args) => {
     // nickname, email, receive_emails
-    let formPage = document.querySelector("#edit-personal-information-page");
-    let profile = document.querySelector("#view-profile-page");
     let form = document.querySelector("#edit-personal-information-form");
-    profile.style.display = "none";
-    formPage.style.display = "block";
-
     for (let i = 0; i < form.length - 1; i++) {
         if (form[i].name === "receive_emails") {
             form[i].checked = args[i];
@@ -163,26 +150,14 @@ let showEditPersonalInformationForm = (...args) => {
             form[i].value = args[i];
         }
     }
+
+    showPage("edit-personal-information-page");
 };
 
 let showEditLoginInformationForm = (...args) => {
     // username
-    let formPage = document.querySelector("#edit-login-information-page");
-    let profile = document.querySelector("#view-profile-page");
     let form = document.querySelector("#edit-login-information-form");
-    profile.style.display = "none";
-    formPage.style.display = "block";
+    form["username"].value = args[0];
 
-    for (let i = 0; i < form.length - 1; i++) {
-        form[i].value = args[i];
-    }
-};
-
-let showResetPasswordForm = (...args) => {
-    // nickname, email, receive_emails
-    let formPage = document.querySelector("#reset-password-page");
-    let profile = document.querySelector("#view-profile-page");
-    let form = document.querySelector("#reset-password-form");
-    profile.style.display = "none";
-    formPage.style.display = "block";
+    showPage("edit-login-information-page");
 };

@@ -151,25 +151,13 @@ let deleteEvaluation = (evaluation_id) => {
 }
 
 ///// HTML modifier functions (like displaying forms) /////
-let showViewEvaluations = () => {
-    let editEvaluationPage = document.querySelector("#edit-evaluation-page");
-    let viewEvaluationsPage = document.querySelector("#evaluation-list");
-
-    editEvaluationPage.style.display = "none";
-    viewEvaluationsPage.style.display = "block";
-}
 let showEditEvaluationForm = (...args) => {
     // evaluation id, creativity, complexity, quality, interpretation, skill level
-    let editEvaluationPage = document.querySelector("#edit-evaluation-page");
-    let viewEvaluationsPage = document.querySelector("#evaluation-list");
     let editEvaluationForm = document.querySelector("#edit-evaluation-form");
-    viewEvaluationsPage.style.display = "none";
-    editEvaluationPage.style.display = "block";
-
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editEvaluationForm.length - 1; i++) {
         editEvaluationForm[i].value = args[i];
     }
-
     setSelectValue('evaluation-level', args[6], args[6]);
+
+    showPage("edit-evaluation-page");
 };

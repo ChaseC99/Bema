@@ -25,6 +25,7 @@ let hideAllPages = () => {
 let showPage = (page_id) => {
     hideAllPages();
     document.getElementById(page_id).hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Request handler

@@ -51,7 +51,7 @@
                     <div class="db-header">
                         <p>Judging Groups</p>
                         <% if (permissions.manage_judging_groups || is_admin) { %>
-                            <span class="btn-tertiary" onclick="showAddEvaluatorGroupForm()">Create Group</span>
+                            <span class="btn-tertiary" onclick="showPage('create-group-page');">Create Group</span>
                         <% } %>
                     </div>
                     <div id="judging-groups-table" class="preview-content">
@@ -96,7 +96,7 @@
                     <div class="db-header">
                         <p>Judging Criteria</p>
                         <% if (permissions.manage_judging_criteria || is_admin) { %>
-                            <span class="btn-tertiary" onclick="showAddJudgingCriteriaForm()">Create Judging Criteria</span>
+                            <span class="btn-tertiary" onclick="showPage('create-judging-criteria-page');">Create Judging Criteria</span>
                         <% } %>
                     </div>
                     <div id="judging-criteria-table" class="preview-content">
@@ -135,7 +135,7 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
@@ -163,7 +163,7 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
@@ -198,7 +198,7 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
@@ -243,7 +243,7 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>
@@ -287,7 +287,7 @@
                         </div>
                     </div>
                     <div class="row form-actions">
-                        <a href="#" class="btn-secondary" onclick="showJudgingSettings()">Cancel</a>
+                        <a href="#" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
                         <input class="btn-primary" type="submit" value="Save">
                     </div>
                 </form>

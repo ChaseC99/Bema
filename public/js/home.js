@@ -101,41 +101,17 @@ request("get", "/api/internal/tasks/available", null, data => {
 });
 
 ///// HTML modifier functions (like displaying forms) /////
-let viewHome = () => {
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-    let createMsg = document.querySelector("#create-message-container");
-    let editMsg = document.querySelector("#edit-message-container");
-
-    createMsg.style.display = "none";
-    editMsg.style.display = "none";
-    viewMsgs.style.display = "block";
-    viewTasks.style.display = "block";
-}
 let showCreateMessageForm = () => {
-    let createMsg = document.querySelector("#create-message-container");
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-
     // Set default message creation Date
     let today = new Date();
     let date = (today.getMonth()+1) + '-' + today.getDate() + '-' + today.getFullYear();
     document.querySelector("#create-message-form #new_message_date").value = date;
 
-    viewMsgs.style.display = "none";
-    viewTasks.style.display = "none";
-    createMsg.style.display = "block";
+    showPage("create-message-page");
 }
 let showEditMessageForm = (...args) => {
     // Params are passed into displayed HTML.
-    let editMsg = document.querySelector("#edit-message-container");
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
     let editMsgForm = document.querySelector("#edit-message-form");
-    viewMsgs.style.display = "none";
-    viewTasks.style.display = "none";
-    editMsg.style.display = "block";
-
     editMsgForm["message_id"].value = args[0];
     editMsgForm["message_date"].value = args[1];
     editMsgForm["message_title"].value = args[2];
@@ -143,6 +119,8 @@ let showEditMessageForm = (...args) => {
 
     // Fill text editors
     document.querySelector("#edit-announcement-editor").firstChild.innerHTML = args[3];
+
+    showPage("edit-message-page");
 }
 
 let editTask = (edit_task_id) => {

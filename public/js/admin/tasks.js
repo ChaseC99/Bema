@@ -131,40 +131,23 @@ let deleteTask = (task_id) => {
 }
 
 // Shows task forms
-let showViewTasks = () => {
-    let viewTasks = document.querySelector("#view-tasks-container");
-    let createTask = document.querySelector("#create-task-container");
-    let editTask = document.querySelector("#edit-task-container");
-
-    createTask.style.display = "none";
-    editTask.style.display = "none";
-    viewTasks.style.display = "block";
-}
 let showCreateTaskForm = () => {
-    let createTask = document.querySelector("#create-task-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-
     // Set default date
     let today = new Date();
     let date = (today.getMonth()+1) + '-' + today.getDate() + '-' + today.getFullYear();
     document.querySelector("#add-task-form #due_date").value = date;
 
-    viewTasks.style.display = "none";
-    createTask.style.display = "block";
+    showPage("create-task-page");
 }
 let showEditTaskForm = (...args) => {
-    let editTask = document.querySelector("#edit-task-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
     let editTaskForm = document.querySelector("#edit-task-form");
-    viewTasks.style.display = "none";
-    editTask.style.display = "block";
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editTaskForm.length - 1; i++) {
         editTaskForm[i].value = args[i];
     }
-
     setSelectValue('edit-assigned-member', `${args[3]}`, `${args[5] === 'null' ? 'Available for Sign Up' : args[5]}`)
     setSelectValue('edit-status', `${args[4]}`, `${args[4]}`);
+
+    showPage("edit-task-page");
 }
 
 // Update navbar highlighting

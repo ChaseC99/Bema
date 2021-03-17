@@ -1,7 +1,5 @@
 let article_id = window.location.href.substring(window.location.href.lastIndexOf("/")+1);
 let articleContainer = document.getElementById("article-container");
-let viewArticleContainer = document.getElementById("view-article-container")
-let editArticleContainer = document.getElementById("edit-article-container")
 let editArticleSectionDropdown = document.querySelector("#article-section-dropdown .select-dropdown-content");
 let sections;
 
@@ -91,14 +89,7 @@ let deleteArticle = (id) => {
 }
 
 /***** Show forms *****/
-let showArticle = () => {
-    editArticleContainer.style.display = "none";
-    viewArticleContainer.style.display = "block";
-}
 let showEditArticleForm = (id) => {
-    viewArticleContainer.style.display = "none";
-    editArticleContainer.style.display = "block";
-
     let editArticleForm = document.querySelector("#edit-article-form");
     request("get", "/api/internal/kb/articles?articleId=" + id, null, (data) => {
         data = data.article;
@@ -122,6 +113,8 @@ let showEditArticleForm = (id) => {
 
         document.querySelector("#edit-article-editor").firstChild.innerHTML = data.article_content;
     });
+
+    showPage("edit-article-page");
 }
 
 /***** Create text editors *****/

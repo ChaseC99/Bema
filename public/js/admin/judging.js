@@ -291,32 +291,9 @@ let deleteJudgingCriteria = (criteria_id) => {
 }
 
 // Displays forms
-let showJudgingSettings = () => {
-    let pages = document.querySelectorAll(".content-container");
-    for (let i = 0; i < pages.length; i++) {
-        pages[i].style.display = "none";
-    }
-
-    document.querySelector("#judging-page").style.display = "block";
-}
-
-let showAddEvaluatorGroupForm = () => {
-    let addEvaluatorGroup = document.querySelector("#create-group-page");
-    let judgingPage = document.querySelector("#judging-page");
-    judgingPage.style.display = "none";
-    addEvaluatorGroup.style.display = "block";
-}
-
 let showEditEvaluatorGroupForm = (...args) => {
     // args: group_id, group_name, is_active
-
-    let editEvaluatorGroup = document.querySelector("#edit-group-page");
-    let judgingPage = document.querySelector("#judging-page");
     let editEvaluatorGroupForm = document.querySelector("#edit-judging-group-form");
-    judgingPage.style.display = "none";
-    editEvaluatorGroup.style.display = "block";
-
-    // Set form values
     for (let i = 0; i < editEvaluatorGroupForm.length - 1; i++) {
         if (editEvaluatorGroupForm[i].name === "is_active") {
             editEvaluatorGroupForm[i].checked = args[i];
@@ -324,40 +301,23 @@ let showEditEvaluatorGroupForm = (...args) => {
             editEvaluatorGroupForm[i].value = args[i];
         }
     }
+
+    showPage("edit-group-page");
 }
 
 let showAssignEvaluatorGroupForm = (...args) => {
     // args: evaluator_id, evaluator_name, group_id, group_name
-
-    let assignEvaluatorGroup = document.querySelector("#assign-group-page");
-    let judgingPage = document.querySelector("#judging-page");
     let assignEvaluatorGroupForm = document.querySelector("#assign-judging-group-form");
-    judgingPage.style.display = "none";
-    assignEvaluatorGroup.style.display = "block";
-
-    // Set form values
     for (let i = 0; i < assignEvaluatorGroupForm.length - 1; i++) {
         assignEvaluatorGroupForm[i].value = args[i];
     }
-
     document.querySelector("#group-id-dropdown .custom-select-btn").innerHTML = `${args[2] ? `${args[2]} ${args[3]}` : 'None'}<i class="fas fa-angle-down"></i>`;
-}
 
-let showAddJudgingCriteriaForm = () => {
-    let addJudgingCriteria = document.querySelector("#create-judging-criteria-page");
-    let judgingPage = document.querySelector("#judging-page");
-    judgingPage.style.display = "none";
-    addJudgingCriteria.style.display = "block";
+    showPage("assign-group-page");
 }
 
 let showEditJudgingCriteriaForm = (...args) => {
-    let editJudgingCriteria = document.querySelector("#edit-judging-criteria-page");
-    let judgingPage = document.querySelector("#judging-page");
     let editJudgingCriteriaForm = document.querySelector("#edit-judging-criteria-form");
-    judgingPage.style.display = "none";
-    editJudgingCriteria.style.display = "block";
-
-    // Set form values
     for (let i = 0; i < editJudgingCriteriaForm.length - 1; i++) {
         if (editJudgingCriteriaForm[i].name === "is_active") {
             editJudgingCriteriaForm[i].checked = args[i];
@@ -365,6 +325,8 @@ let showEditJudgingCriteriaForm = (...args) => {
             editJudgingCriteriaForm[i].value = args[i];
         }
     }
+
+    showPage("edit-judging-criteria-page");
 }
 
 // Update navbar highlighting
