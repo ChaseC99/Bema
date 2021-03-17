@@ -8,6 +8,7 @@ const db = require("./util/db");
 const errorHandler = require("./middleware/error");
 const log = require("./middleware/log");
 const isLoggedIn = require("./middleware/isLoggedIn");
+const redirects = require("./middleware/redirects");
 const apiRoutes = require("./routes/api");
 const pagesRoutes = require("./routes/pages");
 const authRoutes = require("./routes/auth");
@@ -17,10 +18,14 @@ app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use("/static", express.static(__dirname + "/public"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // Log every request.
 app.use(log);
+
+// Check for redirects
+app.use(redirects);
+
 // Check if user is logged in for every request.
 app.use(isLoggedIn);
 app.use("/", pagesRoutes);
