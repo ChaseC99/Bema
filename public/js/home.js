@@ -135,14 +135,11 @@ let showEditMessageForm = (...args) => {
     viewMsgs.style.display = "none";
     viewTasks.style.display = "none";
     editMsg.style.display = "block";
-    // Just need to set values of inputs to provided params.
-    for (let i = 0; i < editMsgForm.length - 1; i++) {
-        if (editMsgForm[i].name === "public") {
-            editMsgForm[i].checked = args[i];
-        } else {
-            editMsgForm[i].value = args[i];
-        }
-    }
+
+    editMsgForm["message_id"].value = args[0];
+    editMsgForm["message_date"].value = args[1];
+    editMsgForm["message_title"].value = args[2];
+    editMsgForm["public"].checked = args[4];
 
     // Fill text editors
     document.querySelector("#edit-announcement-editor").firstChild.innerHTML = args[3];
