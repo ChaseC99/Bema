@@ -108,7 +108,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                     ? `<td class="actions">
                             <i class="actions-dropdown-btn" onclick="showActionDropdown('winner-dropdown-${a.entry_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="winner-dropdown-${a.entry_id}">
-                                <a href="#" onclick="showConfirmModal('Remove Winner?', 'Are you sure you want to remove this winner? Remember that public users can see this change.', 'deleteWinner(${a.entry_id})', false, 'Remove')">Remove</a>
+                                <a href="#" onclick="showConfirmModal('Remove Winner?', 'Are you sure you want to remove this winner? Remember that public users can see this change.', 'deleteWinner(${a.entry_id})', true, 'Remove')">Remove</a>
                             </div>
                        </td>`
                     : ""
