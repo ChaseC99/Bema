@@ -103,9 +103,19 @@ exports.assumeUserIdentity = function(request, response, next) {
                 evaluator_kaid
             } = request.body;
 
-            if (request.decodedToken.permissions.assume_user_identities || request.decodedToken.is_admin) {
+            if (!request.decodedToken.is_impersonated && (request.decodedToken.permissions.assume_user_identities || request.decodedToken.is_admin)) {
+                let origin_kaid = request.decodedToken.evaluator_kaid;
                 response.clearCookie("jwtToken");
-                createJWTToken(evaluator_kaid)
+                createJWTToken(evaluator_kaid, origin_kaid)
+                  .then(jwtToken => {
+                      response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 86400000) });
+                      successMsg(response);
+                  })
+                  .catch(err => handleNext(next, 400, err.message));
+            } else if (request.decodedToken.is_impersonated) {
+                let origin_kaid = request.decodedToken.origin_kaid;
+                response.clearCookie("jwtToken");
+                createJWTToken(origin_kaid)
                   .then(jwtToken => {
                       response.cookie("jwtToken", jwtToken, { expires: new Date(Date.now() + 86400000) });
                       successMsg(response);
