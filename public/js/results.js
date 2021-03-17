@@ -153,7 +153,7 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                     <td class="actions">
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            ${(data.is_admin || permissions.judge_entries) && a.voted_by_user == 0 ? `<a href="#" onclick="showVoteForm(${a.entry_id}, '${a.title}')">Vote for entry</a>` : ""}
+                            ${(data.is_admin || permissions.judge_entries) && a.voted_by_user == 0 ? `<a href="#" onclick="showVoteForm(${a.entry_id}, '${a.title.replace("'", "\\\'")}')">Vote for entry</a>` : ""}
                             ${(data.is_admin || permissions.judge_entries) && a.voted_by_user > 0 ? `<a href="#" onclick="showConfirmModal('Delete vote?', 'Are you sure you want to delete your vote for this entry? This action cannot be undone.', 'deleteVote(${a.entry_id})', true, 'Delete Vote')">Remove vote</a>` : ""}
                             ${data.is_admin || permissions.manage_winners ? `<a href="#" onclick="addWinner(${a.entry_id})">Mark as winner</a>` : ""}
                         </div>
