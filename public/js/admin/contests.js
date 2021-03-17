@@ -14,11 +14,11 @@ request("get", "/api/internal/contests", null, (data) => {
                         ${c.contest_name} - #${c.contest_id} ${c.current ? '<span class="current-contest-tag">Active</span>' : ""}
                     </p>
                     <div class="contest-options">
-                        ${permissions.edit_contests || permissions.delete_contests ? `
+                        ${data.is_admin || permissions.edit_contests || permissions.delete_contests ? `
                             <i class="actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
-                                ${permissions.edit_contests ? `<a href="#" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
-                                ${permissions.delete_contests ? `<a href="#" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
+                                ${data.is_admin || permissions.edit_contests ? `<a href="#" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
+                                ${data.is_admin || permissions.delete_contests ? `<a href="#" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
                             </div>
                         ` : ""}
                     </div>
