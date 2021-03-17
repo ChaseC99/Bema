@@ -139,7 +139,7 @@ let showErrorModal = (error) => {
     var modalBody = document.querySelector("#main-modal .modal-body");
     var modalFooter = document.querySelector("#main-modal .modal-footer");
     modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>Oops! We've encountered an error.</h2>`;
-    modalBody.innerHTML = `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>`;
+    modalBody.innerHTML = `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! ${permissions.judge_entries ? `If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>` : ''}`;
     modalFooter.innerHTML = '';
     modal.style.display = "block";
 
