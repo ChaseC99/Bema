@@ -68,8 +68,8 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                     <div>
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            ${permissions.edit_entries || data.is_admin ? `<a href="#" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
-                            ${permissions.delete_entries || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
+                            ${permissions.edit_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
+                            ${permissions.delete_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
                         </div>
                     </div>
                      </td>

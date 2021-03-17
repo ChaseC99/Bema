@@ -47,7 +47,7 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
                 personalInformation.parentNode.firstElementChild.innerHTML += `
                     <i class="actions-dropdown-btn" onclick="showActionDropdown('edit-personal-info-dropdown');"></i>
                     <div class="actions-dropdown-content" hidden id="edit-personal-info-dropdown">
-                        <a href="#" onclick="showEditPersonalInformationForm('${data.nickname}', '${data.email}', ${data.receive_emails});">Edit</a>
+                        <a href="javascript:void(0);" onclick="showEditPersonalInformationForm('${data.nickname}', '${data.email}', ${data.receive_emails});">Edit</a>
                     </div>
                 `;
             }
@@ -61,8 +61,8 @@ request("get", "/api/internal/users?userId="+userId, null, (data) => {
             loginInformation.parentNode.firstElementChild.innerHTML += `
                 <i class="actions-dropdown-btn" onclick="showActionDropdown('edit-login-info-dropdown');"></i>
                 <div class="actions-dropdown-content" hidden id="edit-login-info-dropdown">
-                    ${is_self && !is_admin && !permissions.edit_user_profiles ? `<a href="#" onclick="showEditLoginInformationForm('${data.username}')">Change Username</a>` : ''}
-                    <a href="#" onclick="showPage('reset-password-page')">Change Password</a>
+                    ${is_self && !is_admin && !permissions.edit_user_profiles ? `<a href="javascript:void(0);" onclick="showEditLoginInformationForm('${data.username}')">Change Username</a>` : ''}
+                    <a href="javascript:void(0);" onclick="showPage('reset-password-page')">Change Password</a>
                 </div>
             `;
         }

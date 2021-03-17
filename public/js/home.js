@@ -22,8 +22,8 @@ request("get", "/api/internal/messages", null, (data) => {
                     ${ data.is_admin || permissions.manage_announcements ? `
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('message-dropdown-${msg.message_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="message-dropdown-${msg.message_id }">
-                            <a href="#" onclick="showEditMessageForm(${ msg.message_id }, '${ msg.message_date }', '${ msg.message_title }', \`${ msg.message_content.replace(/"/g, "'") }\`, ${ msg.public });">Edit</a>
-                            <a href="#" onclick="showConfirmModal('Delete Message?', 'Are you sure you want to delete this message? This action cannot be undone.', 'deleteMessage(${ msg.message_id })', true, 'Delete')">Delete</a>
+                            <a href="javascript:void(0);" onclick="showEditMessageForm(${ msg.message_id }, '${ msg.message_date }', '${ msg.message_title }', \`${ msg.message_content.replace(/"/g, "'") }\`, ${ msg.public });">Edit</a>
+                            <a href="javascript:void(0);" onclick="showConfirmModal('Delete Message?', 'Are you sure you want to delete this message? This action cannot be undone.', 'deleteMessage(${ msg.message_id })', true, 'Delete')">Delete</a>
                         </div>
                     ` : "" }
                 </div>

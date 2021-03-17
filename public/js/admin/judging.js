@@ -66,15 +66,15 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                             <td class="judging-group-actions actions">
                                 <i class="actions-dropdown-btn" onclick="showActionDropdown('judging-group-dropdown-${g.group_id}');"></i>
                                 <div class="actions-dropdown-content" hidden id="judging-group-dropdown-${g.group_id}">
-                                    <a href="#" onclick="showEditEvaluatorGroupForm(${g.group_id}, '${g.group_name}', ${g.is_active})">Edit</a>
-                                    <a href="#" onclick="showConfirmModal('Delete Group?', 'Are you sure you want to delete this judging group? This action cannot be undone, and any evaluators or entries assigned to the group will be unassigned.', 'deleteEvaluatorGroup(${g.group_id})', true, 'Delete')">Delete</a>
+                                    <a href="javascript:void(0);" onclick="showEditEvaluatorGroupForm(${g.group_id}, '${g.group_name}', ${g.is_active})">Edit</a>
+                                    <a href="javascript:void(0);" onclick="showConfirmModal('Delete Group?', 'Are you sure you want to delete this judging group? This action cannot be undone, and any evaluators or entries assigned to the group will be unassigned.', 'deleteEvaluatorGroup(${g.group_id})', true, 'Delete')">Delete</a>
                                 </div>
                             </td>`
                         : ""}
                     </tr>`;
 
                     if (g.is_active && (permissions.assign_evaluator_groups || data.is_admin)) {
-                        assignedGroupsList.innerHTML += `<a href="#" onclick="setSelectValue('group-id', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
+                        assignedGroupsList.innerHTML += `<a href="javascript:void(0);" onclick="setSelectValue('group-id', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
                     }
                 });
             }
@@ -94,7 +94,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     <td>${e.group_id ? e.group_id : "None"}${groupName}</td>
                     ${permissions.assign_evaluator_groups || data.is_admin ? `
                         <td class="assigned-group-actions actions">
-                            <a href="#" class="btn-tertiary" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id}, '${groupName}')">Change Group</a>
+                            <a href="javascript:void(0);" class="btn-tertiary" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id}, '${groupName}')">Change Group</a>
                         </td>
                     ` : ""}
                 </tr>`;
@@ -121,8 +121,8 @@ request("get", "/api/internal/judging/allCriteria", null, data => {
                     <td class="actions">
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('judging-criteria-dropdown-${c.criteria_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="judging-criteria-dropdown-${c.criteria_id}">
-                            <a href="#" onclick="showEditJudgingCriteriaForm(${c.criteria_id}, '${c.criteria_name}', '${c.criteria_description}', ${c.is_active}, ${c.sort_order})">Edit</a>
-                            <a href="#" onclick="showConfirmModal('Delete Criteria?', 'Are you sure you want to delete this judging criteria? This action cannot be undone. Make the criteria inactive instead to preserve its contents.', 'deleteJudgingCriteria(${c.criteria_id})', true, 'Delete')">Delete</a>
+                            <a href="javascript:void(0);" onclick="showEditJudgingCriteriaForm(${c.criteria_id}, '${c.criteria_name}', '${c.criteria_description}', ${c.is_active}, ${c.sort_order})">Edit</a>
+                            <a href="javascript:void(0);" onclick="showConfirmModal('Delete Criteria?', 'Are you sure you want to delete this judging criteria? This action cannot be undone. Make the criteria inactive instead to preserve its contents.', 'deleteJudgingCriteria(${c.criteria_id})', true, 'Delete')">Delete</a>
                         </div>
                     </td>`
                 : "" }

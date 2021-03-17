@@ -8,7 +8,7 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             // Fill forms with sections
             if (permissions.edit_kb_content || data.is_admin) {
                 createArticleSectionDropdown.innerHTML += `
-                    <a href="#" onclick="setSelectValue('create-article-section', ${s.section_id}, '${s.section_name}');">${s.section_name}</a>
+                    <a href="javascript:void(0);" onclick="setSelectValue('create-article-section', ${s.section_id}, '${s.section_name}');">${s.section_name}</a>
                 `;
             }
 
@@ -20,8 +20,8 @@ request("get", "/api/internal/kb/sections", null, (data) => {
                     ${data.is_admin || permissions.edit_kb_content || permissions.delete_kb_content ? `
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('sections-dropdown-${s.section_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="sections-dropdown-${s.section_id}">
-                            ${permissions.edit_kb_content || data.is_admin ? `<a href="#" onclick="showEditSectionForm(${s.section_id})">Edit</a>` : ""}
-                            ${permissions.delete_kb_content || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Section?', 'Are you sure you want to delete this section? This action cannot be undone.', 'deleteSection(${s.section_id})', true, 'Delete')">Delete</a>` : ""}
+                            ${permissions.edit_kb_content || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditSectionForm(${s.section_id})">Edit</a>` : ""}
+                            ${permissions.delete_kb_content || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Section?', 'Are you sure you want to delete this section? This action cannot be undone.', 'deleteSection(${s.section_id})', true, 'Delete')">Delete</a>` : ""}
                         </div>
                     ` : "" }
                 </div>
