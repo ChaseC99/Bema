@@ -17,7 +17,7 @@ request("get", "/api/internal/contests", null, (data) => {
                         ${data.is_admin || permissions.edit_contests || permissions.delete_contests ? `
                             <i class="actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
-                                ${data.is_admin || permissions.edit_contests ? `<a href="javascript:void(0);" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
+                                ${data.is_admin || permissions.edit_contests ? `<a href="javascript:void(0);" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current}, ${c.voting_enabled});">Edit</a>` : ""}
                                 ${data.is_admin || permissions.delete_contests ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
                             </div>
                         ` : ""}
@@ -100,7 +100,7 @@ let showViewContests = () => {
 let showEditContestForm = (...args) => {
     let editContestForm = document.querySelector("#edit-contest-form");
     for (let i = 0; i < editContestForm.length - 1; i++) {
-        if (editContestForm[i].name === "edit_contest_current") {
+        if (editContestForm[i].name === "edit_contest_current" || editContestForm[i].name === "edit_voting_enabled") {
             editContestForm[i].checked = args[i];
         } else {
             editContestForm[i].value = args[i];

@@ -9,7 +9,7 @@ const db = require(process.cwd() + "/util/db");
 exports.get = (request, response, next) => {
     try {
         let contest_id = request.query.contestId;
-        let entriesPerLevel, entriesByAvgScore, evaluationsPerEvaluator, winners, entriesPerGroup, groupAssignments;
+        let entriesPerLevel, entriesByAvgScore, evaluationsPerEvaluator, winners, entriesPerGroup, groupAssignments, voting_enabled;
 
         // Load common data for either logged in or logged out users.
         return db.query("SELECT entry_id, entry_title, entry_author, entry_url, contest_id, is_winner, entry_level FROM entry WHERE contest_id = $1 AND is_winner = true ORDER BY entry_level", [contest_id], res => {
@@ -41,17 +41,25 @@ exports.get = (request, response, next) => {
                                 }
                                 entriesPerGroup = res.rows;
 
-                                return response.json({
-                                    logged_in: true,
-                                    is_admin: request.decodedToken.is_admin,
-                                    contest_id,
-                                    results: {
-                                        entriesPerLevel,
-                                        entriesByAvgScore,
-                                        evaluationsPerEvaluator,
-                                        winners,
-                                        entriesPerGroup
+                                return db.query("SELECT voting_enabled FROM contest WHERE contest_id = $1", [contest_id], res => {
+                                    if (res.error) {
+                                        return handleNext(next, 400, "There was a problem checking to see if voting is enabled for this contest.", res.error);
                                     }
+                                    voting_enabled = res.rows[0].voting_enabled ? res.rows[0].voting_enabled : false;
+
+                                    return response.json({
+                                        logged_in: true,
+                                        is_admin: request.decodedToken.is_admin,
+                                        contest_id,
+                                        voting_enabled,
+                                        results: {
+                                            entriesPerLevel,
+                                            entriesByAvgScore,
+                                            evaluationsPerEvaluator,
+                                            winners,
+                                            entriesPerGroup
+                                        }
+                                    });
                                 });
                             });
                         });
@@ -81,6 +89,7 @@ exports.get = (request, response, next) => {
                         logged_in: false,
                         is_admin: false,
                         contest_id,
+                        voting_enabled: false,
                         results: {
                             entriesPerLevel,
                             entriesByAvgScore,
