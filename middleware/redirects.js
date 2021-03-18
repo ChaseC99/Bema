@@ -2,7 +2,7 @@ const redirects = (request, response, next) => {
     if (request.headers.host === "bema.herokuapp.com") {
         return response.redirect("https://www.kachallengecouncil.org" + request.url);
     }
-    else if (request.headers['x-forwarded-proto'] !== 'https') {
+    else if (request.headers['x-forwarded-proto'] !== 'https' && request.headers.host !== "localhost:"+process.env.PORT) {
         return response.redirect('https://' + request.headers.host + request.url);
     }
     else if (request.url === "/status") {
