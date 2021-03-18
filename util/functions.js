@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("./db");
 
-exports.createJWTToken = (kaid) => {
+exports.createJWTToken = (kaid, origin_kaid = null) => {
     return new Promise((resolve, reject) => {
         db.query("SELECT evaluator_id, evaluator_name, evaluator_kaid, is_admin, account_locked, email, username, nickname, avatar_url FROM evaluator WHERE evaluator_kaid = $1", [kaid], result => {
             if (result.error) {
@@ -37,7 +37,9 @@ exports.createJWTToken = (kaid) => {
                     username,
                     nickname,
                     avatarUrl,
-                    permissions
+                    permissions,
+                    is_impersonated: origin_kaid !== null ? true : false,
+                    origin_kaid
                 }, process.env.SECRET_KEY);
                 resolve(jwtToken);
             });

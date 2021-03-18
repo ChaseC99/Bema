@@ -25,6 +25,7 @@ let hideAllPages = () => {
 let showPage = (page_id) => {
     hideAllPages();
     document.getElementById(page_id).hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Request handler
@@ -129,6 +130,9 @@ let showInfoModal = (title, body) => {
     modalBody.innerHTML = body;
     modalFooter.innerHTML = '';
     modal.style.display = "block";
+
+    var body = document.querySelector("body");
+    body.classList.add("noscroll");
 }
 let showErrorModal = (error) => {
     var modal = document.querySelector("#main-modal");
@@ -136,9 +140,12 @@ let showErrorModal = (error) => {
     var modalBody = document.querySelector("#main-modal .modal-body");
     var modalFooter = document.querySelector("#main-modal .modal-footer");
     modalHeader.innerHTML = `<span class="modal-close" onclick="hideModal('main-modal')">&times;</span><h2>Oops! We've encountered an error.</h2>`;
-    modalBody.innerHTML = `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>`;
+    modalBody.innerHTML = `<p>${error.message}</p><p>This issue has been reported to us so we can investigate and fix it! ${permissions.judge_entries ? `If you need immediate assistance, please reach out <a href="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-" target="_blank">here</a>. Please be sure to mention error code #${error.id} in your post.</p>` : ''}`;
     modalFooter.innerHTML = '';
     modal.style.display = "block";
+
+    var body = document.querySelector("body");
+    body.classList.add("noscroll");
 }
 let showUnautorizedModal = (error) => {
     var modal = document.querySelector("#main-modal");
@@ -149,6 +156,9 @@ let showUnautorizedModal = (error) => {
     modalBody.innerHTML = `<p>${error.message}</p>`;
     modalFooter.innerHTML = '';
     modal.style.display = "block";
+
+    var body = document.querySelector("body");
+    body.classList.add("noscroll");
 }
 let showConfirmModal = (title, message, action, isDestructive, actionText) => {
     var modal = document.querySelector("#main-modal");
@@ -164,8 +174,14 @@ let showConfirmModal = (title, message, action, isDestructive, actionText) => {
     </span>
     `;
     modal.style.display = "block";
+
+    var body = document.querySelector("body");
+    body.classList.add("noscroll");
 }
 let hideModal = (modalId) => {
     var modal = document.querySelector("#" + modalId);
     modal.style.display = "none";
+
+    var body = document.querySelector("body");
+    body.classList.remove("noscroll");
 }

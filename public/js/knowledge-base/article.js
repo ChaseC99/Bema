@@ -1,7 +1,5 @@
 let article_id = window.location.href.substring(window.location.href.lastIndexOf("/")+1);
 let articleContainer = document.getElementById("article-container");
-let viewArticleContainer = document.getElementById("view-article-container")
-let editArticleContainer = document.getElementById("edit-article-container")
 let editArticleSectionDropdown = document.querySelector("#article-section-dropdown .select-dropdown-content");
 let sections;
 
@@ -19,8 +17,8 @@ request("get", "/api/internal/kb/articles?articleId=" + article_id, null, (data)
                             ${data.is_admin || permissions.edit_kb_content || permissions.delete_kb_content ? `
                                 <i class="actions-dropdown-btn" onclick="showActionDropdown('article-dropdown-${a.article_id}');"></i>
                                 <div class="actions-dropdown-content" hidden id="article-dropdown-${a.article_id}">
-                                    ${permissions.edit_kb_content || permissions.publish_kb_content || data.is_admin ? `<a href="#" onclick="showEditArticleForm(${a.article_id})">Edit</a>` : ""}
-                                    ${permissions.delete_kb_content || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Article?', 'Are you sure you want to delete this article? This action cannot be undone.', 'deleteArticle(${a.article_id})', true, 'Delete')">Delete</a>` : ""}
+                                    ${permissions.edit_kb_content || permissions.publish_kb_content || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditArticleForm(${a.article_id})">Edit</a>` : ""}
+                                    ${permissions.delete_kb_content || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Article?', 'Are you sure you want to delete this article? This action cannot be undone.', 'deleteArticle(${a.article_id})', true, 'Delete')">Delete</a>` : ""}
                                 </div>
                             ` : ``}
                     </div>
@@ -49,7 +47,7 @@ request("get", "/api/internal/kb/sections", null, (data) => {
             data.sections.forEach((s, idx) => {
                 // Fill forms with sections
                 editArticleSectionDropdown.innerHTML += `
-                    <a href="#" onclick="setSelectValue('article-section', ${s.section_id}, '${s.section_name}');">${s.section_name}</a>
+                    <a href="javascript:void(0);" onclick="setSelectValue('article-section', ${s.section_id}, '${s.section_name}');">${s.section_name}</a>
                 `;
             });
         }
@@ -91,14 +89,7 @@ let deleteArticle = (id) => {
 }
 
 /***** Show forms *****/
-let showArticle = () => {
-    editArticleContainer.style.display = "none";
-    viewArticleContainer.style.display = "block";
-}
 let showEditArticleForm = (id) => {
-    viewArticleContainer.style.display = "none";
-    editArticleContainer.style.display = "block";
-
     let editArticleForm = document.querySelector("#edit-article-form");
     request("get", "/api/internal/kb/articles?articleId=" + id, null, (data) => {
         data = data.article;
@@ -122,6 +113,8 @@ let showEditArticleForm = (id) => {
 
         document.querySelector("#edit-article-editor").firstChild.innerHTML = data.article_content;
     });
+
+    showPage("edit-article-page");
 }
 
 /***** Create text editors *****/

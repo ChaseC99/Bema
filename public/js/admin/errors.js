@@ -1,8 +1,6 @@
 let tab = document.querySelector("#sidebar-errors");
 let errorsTableBody = document.querySelector("#errors-table-body");
 let errorsSpinner = document.querySelector("#errors-spinner");
-let errorsPage = document.querySelector("#errors-page");
-let detailedErrorPage = document.querySelector("#detailed-error-page");
 let detailedErrorHeader = document.querySelector("#detailed-error-header");
 let detailedErrorContainer = document.querySelector("#detailed-error-container");
 let cachedErrors;
@@ -40,7 +38,7 @@ let showError = (id) => {
     }
     if (e) {
         detailedErrorHeader.innerHTML = `
-            <h2><a href="#" onclick="showAllErrors()">Errors</a> > Error #${e.error_id}</h2>
+            <h2><a href="javascript:void(0);" onclick="showPage('errors-page');">Errors</a> > Error #${e.error_id}</h2>
             <div>
                 ${permissions.delete_errors || is_admin ? `<span id="delete-error-btn" class="btn-destructive-primary" onclick="showConfirmModal('Delete error?', 'Are you sure you want to delete this error? This action cannot be undone.', 'deleteError(${e.error_id})', true, 'Delete');">Delete Error</span>` : ""}
             </div>
@@ -62,14 +60,8 @@ let showError = (id) => {
             }
         }
 
-        errorsPage.style.display = "none";
-        detailedErrorPage.style.display = "block";
+        showPage("detailed-error-page");
     }
-}
-
-let showAllErrors = () => {
-    detailedErrorPage.style.display = "none";
-    errorsPage.style.display = "block";
 }
 
 let deleteError = (error_id) => {

@@ -9,7 +9,7 @@ const db = require(process.cwd() + "/util/db");
 exports.get = (request, response, next) => {
     try {
         let contest_id = request.query.contestId;
-        let entriesPerLevel, entriesByAvgScore, evaluationsPerEvaluator, winners, entriesPerGroup, groupAssignments;
+        let entriesPerLevel, entriesByAvgScore, evaluationsPerEvaluator, winners, entriesPerGroup, groupAssignments, voting_enabled;
 
         // Load common data for either logged in or logged out users.
         return db.query("SELECT entry_id, entry_title, entry_author, entry_url, contest_id, is_winner, entry_level FROM entry WHERE contest_id = $1 AND is_winner = true ORDER BY entry_level", [contest_id], res => {
@@ -25,7 +25,7 @@ exports.get = (request, response, next) => {
                         return handleNext(next, 400, "There was a problem getting the evaluations per level.", res.error);
                     }
                     entriesPerLevel = res.rows;
-                    return db.query(`SELECT REPLACE(z.entry_title,'"','') AS title, z.entry_id, z.entry_author, z.entry_url, z.entry_level, COUNT(z.entry_title) as evaluations, MIN(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) as min_level_numeric, CASE MIN(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) WHEN 0 THEN 'Beginner' WHEN 1 THEN 'Intermediate' ELSE 'Advanced' END as min_level, CASE MAX(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) WHEN 0 THEN 'Beginner' WHEN 1 THEN 'Intermediate' ELSE 'Advanced' END as max_level, AVG(x.creativity + x.complexity + x.execution + x.interpretation) as avg_score, MIN(x.creativity + x.complexity + x.execution + x.interpretation) as min_score, MAX(x.creativity + x.complexity + x.execution + x.interpretation) as max_score, (SELECT COUNT(*) FROM entry_vote WHERE entry_id = z.entry_id) as vote_count, (SELECT COUNT(*) FROM entry_vote WHERE entry_id = z.entry_id AND evaluator_id = $2) as voted_by_user FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id LEFT JOIN entry_vote v ON z.entry_id = v.entry_id WHERE x.evaluation_complete AND z.contest_id = $1 AND z.flagged = false AND z.disqualified = false GROUP BY (z.entry_title, z.entry_id, z.entry_author, z.entry_url, z.entry_level) ORDER BY z.entry_level ASC, avg_score DESC;`, [contest_id, request.decodedToken.evaluator_id], res => {
+                    return db.query(`SELECT REPLACE(z.entry_title,'"','') AS title, z.entry_id, z.entry_author, z.entry_url, z.entry_level, (SELECT COUNT(*) FROM evaluation WHERE entry_id = z.entry_id) as evaluations, MIN(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) as min_level_numeric, CASE MIN(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) WHEN 0 THEN 'Beginner' WHEN 1 THEN 'Intermediate' ELSE 'Advanced' END as min_level, CASE MAX(CASE x.evaluation_level WHEN 'Beginner' THEN 0 WHEN 'Intermediate' THEN 1 ELSE 2 END) WHEN 0 THEN 'Beginner' WHEN 1 THEN 'Intermediate' ELSE 'Advanced' END as max_level, AVG(x.creativity + x.complexity + x.execution + x.interpretation) as avg_score, MIN(x.creativity + x.complexity + x.execution + x.interpretation) as min_score, MAX(x.creativity + x.complexity + x.execution + x.interpretation) as max_score, (SELECT COUNT(*) FROM entry_vote WHERE entry_id = z.entry_id) as vote_count, (SELECT COUNT(*) FROM entry_vote WHERE entry_id = z.entry_id AND evaluator_id = $2) as voted_by_user FROM evaluation x INNER JOIN evaluator y ON y.evaluator_id = x.evaluator_id INNER JOIN entry z ON z.entry_id = x.entry_id LEFT JOIN entry_vote v ON z.entry_id = v.entry_id WHERE x.evaluation_complete AND z.contest_id = $1 AND z.flagged = false AND z.disqualified = false GROUP BY (z.entry_title, z.entry_id, z.entry_author, z.entry_url, z.entry_level) ORDER BY z.entry_level ASC, avg_score DESC;`, [contest_id, request.decodedToken.evaluator_id], res => {
                         if (res.error) {
                             return handleNext(next, 400, "There was a problem getting the entries by average score.", res.error);
                         }
@@ -41,17 +41,25 @@ exports.get = (request, response, next) => {
                                 }
                                 entriesPerGroup = res.rows;
 
-                                return response.json({
-                                    logged_in: true,
-                                    is_admin: request.decodedToken.is_admin,
-                                    contest_id,
-                                    results: {
-                                        entriesPerLevel,
-                                        entriesByAvgScore,
-                                        evaluationsPerEvaluator,
-                                        winners,
-                                        entriesPerGroup
+                                return db.query("SELECT voting_enabled FROM contest WHERE contest_id = $1", [contest_id], res => {
+                                    if (res.error) {
+                                        return handleNext(next, 400, "There was a problem checking to see if voting is enabled for this contest.", res.error);
                                     }
+                                    voting_enabled = res.rows[0].voting_enabled ? res.rows[0].voting_enabled : false;
+
+                                    return response.json({
+                                        logged_in: true,
+                                        is_admin: request.decodedToken.is_admin,
+                                        contest_id,
+                                        voting_enabled,
+                                        results: {
+                                            entriesPerLevel,
+                                            entriesByAvgScore,
+                                            evaluationsPerEvaluator,
+                                            winners,
+                                            entriesPerGroup
+                                        }
+                                    });
                                 });
                             });
                         });
@@ -81,6 +89,7 @@ exports.get = (request, response, next) => {
                         logged_in: false,
                         is_admin: false,
                         contest_id,
+                        voting_enabled: false,
                         results: {
                             entriesPerLevel,
                             entriesByAvgScore,

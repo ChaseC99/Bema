@@ -1,3 +1,9 @@
+<% if (is_impersonated) { %>
+	<div class="banner">
+		<span>You're assuming another user's identity.</span>
+		<span class="btn-primary" onclick="request('post', '/api/auth/assumeUserIdentity', {}, (data) => {if (!data.error) {window.setTimeout(() => window.location.reload(), 1000);} else {displayError(data.error);}});">Return to your account</span>
+	</div>
+<% } %>
 <div class="page-header">
 	<div class="nav">
 		<div class="logo-container">
@@ -25,7 +31,7 @@
 			</span>
 			<% if (logged_in) { %>
 				<span>
-					<a href="#" id="profile-page-link">Profile</a>
+					<a href="javascript:void(0);" id="profile-page-link">Profile</a>
 				</span>
 				<span>
 					<a onclick="logout(event)">Logout</a>

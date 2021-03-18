@@ -20,8 +20,8 @@ request("get", "/api/internal/tasks", null, data => {
                             <td class="actions">
                                 <i class="actions-dropdown-btn" onclick="showActionDropdown('task-dropdown-${t.task_id}');"></i>
                                 <div class="actions-dropdown-content" hidden id="task-dropdown-${t.task_id}">
-                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="#" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
-                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
+                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
+                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
                                 </div>
                             </td>
                         ` : ""}
@@ -38,8 +38,8 @@ request("get", "/api/internal/tasks", null, data => {
                             <td class="actions">
                                 <i class="actions-dropdown-btn" onclick="showActionDropdown('task-dropdown-${t.task_id}');"></i>
                                 <div class="actions-dropdown-content" hidden id="task-dropdown-${t.task_id}">
-                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="#" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
-                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
+                                    ${permissions.edit_all_tasks || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditTaskForm(${t.task_id}, '${t.task_title}', '${t.due_date}', '${t.assigned_member}', '${t.task_status}', '${t.evaluator_name}');">Edit</a>` : ""}
+                                    ${permissions.delete_all_tasks || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This action cannot be undone.', 'deleteTask(${t.task_id})', true, 'Delete')">Delete</a>` : "" }
                                 </div>
                             </td>
                         ` : ""}
@@ -58,12 +58,12 @@ request("get", "/api/internal/users", null, data => {
             data.evaluators.forEach(c => {
                 taskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `
-                        <a href="#" onclick="setSelectValue('assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
+                        <a href="javascript:void(0);" onclick="setSelectValue('assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
                     ` : ""}
                 `;
                 editTaskAssignedMember.innerHTML += `
                     ${!c.account_locked ? `
-                        <a href="#" onclick="setSelectValue('edit-assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
+                        <a href="javascript:void(0);" onclick="setSelectValue('edit-assigned-member', ${c.evaluator_id}, '${c.evaluator_name}');">${c.evaluator_name}</a>
                     ` : ""}
                 `;
             });
@@ -131,40 +131,23 @@ let deleteTask = (task_id) => {
 }
 
 // Shows task forms
-let showViewTasks = () => {
-    let viewTasks = document.querySelector("#view-tasks-container");
-    let createTask = document.querySelector("#create-task-container");
-    let editTask = document.querySelector("#edit-task-container");
-
-    createTask.style.display = "none";
-    editTask.style.display = "none";
-    viewTasks.style.display = "block";
-}
 let showCreateTaskForm = () => {
-    let createTask = document.querySelector("#create-task-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-
     // Set default date
     let today = new Date();
     let date = (today.getMonth()+1) + '-' + today.getDate() + '-' + today.getFullYear();
     document.querySelector("#add-task-form #due_date").value = date;
 
-    viewTasks.style.display = "none";
-    createTask.style.display = "block";
+    showPage("create-task-page");
 }
 let showEditTaskForm = (...args) => {
-    let editTask = document.querySelector("#edit-task-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
     let editTaskForm = document.querySelector("#edit-task-form");
-    viewTasks.style.display = "none";
-    editTask.style.display = "block";
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editTaskForm.length - 1; i++) {
         editTaskForm[i].value = args[i];
     }
-
     setSelectValue('edit-assigned-member', `${args[3]}`, `${args[5] === 'null' ? 'Available for Sign Up' : args[5]}`)
     setSelectValue('edit-status', `${args[4]}`, `${args[4]}`);
+
+    showPage("edit-task-page");
 }
 
 // Update navbar highlighting

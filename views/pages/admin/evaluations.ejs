@@ -121,15 +121,15 @@
                         <div class="custom-select" id="evaluation-level-dropdown">
                             <div class="custom-select-btn" onclick="showSelectDropdown('evaluation-level-dropdown');">TBD<i class="fas fa-angle-down"></i></div>
                             <div class="select-dropdown-content" hidden>
-                                <a href="#" onclick="setSelectValue('evaluation-level', 'Beginner', 'Beginner');">Beginner</a>
-                                <a href="#" onclick="setSelectValue('evaluation-level', 'Intermediate', 'Intermediate');">Intermediate</a>
-                                <a href="#" onclick="setSelectValue('evaluation-level', 'Advanced', 'Advanced');">Advanced</a>
+                                <a href="javascript:void(0);" onclick="setSelectValue('evaluation-level', 'Beginner', 'Beginner');">Beginner</a>
+                                <a href="javascript:void(0);" onclick="setSelectValue('evaluation-level', 'Intermediate', 'Intermediate');">Intermediate</a>
+                                <a href="javascript:void(0);" onclick="setSelectValue('evaluation-level', 'Advanced', 'Advanced');">Advanced</a>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row form-actions">
-                    <a href="#" class="btn-secondary" onclick="showViewEvaluations()">Cancel</a>
+                    <a href="javascript:void(0);" class="btn-secondary" onclick="showPage('evaluation-list');">Cancel</a>
                     <input class="btn-primary" type="submit" value="Save">
                 </div>
             </form>
@@ -148,7 +148,7 @@
             data.evaluators.forEach(c => {
                 userDropdown.innerHTML += `
                     ${!c.account_locked ? `
-                        <a href="#" onclick="setSelectValue('user-selection', ${c.evaluator_id}, '${c.evaluator_name}'); document.getElementById('change-user-btn').click();">${c.evaluator_name}</a>
+                        <a href="javascript:void(0);" onclick="setSelectValue('user-selection', ${c.evaluator_id}, '${c.evaluator_name}'); document.getElementById('change-user-btn').click();">${c.evaluator_name}</a>
                     ` : ""}
                 `;
             });

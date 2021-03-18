@@ -25,16 +25,16 @@ request("get", "/api/internal/users", null, data => {
                                     }
                                     content += `<div class="actions-dropdown-content" hidden id="user-dropdown-${c.evaluator_id}">`;
                                     if (data.is_admin || permissions.edit_user_profiles) {
-                                        content += `<a href="#" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit Profile</a>`;
+                                        content += `<a href="javascript:void(0);" onclick="showEditUserForm(${c.evaluator_id}, '${c.evaluator_name}', '${c.evaluator_kaid}', '${c.username}', '${c.nickname}', '${c.email}', '${c.dt_term_start}', '${c.dt_term_end}', ${c.is_admin}, ${c.account_locked}, ${c.receive_emails});">Edit Profile</a>`;
                                     }
                                     if (data.is_admin || permissions.change_user_passwords) {
-                                        content += `<a href="#" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>`;
+                                        content += `<a href="javascript:void(0);" onclick="showChangePasswordForm('${c.evaluator_name}', ${c.evaluator_id})">Change Password</a>`;
                                     }
                                     if (data.is_admin || permissions.assume_user_identities) {
-                                        content += `<a href="#" onclick="showConfirmModal('Assume Identity?', 'Are you sure you want to assume this user\\\'s identity?', 'assumeUserIdentity(\`${c.evaluator_kaid}\`)', false, 'Assume Identity')">Assume Identity</a>`;
+                                        content += `<a href="javascript:void(0);" onclick="showConfirmModal('Assume Identity?', 'Are you sure you want to assume this user\\\'s identity?', 'assumeUserIdentity(\`${c.evaluator_kaid}\`)', false, 'Assume Identity')">Assume Identity</a>`;
                                     }
                                     if (data.is_admin) {
-                                        content += `<a href="#" onclick="showEditUserPermissionsForm('${c.evaluator_id}')">Edit Permissions</a>`;
+                                        content += `<a href="javascript:void(0);" onclick="showEditUserPermissionsForm('${c.evaluator_id}')">Edit Permissions</a>`;
                                     }
                     content += `    </div>
                                 </div>
@@ -197,46 +197,9 @@ let assumeUserIdentity = (evaluator_kaid) => {
 }
 
 // Displays forms
-let showDeactivatedUsersPage = () => {
-    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
-    let viewUsers = document.querySelector("#view-users-container");
-    viewUsers.style.display = "none";
-    deactivatedUsers.style.display = "block";
-};
-
-let showActiveUsersPage = () => {
-    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
-    let addUser = document.querySelector("#add-user-container");
-    let editUserPermissions = document.querySelector("#edit-user-permissions-container");
-    let editUser = document.querySelector("#edit-user-container");
-    let changePassword = document.querySelector("#change-password-container");
-    let viewUsers = document.querySelector("#view-users-container");
-    deactivatedUsers.style.display = "none";
-    editUserPermissions.style.display = "none";
-    editUser.style.display = "none";
-    addUser.style.display = "none";
-    changePassword.style.display = "none";
-    viewUsers.style.display = "block";
-};
-
-let showAddUserForm = () => {
-    let addUser = document.querySelector("#add-user-container");
-    let viewUsers = document.querySelector("#view-users-container");
-    viewUsers.style.display = "none";
-    addUser.style.display = "block";
-};
-
 let showEditUserForm = (...args) => {
     // id, name, kaid, username, nickname, email, start, end, is_admin, account_locked, receive_emails
-    let editUser = document.querySelector("#edit-user-container");
-    let viewUsers = document.querySelector("#view-users-container");
     let editUserForm = document.querySelector("#edit-user-form");
-    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
-    viewUsers.style.display = "none";
-    editUser.style.display = "block";
-    deactivatedUsers.style.display = "none";
-
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editUserForm.length - 1; i++) {
         if (editUserForm[i].name === "edit_user_is_admin" || editUserForm[i].name === "edit_user_account_locked" || editUserForm[i].name === "edit_user_receive_emails") {
             editUserForm[i].checked = args[i];
@@ -244,16 +207,11 @@ let showEditUserForm = (...args) => {
             editUserForm[i].value = args[i];
         }
     }
+
+    showPage("edit-user-page");
 };
 let showEditUserPermissionsForm = (evaluator_id) => {
-    let editUser = document.querySelector("#edit-user-permissions-container");
-    let viewUsers = document.querySelector("#view-users-container");
     let editUserForm = document.querySelector("#edit-user-permissions-form");
-    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
-    viewUsers.style.display = "none";
-    editUser.style.display = "block";
-    deactivatedUsers.style.display = "none";
-
     request("get", "/api/internal/users/permissions?userId="+evaluator_id, null, (data) => {
         if (!data.error) {
             let keys = Object.keys(data.permissions);
@@ -267,20 +225,17 @@ let showEditUserPermissionsForm = (evaluator_id) => {
             displayError(data.error);
         }
     });
+
+    showPage("edit-user-permissions-page");
 };
 let showChangePasswordForm = (user_name, evaluator_id) => {
-    let changePassword = document.querySelector("#change-password-container");
-    let viewUsers = document.querySelector("#view-users-container");
-    let deactivatedUsers = document.querySelector("#view-deactivated-users-container");
-    viewUsers.style.display = "none";
-    changePassword.style.display = "block";
-    deactivatedUsers.style.display = "none";
-
     let title = document.querySelector("#change-password-title");
     title.innerText += (" " + user_name + ":");
 
     let changePasswordForm = document.querySelector("#change-password-form");
     changePasswordForm[0].value = evaluator_id;
+
+    showPage("change-password-page");
 }
 
 // Update navbar highlighting

@@ -22,8 +22,8 @@ request("get", "/api/internal/messages", null, (data) => {
                     ${ data.is_admin || permissions.manage_announcements ? `
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('message-dropdown-${msg.message_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="message-dropdown-${msg.message_id }">
-                            <a href="#" onclick="showEditMessageForm(${ msg.message_id }, '${ msg.message_date }', '${ msg.message_title }', \`${ msg.message_content.replace(/"/g, "'") }\`, ${ msg.public });">Edit</a>
-                            <a href="#" onclick="showConfirmModal('Delete Message?', 'Are you sure you want to delete this message? This action cannot be undone.', 'deleteMessage(${ msg.message_id })', true, 'Delete')">Delete</a>
+                            <a href="javascript:void(0);" onclick="showEditMessageForm(${ msg.message_id }, '${ msg.message_date }', '${ msg.message_title }', \`${ msg.message_content.replace(/"/g, "'") }\`, ${ msg.public });">Edit</a>
+                            <a href="javascript:void(0);" onclick="showConfirmModal('Delete Message?', 'Are you sure you want to delete this message? This action cannot be undone.', 'deleteMessage(${ msg.message_id })', true, 'Delete')">Delete</a>
                         </div>
                     ` : "" }
                 </div>
@@ -101,51 +101,26 @@ request("get", "/api/internal/tasks/available", null, data => {
 });
 
 ///// HTML modifier functions (like displaying forms) /////
-let viewHome = () => {
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-    let createMsg = document.querySelector("#create-message-container");
-    let editMsg = document.querySelector("#edit-message-container");
-
-    createMsg.style.display = "none";
-    editMsg.style.display = "none";
-    viewMsgs.style.display = "block";
-    viewTasks.style.display = "block";
-}
 let showCreateMessageForm = () => {
-    let createMsg = document.querySelector("#create-message-container");
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
-
     // Set default message creation Date
     let today = new Date();
     let date = (today.getMonth()+1) + '-' + today.getDate() + '-' + today.getFullYear();
     document.querySelector("#create-message-form #new_message_date").value = date;
 
-    viewMsgs.style.display = "none";
-    viewTasks.style.display = "none";
-    createMsg.style.display = "block";
+    showPage("create-message-page");
 }
 let showEditMessageForm = (...args) => {
     // Params are passed into displayed HTML.
-    let editMsg = document.querySelector("#edit-message-container");
-    let viewMsgs = document.querySelector("#view-messages-container");
-    let viewTasks = document.querySelector("#view-tasks-container");
     let editMsgForm = document.querySelector("#edit-message-form");
-    viewMsgs.style.display = "none";
-    viewTasks.style.display = "none";
-    editMsg.style.display = "block";
-    // Just need to set values of inputs to provided params.
-    for (let i = 0; i < editMsgForm.length - 1; i++) {
-        if (editMsgForm[i].name === "public") {
-            editMsgForm[i].checked = args[i];
-        } else {
-            editMsgForm[i].value = args[i];
-        }
-    }
+    editMsgForm["message_id"].value = args[0];
+    editMsgForm["message_date"].value = args[1];
+    editMsgForm["message_title"].value = args[2];
+    editMsgForm["public"].checked = args[4];
 
     // Fill text editors
     document.querySelector("#edit-announcement-editor").firstChild.innerHTML = args[3];
+
+    showPage("edit-message-page");
 }
 
 let editTask = (edit_task_id) => {

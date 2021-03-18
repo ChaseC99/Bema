@@ -68,8 +68,8 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                     <div>
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            ${permissions.edit_entries || data.is_admin ? `<a href="#" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
-                            ${permissions.delete_entries || data.is_admin ? `<a href="#" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
+                            ${permissions.edit_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
+                            ${permissions.delete_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
                         </div>
                     </div>
                      </td>
@@ -212,33 +212,9 @@ const transferEntries = (e) => {
 }
 
 ///// HTML modifier functions (like displaying forms) /////
-let showViewEntries = () => {
-    let viewEntryPage = document.querySelector("#entry-list");
-    let addEntryForm = document.querySelector("#add-entry-page");
-    let editEntryPage = document.querySelector("#edit-entry-page");
-    let updateGroupspage = document.querySelector("#update-entry-groups-page");
-
-    viewEntryPage.style.display = "block";
-    addEntryForm.style.display = "none";
-    editEntryPage.style.display = "none";
-    updateGroupspage.style.display = "none";
-}
-let showAddEntryForm = () => {
-    let addEntryForm = document.querySelector("#add-entry-page");
-    let viewEntryPage = document.querySelector("#entry-list");
-    viewEntryPage.style.display = "none";
-    addEntryForm.style.display = "block";
-};
-
 let showEditEntryForm = (...args) => {
     // id, title, author, skill level, group, flagged, disqualified
-    let editEntryPage = document.querySelector("#edit-entry-page");
-    let viewEntryPage = document.querySelector("#entry-list");
     let editEntryForm = document.querySelector("#edit-entry-form");
-    viewEntryPage.style.display = "none";
-    editEntryPage.style.display = "block";
-
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editEntryForm.length - 1; i++) {
         if (editEntryForm[i].name === "edit_flagged" || editEntryForm[i].name === "edit_disqualified") {
             editEntryForm[i].checked = args[i];
@@ -249,11 +225,6 @@ let showEditEntryForm = (...args) => {
 
     document.querySelector("#edit-entry-level-dropdown .custom-select-btn").innerHTML = `${args[3]} <i class="fas fa-angle-down"></i>`;
     document.querySelector("#assigned-group-dropdown .custom-select-btn").innerHTML = `${args[7] === 'null' ? "None" : args[7]} <i class="fas fa-angle-down"></i>`;
-};
 
-let showUpdateGroupsForm = () => {
-    let updateGroupspage = document.querySelector("#update-entry-groups-page");
-    let viewEntryPage = document.querySelector("#entry-list");
-    viewEntryPage.style.display = "none";
-    updateGroupspage.style.display = "block";
-}
+    showPage("edit-entry-page");
+};

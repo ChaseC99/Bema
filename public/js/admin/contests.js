@@ -14,11 +14,11 @@ request("get", "/api/internal/contests", null, (data) => {
                         ${c.contest_name} - #${c.contest_id} ${c.current ? '<span class="current-contest-tag">Active</span>' : ""}
                     </p>
                     <div class="contest-options">
-                        ${permissions.edit_contests || permissions.delete_contests ? `
+                        ${data.is_admin || permissions.edit_contests || permissions.delete_contests ? `
                             <i class="actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
-                                ${permissions.edit_contests ? `<a href="#" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current});">Edit</a>` : ""}
-                                ${permissions.delete_contests ? `<a href="#" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
+                                ${data.is_admin || permissions.edit_contests ? `<a href="javascript:void(0);" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current}, ${c.voting_enabled});">Edit</a>` : ""}
+                                ${data.is_admin || permissions.delete_contests ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
                             </div>
                         ` : ""}
                     </div>
@@ -95,34 +95,19 @@ let deleteContest = (contest_id) => {
 
 // Displays forms
 let showViewContests = () => {
-    let createContest = document.querySelector("#create-contest-container");
-    let editContest = document.querySelector("#edit-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
-
-    viewContests.style.display = "block";
-    editContest.style.display = "none";
-    createContest.style.display = "none";
-}
-let showCreateContestForm = () => {
-    let createContest = document.querySelector("#create-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
-    viewContests.style.display = "none";
-    createContest.style.display = "block";
+    showPage("view-contests-page");
 }
 let showEditContestForm = (...args) => {
-    let editContest = document.querySelector("#edit-contest-container");
-    let viewContests = document.querySelector("#view-contests-container");
     let editContestForm = document.querySelector("#edit-contest-form");
-    viewContests.style.display = "none";
-    editContest.style.display = "block";
-    // Just need to set values of inputs to provided params.
     for (let i = 0; i < editContestForm.length - 1; i++) {
-        if (editContestForm[i].name === "edit_contest_current") {
+        if (editContestForm[i].name === "edit_contest_current" || editContestForm[i].name === "edit_voting_enabled") {
             editContestForm[i].checked = args[i];
         } else {
             editContestForm[i].value = args[i];
         }
     }
+
+    showPage("edit-contest-page");
 };
 
 // Update navbar highlighting

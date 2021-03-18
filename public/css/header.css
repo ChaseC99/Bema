@@ -57,3 +57,22 @@
 .links span a:hover {
     text-decoration: underline;
 }
+
+.banner {
+    width: 100%;
+    padding: 15px 30px;
+    background-color: #1865f2;
+    color: #ffffff;
+}
+
+.banner .btn-primary {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}
+
+.banner .btn-primary:hover {
+    border: none !important;
+    box-shadow: none !important;
+    text-decoration: underline !important;
+}

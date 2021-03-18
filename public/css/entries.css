@@ -1,7 +1,3 @@
-/* Hide unloaded content and unused forms */
-#entries-table, #add-entry-page, #edit-entry-page, #update-entry-groups-page {
-	display: none;
-}
 /* Actions buttons */
 td img.delete-icon, td img.edit-icon {
     width: 25%;
