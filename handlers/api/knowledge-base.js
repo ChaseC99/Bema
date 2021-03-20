@@ -293,6 +293,33 @@ exports.editArticle = (request, response, next) => {
     }
 };
 
+exports.editArticleProperties = (request, response, next) => {
+    try {
+        let {
+            article_id,
+            section_id,
+            article_visibility,
+            is_published
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                return db.query("UPDATE kb_article SET section_id = $1, article_visibility = $2, is_published = 3 WHERE article_id = $4", [section_id, article_visibility, is_published, article_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem editing this article.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base article properties.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while editing a knowledge base article.", error);
+    }
+};
+
 exports.deleteArticle = (request, response, next) => {
     try {
         let {
