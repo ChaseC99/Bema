@@ -580,7 +580,14 @@ const routeChecks = {
 			check("article_id")
 			.isInt()
 			.withMessage("article_id must be an integer")
+		],
+		addArticleDraft: [
+			check("article_id")
 			.isInt()
+			.withMessage("article_id must be an integer"),
+			check("article_name")
+			.isLength(contentChars)
+			.withMessage("article_name must be between 0 and 5000 characters")
 		]
 	},
 	errors: {
@@ -686,6 +693,7 @@ router.post("/internal/kb/articles", routeChecks.kb.addArticle, wasValidated, kb
 router.put("/internal/kb/articles", routeChecks.kb.editArticle, wasValidated, kb.editArticle);
 router.delete("/internal/kb/articles", routeChecks.kb.deleteArticle, wasValidated, kb.deleteArticle);
 router.get("/internal/kb/articles/drafts", kb.getArticleDraft);
+router.post("/internal/kb/articles/drafts", routeChecks.kb.addArticleDraft, wasValidated, kb.addArticleDraft);
 
 // Errors
 router.get("/internal/errors", errors.get);
