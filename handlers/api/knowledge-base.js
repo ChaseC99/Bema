@@ -256,14 +256,11 @@ exports.editArticle = (request, response, next) => {
         let {
             article_id,
             article_name,
-            article_content,
-            article_visibility,
-            article_section,
-            is_published
+            article_content
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin) {
                 return db.query("SELECT article_visibility FROM kb_article WHERE article_id = $1", [article_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this article.", res.error);
@@ -271,16 +268,23 @@ exports.editArticle = (request, response, next) => {
                     let current_visibility = res.rows[0].article_visibility;
 
                     if ((current_visibility === "Public" || current_visibility === "Evaluators Only") || request.decodedToken.is_admin) {
-                        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin ? is_published : false, article_id], res => {
+                        return db.query("UPDATE kb_article SET article_name = $1, article_content = $2, article_author = $3, article_last_updated = $4, is_published = true WHERE article_id = $5", [article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_id], res => {
                             if (res.error) {
                                 return handleNext(next, 400, "There was a problem editing this article.", res.error);
                             }
-                            successMsg(response);
+                            return db.query("DELETE FROM kb_article_draft WHERE article_id = $1", [article_id], res => {
+                                if (res.error) {
+                                    return handleNext(next, 400, "There was a problem deleting the article drafts.", res.error);
+                                }
+                                successMsg(response);
+                            });
                         });
+                    } else {
+                        return handleNext(next, 403, "You're not authorized to edit this article.");
                     }
                 });
             } else {
-                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+                return handleNext(next, 403, "You're not authorized to publish knowledge base articles.");
             }
         }
         return handleNext(next, 401, "You must log in to edit knowledge base articles.");

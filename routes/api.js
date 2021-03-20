@@ -563,18 +563,15 @@ const routeChecks = {
 			.withMessage("article_section must be an integer")
 		],
 		editArticle: [
+			check("article_id")
+			.isInt()
+			.withMessage("article_id must be an integer"),
 			check("article_name")
 			.isLength(contentChars)
 			.withMessage("article_name must be between 0 and 5000 characters"),
-			check("article_visibility")
-			.isIn(visibilities)
-			.withMessage("Incorrect visibility"),
-			check("article_section")
-			.isInt()
-			.withMessage("article_section must be an integer"),
-			check("is_published")
-			.isBoolean()
-			.withMessage("is_published must be a boolean")
+			check("article_content")
+			.isLength(contentChars)
+		    .withMessage("Article content must be between 0 and 5000 characters")
 		],
 		deleteArticle: [
 			check("article_id")
