@@ -256,14 +256,11 @@ exports.editArticle = (request, response, next) => {
         let {
             article_id,
             article_name,
-            article_content,
-            article_visibility,
-            article_section,
-            is_published
+            article_content
         } = request.body;
 
         if (request.decodedToken) {
-            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+            if (request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin) {
                 return db.query("SELECT article_visibility FROM kb_article WHERE article_id = $1", [article_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this article.", res.error);
@@ -271,16 +268,50 @@ exports.editArticle = (request, response, next) => {
                     let current_visibility = res.rows[0].article_visibility;
 
                     if ((current_visibility === "Public" || current_visibility === "Evaluators Only") || request.decodedToken.is_admin) {
-                        return db.query("UPDATE kb_article SET section_id = $1, article_name = $2, article_content = $3, article_author = $4, article_last_updated = $5, article_visibility = $6, is_published = $7 WHERE article_id = $8", [article_section, article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_visibility, request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin ? is_published : false, article_id], res => {
+                        return db.query("UPDATE kb_article SET article_name = $1, article_content = $2, article_author = $3, article_last_updated = $4, is_published = true WHERE article_id = $5", [article_name, article_content, request.decodedToken.evaluator_id, new Date(), article_id], res => {
                             if (res.error) {
                                 return handleNext(next, 400, "There was a problem editing this article.", res.error);
                             }
-                            successMsg(response);
+                            return db.query("DELETE FROM kb_article_draft WHERE article_id = $1", [article_id], res => {
+                                if (res.error) {
+                                    return handleNext(next, 400, "There was a problem deleting the article drafts.", res.error);
+                                }
+                                successMsg(response);
+                            });
                         });
+                    } else {
+                        return handleNext(next, 403, "You're not authorized to edit this article.");
                     }
                 });
             } else {
-                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+                return handleNext(next, 403, "You're not authorized to publish knowledge base articles.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while editing a knowledge base article.", error);
+    }
+};
+
+exports.editArticleProperties = (request, response, next) => {
+    try {
+        let {
+            article_id,
+            article_section,
+            article_visibility,
+            is_published
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                return db.query("UPDATE kb_article SET section_id = $1, article_visibility = $2, is_published = $3 WHERE article_id = $4", [article_section, article_visibility, is_published, article_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem editing this article.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base article properties.");
             }
         }
         return handleNext(next, 401, "You must log in to edit knowledge base articles.");
@@ -310,6 +341,86 @@ exports.deleteArticle = (request, response, next) => {
         return handleNext(next, 401, "You must log in to delete knowledge base articles.");
     } catch (error) {
         return handleNext(next, 500, "Unexpected error while deleting a knowledge base article.", error);
+    }
+};
+
+exports.getArticleDraft = (request, response, next) => {
+    try {
+        if (request.decodedToken && (request.decodedToken.permissions.edit_kb_content || request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin)) {
+            let article_id = parseInt(request.query.articleId);
+
+            if (article_id > 0) {
+                return db.query("SELECT * FROM kb_article_draft WHERE article_id = $1 ORDER BY draft_last_updated DESC LIMIT 1;", [article_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the requested article draft.", res.error);
+                    }
+
+                    response.json({
+                        is_admin: request.decodedToken.is_admin,
+                        logged_in: true,
+                        draft: res.rows.length > 0 ? res.rows[0] : null
+                    });
+                });
+            } else {
+                return handleNext(next, 400, "You must specify an articleId.", new Error("Invalid article_id"));
+            }
+        } else {
+            return handleNext(next, 403, "You're not authorized to retrieve article drafts.");
+        }
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving a knowledge base article.", error);
+    }
+};
+
+exports.addArticleDraft = (request, response, next) => {
+    try {
+        let {
+            article_id,
+            article_name,
+            article_content
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+                return db.query("INSERT INTO kb_article_draft (article_id, draft_name, draft_content, draft_author, draft_last_updated) VALUES ($1, $2, $3, $4, $5)", [article_id, article_name, article_content, request.decodedToken.evaluator_id, new Date()], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem creating this article draft.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while creating a knowledge base article draft.", error);
+    }
+};
+
+exports.editArticleDraft = (request, response, next) => {
+    try {
+        let {
+            draft_id,
+            article_name,
+            article_content
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+                return db.query("UPDATE kb_article_draft SET draft_name = $1, draft_content = $2, draft_author = $3, draft_last_updated = $4 WHERE draft_id = $5", [article_name, article_content, request.decodedToken.evaluator_id, new Date(), draft_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem updating this article draft.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while creating a knowledge base article draft.", error);
     }
 };
 
