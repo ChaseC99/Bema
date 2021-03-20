@@ -580,6 +580,7 @@ const routeChecks = {
 			check("article_id")
 			.isInt()
 			.withMessage("article_id must be an integer")
+			.isInt()
 		]
 	},
 	errors: {

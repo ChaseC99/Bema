@@ -313,4 +313,30 @@ exports.deleteArticle = (request, response, next) => {
     }
 };
 
+exports.addArticleDraft = (request, response, next) => {
+    try {
+        let {
+            article_id,
+            article_name,
+            article_content
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+                return db.query("INSERT INTO kb_article_draft (article_id, draft_name, draft_content, draft_author, draft_last_updated) VALUES ($1, $2, $3, $4, $5)", [article_id, article_name, article_content, request.decodedToken.evaluator_id, new Date()], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem creating this article draft.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while creating a knowledge base article draft.", error);
+    }
+};
+
 module.exports = exports;
