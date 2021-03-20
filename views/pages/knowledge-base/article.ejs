@@ -30,6 +30,7 @@
                     <h2>Edit Article</h2>
                 </div>
                 <form id="edit-article-form" onsubmit="return editArticle(event)">
+                    <input class="form-input" type="hidden" id="draft_id" name="draft_id">
                     <input class="form-input" type="hidden" id="article_id" name="article_id">
                     <div class="row">
                         <div class="col-10">
@@ -48,6 +49,23 @@
                             </div>
                         </div>
                     </div>
+                    <div class='row form-actions'>
+                        <a href="javascript:void(0);" class="btn-secondary" onclick="showPage('view-article-page')">Cancel</a>
+                        <input type='submit' class="btn-primary" name="action_type" value='Save Draft'>
+                        <% if (permissions.publish_kb_content || is_admin) { %>
+                            <input type='submit' class="btn-primary" name="action_type" value='Save and Publish'>
+                        <% } %>
+                    </div>
+                </form>
+            </div>
+        <% } %>
+        <% if (permissions.edit_kb_content || is_admin) { %>
+            <div class="content-container" id="edit-article-properties-page" hidden>
+                <div class="content-header">
+                    <h2>Edit Article Properties</h2>
+                </div>
+                <form id="edit-article-properties-form" onsubmit="return editArticleProperties(event)">
+                    <input class="form-input" type="hidden" id="article_id" name="article_id">
                     <div class="row">
                         <div class="col-10">
                             <label for="article_visibility">Visibility</label>
