@@ -577,7 +577,7 @@ const routeChecks = {
 			check("article_id")
 			.isInt()
 			.withMessage("article_id must be an integer"),
-			check("section_id")
+			check("article_section")
 			.isInt()
 			.withMessage("section_id must be an integer"),
 			check("article_visibility")
