@@ -685,6 +685,7 @@ router.get("/internal/kb/articles", kb.getArticles);
 router.post("/internal/kb/articles", routeChecks.kb.addArticle, wasValidated, kb.addArticle);
 router.put("/internal/kb/articles", routeChecks.kb.editArticle, wasValidated, kb.editArticle);
 router.delete("/internal/kb/articles", routeChecks.kb.deleteArticle, wasValidated, kb.deleteArticle);
+router.get("/internal/kb/articles/drafts", kb.getArticleDraft);
 
 // Errors
 router.get("/internal/errors", errors.get);
