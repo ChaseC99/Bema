@@ -316,7 +316,7 @@ exports.deleteArticle = (request, response, next) => {
 exports.getArticleDraft = (request, response, next) => {
     try {
         if (request.decodedToken && (request.decodedToken.permissions.edit_kb_content || request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin)) {
-            let article_id = parseInt(document.query.articleId);
+            let article_id = parseInt(request.query.articleId);
 
             if (article_id > 0) {
                 return db.query("SELECT * FROM kb_article_draft WHERE article_id = $1 ORDER BY draft_last_updated DESC LIMIT 1;", [article_id], res => {
@@ -327,7 +327,7 @@ exports.getArticleDraft = (request, response, next) => {
                     response.json({
                         is_admin: request.decodedToken.is_admin,
                         logged_in: true,
-                        draft: res.rows[0]
+                        draft: res.rows.length > 0 ? res.rows[0] : null
                     });
                 });
             } else {
@@ -354,6 +354,32 @@ exports.addArticleDraft = (request, response, next) => {
                 return db.query("INSERT INTO kb_article_draft (article_id, draft_name, draft_content, draft_author, draft_last_updated) VALUES ($1, $2, $3, $4, $5)", [article_id, article_name, article_content, request.decodedToken.evaluator_id, new Date()], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem creating this article draft.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You're not authorized to edit knowledge base articles.");
+            }
+        }
+        return handleNext(next, 401, "You must log in to edit knowledge base articles.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while creating a knowledge base article draft.", error);
+    }
+};
+
+exports.editArticleDraft = (request, response, next) => {
+    try {
+        let {
+            draft_id,
+            article_name,
+            article_content
+        } = request.body;
+
+        if (request.decodedToken) {
+            if (request.decodedToken.permissions.edit_kb_content || request.decodedToken.is_admin) {
+                return db.query("UPDATE kb_article_draft SET draft_name = $1, draft_content = $2, draft_author = $3, draft_last_updated = $4 WHERE draft_id = $5", [article_name, article_content, request.decodedToken.evaluator_id, new Date(), draft_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem updating this article draft.", res.error);
                     }
                     successMsg(response);
                 });
