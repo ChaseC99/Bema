@@ -17,16 +17,23 @@ request("get", "/api/internal/contests", null, (data) => {
                         ${data.is_admin || permissions.edit_contests || permissions.delete_contests ? `
                             <i class="actions-dropdown-btn" onclick="showActionDropdown('contest-dropdown-${c.contest_id}');"></i>
                             <div class="actions-dropdown-content" hidden id="contest-dropdown-${c.contest_id}">
-                                ${data.is_admin || permissions.edit_contests ? `<a href="javascript:void(0);" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', ${c.current}, ${c.voting_enabled});">Edit</a>` : ""}
+                                ${data.is_admin || permissions.edit_contests ? `<a href="javascript:void(0);" onclick="showEditContestForm(${c.contest_id}, '${c.contest_name}', '${c.contest_url}', '${c.contest_author}', '${c.date_start}', '${c.date_end}', '${c.badge_name}', '${c.badge_image_url}', ${c.current}, ${c.voting_enabled});">Edit</a>` : ""}
                                 ${data.is_admin || permissions.delete_contests ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete contest?', 'Are you sure you want to delete this contest? This action cannot be undone.', 'deleteContest(${c.contest_id})', true, 'Delete');">Delete</a>` : ""}
                             </div>
                         ` : ""}
                     </div>
                 </div>
                 <div class="preview-content">
-                    <a href="${c.contest_url}" target="_blank">
-                        <img class="preview-thumb" src="${c.contest_url}/latest.png">
-                    </a>
+                    <div class="contest-images">
+                        <a href="${c.contest_url}" target="_blank">
+                            <img class="preview-thumb" src="${c.contest_url}/latest.png">
+                        </a>
+                        ${c.badge_name !== null ? `
+                            <a href="https://www.khanacademy.org/badges/custom/${c.badge_name}" target="_blank">
+                                <img class="preview-thumb" src="${c.badge_image_url}">
+                            </a>
+                        ` : ''}
+                    </div>
                     <p><span class="label">Start:</span>
                         ${c.date_start}
                     </p>
@@ -66,7 +73,7 @@ let editContest = (e) => {
     e.preventDefault();
     let body = {};
     for (key of e.target) {
-        if (key.name === "edit_contest_current") {
+        if (key.name === "edit_contest_current" || key.name === "edit_voting_enabled") {
             body[key.name] = key.checked;
         } else {
             body[key.name] = key.value;
