@@ -11,7 +11,8 @@ exports.home = (request, response, next) => {
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
             permissions: request.decodedToken.permissions,
-            is_impersonated: request.decodedToken.is_impersonated
+            is_impersonated: request.decodedToken.is_impersonated,
+            evaluator_id: request.decodedToken.evaluator_id
         });
     }
     response.render("pages/home", {
@@ -43,7 +44,8 @@ exports.judging = (request, response, next) => {
                 entry: res.rows[0],
                 logged_in: true,
                 permissions: request.decodedToken.permissions,
-                is_impersonated: request.decodedToken.is_impersonated
+                is_impersonated: request.decodedToken.is_impersonated,
+                evaluator_id: request.decodedToken.evaluator_id
             });
         });
     }
@@ -148,6 +150,7 @@ exports.adminEvaluations = (request, response, next) => {
             return response.render("pages/admin/evaluations", {
                 logged_in: true,
                 is_admin: request.decodedToken.is_admin,
+                evaluator_id: request.decodedToken.evaluator_id,
                 current_contest_id: parseInt(request.params.contestId),
                 current_evaluator_id: userId,
                 permissions: request.decodedToken.permissions,

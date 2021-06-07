@@ -40,6 +40,9 @@ request("get", "/api/internal/contests", null, (data) => {
                     <p><span class="label">End:</span>
                         ${c.date_end}
                     </p>
+                    <p><a href="/entries/${c.contest_id}">View Entries</a></p>
+                    ${logged_in ? `<p><a href="/admin/evaluations/${evaluator_id}/${c.contest_id}">View Evaluations</a></p>` : ""}
+                    <p><a href="/results/${c.contest_id}">View Results</a></p>
                 </div>
             </div>
             `;
