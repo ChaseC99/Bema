@@ -16,7 +16,7 @@ exports.get = (request, response, next) => {
         if (contest_id > 0) {
             // Send back all entry info
             if (request.decodedToken) {
-                return db.query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_author, e.entry_level, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, g.group_name, to_char(entry_created, $1) as entry_created FROM entry e LEFT JOIN evaluator_group g ON e.assigned_group_id = g.group_id WHERE e.contest_id = $2 ORDER BY e.entry_id", [displayFancyDateFormat, contest_id], res => {
+                return db.query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_author, e.entry_level, e.entry_level_locked, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, g.group_name, to_char(entry_created, $1) as entry_created FROM entry e LEFT JOIN evaluator_group g ON e.assigned_group_id = g.group_id WHERE e.contest_id = $2 ORDER BY e.entry_id", [displayFancyDateFormat, contest_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting the list of entries.", res.error);
                     }
@@ -114,6 +114,7 @@ exports.edit = (request, response, next) => {
                 edit_entry_title,
                 edit_entry_author,
                 edit_entry_level,
+                edit_entry_level_locked,
                 edit_entry_group,
                 edit_flagged,
                 edit_disqualified
@@ -123,7 +124,7 @@ exports.edit = (request, response, next) => {
             } = request.decodedToken;
 
             if (request.decodedToken.permissions.edit_entries || is_admin) {
-                return db.query("UPDATE entry SET entry_title = $1, entry_author = $2, entry_level = $3, assigned_group_id = $4, flagged = $5, disqualified = $6 WHERE entry_id = $7", [edit_entry_title, edit_entry_author, edit_entry_level, edit_entry_group, edit_flagged, edit_disqualified, edit_entry_id], res => {
+                return db.query("UPDATE entry SET entry_title = $1, entry_author = $2, entry_level = $3, entry_level_locked = $4, assigned_group_id = $5, flagged = $6, disqualified = $7 WHERE entry_id = $8", [edit_entry_title, edit_entry_author, edit_entry_level, edit_entry_level_locked, edit_entry_group, edit_flagged, edit_disqualified, edit_entry_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this entry.", res.error);
                     }
