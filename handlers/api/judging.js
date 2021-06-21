@@ -26,11 +26,20 @@ exports.submit = (request, response, next) => {
                 if (res.error) {
                     return handleNext(next, 400, "There was a problem evaluating this entry.", res.error);
                 }
-                return db.query("SELECT update_entry_level($1)", [entry_id], res => {
+                return db.query("SELECT entry_level_locked FROM entry WHERE entry_id = $1", [entry_id], res => {
                     if (res.error) {
-                        return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
+                        return handleNext(next, 500, "There was a problem checking whether this entry's skill level is locked.", res.error);
                     }
-                    successMsg(response);
+                    if (!res.rows[0].entry_level_locked) {
+                        return db.query("SELECT update_entry_level($1)", [entry_id], res => {
+                            if (res.error) {
+                                return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
+                            }
+                            successMsg(response);
+                        });
+                    } else {
+                        successMsg(response);
+                    }
                 });
             });
         }
