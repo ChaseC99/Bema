@@ -16,6 +16,49 @@
     margin-left: 0px;
 }
 
+.sortable-container {
+    height: 650px;
+    width: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    margin-bottom: 15px;
+}
+
+.sortable-list-title {
+    display: block;
+    margin: auto;
+    text-align: center;
+    border-bottom: 1px solid #21242c;
+    padding-bottom: 5px;
+}
+
+.sortable-list {
+    width: 100%;
+    float: left;
+    display: inline;
+    border: 2px solid rgba(33,36,44,0.16);
+    max-width: 150px;
+    min-height: 20px;
+    list-style: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    height: 600px;
+    overflow: scroll;
+    margin-right: 10px;
+}
+
+.sortable-list li {
+    background-color: #ffffff;
+    color: #21242c;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-size: 16px;
+    border: 1px solid grey;
+    cursor: pointer;
+    box-sizing: border-box;
+    margin: 10px 0px;
+}
+
 /* Contests page styling */
 .current-contest-tag {
     background-color: #1865f2;

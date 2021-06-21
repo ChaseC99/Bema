@@ -404,12 +404,24 @@ const routeChecks = {
 			.withMessage("manage_announcements must be a boolean")
 		],
 		assignToEvaluatorGroup: [
-			check("evaluator_id")
-			.isInt()
-		    .withMessage("User ID must be an integer"),
-			check("group_id")
-			.isInt()
-		    .withMessage("Group ID must be an integer")
+			oneOf([
+				[
+					check("evaluator_id")
+					.isInt()
+				    .withMessage("User ID must be an integer or null"),
+					check("group_id")
+					.isInt()
+				    .withMessage("Group ID must be an integer")
+				],
+				[
+					check("evaluator_id")
+					.isInt()
+				    .withMessage("User ID must be an integer or null"),
+					check("group_id")
+					.isIn([null])
+				    .withMessage("Group ID must be an integer")
+				]
+			])
 		]
 	},
 	winners: {

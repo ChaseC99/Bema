@@ -74,6 +74,9 @@
                 <div class="preview col-12 standard">
                     <div class="db-header">
                         <p>Assigned Groups</p>
+                        <% if (permissions.assign_evaluator_groups || is_admin) { %>
+                            <span class="btn-tertiary" onclick="showPage('assign-group-page')">Edit Groups</span>
+                        <% } %>
                     </div>
                     <div id="assigned-groups-table" class="preview-content">
                         <table>
@@ -81,9 +84,6 @@
                                 <th style="width: 10%">Evaluator ID</th>
                                 <th style="width: 25%">Evaluator Name</th>
                                 <th style="width: 25%">Assigned Group</th>
-                                <% if (permissions.assign_evaluator_groups || is_admin) { %>
-                                    <th style="width: 60%"></th>
-                                <% } %>
                             </thead>
                             <tbody id="assigned-groups-table-body">
                                 <!-- assigned evaluator groups -->
@@ -174,34 +174,15 @@
                 <div class="content-header">
                     <h2>Assign Judging Group</h2>
                 </div>
-                <form id="assign-judging-group-form" onsubmit="return assignEvaluatorGroup(event)">
-                    <input class="form-input" type="hidden" id="evaluator_id" name="evaluator_id" value="">
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="evaluator_name">Evaluator Name</label>
-                        </div>
-                        <div class="col-90">
-                            <input class="form-input" type="text" id="evaluator_name" name="evaluator_name" disabled>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <label for="group_id">Assigned Group</label>
-                        </div>
-                        <div class="col-90">
-                            <input type="hidden" id="group-id-input" name="group_id" value="null" hidden>
-                            <div class="custom-select" id="group-id-dropdown">
-                                <div class="custom-select-btn" onclick="showSelectDropdown('group-id-dropdown');">None<i class="fas fa-angle-down"></i></div>
-                                <div class="select-dropdown-content" hidden>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row form-actions">
-                        <a href="javascript:void(0);" class="btn-secondary" onclick="showPage('judging-page');">Cancel</a>
-                        <input class="btn-primary" type="submit" value="Save">
-                    </div>
-                </form>
+                <div id="judging-group-sortable-container" class="sortable-container">
+                    <ul id="judging-group-null-sortable" class="judging-group-sortable sortable-list">
+                        <span class="sortable-list-title" data-group-id="null">Unassigned</span>
+                    </ul>
+                </div>
+                <div class="form-actions">
+                    <span class="btn-secondary" onclick="showPage('judging-page')">Cancel</span>
+                    <span class="btn-primary" onclick="assignEvaluatorGroups()">Save</span>
+                </div>
             </div>
         <% } %>
         <% if (permissions.manage_judging_criteria || is_admin) { %>
@@ -300,4 +281,11 @@
 <script src="/static/js/adminSidebar.js"></script>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+    $(function() {
+        $( "#judging-group-1-sortable, #judging-group-2-sortable" ).sortable({
+            connectWith: ".judging-group-sortable"
+        }).disableSelection();
+    });
+</script>
 </html>
