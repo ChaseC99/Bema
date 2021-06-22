@@ -17,4 +17,5 @@ router.get("/admin/errors", handlers.adminErrors);
 router.get("/kb", handlers.kbHome);
 router.get("/kb/article/:articleId", handlers.kbArticle);
 router.get("/evaluator/:userId", handlers.evaluatorProfile);
+router.get("/contestants", handlers.contestants);
 module.exports = router;

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Contestants | Challenge Council</title>
+    <%- include ../partials/styles %>
+    <link rel="stylesheet" type="text/css" href="/static/css/sidebar.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/previews.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/tables.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/contestants.css">
+</head>
+
+<body>
+    <%- include ../partials/header %>
+
+    <div class="page-container">
+        <%- include ../partials/adminSidebar %>
+
+        <div class="content-container" id="contestant-search">
+            <div class="content-header">
+                <h2>
+                    Search Contestants
+                </h2>
+            </div>
+            <div class="previews-container">
+                <div class="preview col-12 standard">
+                    <div class="preview-content">
+                        <div id="search-container">
+                            <form onSubmit="return searchContestants(event)">
+                                <div class="row">
+                                    <input type="text" class="form-input" name="search-input" placeholder="Enter display name or KAID"></input>
+                                    <input type="button" class="btn-primary" value="Search"></input>
+                                </div>
+                            </form>
+                        </div>
+                        <table id="contestant-search-results-table" style="display: none">
+                            <thead>
+                                <th style="width: 5%">Name</th>
+                                <th style="width: 25%">KAID</th>
+                                <th style="width: 5%">View Profile</th>
+                            </thead>
+                            <tbody id="contestant-search-results-table-body">
+                                <!-- Contestants -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Page container -->
+
+    <%- include ../partials/footer %>
+</body>
+<script src="/static/js/contestants.js"></script>
+<script src="/static/js/adminSidebar.js"></script>
+</html>

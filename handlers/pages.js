@@ -289,7 +289,6 @@ exports.evaluatorProfile = (request, response, next) => {
     if (request.decodedToken) {
         response.render("pages/evaluatorProfile", {
             is_self: userId === request.decodedToken.evaluator_id ? true : false,
-            evaluator_id: userId,
             logged_in: true,
             is_admin: request.decodedToken.is_admin,
             evaluator_id: request.decodedToken.evaluator_id,
@@ -298,6 +297,24 @@ exports.evaluatorProfile = (request, response, next) => {
         });
     }
     response.render("pages/home", {
+        logged_in: false,
+        is_admin: false,
+        permissions: publicPermissions,
+        is_impersonated: false
+    });
+}
+
+exports.contestants = (request, response, next) => {
+    if (request.decodedToken) {
+        response.render("pages/contestants", {
+            logged_in: true,
+            is_admin: request.decodedToken.is_admin,
+            evaluator_id: request.decodedToken.evaluator_id,
+            permissions: request.decodedToken.permissions,
+            is_impersonated: request.decodedToken.is_impersonated
+        });
+    }
+    response.render("pages/contestants", {
         logged_in: false,
         is_admin: false,
         permissions: publicPermissions,
