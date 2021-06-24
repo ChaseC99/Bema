@@ -9,10 +9,10 @@
     <a class="nav-button" id="sidebar-entries" href="">
         <p>Entries</p>
     </a>
-    <a class="nav-button" id="sidebar-contestants" href="/contestants">
-        <p>Contestants</p>
-    </a>
     <% if (logged_in) { %>
+        <a class="nav-button" id="sidebar-contestants" href="/contestants">
+            <p>Contestants</p>
+        </a>
         <a class="nav-button" id="sidebar-evaluations" href="/admin/evaluations/<%= evaluator_id %>">
             <p>Evaluations</p>
         </a>
