@@ -1,3 +1,4 @@
+let tab = document.querySelector("#sidebar-contestants");
 let hasHashInUrl = document.location.href.indexOf("#") != -1;
 let contestantId = (
     hasHashInUrl ?
@@ -46,3 +47,6 @@ request("get", "/api/internal/contestants/entries?id="+contestantId, null, (data
         displayError(data.error);
     }
 });
+
+// Update navbar highlighting
+tab.classList.add("selected");

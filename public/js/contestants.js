@@ -1,3 +1,4 @@
+let tab = document.querySelector("#sidebar-contestants");
 let searchResultsTable = document.getElementById("contestant-search-results-table");
 let searchResultsTableBody = document.getElementById("contestant-search-results-table-body");
 
@@ -27,3 +28,6 @@ const searchContestants = (e) => {
         }
     });
 }
+
+// Update navbar highlighting
+tab.classList.add("selected");
