@@ -18,4 +18,5 @@ router.get("/kb", handlers.kbHome);
 router.get("/kb/article/:articleId", handlers.kbArticle);
 router.get("/evaluator/:userId", handlers.evaluatorProfile);
 router.get("/contestants", handlers.contestants);
+router.get("/contestants/:contestantId", handlers.contestantProfile);
 module.exports = router;
