@@ -8,12 +8,13 @@ const searchContestants = (e) => {
     request("get", "/api/internal/contestants/search?searchQuery="+e.target["search-input"].value, null, (data) => {
         if (!data.error) {
             searchResultsTableBody.innerHTML = '';
-
             if (data.contestants.length > 0) {
                 data.contestants.forEach(c => {
+                    let uniqueNames = [...new Set(c.contestant_names.split(", "))];
+                    console.log(uniqueNames);
                     searchResultsTableBody.innerHTML += `
                     <tr>
-                        <td>${c.contestant_names}</td>
+                        <td>${Array.from(uniqueNames).join(', ')}</td>
                         <td>${c.contestant_kaid}</td>
                         <td>${c.contestant_kaid ? `<a href="/contestants/${c.contestant_kaid}">View Profile</a>` : `Profile Unavailable` }</td>
                     </tr>`;
