@@ -111,9 +111,11 @@ exports.edit = (request, response, next) => {
                     edit_contest_start_date,
                     edit_contest_end_date,
                     edit_contest_current,
-                    edit_voting_enabled
+                    edit_voting_enabled,
+                    edit_badge_name,
+                    edit_badge_image_url
                 } = request.body;
-                return db.query("UPDATE contest SET contest_name = $1, contest_url = $2, contest_author = $3, date_start = $4, date_end = $5, current = $6, voting_enabled = $7 WHERE contest_id = $8", [edit_contest_name, edit_contest_url, edit_contest_author, edit_contest_start_date, edit_contest_end_date, edit_contest_current, edit_voting_enabled, edit_contest_id], res => {
+                return db.query("UPDATE contest SET contest_name = $1, contest_url = $2, contest_author = $3, date_start = $4, date_end = $5, current = $6, voting_enabled = $7, badge_name = $8, badge_image_url = $9 WHERE contest_id = $10", [edit_contest_name, edit_contest_url, edit_contest_author, edit_contest_start_date, edit_contest_end_date, edit_contest_current, edit_voting_enabled, edit_badge_name, edit_badge_image_url, edit_contest_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem editing this contest.", res.error);
                     }

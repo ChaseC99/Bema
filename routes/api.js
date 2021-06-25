@@ -7,6 +7,7 @@ const { nameChars, datePattern, kaidPattern, dateFormat, scoreChars, messageChar
 
 const admin = require(process.cwd() + "/handlers/api/admin");
 const contests = require(process.cwd() + "/handlers/api/contests");
+const contestants = require(process.cwd() + "/handlers/api/contestants");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const results = require(process.cwd() + "/handlers/api/results");
 const judging = require(process.cwd() + "/handlers/api/judging");
@@ -404,12 +405,24 @@ const routeChecks = {
 			.withMessage("manage_announcements must be a boolean")
 		],
 		assignToEvaluatorGroup: [
-			check("evaluator_id")
-			.isInt()
-		    .withMessage("User ID must be an integer"),
-			check("group_id")
-			.isInt()
-		    .withMessage("Group ID must be an integer")
+			oneOf([
+				[
+					check("evaluator_id")
+					.isInt()
+				    .withMessage("User ID must be an integer or null"),
+					check("group_id")
+					.isInt()
+				    .withMessage("Group ID must be an integer")
+				],
+				[
+					check("evaluator_id")
+					.isInt()
+				    .withMessage("User ID must be an integer or null"),
+					check("group_id")
+					.isIn([null])
+				    .withMessage("Group ID must be an integer")
+				]
+			])
 		]
 	},
 	winners: {
@@ -647,6 +660,10 @@ router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
 
+// Contestants
+router.get("/internal/contestants/search", contestants.search);
+router.get("/internal/contestants/entries", contestants.getEntries);
+router.get("/internal/contestants/stats", contestants.stats);
 
 // Messages
 router.get("/internal/messages", messages.get);

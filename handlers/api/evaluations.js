@@ -76,13 +76,43 @@ exports.put = (request, response, next) => {
                                 if (res.error) {
                                     return handleNext(next, 400, "There was a problem editing this evaluation.", res.error);
                                 }
-                                return db.query("SELECT update_entry_level($1)", [edit_entry_id], res => {
+                                return db.query("SELECT entry_level_locked FROM entry WHERE entry_id = $1", [edit_entry_id], res => {
                                     if (res.error) {
-                                        return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
+                                        return handleNext(next, 500, "There was a problem checking whether this entry's skill level is locked.", res.error);
                                     }
+                                    if (!res.rows[0].entry_level_locked) {
+                                        return db.query("SELECT entry_author_kaid FROM entry WHERE entry_id = $1", [edit_entry_id], res => {
+                                            if (res.error) {
+                                                return handleNext(next, 400, "There was a problem getting this entry's author.", res.error);
+                                            }
+                                            let authorKaid = res.rows[0].entry_author_kaid;
 
+                                            return db.query("SELECT entry_level FROM entry WHERE entry_author_kaid = $1 AND entry_id != $2 ORDER BY entry_id DESC LIMIT 3", [authorKaid, edit_entry_id], res => {
+                                                if (res.error) {
+                                                    return handleNext(next, 400, "There was a problem getting this user's past skill levels.", res.error);
+                                                }
+                                                let levels = res.rows;
 
-                                    successMsg(response);
+                                                if (levels.length === 3 && levels[0].entry_level === "Advanced" && levels[1].entry_level === "Advanced" && levels[2].entry_level === "Advanced") {
+                                                    return db.query("UPDATE entry SET entry_level = $1, entry_level_locked = true WHERE entry_id = $2", [levels[0].entry_level, entry_id], res => {
+                                                        if (res.error) {
+                                                            return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
+                                                        }
+                                                        successMsg(response);
+                                                    });
+                                                } else {
+                                                    return db.query("SELECT update_entry_level($1)", [edit_entry_id], res => {
+                                                        if (res.error) {
+                                                            return handleNext(next, 400, "There was a problem updating this entry's skill level.", res.error);
+                                                        }
+                                                        successMsg(response);
+                                                    });
+                                                }
+                                            });
+                                        });
+                                    } else {
+                                        successMsg(response);
+                                    }
                                 });
                             });
                         } else {

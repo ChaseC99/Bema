@@ -5,11 +5,11 @@ let judgingGroupsTableBody = document.querySelector("#judging-groups-table-body"
 let assignedGroupsTable = document.querySelector("#assigned-groups-table");
 let assignedGroupsTableBody = document.querySelector("#assigned-groups-table-body");
 let judgingCriteriaTableBody = document.querySelector("#judging-criteria-table-body");
-let assignedGroupsList = document.querySelector("#group-id-dropdown .select-dropdown-content");
 let flaggedEntriesSpinner = document.querySelector("#flagged-entries-spinner");
 let judgingGroupsSpinner = document.querySelector("#judging-groups-spinner");
 let assignedGroupsSpinner = document.querySelector("#assigned-groups-spinner");
 let judgingCriteriaSpinner = document.querySelector("#judging-criteria-spinner");
+let assignGroupsDraggableContainer = document.querySelector("#judging-group-sortable-container");
 let tab = document.querySelector("#sidebar-judging");
 
 // Load page data
@@ -74,7 +74,11 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     </tr>`;
 
                     if (g.is_active && (permissions.assign_evaluator_groups || data.is_admin)) {
-                        assignedGroupsList.innerHTML += `<a href="javascript:void(0);" onclick="setSelectValue('group-id', ${g.group_id}, '${g.group_id} - ${g.group_name}');">${g.group_id} - ${g.group_name}</a>`;
+                        assignGroupsDraggableContainer.innerHTML += `
+                        <ul id="judging-group-${g.group_id}-sortable" class="judging-group-sortable sortable-list" data-group-id="${g.group_id}">
+                            <span class="sortable-list-title">${g.group_name}</span>
+                        </ul>
+                        `;
                     }
                 });
             }
@@ -92,13 +96,22 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     <td>${e.evaluator_id}</td>
                     <td>${e.evaluator_name}</td>
                     <td>${e.group_id ? e.group_id : "None"}${groupName}</td>
-                    ${permissions.assign_evaluator_groups || data.is_admin ? `
-                        <td class="assigned-group-actions actions">
-                            <a href="javascript:void(0);" class="btn-tertiary" onclick="showAssignEvaluatorGroupForm(${e.evaluator_id}, '${e.evaluator_name}', ${e.group_id}, '${groupName}')">Change Group</a>
-                        </td>
-                    ` : ""}
                 </tr>`;
+
+                let container = document.querySelector("#judging-group-sortable-container #judging-group-" + e.group_id + "-sortable");
+                container.innerHTML += `
+                    <li data-user-id="${e.evaluator_id}">${e.evaluator_name}</li>
+                `;
             });
+
+            data.evaluatorGroups.forEach(g => {
+                $("#judging-group-" + g.group_id + "-sortable").sortable({
+                    connectWith: ".judging-group-sortable"
+                }).disableSelection();
+            });
+            $("#judging-group-null-sortable").sortable({
+                connectWith: ".judging-group-sortable"
+            }).disableSelection();
         }
     } else {
         displayError(data.error);
@@ -219,21 +232,25 @@ let deleteEvaluatorGroup = (group_id) => {
     });
 }
 
-let assignEvaluatorGroup = (e) => {
-    e.preventDefault();
-    let body = {};
-    for (key of e.target) {
-        body[key.name] = key.value;
-    }
-    delete body[""];
+let assignEvaluatorGroups = () => {
+    let groups = document.querySelectorAll("#judging-group-sortable-container .judging-group-sortable");
 
-    request("put", "/api/internal/users/assignToEvaluatorGroup", body, (data) => {
-        if (!data.error) {
-            window.setTimeout(() => window.location.reload(), 1000);
-        } else {
-            displayError(data.error);
+    for (let g = 0; g < groups.length; g++) {
+        let group_id = groups[g].dataset.groupId === "null" ? null : groups[g].dataset.groupId;
+        for (let e = 1; e < groups[g].children.length; e++) {
+            let user_id = groups[g].children[e].dataset.userId;
+            request("put", "/api/internal/users/assignToEvaluatorGroup", {
+                group_id: group_id,
+                evaluator_id: user_id
+            }, (data) => {
+                if (!data.error) {
+                    window.setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    displayError(data.error);
+                }
+            });
         }
-    });
+    }
 }
 
 let addJudgingCriteria = (e) => {
@@ -303,17 +320,6 @@ let showEditEvaluatorGroupForm = (...args) => {
     }
 
     showPage("edit-group-page");
-}
-
-let showAssignEvaluatorGroupForm = (...args) => {
-    // args: evaluator_id, evaluator_name, group_id, group_name
-    let assignEvaluatorGroupForm = document.querySelector("#assign-judging-group-form");
-    for (let i = 0; i < assignEvaluatorGroupForm.length - 1; i++) {
-        assignEvaluatorGroupForm[i].value = args[i];
-    }
-    document.querySelector("#group-id-dropdown .custom-select-btn").innerHTML = `${args[2] ? `${args[2]} ${args[3]}` : 'None'}<i class="fas fa-angle-down"></i>`;
-
-    showPage("assign-group-page");
 }
 
 let showEditJudgingCriteriaForm = (...args) => {

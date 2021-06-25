@@ -68,7 +68,7 @@ request("get", `/api/internal/entries?contestId=${currentContestId}`, null, (dat
                     <div>
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            ${permissions.edit_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
+                            ${permissions.edit_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showEditEntryForm(${a.entry_id}, '${a.entry_title.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_author.replace("'", "").replace('"', '').replace('"', '')}', '${a.entry_level}', ${a.entry_level_locked}, ${a.assigned_group_id}, ${a.flagged}, ${a.disqualified}, '${a.group_name}')">Edit</a>` : ""}
                             ${permissions.delete_entries || data.is_admin ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry(${a.entry_id})', true, 'Delete')">Delete</a>` : ""}
                         </div>
                     </div>
@@ -88,7 +88,7 @@ let editEntry = (e) => {
 
     let body = {};
     for (key of e.target) {
-        if (key.name === "edit_flagged" || key.name === "edit_disqualified") {
+        if (key.name === "edit_flagged" || key.name === "edit_disqualified" || key.name === "edit_entry_level_locked") {
             body[key.name] = key.checked;
         } else if (key.name === "edit_entry_group" && key.value === "null") {
             body[key.name] = null;
@@ -213,10 +213,10 @@ const transferEntries = (e) => {
 
 ///// HTML modifier functions (like displaying forms) /////
 let showEditEntryForm = (...args) => {
-    // id, title, author, skill level, group, flagged, disqualified
+    // id, title, author, skill level, skill level locked, group, flagged, disqualified, group name
     let editEntryForm = document.querySelector("#edit-entry-form");
     for (let i = 0; i < editEntryForm.length - 1; i++) {
-        if (editEntryForm[i].name === "edit_flagged" || editEntryForm[i].name === "edit_disqualified") {
+        if (editEntryForm[i].name === "edit_flagged" || editEntryForm[i].name === "edit_disqualified" || editEntryForm[i].name === "edit_entry_level_locked") {
             editEntryForm[i].checked = args[i];
         } else {
             editEntryForm[i].value = args[i];
@@ -224,7 +224,7 @@ let showEditEntryForm = (...args) => {
     }
 
     document.querySelector("#edit-entry-level-dropdown .custom-select-btn").innerHTML = `${args[3]} <i class="fas fa-angle-down"></i>`;
-    document.querySelector("#assigned-group-dropdown .custom-select-btn").innerHTML = `${args[7] === 'null' ? "None" : args[7]} <i class="fas fa-angle-down"></i>`;
+    document.querySelector("#assigned-group-dropdown .custom-select-btn").innerHTML = `${args[8] === 'null' ? "None" : args[8]} <i class="fas fa-angle-down"></i>`;
 
     showPage("edit-entry-page");
 };
