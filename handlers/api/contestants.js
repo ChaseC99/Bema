@@ -45,7 +45,7 @@ exports.getEntries = (request, response, next) => {
             let id = request.query.id;
 
             if (id) {
-                return db.query("SELECT e.entry_id, e.entry_title, e.entry_level, e.is_winner, e.disqualified, e.contest_id, c.contest_name, (SELECT AVG(ev.creativity + ev.complexity + ev.interpretation + ev.execution) as avg_score FROM evaluation ev WHERE ev.entry_id = e.entry_id) FROM entry e INNER JOIN contest c ON e.contest_id = c.contest_id WHERE e.entry_author_kaid = $1", [id], res => {
+                return db.query("SELECT e.entry_id, e.entry_title, e.entry_level, e.is_winner, e.disqualified, e.contest_id, c.contest_name, (SELECT AVG(ev.creativity + ev.complexity + ev.interpretation + ev.execution) as avg_score FROM evaluation ev WHERE ev.entry_id = e.entry_id) FROM entry e INNER JOIN contest c ON e.contest_id = c.contest_id WHERE e.entry_author_kaid = $1 ORDER BY e.entry_id DESC", [id], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem retrieving this contestant's entries.", res.error);
                     }
