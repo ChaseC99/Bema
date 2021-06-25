@@ -13,7 +13,7 @@ request("get", "/api/internal/contestants/stats?id="+contestantId, null, (data) 
     if (!data.error) {
         let contestInfo = document.getElementById("contestant-info");
         contestInfo.innerHTML = `
-            <h1>${data.profileInfo.name}$</h1>
+            <h1>${data.profileInfo.name}</h1>
             <div id="contestant-stat-container">
                 <span class="stat-box"><span class="big-number">${data.entryCount}</span><br><span class="label">Entries<br>Submitted</span></span>
                 <span class="stat-box"><span class="big-number">${data.contestCount}</span><br><span class="label">Contests<br>Entered</span></span>
