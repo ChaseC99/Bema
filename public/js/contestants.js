@@ -14,7 +14,7 @@ const searchContestants = (e) => {
                     <tr>
                         <td>${c.contestant_names}</td>
                         <td>${c.contestant_kaid}</td>
-                        <td><a href="/contestants/${c.contestant_kaid}">View Profile</a></td>
+                        <td>${c.contestant_kaid ? `<a href="/contestants/${c.contestant_kaid}">View Profile</a>` : `Profile Unavailable` }</td>
                     </tr>`;
                 });
             } else {

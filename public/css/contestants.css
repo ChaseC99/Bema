@@ -35,3 +35,23 @@
 #contestant-entries-table {
     margin-top: 20px;
 }
+
+.disqualified-tag {
+    font-size: 12px;
+    text-transform: uppercase;
+    background-color: #d92916;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.winner-tag {
+    font-size: 12px;
+    text-transform: uppercase;
+    background-color: #ffb100;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
