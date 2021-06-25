@@ -30,16 +30,16 @@
                         <div id="search-container">
                             <form onSubmit="return searchContestants(event)">
                                 <div class="row">
-                                    <input type="text" class="form-input" name="search-input" placeholder="Enter display name or KAID"></input>
-                                    <input type="button" class="btn-primary" value="Search"></input>
+                                    <input type="text" class="form-input" name="search-input" placeholder="Enter display name or KAID" required></input>
+                                    <input type="submit" class="btn-primary" value="Search"></input>
                                 </div>
                             </form>
                         </div>
-                        <table id="contestant-search-results-table" style="display: none">
+                        <table id="contestant-search-results-table" hidden>
                             <thead>
-                                <th style="width: 5%">Name</th>
-                                <th style="width: 25%">KAID</th>
-                                <th style="width: 5%">View Profile</th>
+                                <th>Name</th>
+                                <th>KAID</th>
+                                <th>View Profile</th>
                             </thead>
                             <tbody id="contestant-search-results-table-body">
                                 <!-- Contestants -->

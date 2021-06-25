@@ -1,3 +1,12 @@
-#search-container input[type="button"] {
+#contestant-search-results-table {
+    margin-top: 20px;
+}
+
+#search-container input[type="submit"] {
     margin-left: 20px;
+}
+
+#no-results {
+    display: block;
+    margin-top: 20px;
 }
