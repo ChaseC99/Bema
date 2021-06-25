@@ -80,7 +80,7 @@ exports.stats = (request, response, next) => {
                             return handleNext(next, 500, "There was a problem retrieving this contestant's entry count.", res.error);
                         }
                         let entryCount = res.rows[0].count;
-                        return db.query("SELECT COUNT(*) FROM entry e INNER JOIN contest c ON e.contest_id = c.contest_id WHERE entry_author_kaid = $1 GROUP BY c.contest_id;", [id], res => {
+                        return db.query("SELECT COUNT(*) FROM contest c WHERE EXISTS (SELECT e.entry_id FROM entry e WHERE e.entry_author_kaid = $1 AND e.contest_id = c.contest_id);", [id], res => {
                             if (res.error) {
                                 return handleNext(next, 500, "There was a problem retrieving this contestant's entry count.", res.error);
                             }
