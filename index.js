@@ -12,6 +12,7 @@ const redirects = require("./middleware/redirects");
 const apiRoutes = require("./routes/api");
 const pagesRoutes = require("./routes/pages");
 const authRoutes = require("./routes/auth");
+const publicPermissions = require("./util/variables");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -34,10 +35,22 @@ app.use("/api/auth/", authRoutes);
 
 // Handler for any undefined routes.
 app.use((req, res, next) => {
-    res.render("pages/notFound", {
-        logged_in: req.decodedToken,
-        is_admin: req.decodedToken.is_admin
-    });
+    if (req.decodedToken) {
+        res.render("pages/notFound", {
+            logged_in: true,
+            is_admin: req.decodedToken.is_admin,
+            permissions: req.decodedToken.permissions,
+            is_impersonated: req.decodedToken.is_impersonated,
+            evaluator_id: req.decodedToken.evaluator_id
+        });
+    } else {
+        res.render("pages/notFound", {
+            logged_in: false,
+            is_admin: false,
+            is_impersonated: false,
+            permissions: publicPermissions
+        });
+    }
 });
 
 // Handler for standardizing error format.
