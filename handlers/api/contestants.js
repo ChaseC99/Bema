@@ -63,4 +63,45 @@ exports.getEntries = (request, response, next) => {
         return handleNext(next, 500, "Unexpected error while retrieving a contestant's entries.", error);
     }
 };
+
+exports.stats = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            let id = request.query.id;
+
+            if (id) {
+                return db.query("SELECT e.entry_author, e.entry_author_kaid FROM entry e WHERE e.entry_author_kaid = $1;", [id], res => {
+                    if (res.error) {
+                        return handleNext(next, 500, "There was a problem retrieving this contestant's profile information.", res.error);
+                    }
+                    let profileInfo = res.rows[0];
+                    return db.query("SELECT COUNT(*) FROM entry WHERE entry_author_kaid = $1;", [id], res => {
+                        if (res.error) {
+                            return handleNext(next, 500, "There was a problem retrieving this contestant's entry count.", res.error);
+                        }
+                        let entryCount = res.rows[0].count;
+                        return db.query("SELECT COUNT(*) FROM entry e INNER JOIN contest c ON e.contest_id = c.contest_id WHERE entry_author_kaid = $1 GROUP BY c.contest_id;", [id], res => {
+                            if (res.error) {
+                                return handleNext(next, 500, "There was a problem retrieving this contestant's entry count.", res.error);
+                            }
+                            let contestCount = res.rows[0].count;
+                            response.json({
+                                is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
+                                logged_in: true,
+                                profileInfo: profileInfo,
+                                entryCount: entryCount,
+                                contestCount: contestCount
+                            });
+                        });
+                    });
+                });
+            }
+            return handleNext(next, 400, "Invalid Input: id is required.", new Error("id has not been specified."));
+        }
+        return handleNext(next, 401, "You must log in to view a contestant's stats.");
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving a contestant's stats.", error);
+    }
+};
+
 module.exports = exports;
