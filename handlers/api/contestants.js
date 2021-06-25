@@ -70,7 +70,7 @@ exports.stats = (request, response, next) => {
             let id = request.query.id;
 
             if (id) {
-                return db.query("SELECT e.entry_author, e.entry_author_kaid FROM entry e WHERE e.entry_author_kaid = $1;", [id], res => {
+                return db.query("SELECT e.entry_author as name, e.entry_author_kaid as kaid FROM entry e WHERE e.entry_author_kaid = $1;", [id], res => {
                     if (res.error) {
                         return handleNext(next, 500, "There was a problem retrieving this contestant's profile information.", res.error);
                     }

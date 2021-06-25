@@ -10,3 +10,28 @@
     display: block;
     margin-top: 20px;
 }
+
+#contestant-info {
+    text-align: center;
+}
+
+#contestant-info .label {
+    margin-right: 0px !important;
+}
+
+.big-number {
+    font-size: 32px;
+}
+
+.stat-box {
+    padding: 0px 20px;
+}
+
+#contestant-stat-container {
+    display: flex;
+    justify-content: center;
+}
+
+#contestant-entries-table {
+    margin-top: 20px;
+}
