@@ -663,6 +663,7 @@ router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
 // Contestants
 router.get("/internal/contestants/search", contestants.search);
 router.get("/internal/contestants/entries", contestants.getEntries);
+router.get("/internal/contestants/stats", contestants.stats);
 
 // Messages
 router.get("/internal/messages", messages.get);
