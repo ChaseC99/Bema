@@ -89,6 +89,13 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     if (e.group_id === g.group_id) {
                         groupName = " - " + g.group_name;
                     }
+
+                    if (g.is_active && e.group_id === g.group_id) {
+                        let container = document.querySelector("#judging-group-sortable-container #judging-group-" + e.group_id + "-sortable");
+                        container.innerHTML += `
+                            <li data-user-id="${e.evaluator_id}">${e.evaluator_name}</li>
+                        `;
+                    }
                 });
 
                 assignedGroupsTableBody.innerHTML += `
@@ -97,11 +104,6 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                     <td>${e.evaluator_name}</td>
                     <td>${e.group_id ? e.group_id : "None"}${groupName}</td>
                 </tr>`;
-
-                let container = document.querySelector("#judging-group-sortable-container #judging-group-" + e.group_id + "-sortable");
-                container.innerHTML += `
-                    <li data-user-id="${e.evaluator_id}">${e.evaluator_name}</li>
-                `;
             });
 
             data.evaluatorGroups.forEach(g => {
