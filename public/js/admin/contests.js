@@ -29,7 +29,7 @@ request("get", "/api/internal/contests", null, (data) => {
                             <img class="preview-thumb" src="${c.contest_url}/latest.png">
                         </a>
                         ${c.badge_name !== null ? `
-                            <a href="https://www.khanacademy.org/badges/custom/${c.badge_name}" target="_blank">
+                            <a href="https://www.khanacademy.org/badges/${c.badge_name}" target="_blank">
                                 <img class="preview-thumb" src="${c.badge_image_url}">
                             </a>
                         ` : ''}
