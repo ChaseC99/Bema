@@ -301,8 +301,8 @@ span.label {
     display: inline-block;
 }
 .actions-dropdown-btn:after {
-    content: "\2807";
-    font-size: 30px;
+    content: "︙";
+    font-size: 25px;
     cursor: pointer;
     font-style: normal;
 }
