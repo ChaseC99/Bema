@@ -40,9 +40,13 @@ span.label {
 .content-container {
     background: #ffffff;
     min-height: 100vh;
+    max-width: 80vw;
     padding: 0px 30px 50px 30px;
     flex-grow: 1;
     flex-direction: column;
+}
+.content-container.center {
+    margin: auto;
 }
 /* Main header inside content containers */
 .content-header {

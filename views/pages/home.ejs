@@ -21,8 +21,8 @@
             <% if (logged_in) { %>
                 <section id="task-section">
                     <div id="view-tasks-container">
-                        <div class="previews-container" id="available-tasks-section">
-                            <div class="preview col-12 standard">
+                        <div class="previews-container center" id="available-tasks-section">
+                            <div class="preview col-8 standard">
                                 <div class="db-header">
                                     <p>Available Tasks</p>
                                 </div>
@@ -31,8 +31,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="previews-container">
-                            <div class="preview col-12 standard">
+                        <div class="previews-container center">
+                            <div class="preview col-8 standard">
                                 <div class="db-header">
                                     <p>My Tasks</p>
                                 </div>
@@ -46,8 +46,8 @@
             <% } %>
             <section id="message-section">
                 <div id="view-messages-container">
-                    <div class="previews-container">
-                        <div class="preview col-12 standard">
+                    <div class="previews-container center">
+                        <div class="preview col-8 standard">
                             <div class="db-header">
                                 <p>Announcements</p>
                                 <% if (permissions.manage_announcements || is_admin) { %>
