@@ -38,7 +38,7 @@ request("get", "/api/internal/contestants/entries?id="+contestantId, null, (data
             </td>
             <td>${e.contest_name.split("Contest: ")[1]}</td>
             <td>${e.entry_level}</td>
-            <td>${e.avg_score}</td>
+            <td>${e.avg_score ? e.avg_score : "-----"}</td>
             `;
         });
         entriesTable.hidden = false;
