@@ -90,7 +90,7 @@ request("get", "/api/internal/admin/getEvaluatorGroups", null, data => {
                         groupName = " - " + g.group_name;
                     }
 
-                    if (g.is_active && e.group_id === g.group_id) {
+                    if (permissions.assign_evaluator_groups && g.is_active && e.group_id === g.group_id) {
                         let container = document.querySelector("#judging-group-sortable-container #judging-group-" + e.group_id + "-sortable");
                         container.innerHTML += `
                             <li data-user-id="${e.evaluator_id}">${e.evaluator_name}</li>
