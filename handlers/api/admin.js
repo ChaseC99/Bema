@@ -29,7 +29,7 @@ exports.stats = (request, response, next) => {
                     }
                     // If length > 0, true, else false.
                     if (res.rows.length) {
-                        yourReviewedEntriesCount = res.rows[0].cnt;
+                        yourReviewedEntriesCount = parseInt(res.rows[0].cnt);
                     } else {
                         yourReviewedEntriesCount = 0;
                     }
@@ -39,7 +39,7 @@ exports.stats = (request, response, next) => {
                             return handleNext(next, 400, "There was a problem getting your group entries.", res.error);
                         }
                         if (res.rows.length) {
-                            groupEntriesCount = res.rows[0].count;
+                            groupEntriesCount = parseInt(res.rows[0].count);
                         } else {
                             groupEntriesCount = 0;
                         }
@@ -48,7 +48,7 @@ exports.stats = (request, response, next) => {
                                 return handleNext(next, 400, "There was a problem getting the evaluator count in your group.", res.error);
                             }
                             if (res.rows.length) {
-                                groupEvaluatorCount = res.rows[0].count;
+                                groupEvaluatorCount = parseInt(res.rows[0].count);
                             } else {
                                 groupEvaluatorCount = 0;
                             }
@@ -57,7 +57,7 @@ exports.stats = (request, response, next) => {
                                     return handleNext(next, 400, "There was a problem getting the evaluation count in your group.", res.error);
                                 }
                                 if (res.rows.length) {
-                                    groupEvaluationsCount = res.rows[0].cnt;
+                                    groupEvaluationsCount = parseInt(res.rows[0].cnt);
                                 } else {
                                     groupEvaluationsCount = 0;
                                 }
@@ -68,7 +68,7 @@ exports.stats = (request, response, next) => {
                                             return handleNext(next, 400, "There was a problem getting the total entries for the current contest.", res.error);
                                         }
                                         if (res.rows.length) {
-                                            totalEntriesCount = res.rows[0].count;
+                                            totalEntriesCount = parseInt(res.rows[0].count);
                                         } else {
                                             totalEntriesCount = 0;
                                         }
@@ -86,7 +86,7 @@ exports.stats = (request, response, next) => {
                                                     return handleNext(next, 400, "There was a problem getting the evaluation count for the current contest.", res.error);
                                                 }
                                                 if (res.rows.length) {
-                                                    totalEvaluationsCount = res.rows[0].count;
+                                                    totalEvaluationsCount = parseInt(res.rows[0].count);
                                                 } else {
                                                     totalEvaluationsCount = 0;
                                                 }
@@ -95,7 +95,7 @@ exports.stats = (request, response, next) => {
                                                         return handleNext(next, 400, "There was a problem getting the active evaluators.", res.error);
                                                     }
                                                     if (res.rows.length) {
-                                                        totalActiveEvaluators = res.rows[0].count;
+                                                        totalActiveEvaluators = parseInt(res.rows[0].count);
                                                     } else {
                                                         totalActiveEvaluators = 0;
                                                     }
@@ -104,7 +104,7 @@ exports.stats = (request, response, next) => {
                                                             return handleNext(next, 400, "There was a problem getting the flagged entries for the current contest.", res.error);
                                                         }
                                                         if (res.rows.length) {
-                                                            totalFlaggedEntries = res.rows[0].count;
+                                                            totalFlaggedEntries = parseInt(res.rows[0].count);
                                                         } else {
                                                             totalFlaggedEntries = 0;
                                                         }
@@ -113,7 +113,7 @@ exports.stats = (request, response, next) => {
                                                                 return handleNext(next, 400, "There was a problem getting the disqualified entries for the current contest.", res.error);
                                                             }
                                                             if (res.rows.length) {
-                                                                totalDisqualifiedEntries = res.rows[0].count;
+                                                                totalDisqualifiedEntries = parseInt(res.rows[0].count);
                                                             } else {
                                                                 totalDisqualifiedEntries = 0;
                                                             }
