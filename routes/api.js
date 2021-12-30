@@ -41,6 +41,14 @@ const routeChecks = {
 			check("group_id")
 			.isInt()
 			.withMessage("Group ID must be an integer")
+		],
+		setEntrySkillLevel: [
+			check("entry_level")
+			.isIn(skillLevels)
+			.withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'TBD'"),
+			check("entry_id")
+			.isInt()
+			.withMessage("Entry ID must be an integer")
 		]
 	},
 	contests: {
@@ -709,6 +717,10 @@ router.get("/internal/admin/getEvaluatorGroups", admin.getEvaluatorGroups);
 router.post("/internal/admin/addEvaluatorGroup", routeChecks.admin.addEvaluatorGroup, wasValidated, admin.addEvaluatorGroup);
 router.put("/internal/admin/editEvaluatorGroup", routeChecks.admin.editEvaluatorGroup, wasValidated, admin.editEvaluatorGroup);
 router.delete("/internal/admin/deleteEvaluatorGroup", routeChecks.admin.deleteEvaluatorGroup, wasValidated, admin.deleteEvaluatorGroup);
+
+// Entry Skill Levels
+router.get("/internal/admin/skillLevels/getNextEntryToReview", admin.getNextEntryToReview);
+router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Tasks
 router.get("/internal/tasks", tasks.get);

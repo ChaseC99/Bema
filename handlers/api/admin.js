@@ -280,4 +280,58 @@ exports.deleteEvaluatorGroup = (request, response, next) => {
     }
 };
 
+exports.getNextEntryToReview = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let nextEntry;
+                return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_author_kaid, entry_votes, entry_height FROM entry WHERE entry_level = $1 AND disqualified = false ORDER BY contest_id DESC LIMIT 1", ["TBD"], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the next entry to review.", res.error);
+                    }
+
+                    if (res.rows.length > 0) {
+                        nextEntry = res.rows[0];
+                    } else {
+                        nextEntry = null;
+                    }
+
+                    response.json({
+                        entry: nextEntry
+                    });
+                });
+            } else {
+                return handleNext(next, 403, "You do not have permission to review entry skill levels.");
+            }
+        } else {
+            return handleNext(next, 401, "You must log in to review entry skill levels.");
+        }
+    } catch {
+        return handleNext(next, 500, "Unexpected error while retrieving the next entry to review.", error);
+    }
+}
+
+exports.setEntrySkillLevel = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let {entry_level, entry_id} = request.body;
+
+                return db.query("UPDATE entry SET entry_level = $1 WHERE entry_id = $2", [entry_level, entry_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem setting the entry's skill level.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You do not have permission to set entry skill levels.");
+            }
+        } else {
+            return handleNext(next, 401, "You must log in to set entry skill levels.");
+        }
+    } catch {
+        return handleNext(next, 500, "Unexpected error while setting an entry's skill level.", error);
+    }
+}
+
 module.exports = exports;
