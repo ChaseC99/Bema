@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Review Entry Levels | Challenge Council</title>
+    <%- include ../../partials/styles %>
+    <link rel="stylesheet" type="text/css" href="/static/css/admin.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/previews.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/sidebar.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/tables.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/reviewEntryLevels.css">
+</head>
+
+<body>
+
+    <%- include ../../partials/header %>
+
+    <div class="page-container">
+        <%- include ../../partials/adminSidebar %>
+
+        <div class="content-container" id="dashboard-page">
+            <div class="content-header">
+                <h2>Review Entry Levels</h2>
+            </div>
+            
+            <div id="entry-editor-container">
+                <img class="loading-spinner" src="/static/images/new-loading-spinner.svg">
+            </div>
+
+            <div class="actions">
+                <div id="skill-level-btns">
+                    <h4>Set Skill Level</h4>
+                    <span class="btn-primary" onclick="setSkillLevel('Beginner')">Beginner</span>
+                    <span class="btn-primary" onclick="setSkillLevel('Intermediate')">Intermediate</span>
+                    <span class="btn-primary" onclick="setSkillLevel('Advanced')">Advanced</span>
+                </div>
+                <div id="moderation-btns">
+                    <h4>Moderation</h4>
+                    <span class="btn-destructive-secondary" onclick="showConfirmModal('Disqualify Entry?', 'Are you sure you want to delete this entry?', 'disqualifyEntry()', true, 'Disqualify')">Disqualify</span>
+                    <span class="btn-destructive-secondary" onclick="showConfirmModal('Delete Entry?', 'Are you sure you want to delete this entry? This action cannot be undone.', 'deleteEntry()', true, 'Delete')">Delete</span>
+                </div>
+            </div>
+
+            <div id="author-information">
+                <img class="loading-spinner" src="/static/images/new-loading-spinner.svg">
+            </div>
+        </div>
+    </div>
+    <%- include ../../partials/footer %>
+</body>
+<script src="/static/js/adminSidebar.js"></script>
+<script src="/static/js/admin/reviewEntryLevels.js"></script>
+</html>

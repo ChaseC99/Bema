@@ -23,6 +23,11 @@
     <% if (permissions.view_all_tasks || permissions.view_judging_settings || permissions.view_all_users || permissions.view_errors || is_admin) { %>
         <h3>Admin</h3>
     <% } %>
+    <% if (is_admin) { %>
+        <a class="nav-button" id="sidebar-skill-levels" href="/admin/skill-levels">
+            <p>Skill Levels</p>
+        </a>
+    <% } %>
     <% if (permissions.view_all_tasks || is_admin) { %>
         <a class="nav-button" id="sidebar-tasks" href="/admin/tasks">
             <p>Tasks</p>
