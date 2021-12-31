@@ -4,7 +4,7 @@
     "description": "An open source tool used to judge official contests on Khan Academy",
     "main": "index.js",
     "engines": {
-        "node": "14.15.4"
+        "node": "16.13.0"
     },
     "scripts": {
         "start": "nodemon index.js"

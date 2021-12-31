@@ -7,6 +7,12 @@
 	overflow-wrap: break-word;
 }
 
+/* Dashboard Styling */
+#contest-summary {
+    display: flex;
+    justify-content: space-evenly;
+}
+
 /* Styling for judging page */
 .flagged-entry-actions i {
     margin-left: 15%;

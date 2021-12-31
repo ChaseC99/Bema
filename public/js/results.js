@@ -149,12 +149,12 @@ request("get", `/api/internal/results?contestId=${currentContestId}`, null, (dat
                     </td>
                 ` : ""
                 }
-                ${data.is_admin || permissions.manage_winners || permissions.judge_entries ? `
+                ${data.is_admin || permissions.manage_winners || (data.voting_enabled && permissions.judge_entries) ? `
                     <td class="actions">
                         <i class="actions-dropdown-btn" onclick="showActionDropdown('entry-dropdown-${a.entry_id}');"></i>
                         <div class="actions-dropdown-content" hidden id="entry-dropdown-${a.entry_id}">
-                            ${(data.voting_enabled || data.is_admin) && (data.is_admin || permissions.judge_entries) && a.voted_by_user == 0 ? `<a href="javascript:void(0);" onclick="showVoteForm(${a.entry_id}, '${a.title.replace("'", "\\\'")}')">Vote for entry</a>` : ""}
-                            ${(data.voting_enabled || data.is_admin) && (data.is_admin || permissions.judge_entries) && a.voted_by_user > 0 ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete vote?', 'Are you sure you want to delete your vote for this entry? This action cannot be undone.', 'deleteVote(${a.entry_id})', true, 'Delete Vote')">Remove vote</a>` : ""}
+                            ${(data.is_admin || (data.voting_enabled && permissions.judge_entries)) && a.voted_by_user == 0 ? `<a href="javascript:void(0);" onclick="showVoteForm(${a.entry_id}, '${a.title.replace("'", "\\\'")}')">Vote for entry</a>` : ""}
+                            ${(data.is_admin || (data.voting_enabled && permissions.judge_entries)) && a.voted_by_user > 0 ? `<a href="javascript:void(0);" onclick="showConfirmModal('Delete vote?', 'Are you sure you want to delete your vote for this entry? This action cannot be undone.', 'deleteVote(${a.entry_id})', true, 'Delete Vote')">Remove vote</a>` : ""}
                             ${data.is_admin || permissions.manage_winners ? `<a href="javascript:void(0);" onclick="addWinner(${a.entry_id})">Mark as winner</a>` : ""}
                         </div>
                     </td>

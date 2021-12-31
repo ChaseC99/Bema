@@ -1,0 +1,52 @@
+#entry-viewer-iframe {
+    border: none;
+    width: 100%;
+    min-height: 404px;
+    margin: 30px 0px 0px 0px;
+}
+
+#entry-editor-container {
+    text-align: center;
+}
+
+.actions {
+    padding: 0 85px;
+    height: 100px;
+}
+
+.actions div {
+    padding: 10px 0;
+}
+
+.actions #skill-level-btns {
+    float: left;
+}
+
+.actions #moderation-btns {
+    float: right;
+}
+
+#author-information {
+    margin-top: 60px;
+    padding: 0 85px;
+}
+
+.disqualified-tag {
+    font-size: 12px;
+    text-transform: uppercase;
+    background-color: #d92916;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.winner-tag {
+    font-size: 12px;
+    text-transform: uppercase;
+    background-color: #ffb100;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}

@@ -29,7 +29,7 @@ exports.stats = (request, response, next) => {
                     }
                     // If length > 0, true, else false.
                     if (res.rows.length) {
-                        yourReviewedEntriesCount = res.rows[0].cnt;
+                        yourReviewedEntriesCount = parseInt(res.rows[0].cnt);
                     } else {
                         yourReviewedEntriesCount = 0;
                     }
@@ -39,7 +39,7 @@ exports.stats = (request, response, next) => {
                             return handleNext(next, 400, "There was a problem getting your group entries.", res.error);
                         }
                         if (res.rows.length) {
-                            groupEntriesCount = res.rows[0].count;
+                            groupEntriesCount = parseInt(res.rows[0].count);
                         } else {
                             groupEntriesCount = 0;
                         }
@@ -48,7 +48,7 @@ exports.stats = (request, response, next) => {
                                 return handleNext(next, 400, "There was a problem getting the evaluator count in your group.", res.error);
                             }
                             if (res.rows.length) {
-                                groupEvaluatorCount = res.rows[0].count;
+                                groupEvaluatorCount = parseInt(res.rows[0].count);
                             } else {
                                 groupEvaluatorCount = 0;
                             }
@@ -57,7 +57,7 @@ exports.stats = (request, response, next) => {
                                     return handleNext(next, 400, "There was a problem getting the evaluation count in your group.", res.error);
                                 }
                                 if (res.rows.length) {
-                                    groupEvaluationsCount = res.rows[0].cnt;
+                                    groupEvaluationsCount = parseInt(res.rows[0].cnt);
                                 } else {
                                     groupEvaluationsCount = 0;
                                 }
@@ -68,7 +68,7 @@ exports.stats = (request, response, next) => {
                                             return handleNext(next, 400, "There was a problem getting the total entries for the current contest.", res.error);
                                         }
                                         if (res.rows.length) {
-                                            totalEntriesCount = res.rows[0].count;
+                                            totalEntriesCount = parseInt(res.rows[0].count);
                                         } else {
                                             totalEntriesCount = 0;
                                         }
@@ -86,7 +86,7 @@ exports.stats = (request, response, next) => {
                                                     return handleNext(next, 400, "There was a problem getting the evaluation count for the current contest.", res.error);
                                                 }
                                                 if (res.rows.length) {
-                                                    totalEvaluationsCount = res.rows[0].count;
+                                                    totalEvaluationsCount = parseInt(res.rows[0].count);
                                                 } else {
                                                     totalEvaluationsCount = 0;
                                                 }
@@ -95,7 +95,7 @@ exports.stats = (request, response, next) => {
                                                         return handleNext(next, 400, "There was a problem getting the active evaluators.", res.error);
                                                     }
                                                     if (res.rows.length) {
-                                                        totalActiveEvaluators = res.rows[0].count;
+                                                        totalActiveEvaluators = parseInt(res.rows[0].count);
                                                     } else {
                                                         totalActiveEvaluators = 0;
                                                     }
@@ -104,7 +104,7 @@ exports.stats = (request, response, next) => {
                                                             return handleNext(next, 400, "There was a problem getting the flagged entries for the current contest.", res.error);
                                                         }
                                                         if (res.rows.length) {
-                                                            totalFlaggedEntries = res.rows[0].count;
+                                                            totalFlaggedEntries = parseInt(res.rows[0].count);
                                                         } else {
                                                             totalFlaggedEntries = 0;
                                                         }
@@ -113,7 +113,7 @@ exports.stats = (request, response, next) => {
                                                                 return handleNext(next, 400, "There was a problem getting the disqualified entries for the current contest.", res.error);
                                                             }
                                                             if (res.rows.length) {
-                                                                totalDisqualifiedEntries = res.rows[0].count;
+                                                                totalDisqualifiedEntries = parseInt(res.rows[0].count);
                                                             } else {
                                                                 totalDisqualifiedEntries = 0;
                                                             }
@@ -279,5 +279,59 @@ exports.deleteEvaluatorGroup = (request, response, next) => {
         return handleNext(next, 500, "Unexpected error while deleting an evaluator group.", error);
     }
 };
+
+exports.getNextEntryToReview = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let nextEntry;
+                return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_author_kaid, entry_votes, entry_height FROM entry WHERE (entry_level_locked = false OR entry_level_locked IS NULL) AND disqualified = false ORDER BY contest_id DESC LIMIT 1", [], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem getting the next entry to review.", res.error);
+                    }
+
+                    if (res.rows.length > 0) {
+                        nextEntry = res.rows[0];
+                    } else {
+                        nextEntry = null;
+                    }
+
+                    response.json({
+                        entry: nextEntry
+                    });
+                });
+            } else {
+                return handleNext(next, 403, "You do not have permission to review entry skill levels.");
+            }
+        } else {
+            return handleNext(next, 401, "You must log in to review entry skill levels.");
+        }
+    } catch {
+        return handleNext(next, 500, "Unexpected error while retrieving the next entry to review.", error);
+    }
+}
+
+exports.setEntrySkillLevel = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            if (request.decodedToken.is_admin) {
+                let {entry_level, entry_id} = request.body;
+
+                return db.query("UPDATE entry SET entry_level = $1, entry_level_locked = true WHERE entry_id = $2", [entry_level, entry_id], res => {
+                    if (res.error) {
+                        return handleNext(next, 400, "There was a problem setting the entry's skill level.", res.error);
+                    }
+                    successMsg(response);
+                });
+            } else {
+                return handleNext(next, 403, "You do not have permission to set entry skill levels.");
+            }
+        } else {
+            return handleNext(next, 401, "You must log in to set entry skill levels.");
+        }
+    } catch {
+        return handleNext(next, 500, "Unexpected error while setting an entry's skill level.", error);
+    }
+}
 
 module.exports = exports;

@@ -3,6 +3,9 @@
     flex-wrap: wrap;
     justify-content: space-between;
 }
+.previews-container.center {
+    justify-content: center !important;
+}
 .preview {
     background: white;
     display: inline-block;

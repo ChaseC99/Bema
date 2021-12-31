@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="/static/css/sidebar.css">
     <link rel="stylesheet" type="text/css" href="/static/css/forms.css">
     <link rel="stylesheet" type="text/css" href="/static/css/tables.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/progressRings.css">
 </head>
 
 <body>
@@ -25,43 +26,16 @@
             </div>
 
             <div class="previews-container">
-                <div class="preview col-6 standard">
+                <div class="preview col-12 standard">
                     <div class="db-header">
-                        <p>Your Progress</p>
+                        <p>Contest Summary</p>
                     </div>
-                    <div id="your-reviewed-entries-count" class="preview-content">
-                        <!-- reviewedCount -->
+                    <div id="contest-summary" class="preview-content">
                         <img class="loading-spinner" src="/static/images/new-loading-spinner.svg">
                     </div>
                 </div>
-                <div class="preview col-6 standard">
-                    <div class="db-header">
-                        <p>Group Progress</p>
-                    </div>
-                    <div id="your-group-total-evaluations-count" class="preview-content">
-                        <!-- totalEvaluationsCount -->
-                        <img src="/static/images/new-loading-spinner.svg" class="loading-spinner">
-                    </div>
-                </div>
+
                 <% if (is_admin || permissions.view_admin_stats) { %>
-                    <div class="preview col-6 standard">
-                        <div class="db-header">
-                            <p>Total Reviewed Entries</p>
-                        </div>
-                        <div id="total-reviewed-count" class="preview-content">
-                            <!-- totalEvaluationsCount -->
-                            <img src="/static/images/new-loading-spinner.svg" class="loading-spinner">
-                        </div>
-                    </div>
-                    <div class="preview col-6 standard">
-                        <div class="db-header">
-                            <p>Total Evaluations</p>
-                        </div>
-                        <div id="total-evaluations-count" class="preview-content">
-                            <!-- totalEvaluationsCount -->
-                            <img src="/static/images/new-loading-spinner.svg" class="loading-spinner">
-                        </div>
-                    </div>
                     <div class="preview col-6 standard">
                         <div class="db-header">
                             <p>Entry Stats</p>
