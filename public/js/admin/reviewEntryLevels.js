@@ -75,7 +75,7 @@ const setSkillLevel = (level) => {
 
 const deleteEntry = () => {
     request("delete", "/api/internal/entries", {
-        entryID
+        entry_id: entryID
     }, (data) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
@@ -87,7 +87,7 @@ const deleteEntry = () => {
 
 const disqualifyEntry = () => {
     request("put", "/api/internal/entries/disqualify", {
-        entryID
+        entry_id: entryID
     }, (data) => {
         if (!data.error) {
             window.setTimeout(() => window.location.reload(), 1000);
