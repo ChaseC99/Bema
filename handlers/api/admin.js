@@ -285,7 +285,7 @@ exports.getNextEntryToReview = (request, response, next) => {
         if (request.decodedToken) {
             if (request.decodedToken.is_admin) {
                 let nextEntry;
-                return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_author_kaid, entry_votes, entry_height FROM entry WHERE entry_level = $1 AND disqualified = false ORDER BY contest_id DESC LIMIT 1", ["TBD"], res => {
+                return db.query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_author_kaid, entry_votes, entry_height FROM entry WHERE (entry_level_locked = false OR entry_level_locked IS NULL) AND disqualified = false ORDER BY contest_id DESC LIMIT 1", [], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem getting the next entry to review.", res.error);
                     }
@@ -317,7 +317,7 @@ exports.setEntrySkillLevel = (request, response, next) => {
             if (request.decodedToken.is_admin) {
                 let {entry_level, entry_id} = request.body;
 
-                return db.query("UPDATE entry SET entry_level = $1 WHERE entry_id = $2", [entry_level, entry_id], res => {
+                return db.query("UPDATE entry SET entry_level = $1, entry_level_locked = true WHERE entry_id = $2", [entry_level, entry_id], res => {
                     if (res.error) {
                         return handleNext(next, 400, "There was a problem setting the entry's skill level.", res.error);
                     }
