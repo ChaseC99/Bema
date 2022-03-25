@@ -85,6 +85,70 @@ exports.get = (request, response, next) => {
     }
 };
 
+exports.getFullUserProfile = (request, response, next) => {
+    try {
+        if (request.decodedToken) {
+            return response.json({
+                user: {
+                    evaluator_id: request.decodedToken.evaluator_id,
+                    evaluator_name: request.decodedToken.evaluator_name,
+                    evaluator_kaid: request.decodedToken.evaluator_kaid,
+                    account_locked: request.decodedToken.account_locked,
+                    email: request.decodedToken.email,
+                    username: request.decodedToken.username,
+                    nickname: request.decodedToken.nickname,
+                    permissions: {
+                        judge_entries: request.decodedToken.permissions.judge_entries,
+                        view_admin_stats: request.decodedToken.permissions.view_admin_stats,
+                        manage_announcements: request.decodedToken.permissions.manage_announcements,
+                        manage_winners: request.decodedToken.permissions.manage_winners,
+                        edit_contests: request.decodedToken.permissions.edit_contests,
+                        delete_contests: request.decodedToken.permissions.delete_contests,
+                        add_entries: request.decodedToken.permissions.add_entries,
+                        edit_entries: request.decodedToken.permissions.edit_entries,
+                        delete_entries: request.decodedToken.permissions.delete_entries,
+                        assign_entry_groups: request.decodedToken.permissions.assign_entry_groups,
+                        view_all_evaluations: request.decodedToken.permissions.view_all_evaluations,
+                        edit_all_evaluations: request.decodedToken.permissions.edit_all_evaluations,
+                        delete_all_evaluations: request.decodedToken.permissions.delete_all_evaluations,
+                        view_all_tasks: request.decodedToken.permissions.view_all_tasks,
+                        edit_all_tasks: request.decodedToken.permissions.edit_all_tasks,
+                        delete_all_tasks: request.decodedToken.permissions.delete_all_tasks,
+                        view_judging_settings: request.decodedToken.permissions.view_judging_settings,
+                        manage_judging_groups: request.decodedToken.permissions.manage_judging_groups,
+                        assign_evaluator_groups: request.decodedToken.permissions.assign_evaluator_groups,
+                        manage_judging_criteria: request.decodedToken.permissions.manage_judging_criteria,
+                        view_all_users: request.decodedToken.permissions.view_all_users,
+                        add_users: request.decodedToken.permissions.add_users,
+                        edit_user_profiles: request.decodedToken.permissions.edit_user_profiles,
+                        change_user_passwords: request.decodedToken.permissions.change_user_passwords,
+                        assume_user_identities: request.decodedToken.permissions.assume_user_identities,
+                        view_errors: request.decodedToken.permissions.view_errors,
+                        delete_errors: request.decodedToken.permissions.delete_errors,
+                        edit_kb_content: request.decodedToken.permissions.edit_kb_content,
+                        delete_kb_content: request.decodedToken.permissions.delete_kb_content,
+                        publish_kb_content: request.decodedToken.permissions.publish_kb_content
+                    }
+                },
+                logged_in: true,
+                is_admin: request.decodedToken.is_admin,
+                is_impersonated: request.decodedToken.is_impersonated,
+                origin_kaid: request.decodedToken.origin_kaid
+            });
+        } else {
+            return response.json({
+                user: null,
+                logged_in: false,
+                is_admin: false,
+                is_impersonated: false,
+                origin_kaid: null
+            });
+        }
+    } catch (error) {
+        return handleNext(next, 500, "Unexpected error while retrieving a user's data", error);
+    }
+}
+
 exports.getId = (request, response, next) => {
     try {
         if (request.decodedToken) {

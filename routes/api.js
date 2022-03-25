@@ -667,6 +667,8 @@ router.put("/internal/users/permissions", routeChecks.users.editPermissions, was
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
+router.get("/internal/users/getFullUserProfile", users.getFullUserProfile);
+
 
 // Contestants
 router.get("/internal/contestants/search", contestants.search);
