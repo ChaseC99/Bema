@@ -24,7 +24,7 @@ test("renders logo", () => {
 
   const logoText = screen.getByTestId("logo-text");
   expect(logoText).toBeInTheDocument();
-  expect(logoText.innerHTML).toBe("Bema")
+  expect(logoText.innerHTML).toBe("Bema");
 });
 
 test("shows correct nav links when logged out", () => {
