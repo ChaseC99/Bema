@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import Header from "./Header";
-import useAppState from '../state/useAppState';
-import { customPermissions, defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../util/testing-utils';
+import useAppState from '../../state/useAppState';
+import { customPermissions, defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../../util/testing-utils';
 
 jest.mock("../state/useAppState", () => {
   return {

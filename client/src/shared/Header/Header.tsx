@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import useAppState from "../state/useAppState";
-import { displayError } from "../util/errors";
-import request from "../util/request";
+import useAppState from "../../state/useAppState";
+import { displayError } from "../../util/errors";
+import request from "../../util/request";
 import "./Header.css";
 
 function Header() {
