@@ -24,4 +24,20 @@ function App() {
   );
 }
 
+// Used to hide all open action menus
+window.addEventListener("click", (e: MouseEvent) => {
+  e.preventDefault();
+
+  const target = e.target as Node as Element;
+  if (target.classList.contains("actions-dropdown-btn")) {
+    return;
+  }
+
+  const actionMenus = document.querySelectorAll(".actions-dropdown-content");
+  actionMenus.forEach((m) => {
+    const menu = m as HTMLDivElement;
+    menu.hidden = true;
+  });
+});
+
 export default App;
