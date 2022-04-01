@@ -2,6 +2,7 @@ import { MouseEvent } from "react";
 import TimeAgo from 'javascript-time-ago';
 import ActionMenu from '../../shared/ActionMenu';
 import "./AnnouncementCard.css";
+import useAppState from "../../state/useAppState";
 
 type AnnouncementCardProps = {
     author: string
@@ -20,6 +21,8 @@ type AnnouncementCardProps = {
  * @returns 
  */
 function AnnouncementCard(props: AnnouncementCardProps) {
+    const { state } = useAppState();
+
     const timeAgo = new TimeAgo('en-US')
     const date = timeAgo.format(new Date(props.date));
 
@@ -27,7 +30,7 @@ function AnnouncementCard(props: AnnouncementCardProps) {
         <article className="card announcement-card" data-testid={props.testId}>
             <div className="announcement-card-header">
                 <h3>{props.title}</h3>
-                <ActionMenu actions={[
+                {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
                     {
                         role: "link",
                         action: "/announcements/edit/" + props.id,
@@ -38,7 +41,7 @@ function AnnouncementCard(props: AnnouncementCardProps) {
                         action: deleteAnnouncement,
                         text: "Delete"
                     }
-                ]} />
+                ]} /> }
             </div>
             <div className="announcement-card-body">
                 {props.children}
