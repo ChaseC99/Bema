@@ -1,4 +1,7 @@
 import { render } from "@testing-library/react";
+import TimeAgo from "javascript-time-ago";
+import en from 'javascript-time-ago/locale/en.json';
+import { act } from "react-dom/test-utils";
 import { MemoryRouter } from "react-router-dom";
 import { AppState, Permissions } from "../state/appStateReducer";
 
@@ -7,12 +10,15 @@ import { AppState, Permissions } from "../state/appStateReducer";
  * router Links to be tested without having to be mocked.
  * @param component The component to render
  */
-export function renderWithRouter(component: React.ReactElement<any, string | React.JSXElementConstructor<any>>) {    
-    render(
-      <MemoryRouter>
-        {component}
-      </MemoryRouter>
-    )
+export function renderWithRouter(component: React.ReactElement<any, string | React.JSXElementConstructor<any>>) {
+  TimeAgo.setDefaultLocale(en.locale)
+  TimeAgo.addLocale(en)
+
+  render(
+    <MemoryRouter>
+      {component}
+    </MemoryRouter>
+  );
 }
 
 /**
