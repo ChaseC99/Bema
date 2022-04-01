@@ -1,5 +1,7 @@
+import Announcements from "./Announcements";
+
 function Home() {
-    return <div>Home page</div>;
+    return <Announcements />
 }
 
 export default Home;

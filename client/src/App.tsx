@@ -1,11 +1,19 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from './shared/Header';
+import Header from './shared/Header/Header';
 import Home from "./pages/Home";
 import './App.css';
 import { AppStateProvider } from './state/AppStateContext';
 import Logout from "./pages/Logout";
+import TimeAgo from "javascript-time-ago";
+import en from 'javascript-time-ago/locale/en.json';
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    TimeAgo.setDefaultLocale(en.locale)
+    TimeAgo.addLocale(en)
+  }, []);
+  
   return (
     <AppStateProvider>
       <BrowserRouter>
@@ -13,7 +21,7 @@ function App() {
         <Header />
 
         <Routes>
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Home />} />
 
           <Route path="/logout" element={<Logout />} />
         </Routes>
