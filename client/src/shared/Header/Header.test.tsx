@@ -3,7 +3,7 @@ import Header from "./Header";
 import useAppState from '../../state/useAppState';
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../../util/testing-utils';
 
-jest.mock("../state/useAppState", () => {
+jest.mock("../../state/useAppState", () => {
   return {
     __esModule: true,
     default: jest.fn()
