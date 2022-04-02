@@ -110,6 +110,19 @@ test("renders the available tasks section correctly", async () => {
   expect(body.innerHTML).toMatch("Sample task 4");
 });
 
+test("does not render the my tasks section if there are no assigned tasks", async () => {
+  fetchMyTasksMock.mockReturnValue(new Promise(resolve => {
+    resolve([])
+  }));
+
+  renderWithRouter(<Tasks />);
+
+  await waitForElementToBeRemoved(() => screen.queryByTestId("my-tasks-spinner"));
+
+  const section = screen.queryByTestId("my-tasks-header");
+  expect(section).not.toBeInTheDocument();
+});
+
 test("renders the my tasks section correctly", async () => {
   renderWithRouter(<Tasks />);
 

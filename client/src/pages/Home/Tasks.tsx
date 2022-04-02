@@ -81,7 +81,7 @@ function Tasks() {
 
   return (
     <React.Fragment>
-      {(availableTasksIsLoading || availableTasks.length > 0) &&
+      { (availableTasksIsLoading || availableTasks.length > 0) &&
         <section id="available-tasks-section" className="container center">
           <div className="col-6">
             <div className="section-header">
@@ -110,32 +110,34 @@ function Tasks() {
         </section>
       }
 
-      <section id="my-tasks-section" className="container center">
-        <div className="col-6">
-          <div className="section-header">
-            <h2 data-testid="my-tasks-header">My Tasks</h2>
-          </div>
-          <div className="section-body" data-testid="my-tasks-section-body">
-            {myTasksIsLoading && <LoadingSpinner size="MEDIUM" testId="my-tasks-spinner" />}
+      { (myTasksIsLoading || myTasks.length > 0) && 
+        <section id="my-tasks-section" className="container center">
+          <div className="col-6">
+            <div className="section-header">
+              <h2 data-testid="my-tasks-header">My Tasks</h2>
+            </div>
+            <div className="section-body" data-testid="my-tasks-section-body">
+              {myTasksIsLoading && <LoadingSpinner size="MEDIUM" testId="my-tasks-spinner" />}
 
-            {!myTasksIsLoading && myTasks.map((t) => {
-                return (
-                  <TaskCard
-                    title={t.task_title}
-                    status={t.task_status}
-                    id={t.task_id}
-                    dueDate={t.due_date}
-                    assigned={t.assigned_member > 0}
-                    updateTaskStatus={updateTaskStatus}
-                    signupForTask={signupForTask}
-                    testId={t.testId}
-                    key={"tasks-" + t.task_id}
-                  />
-                );
-              })}
+              {!myTasksIsLoading && myTasks.length > 0 && myTasks.map((t) => {
+                  return (
+                    <TaskCard
+                      title={t.task_title}
+                      status={t.task_status}
+                      id={t.task_id}
+                      dueDate={t.due_date}
+                      assigned={t.assigned_member > 0}
+                      updateTaskStatus={updateTaskStatus}
+                      signupForTask={signupForTask}
+                      testId={t.testId}
+                      key={"tasks-" + t.task_id}
+                    />
+                  );
+                })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      }
     </React.Fragment>
   );
 }
