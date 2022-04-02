@@ -8,8 +8,8 @@ type TaskCardProps = {
   id: number
   dueDate: string
   assigned: boolean
-  updateTaskStatus: React.MouseEventHandler<HTMLSpanElement>
-  signupForTask: React.MouseEventHandler<HTMLSpanElement>
+  updateTaskStatus: (data: any) => any
+  signupForTask: (data: any) => any
   testId?: string
 }
 
@@ -20,21 +20,27 @@ function TaskCard(props: TaskCardProps) {
     actions = [{
       role: "button",
       action: props.signupForTask,
-      text: "Sign up for task"
+      data: props.id,
+      text: "Sign up for task",
+      testId: props.testId ? props.testId + "-actions-1" : undefined
     }];
   }
   else if (props.status === "Not Started") {
     actions = [{
       role: "button",
       action: props.updateTaskStatus,
-      text: "Mark as started"
+      data: props.id,
+      text: "Mark as started",
+      testId: props.testId ? props.testId + "-actions-1" : undefined
     }];
   }
   else {
     actions = [{
       role: "button",
       action: props.updateTaskStatus,
-      text: "Mark as completed"
+      data: props.id,
+      text: "Mark as completed",
+      testId: props.testId ? props.testId + "-actions-1" : undefined
     }];
   }
 
@@ -42,7 +48,7 @@ function TaskCard(props: TaskCardProps) {
     <article className="card task-card" data-testid={props.testId}>
       <div className="card-header">
         <h3>{props.title}</h3>
-        <ActionMenu actions={actions} />
+        <ActionMenu actions={actions} testId={props.testId ? props.testId + "-actions" : undefined} />
       </div>
       <div className="card-body">
         <p><span className="label">Status:</span> {props.status}</p>
