@@ -7,7 +7,8 @@
     "node": "16.13.0"
   },
   "scripts": {
-    "start": "(cd client && npm run build) && node index.js",
+    "start": "node index.js",
+    "heroku-postbuild": "cd client && npm install && npm run build",
     "dev": "(cd client && npm run build) && node index.js"
   },
   "dependencies": {
