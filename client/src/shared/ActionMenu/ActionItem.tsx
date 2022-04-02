@@ -4,9 +4,10 @@ import { Link } from "react-router-dom";
 type ActionItemProps =
     | {
         role: "button"
-        action: MouseEventHandler<HTMLSpanElement>
+        action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
         text: string
         testId?: string
+        data?: any
     }
     | {
         role: "link"
@@ -23,6 +24,12 @@ type ActionItemProps =
  */
 function ActionItem(props: ActionItemProps) {
     if (props.role === "button") {
+        if (props.data) {
+            return (
+                <span onClick={() => props.action(props.data)} data-testid={props.testId}>{props.text}</span>
+            );
+        }
+
         return (
             <span onClick={props.action} data-testid={props.testId}>{props.text}</span>
         );

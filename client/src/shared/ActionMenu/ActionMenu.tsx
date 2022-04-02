@@ -1,12 +1,13 @@
-import React, { MouseEvent, MouseEventHandler } from "react";
+import { MouseEvent, MouseEventHandler } from "react";
 import ActionItem from "./ActionItem";
 import "./ActionMenu.css";
 
 export type Action =
     | {
         role: "button"
-        action: MouseEventHandler<HTMLSpanElement>
+        action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
         text: string
+        data?: any
         testId?: string
     }
     | {
@@ -34,7 +35,7 @@ function ActionMenu(props: ActionMenuProps) {
                 <div className="actions-dropdown-content" hidden>
                     {props.actions.map((a, index) => {
                         if (a.role === "button") {
-                            return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} />
+                            return <ActionItem role={a.role} action={a.action} data={a.data} text={a.text} testId={a.testId} key={index} />
                         }
                         else {
                             return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} />
