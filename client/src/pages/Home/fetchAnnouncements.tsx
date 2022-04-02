@@ -1,6 +1,7 @@
+import request from "../../util/request";
+
 export async function fetchAnnouncements() {
-  const response = await fetch("/api/internal/messages");
-  const data = await response.json();
+  const data = await request("GET", "/api/internal/messages");
 
   return data.messages;
 }
