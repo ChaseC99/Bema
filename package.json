@@ -7,7 +7,7 @@
     "node": "16.13.0"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "(cd client && npm run build) && node index.js",
     "dev": "(cd client && npm run build) && node index.js"
   },
   "dependencies": {
