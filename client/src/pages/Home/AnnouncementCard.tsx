@@ -28,7 +28,7 @@ function AnnouncementCard(props: AnnouncementCardProps) {
 
     return (
         <article className="card announcement-card" data-testid={props.testId}>
-            <div className="announcement-card-header">
+            <div className="card-header">
                 <h3>{props.title}</h3>
                 {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
                     {
@@ -43,10 +43,10 @@ function AnnouncementCard(props: AnnouncementCardProps) {
                     }
                 ]} /> }
             </div>
-            <div className="announcement-card-body">
+            <div className="card-body">
                 {props.children}
             </div>
-            <div className="announcement-card-footer">
+            <div className="card-footer announcement-card-footer">
                 <p><em>{props.author} posted <span title={props.date}>{date}</span>.</em></p>
             </div>
         </article>

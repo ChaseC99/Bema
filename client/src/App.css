@@ -92,3 +92,26 @@
   box-shadow: rgb(0 0 0 / 5%) 1px 2px 2px;
   border: 2px solid rgb(238, 238, 238);
 }
+
+.card-header {
+  padding: 5px 30px 0px 30px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body {
+  padding: 0 30px 5px 30px;
+}
+
+.card-footer {
+  padding: 5px 30px 15px 30px;
+}
+
+span.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-right: 5px;
+}
