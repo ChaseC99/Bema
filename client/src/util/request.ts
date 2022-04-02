@@ -1,14 +1,14 @@
-const request = (method: "GET" | "POST" | "PUT", path: string, data: object, callback: (data: any) => any) => {
-    fetch(path, (method === "GET") ? undefined : {
-        method,
-        body: JSON.stringify(data),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
-    .then(res => res.json())
-    .then(data => callback(data))
-    .catch(err => callback({error: err}));
+const request = async (method: "GET" | "POST" | "PUT", path: string, bodyData?: object) => {
+  const response = await fetch(path, (method === "GET") ? undefined : {
+    method,
+    body: JSON.stringify(bodyData),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  const data = await response.json();
+  return data;
 };
 
 export default request;

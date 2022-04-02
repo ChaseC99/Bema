@@ -58,7 +58,7 @@ function Header() {
           }
 
           <span>
-            <Link to="kb"data-testid="/kb">Resources</Link>
+            <Link to="kb" data-testid="/kb">Resources</Link>
           </span>
 
           {state.logged_in &&
@@ -85,15 +85,15 @@ function Header() {
   )
 }
 
-function handleReturnToAccount() {
-  request('POST', '/api/auth/assumeUserIdentity', {}, (data) => {
-    if (!data.error) {
-      window.setTimeout(() => window.location.reload(), 1000); // TODO: Instead of page refresh, update global state
-    }
-    else {
-      displayError(data.error);
-    }
-  });
+async function handleReturnToAccount() {
+  const data = await request('POST', '/api/auth/assumeUserIdentity', {});
+  
+  if (!data.error) {
+    window.setTimeout(() => window.location.reload(), 1000); // TODO: Instead of page refresh, update global state
+  }
+  else {
+    displayError(data.error);
+  }
 }
 
 export default Header;
