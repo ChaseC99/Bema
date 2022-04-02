@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 5000;
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const db = require("./util/db");
 const errorHandler = require("./middleware/error");
 const log = require("./middleware/log");
@@ -17,6 +18,7 @@ const app = express();
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "client", "build")));
 app.use("/static", express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -32,6 +34,10 @@ app.use(isLoggedIn);
 app.use("/", pagesRoutes);
 app.use("/api/", apiRoutes);
 app.use("/api/auth/", authRoutes);
+
+app.use("/", (req, res, next) => {
+    res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+});
 
 // Handler for any undefined routes.
 app.use((req, res, next) => {
