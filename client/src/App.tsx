@@ -7,6 +7,7 @@ import Logout from "./pages/Logout";
 import TimeAgo from "javascript-time-ago";
 import en from 'javascript-time-ago/locale/en.json';
 import { useEffect } from "react";
+import NotFound from "./pages/NotFound/NotFound";
 
 function App() {
   useEffect(() => {
@@ -24,6 +25,8 @@ function App() {
           <Route path="/" element={<Home />} />
 
           <Route path="/logout" element={<Logout />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
       </BrowserRouter>
