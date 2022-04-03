@@ -1,0 +1,61 @@
+.progress-ring-container .progress-ring {
+  height: 200px;
+  position: relative;
+  width: 200px;
+}
+
+.progress-ring-container .progress-ring svg {
+  height: 200px;
+  width: 200px;
+}
+
+.progress-ring-container .progress-ring svg circle {
+  fill: none;
+  stroke-width: 10;
+  stroke: rgba(180, 180, 180, 0.64);
+  transform: translate(5px, 5px);
+  stroke-dasharray: 564;
+  stroke-linecap: round;
+}
+
+.progress-ring-container .progress-ring svg circle:nth-child(2) {
+  stroke: #1865f2;
+}
+
+.progress-ring-container .progress-ring .progress-ring-percent {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  flex-wrap: wrap;
+  align-content: center;
+}
+
+.progress-ring-container .progress-ring .progress-ring-percent p {
+  font-size: 48px;
+  margin: 0;
+}
+
+.progress-ring-container .progress-ring .progress-ring-percent span {
+  font-size: 24px;
+}
+
+.progress-ring-container .progress-ring .progress-ring-percent-label {
+  font-size: 16px !important;
+  width: 200px;
+  text-align: center;
+  margin-left: -10px !important;
+}
+
+.progress-ring-container .progress-ring-label {
+  margin: 0;
+  margin-left: -5px;
+  text-align: center;
+  width: 200px;
+  font-size: 18px;
+  font-weight: 700;
+}

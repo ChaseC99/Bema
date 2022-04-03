@@ -8,6 +8,8 @@ import TimeAgo from "javascript-time-ago";
 import en from 'javascript-time-ago/locale/en.json';
 import { useEffect } from "react";
 import NotFound from "./pages/NotFound/NotFound";
+import Dashboard from "./pages/Dashboard";
+import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
 
 function App() {
   useEffect(() => {
@@ -24,7 +26,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
 
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+
           <Route path="/logout" element={<Logout />} />
+
+          <Route path="/status" element={<ExternalRedirect to="http://status.kachallengecouncil.org" />}/>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
