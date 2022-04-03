@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import useAppState from "../../state/useAppState";
 import { displayError } from "../../util/errors";
 import request from "../../util/request";
+import Button from "../Button/Button";
 import "./Header.css";
 
 function Header() {
@@ -12,7 +13,7 @@ function Header() {
       {state.is_impersonated &&
         <div className="banner" data-testid="impersonation-banner">
           <span>You're assuming another user's identity.</span>
-          <span className="btn-primary" onClick={() => handleReturnToAccount}>Return to your account</span>
+          <Button style="tertiary" role="button" action={handleReturnToAccount} text="Return to your account" inverse />
         </div>
       }
 
@@ -22,8 +23,7 @@ function Header() {
         <span className="alert-container">
           <span className="alert-type">System Outage</span><span className="alert-message">- We're currently experiencing problems with the site. Some features may be unavailable.</span>
         </span>
-
-        <a className="btn-primary" href="http://status.kachallengecouncil.org">View Incident</a>
+        <Button style="tertiary" inverse role="link" action="/status" text="View Incident" />
       </div>
 
 
@@ -32,7 +32,7 @@ function Header() {
         <span className="alert-container">
           <span className="alert-type">Ongoing Maintenance</span><span className="alert-message">- The site is currently undergoing maintenance. Some features may be temporarily unavailable.</span>
         </span>
-        <a className="btn-primary" href="http://status.kachallengecouncil.org">View Maintenance</a>
+        <Button style="tertiary" inverse role="link" action="/status" text="View Maintenance" />
       </div>
 
       <nav>

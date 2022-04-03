@@ -81,6 +81,42 @@
   border-radius: 2px !important;
 }
 
+.btn-tertiary-inverse {
+  color: #ffffff !important;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer !important;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+  position: relative !important;
+}
+
+.btn-tertiary-inverse:hover::after {
+  content: '' !important;
+  position: absolute !important;
+  height: 2px !important;
+  width: calc(100% - 0px) !important;
+  right: 0px !important;
+  bottom: 0px !important;
+  background: #ffffff !important;
+  border-radius: 2px !important;
+}
+
+.btn-tertiary-inverse:active {
+  color: #bcbcbc !important;
+}
+
+.btn-tertiary:active::after {
+  content: '' !important;
+  position: absolute !important;
+  height: 2px !important;
+  width: calc(100% - 0px) !important;
+  right: 0px !important;
+  bottom: calc(50% - 11px) !important;
+  background: #bcbcbc !important;
+  border-radius: 2px !important;
+}
+
 .btn-destructive-primary {
   background-color: #d92916 !important;
   color: #ffffff !important;
