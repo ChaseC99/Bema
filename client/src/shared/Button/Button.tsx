@@ -51,8 +51,8 @@ function Button(props: ButtonProps) {
   else {
     if (props.data) {
       return (
-        <button className={c} data-testid={props.testId}>
-          <span onClick={() => props.action(props.data)}>
+        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId}>
+          <span>
             {props.text}
           </span>
         </button>
@@ -60,8 +60,8 @@ function Button(props: ButtonProps) {
     }
 
     return (
-      <button className={c} data-testid={props.testId}>
-        <span onClick={props.action}>
+      <button className={c} onClick={props.action} data-testid={props.testId}>
+        <span>
           {props.text}
         </span>
       </button>
