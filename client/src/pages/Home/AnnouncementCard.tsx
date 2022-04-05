@@ -1,17 +1,18 @@
-import { MouseEvent } from "react";
+import React from "react";
 import TimeAgo from 'javascript-time-ago';
 import ActionMenu from '../../shared/ActionMenu';
 import "./AnnouncementCard.css";
 import useAppState from "../../state/useAppState";
 
 type AnnouncementCardProps = {
-    author: string
-    date: string
-    id: number
-    title: string
-    isPublic: boolean
-    children: React.ReactChild | React.ReactChild[]
-    testId?: string
+  author: string
+  date: string
+  id: number
+  title: string
+  isPublic: boolean
+  children: React.ReactChild | React.ReactChild[]
+  handleDelete: (id: number) => void
+  testId?: string
 }
 
 /**
@@ -21,42 +22,39 @@ type AnnouncementCardProps = {
  * @returns 
  */
 function AnnouncementCard(props: AnnouncementCardProps) {
-    const { state } = useAppState();
+  const { state } = useAppState();
 
-    const timeAgo = new TimeAgo('en-US')
-    const date = timeAgo.format(new Date(props.date));
+  const timeAgo = new TimeAgo('en-US')
+  const date = timeAgo.format(new Date(props.date));
 
-    return (
-        <article className="card announcement-card" data-testid={props.testId}>
-            <div className="card-header">
-                <h3>{props.title}</h3>
-                {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
-                    {
-                        role: "link",
-                        action: "/announcements/edit/" + props.id,
-                        text: "Edit"
-                    },
-                    {
-                        role: "button",
-                        action: deleteAnnouncement,
-                        text: "Delete"
-                    }
-                ]} /> }
-            </div>
-            <div className="card-body">
-                {props.children}
-            </div>
-            <div className="card-footer announcement-card-footer">
-                <p><em>{props.author} posted <span title={props.date}>{date}</span>.</em></p>
-            </div>
-        </article>
-    );
-}
-
-function deleteAnnouncement(e: MouseEvent<HTMLSpanElement>) {
-    e.preventDefault();
-
-    window.alert("Not yet impleted");
+  return (
+    <React.Fragment>
+      <article className="card announcement-card" data-testid={props.testId}>
+        <div className="card-header">
+          <h3>{props.title}</h3>
+          {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
+            {
+              role: "link",
+              action: "/announcements/edit/" + props.id,
+              text: "Edit"
+            },
+            {
+              role: "button",
+              action: props.handleDelete,
+              data: props.id,
+              text: "Delete"
+            }
+          ]} />}
+        </div>
+        <div className="card-body">
+          {props.children}
+        </div>
+        <div className="card-footer announcement-card-footer">
+          <p><em>{props.author} posted <span title={props.date}>{date}</span>.</em></p>
+        </div>
+      </article>
+    </React.Fragment>
+  );
 }
 
 export default AnnouncementCard;
