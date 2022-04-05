@@ -15,8 +15,9 @@ type ButtonProps =
   | {
     style: "primary" | "secondary" | "tertiary"
     role: "button"
-    action: MouseEventHandler<HTMLSpanElement>
+    action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
     text: string
+    data?: any
     inverse?: boolean
     destructive?: boolean
     testId?: string
@@ -48,10 +49,22 @@ function Button(props: ButtonProps) {
     );
   }
   else {
+    if (props.data) {
+      return (
+        <button className={c} data-testid={props.testId}>
+          <span onClick={() => props.action(props.data)}>
+            {props.text}
+          </span>
+        </button>
+      );
+    }
+
     return (
-      <span className={c} onClick={props.action} data-testid={props.testId}>
-        {props.text}
-      </span>
+      <button className={c} data-testid={props.testId}>
+        <span onClick={props.action}>
+          {props.text}
+        </span>
+      </button>
     );
   }
 }
