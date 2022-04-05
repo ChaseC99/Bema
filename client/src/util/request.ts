@@ -1,4 +1,4 @@
-const request = async (method: "GET" | "POST" | "PUT", path: string, bodyData?: object) => {
+const request = async (method: "GET" | "POST" | "PUT" | "DELETE", path: string, bodyData?: object) => {
   const response = await fetch(path, (method === "GET") ? undefined : {
     method,
     body: JSON.stringify(bodyData),
