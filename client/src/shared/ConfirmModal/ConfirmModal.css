@@ -1,0 +1,76 @@
+.confirm-modal-background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(33, 36, 44, 0.64) !important;
+  z-index: 400;
+}
+
+.confirm-modal-container {
+  background-color: #ffffff;
+  border-radius: 5px;
+  min-width: 400px;
+  max-width: 40%;
+  z-index: 401;
+}
+
+.confirm-modal-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding: 20px;
+}
+
+.confirm-modal-header h2 {
+  margin: 0;
+}
+
+.confirm-modal-body {
+  padding: 30px 20px;
+  max-height: 40vh;
+  overflow: scroll;
+}
+
+.confirm-modal-footer {
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.confirm-modal-footer .btn-tertiary {
+  margin-right: 16px;
+}
+
+.close-modal {
+  background-color: inherit;
+  border: none !important;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+}
+
+.close-modal:hover {
+  color: #1865f2;
+  border: 2px solid #1865f2 !important;
+  cursor: pointer;
+}
+
+.close-modal:active {
+  color: #1b50b3;
+  border: 2px solid #1b50b3 !important;
+  cursor: pointer;
+}

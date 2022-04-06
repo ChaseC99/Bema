@@ -140,3 +140,8 @@ span.label {
   text-transform: uppercase;
   margin-right: 5px;
 }
+
+.stop-scrolling {
+  height: 100%;
+  overflow: hidden;
+}
