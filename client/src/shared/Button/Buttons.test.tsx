@@ -3,7 +3,7 @@ import { renderWithRouter } from '../../util/testing-utils';
 import Button from "./Button";
 
 test("renders a link button correctly", () => {
-  renderWithRouter(<Button style="primary" role="link" action="/test" text="Test Button" testId="test-button" />);
+  renderWithRouter(<Button type="primary" role="link" action="/test" text="Test Button" testId="test-button" />);
 
   const button: HTMLAnchorElement = screen.getByTestId("test-button");
   expect(button).toBeInTheDocument();
@@ -13,7 +13,7 @@ test("renders a link button correctly", () => {
 
 test("renders an action button correctly", () => {
   let action = () => {};
-  render(<Button style="primary" role="button" action={action} text="Test Button" testId="test-button" />);
+  render(<Button type="primary" role="button" action={action} text="Test Button" testId="test-button" />);
 
   const button = screen.getByTestId("test-button");
   expect(button).toBeInTheDocument();
@@ -23,7 +23,7 @@ test("renders an action button correctly", () => {
 
 test("renders a primary button correctly", () => {
   let action = () => {};
-  render(<Button style="primary" role="button" action={action} text="Test Button" testId="test-button" />);
+  render(<Button type="primary" role="button" action={action} text="Test Button" testId="test-button" />);
 
   const button = screen.getByTestId("test-button");
   expect(button).toBeInTheDocument();
@@ -32,7 +32,7 @@ test("renders a primary button correctly", () => {
 
 test("renders a secondary button correctly", () => {
   let action = () => {};
-  render(<Button style="secondary" role="button" action={action} text="Test Button" testId="test-button" />);
+  render(<Button type="secondary" role="button" action={action} text="Test Button" testId="test-button" />);
 
   const button = screen.getByTestId("test-button");
   expect(button).toBeInTheDocument();
@@ -41,7 +41,7 @@ test("renders a secondary button correctly", () => {
 
 test("renders a tertiary button correctly", () => {
   let action = () => {};
-  render(<Button style="tertiary" role="button" action={action} text="Test Button" testId="test-button" />);
+  render(<Button type="tertiary" role="button" action={action} text="Test Button" testId="test-button" />);
 
   const button = screen.getByTestId("test-button");
   expect(button).toBeInTheDocument();
@@ -50,7 +50,7 @@ test("renders a tertiary button correctly", () => {
 
 test("renders a disabled button correctly", () => {
   let action = () => {};
-  render(<Button style="primary" role="button" action={action} text="Test Button" disabled={true} testId="test-button" />);
+  render(<Button type="primary" role="button" action={action} text="Test Button" disabled={true} testId="test-button" />);
 
   const button = screen.getByTestId("test-button") as HTMLButtonElement;
   expect(button).toBeInTheDocument();

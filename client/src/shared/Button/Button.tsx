@@ -4,7 +4,7 @@ import "./Button.css";
 
 type ButtonProps =
   | {
-    style: "primary" | "secondary" | "tertiary"
+    type: "primary" | "secondary" | "tertiary"
     role: "link"
     action: string
     text: string
@@ -13,7 +13,7 @@ type ButtonProps =
     testId?: string
   }
   | {
-    style: "primary" | "secondary" | "tertiary"
+    type: "primary" | "secondary" | "tertiary"
     role: "button"
     action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
     text: string
@@ -31,13 +31,13 @@ type ButtonProps =
  * @returns 
  */
 function Button(props: ButtonProps) {
-  let c = "btn-" + props.style;
-  if (props.inverse && props.style === "tertiary") {
+  let c = "btn-" + props.type;
+  if (props.inverse && props.type === "tertiary") {
     c += "-inverse";
   }
 
   if (props.destructive) {
-    c = "btn-destructive-" + props.style;
+    c = "btn-destructive-" + props.type;
   }
 
   if (props.role === "link") {
