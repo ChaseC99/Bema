@@ -5,9 +5,9 @@ type InputFieldProps = {
   value: string
   onChange: (name: string, value: string) => void
   size: "SMALL" | "MEDIUM" | "LARGE"
-  error?: string | null
-  label?: string
+  label: string
   description?: string
+  error?: string | null
   required?: boolean
   readonly?: boolean
   placeholder?: string
@@ -41,10 +41,9 @@ function InputField(props: InputFieldProps) {
 
   return (
     <div className={"form-item " + size} data-testid={props.testId}>
-      {props.label &&
-        <label htmlFor={props.id}>{props.label}</label>
-      }
-      {(props.label && props.description) &&
+      <label htmlFor={props.id}>{props.label}</label>
+
+      {props.description &&
         <p className="form-item-description">{props.description}</p>
       }
 
