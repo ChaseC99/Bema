@@ -67,6 +67,7 @@ function InputField(props: InputFieldProps) {
         step={props.step}
         onChange={handleChange}
         className={props.error ? "error" : ""}
+        data-testid={props.testId + "-input"}
       />
 
       {props.error &&
