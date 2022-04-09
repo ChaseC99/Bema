@@ -6,7 +6,7 @@ import useAppState from "../../state/useAppState";
 import AnnouncementCard from "./AnnouncementCard";
 import { fetchAnnouncements } from "./fetchAnnouncements";
 import request from "../../util/request";
-import ConfirmModal from "../../shared/ConfirmModal/ConfirmModal";
+import { ConfirmModal } from "../../shared/Modals";
 
 type Announcement = {
   message_author: string
