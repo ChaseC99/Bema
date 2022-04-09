@@ -20,6 +20,7 @@ type ButtonProps =
     data?: any
     inverse?: boolean
     destructive?: boolean
+    disabled?: boolean
     testId?: string
   }
 
@@ -51,7 +52,7 @@ function Button(props: ButtonProps) {
   else {
     if (props.data) {
       return (
-        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId}>
+        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId} disabled={props.disabled}>
           <span>
             {props.text}
           </span>
@@ -60,7 +61,7 @@ function Button(props: ButtonProps) {
     }
 
     return (
-      <button className={c} onClick={props.action} data-testid={props.testId}>
+      <button className={c} onClick={props.action} data-testid={props.testId} disabled={props.disabled}>
         <span>
           {props.text}
         </span>
