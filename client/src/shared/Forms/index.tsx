@@ -9,7 +9,7 @@ export { Form };
  * that are not visible to the end-user (front-end programmer).
  */
 
-export type FormFields = InputField | CheckboxField
+export type FormFields = InputField | CheckboxField | TextAreaField
 
 export type InputField = {
   fieldType: "INPUT"
@@ -44,5 +44,18 @@ export type CheckboxField = {
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   description?: string
+  testId?: string
+}
+
+export type TextAreaField = {
+  fieldType: "TEXTAREA"
+  name: string
+  id: string
+  defaultValue: string
+  size: "SMALL" | "MEDIUM" | "LARGE"
+  label: string
+  description?: string
+  rows?: number
+  required?: boolean
   testId?: string
 }

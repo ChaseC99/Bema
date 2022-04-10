@@ -19,6 +19,17 @@
   line-height: 20px;
 }
 
+.form-fields-container textarea {
+  padding: 12px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 4px;
+  box-sizing: border-box !important;
+  width: 100%;
+  margin-top: 12px;
+  padding-left: 16px;
+  line-height: 20px;
+}
+
 .form-fields-container input[type="checkbox"] {
   margin: 0 8px 0 0;
   width: 16px;

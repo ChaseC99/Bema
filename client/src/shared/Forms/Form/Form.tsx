@@ -3,6 +3,7 @@ import { FormFields } from "..";
 import Button from "../../Button";
 import CheckboxField from "../CheckboxField/CheckboxField";
 import InputField from "../InputField/InputField";
+import TextAreaField from "../TextAreaField/TextAreaField";
 import "./Form.css";
 
 type FormProps = {
@@ -24,7 +25,7 @@ function Form(props: FormProps) {
     props.fields.forEach((field) => {
       const value = field.defaultValue;
       newValues[field.name] = value;
-      
+
       if (field.fieldType === "INPUT" && field.validate) {
         let e = field.validate(field.defaultValue || "");
         updateError(field.name, e);
@@ -58,7 +59,7 @@ function Form(props: FormProps) {
     }
   }
 
-  const handleChange = (name: string, value: any) => {    
+  const handleChange = (name: string, value: any) => {
     const newValues = {
       ...values,
       [name]: value
@@ -87,55 +88,74 @@ function Form(props: FormProps) {
 
   return (
     <div className="form" data-testid={props.testId}>
-      <div className="form-fields-container">
-        {!isLoading && props.fields.map((field) => {
-          if (field.fieldType === "INPUT") {
-            return (
-              <InputField
-                type={field.type}
-                name={field.name}
-                id={field.id}
-                size={field.size}
-                value={values[field.name]}
-                onChange={handleChange}
-                error={errors[field.name]}
-                label={field.label}
-                description={field.description}
-                required={field.required}
-                readonly={field.readonly}
-                placeholder={field.placeholder}
-                pattern={field.pattern}
-                autocomplete={field.autocomplete}
-                autofocus={field.autofocus}
-                disabled={field.disabled}
-                max={field.max}
-                maxlength={field.maxlength}
-                min={field.min}
-                minlength={field.minlength}
-                step={field.step}
-                testId={field.testId}
-                key={field.id}
-              />
-            );
-          }
-          else if (field.fieldType === "CHECKBOX") {
-            return (
-              <CheckboxField 
-                name={field.name}
-                id={field.id}
-                value={values[field.name]}
-                size={field.size}
-                label={field.label}
-                description={field.description}
-                onChange={handleChange}
-                testId={field.testId}
-                key={field.id}
-              />
-            );
-          }
+      <div className="form-fields-wrapper">
+        <div className="form-fields-container">
+          {!isLoading && props.fields.map((field) => {
+            if (field.fieldType === "INPUT") {
+              return (
+                <InputField
+                  type={field.type}
+                  name={field.name}
+                  id={field.id}
+                  size={field.size}
+                  value={values[field.name]}
+                  onChange={handleChange}
+                  error={errors[field.name]}
+                  label={field.label}
+                  description={field.description}
+                  required={field.required}
+                  readonly={field.readonly}
+                  placeholder={field.placeholder}
+                  pattern={field.pattern}
+                  autocomplete={field.autocomplete}
+                  autofocus={field.autofocus}
+                  disabled={field.disabled}
+                  max={field.max}
+                  maxlength={field.maxlength}
+                  min={field.min}
+                  minlength={field.minlength}
+                  step={field.step}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "CHECKBOX") {
+              return (
+                <CheckboxField
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  description={field.description}
+                  onChange={handleChange}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "TEXTAREA") {
+              return (
+                <TextAreaField
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  onChange={handleChange}
+                  description={field.description}
+                  rows={field.rows}
+                  required={field.required}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
 
-          return null;
-        })}
+            return null;
+          })}
+        </div>
       </div>
 
       <div className="form-actions">
