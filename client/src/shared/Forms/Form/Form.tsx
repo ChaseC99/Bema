@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FormFields } from "..";
 import Button from "../../Button";
+import CheckboxField from "../CheckboxField/CheckboxField";
 import InputField from "../InputField/InputField";
 import "./Form.css";
 
@@ -21,7 +22,7 @@ function Form(props: FormProps) {
     const newValues: { [name: string]: any } = {};
 
     props.fields.forEach((field) => {
-      const value = field.defaultValue ? field.defaultValue : "";
+      const value = field.defaultValue;
       newValues[field.name] = value;
       
       if (field.fieldType === "INPUT" && field.validate) {
@@ -57,7 +58,7 @@ function Form(props: FormProps) {
     }
   }
 
-  const handleChange = (name: string, value: any) => {
+  const handleChange = (name: string, value: any) => {    
     const newValues = {
       ...values,
       [name]: value
@@ -117,12 +118,29 @@ function Form(props: FormProps) {
               />
             );
           }
+          else if (field.fieldType === "CHECKBOX") {
+            return (
+              <CheckboxField 
+                name={field.name}
+                id={field.id}
+                value={values[field.name]}
+                size={field.size}
+                label={field.label}
+                description={field.description}
+                onChange={handleChange}
+                testId={field.testId}
+                key={field.id}
+              />
+            );
+          }
+
+          return null;
         })}
       </div>
 
       <div className="form-actions">
-        <Button style="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} />
-        <Button style="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0} />
+        <Button type="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} />
+        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0} />
       </div>
     </div>
   );
