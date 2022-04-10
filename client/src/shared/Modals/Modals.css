@@ -34,7 +34,7 @@
 }
 
 .modal-body,
-.form-fields-container {
+.form-fields-wrapper {
   padding: 30px 20px;
   max-height: 40vh;
   overflow: scroll;
