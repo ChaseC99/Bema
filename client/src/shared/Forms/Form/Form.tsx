@@ -3,6 +3,7 @@ import { FormFields } from "..";
 import Button from "../../Button";
 import CheckboxField from "../CheckboxField/CheckboxField";
 import InputField from "../InputField/InputField";
+import SelectField from "../SelectField/SelectField";
 import TextAreaField from "../TextAreaField/TextAreaField";
 import "./Form.css";
 
@@ -147,6 +148,23 @@ function Form(props: FormProps) {
                   description={field.description}
                   rows={field.rows}
                   required={field.required}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "SELECT") {
+              return (
+                <SelectField 
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  description={field.description}
+                  choices={field.choices}
+                  onChange={handleChange}
+                  placeholder={field.placeholder}
                   testId={field.testId}
                   key={field.id}
                 />

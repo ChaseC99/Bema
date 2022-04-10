@@ -121,3 +121,87 @@
 .form-item {
   margin-bottom: 30px;
 }
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-picker-container {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.select-picker-container button {
+  height: 40px;
+  width: 100%;
+  padding: 0 12px 0 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box !important;
+}
+
+.select-picker-container button.empty {
+  color: rgba(33, 36, 44, 0.64);
+}
+
+.select-picker-container button span {
+  margin-right: 8px;
+}
+
+.select-picker-container button:hover {
+  border: 2px solid #1865f2;
+  padding: 0 11px 0 15px;
+}
+
+.select-picker-container button:active {
+  border: 2px solid #1b50b3;
+  color: rgba(33, 36, 44, 0.64);
+  padding: 0 11px 0 15px;
+  background: #b5cdfb;
+}
+
+.select-popup-container {
+  padding: 5px 0px;
+  position: absolute;
+  left: 0px;
+  top: 45px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 5px;
+  background-color: #ffffff;
+  min-width: 160px;
+  box-shadow: rgb(0 0 0 / 5%) 1px 2px 2px;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.select-popup-container div {
+  color: #21242c;
+  font-weight: 400;
+  padding: 12px 16px;
+  fill: #21242c;
+  cursor: default !important;
+}
+
+.select-popup-container div:hover {
+  background-color: #1865f2;
+  color: #ffffff;
+  fill: #ffffff;
+}
+
+.select-popup-container div.selected svg {
+  visibility: visible;
+}
+
+.select-popup-container div span {
+  margin-left: 8px;
+}
+
+.select-popup-container div svg {
+  vertical-align: text-bottom;
+  visibility: hidden;
+}
