@@ -9,7 +9,12 @@ export { Form };
  * that are not visible to the end-user (front-end programmer).
  */
 
-export type FormFields = InputField | CheckboxField | TextAreaField | SelectField
+export type FormFields =
+  InputField
+  | CheckboxField
+  | TextAreaField
+  | TextEditorField
+  | SelectField
 
 export type InputField = {
   fieldType: "INPUT"
@@ -60,6 +65,16 @@ export type TextAreaField = {
   testId?: string
 }
 
+export type TextEditorField = {
+  fieldType: "TEXTEDITOR"
+  name: string
+  id: string
+  defaultValue: string
+  label: string
+  description?: string
+  testId?: string
+}
+
 export type SelectField = {
   fieldType: "SELECT"
   name: string
@@ -68,7 +83,7 @@ export type SelectField = {
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   placeholder?: string
-  choices: ({value: string, text: string})[]
+  choices: ({ value: string, text: string })[]
   description?: string
   testId?: string
 }

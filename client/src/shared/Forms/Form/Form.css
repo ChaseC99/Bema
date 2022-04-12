@@ -205,3 +205,17 @@
   vertical-align: text-bottom;
   visibility: hidden;
 }
+
+.form-item .quill {
+  margin-top: 12px;
+}
+
+.form-item .quill .ql-toolbar {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 4px 4px 0 0;
+}
+
+.form-item .quill .ql-container {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 0 0 4px 4px;
+}

@@ -5,6 +5,7 @@ import CheckboxField from "../CheckboxField/CheckboxField";
 import InputField from "../InputField/InputField";
 import SelectField from "../SelectField/SelectField";
 import TextAreaField from "../TextAreaField/TextAreaField";
+import TextEditorField from "../TextEditorField/TextEditorField";
 import "./Form.css";
 
 type FormProps = {
@@ -148,6 +149,20 @@ function Form(props: FormProps) {
                   description={field.description}
                   rows={field.rows}
                   required={field.required}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "TEXTEDITOR") {
+              return (
+                <TextEditorField 
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  label={field.label}
+                  description={field.description}
+                  onChange={handleChange}
                   testId={field.testId}
                   key={field.id}
                 />
