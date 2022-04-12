@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { renderWithRouter } from "../../../util/testing-utils";
 import SelectField from "./SelectField";
