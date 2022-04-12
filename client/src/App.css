@@ -61,12 +61,32 @@
   width: 100%;
 }
 
+.col-11 {
+  width: 88%;
+}
+
+.col-10 {
+  width: 80%;
+}
+
+.col-9 {
+  width: 72%;
+}
+
 .col-8 {
   width: 64%;
 }
 
+.col-7 {
+  width: 56%;
+}
+
 .col-6 {
   width: 48%;
+}
+
+.col-5 {
+  width: 40%;
 }
 
 .col-4 {
@@ -75,6 +95,14 @@
 
 .col-3 {
   width: 24%;
+}
+
+.col-2 {
+  width: 16%;
+}
+
+.col-1 {
+  width: 8%;
 }
 
 .section-header {
