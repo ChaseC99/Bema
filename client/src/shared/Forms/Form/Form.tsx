@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FormFields } from "..";
 import Button from "../../Button";
 import CheckboxField from "../CheckboxField/CheckboxField";
+import DateField from "../DateField/DateField";
 import InputField from "../InputField/InputField";
 import SelectField from "../SelectField/SelectField";
 import TextAreaField from "../TextAreaField/TextAreaField";
@@ -156,7 +157,7 @@ function Form(props: FormProps) {
             }
             else if (field.fieldType === "TEXTEDITOR") {
               return (
-                <TextEditorField 
+                <TextEditorField
                   name={field.name}
                   id={field.id}
                   value={values[field.name]}
@@ -170,7 +171,7 @@ function Form(props: FormProps) {
             }
             else if (field.fieldType === "SELECT") {
               return (
-                <SelectField 
+                <SelectField
                   name={field.name}
                   id={field.id}
                   value={values[field.name]}
@@ -180,6 +181,23 @@ function Form(props: FormProps) {
                   choices={field.choices}
                   onChange={handleChange}
                   placeholder={field.placeholder}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "DATE") {
+              return (
+                <DateField
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  onChange={handleChange}
+                  description={field.description}
+                  minDate={field.minDate}
+                  maxDate={field.maxDate}
                   testId={field.testId}
                   key={field.id}
                 />

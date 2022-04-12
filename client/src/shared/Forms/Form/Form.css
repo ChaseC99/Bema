@@ -219,3 +219,11 @@
   border: 1px solid rgba(33, 36, 44, 0.16);
   border-radius: 0 0 4px 4px;
 }
+
+.react-datepicker__day--selected {
+  background-color: #1865f2;
+}
+
+.react-datepicker__day--selected:hover {
+  background-color: #1b50b3;
+}

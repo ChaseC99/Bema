@@ -15,6 +15,7 @@ export type FormFields =
   | TextAreaField
   | TextEditorField
   | SelectField
+  | DateField
 
 export type InputField = {
   fieldType: "INPUT"
@@ -85,5 +86,18 @@ export type SelectField = {
   placeholder?: string
   choices: ({ value: string, text: string })[]
   description?: string
+  testId?: string
+}
+
+export type DateField = {
+  fieldType: "DATE"
+  name: string
+  id: string
+  defaultValue: string
+  size: "SMALL" | "MEDIUM" | "LARGE"
+  label: string
+  description?: string
+  minDate?: string
+  maxDate?: string
   testId?: string
 }
