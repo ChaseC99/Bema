@@ -4,7 +4,6 @@ import "./AdminSidebar.css";
 import { useEffect, useState } from "react";
 import { fetchCurrentContest, fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
-import { useLocation } from "react-router-dom";
 
 function AdminSidebar() {
   const { state } = useAppState();
@@ -13,8 +12,6 @@ function AdminSidebar() {
   const [evaluationContestId, setEvaluationContestId] = useState<number>();
   const [currentContestIdLoading, setCurrentContestIdLoading] = useState<boolean>(true);
   const [evaluationContestIdLoading, setEvaluationContestIdLoading] = useState<boolean>(false);
-
-  const location = useLocation();
 
   useEffect(() => {
     fetchCurrentContest()
@@ -33,7 +30,7 @@ function AdminSidebar() {
     else {
       setEvaluationContestIdLoading(false);
     }
-  }, []);
+  }, [state.logged_in, state.user]);
 
   if (currentContestIdLoading || evaluationContestIdLoading) {
     return (

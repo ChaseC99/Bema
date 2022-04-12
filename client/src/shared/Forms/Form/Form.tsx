@@ -24,6 +24,7 @@ function Form(props: FormProps) {
 
   useEffect(() => {
     const newValues: { [name: string]: any } = {};
+    const newErrors: { [name: string]: string } = {};
 
     props.fields.forEach((field) => {
       const value = field.defaultValue;
@@ -31,36 +32,17 @@ function Form(props: FormProps) {
 
       if (field.fieldType === "INPUT" && field.validate) {
         let e = field.validate(field.defaultValue || "");
-        updateError(field.name, e);
+
+        if (e) {
+          newErrors[field.name] = e;
+        }
       }
     });
 
     setValues(newValues);
+    setErrors(newErrors);
     setIsLoading(false);
   }, [props.fields]);
-
-  const updateError = (name: string, error: string | null) => {
-    let e = error;
-
-    if (e === null) {
-      e = "";
-
-      const newErrors = {
-        ...errors,
-        [name]: e
-      }
-
-      delete newErrors[name];
-      setErrors(newErrors);
-    }
-    else {
-      const newErrors = {
-        ...errors,
-        [name]: e
-      }
-      setErrors(newErrors);
-    }
-  }
 
   const handleChange = (name: string, value: any) => {
     const newValues = {
@@ -77,7 +59,25 @@ function Form(props: FormProps) {
       if (field.name === name) {
         if (field.fieldType === "INPUT" && field.validate) {
           let e = field.validate(value);
-          updateError(field.name, e);
+          
+          if (e === null) {
+            e = "";
+      
+            const newErrors = {
+              ...errors,
+              [name]: e
+            }
+      
+            delete newErrors[name];
+            setErrors(newErrors);
+          }
+          else {
+            const newErrors = {
+              ...errors,
+              [name]: e
+            }
+            setErrors(newErrors);
+          }
         }
 
         break;
