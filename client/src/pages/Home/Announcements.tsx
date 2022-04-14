@@ -6,7 +6,7 @@ import useAppState from "../../state/useAppState";
 import AnnouncementCard from "./AnnouncementCard";
 import { fetchAnnouncements } from "./fetchAnnouncements";
 import request from "../../util/request";
-import { ConfirmModal } from "../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../shared/Modals";
 
 type Announcement = {
   message_author: string
@@ -17,11 +17,18 @@ type Announcement = {
   public: boolean
 }
 
+type CreateAnnouncement = {
+  message_title: string
+  message_content: string
+  public: boolean
+}
+
 function Announcements() {
   const { state } = useAppState();
   const [messages, setMessages] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number>();
+  const [shouldShowCreateModal, setShouldShowCreateModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchAnnouncements()
@@ -58,8 +65,28 @@ function Announcements() {
     }
   }
 
-  const hideModal = () => {
+  const hideDeleteModal = () => {
     setConfirmDeleteId(undefined);
+  }
+
+  const createAnnouncement = async (values: {[name: string]: any;}) => {
+    const data = values as CreateAnnouncement;
+
+    await request("POST", "/api/internal/messages", {
+      message_title: data.message_title,
+      message_content: data.message_content,
+      public: data.public
+    });
+
+    setShouldShowCreateModal(false);
+  }
+
+  const showCreateAnnouncementModal = () => {
+    setShouldShowCreateModal(true);
+  }
+
+  const hideCreateAnnouncementModal = () => {
+    setShouldShowCreateModal(false);
   }
 
   return (
@@ -70,7 +97,7 @@ function Announcements() {
             <h2 data-testid="announcement-header">Announcements</h2>
 
             <span className="section-actions" data-testid="announcement-section-actions">
-              {(state.user?.permissions.manage_announcements || state.is_admin) && <Button type="tertiary" role="link" action="/announcements/new" text="New Announcement" />}
+              {(state.user?.permissions.manage_announcements || state.is_admin) && <Button type="tertiary" role="button" action={showCreateAnnouncementModal} text="New Announcement" />}
             </span>
           </div>
           <div className="section-body" data-testid="announcement-section-body">
@@ -88,9 +115,46 @@ function Announcements() {
       </section>
 
       {confirmDeleteId &&
-        <ConfirmModal title="Delete announcement?" confirmLabel="Delete" handleConfirm={deleteAnnouncement} handleCancel={hideModal} data={confirmDeleteId} destructive>
+        <ConfirmModal title="Delete announcement?" confirmLabel="Delete" handleConfirm={deleteAnnouncement} handleCancel={hideDeleteModal} data={confirmDeleteId} destructive>
           <p>Are you sure you want to delete this announcement? This action cannot be undone.</p>
         </ConfirmModal>
+      }
+
+      {shouldShowCreateModal &&
+        <FormModal
+          title="Create announcement"
+          submitLabel="Create"
+          handleSubmit={createAnnouncement}
+          handleCancel={hideCreateAnnouncementModal}
+          cols={5}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "message_title",
+              id: "announcement-title",
+              size: "LARGE",
+              label: "Title",
+              defaultValue: "",
+            },
+            {
+              fieldType: "TEXTEDITOR",
+              name: "message_content",
+              id: "announcement-content",
+              label: "Message",
+              defaultValue: "",
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "public",
+              id: "announcement-is-public",
+              size: "LARGE",
+              label: "Public Announcement",
+              description: "Displays the announcement to all users, even if not logged in.",
+              defaultValue: false,
+            }
+          ]}
+        />
       }
     </React.Fragment>
   );
