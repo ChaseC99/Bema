@@ -36,7 +36,7 @@ function ConfirmModal(props: ConfirmModalProps) {
 
   return (
     <div className="modal-background-container">
-      <div className="modal-container col-6" data-testid={props.testId}>
+      <div className="modal-container col-4" data-testid={props.testId}>
         <div className="modal-header">
           <h2>{props.title}</h2>
           <button className="close-modal" onClick={handleClose} data-testid={props.testId + "-close"}>
