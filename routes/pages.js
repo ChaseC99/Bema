@@ -6,7 +6,6 @@ router.get("/login", handlers.login);
 router.get("/judging", handlers.judging);
 router.get("/results/:contestId", handlers.results);
 router.get("/entries/:contestId", handlers.entries)
-router.get("/admin/dashboard", handlers.adminDashboard);
 router.get("/admin/contests", handlers.adminContests);
 router.get("/admin/skill-levels", handlers.adminSkillLevels);
 router.get("/admin/tasks", handlers.adminTasks);

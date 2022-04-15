@@ -45,25 +45,6 @@ exports.judging = (request, response, next) => {
   });
 }
 
-exports.adminDashboard = (request, response, next) => {
-  if (request.decodedToken) {
-    return response.render("pages/admin/dashboard", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    return response.render("pages/admin/dashboard", {
-      logged_in: false,
-      is_admin: false,
-      permissions: publicPermissions,
-      is_impersonated: false
-    });
-  }
-}
-
 exports.adminContests = (request, response, next) => {
   if (request.decodedToken) {
     return response.render("pages/admin/contests", {
