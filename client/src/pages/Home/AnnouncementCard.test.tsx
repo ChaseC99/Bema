@@ -1,7 +1,5 @@
 import { screen } from '@testing-library/react';
 import AnnouncementCard from "./AnnouncementCard";
-import TimeAgo from "javascript-time-ago";
-import en from 'javascript-time-ago/locale/en.json';
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../../util/testing-utils';
 import useAppState from '../../state/useAppState';
 
