@@ -115,7 +115,6 @@ exports.edit = (request, response, next) => {
     if (request.decodedToken) {
       let {
         message_id,
-        message_date,
         message_title,
         message_content,
         public
@@ -125,7 +124,7 @@ exports.edit = (request, response, next) => {
       } = request.decodedToken;
 
       if (request.decodedToken.permissions.manage_announcements || is_admin) {
-        return db.query("UPDATE messages SET message_date = $1, message_title = $2, message_content = $3, public = $4 WHERE message_id = $5", [message_date, message_title, message_content, public, message_id], res => {
+        return db.query("UPDATE messages SET message_title = $1, message_content = $2, public = $3 WHERE message_id = $4", [message_title, message_content, public, message_id], res => {
           if (res.error) {
             return handleNext(next, 400, "There was a problem editing this message.", res.error);
           }

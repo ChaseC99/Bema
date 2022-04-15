@@ -246,9 +246,6 @@ const routeChecks = {
       check("message_id")
       .isInt()
       .withMessage("Message ID must be an integer"),
-      check("message_date")
-      .matches(datePattern)
-      .withMessage(`Message date must be a valid date ${dateFormat}`),
       check("message_title")
       .isLength(messageChars)
       .withMessage("Message title cannot be empty or longer than 100 characters"),
