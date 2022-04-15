@@ -37,7 +37,8 @@
 .form-fields-wrapper {
   padding: 30px 20px;
   max-height: 40vh;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .modal-footer,
