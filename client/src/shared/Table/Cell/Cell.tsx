@@ -8,7 +8,7 @@ type CellProps = {
   width?: number
   permissions?: PermissionName[]
   requireAllPermissions?: boolean
-  children: React.ReactChild | React.ReactChild[]
+  children?: React.ReactChild | React.ReactChild[]
   testId?: string
 }
 
