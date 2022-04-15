@@ -12,6 +12,7 @@ type AnnouncementCardProps = {
   isPublic: boolean
   children: React.ReactChild | React.ReactChild[]
   handleDelete: (id: number) => void
+  handleEdit: (id: number) => void
   testId?: string
 }
 
@@ -34,8 +35,9 @@ function AnnouncementCard(props: AnnouncementCardProps) {
           <h3>{props.title}</h3>
           {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
             {
-              role: "link",
-              action: "/announcements/edit/" + props.id,
+              role: "button",
+              action: props.handleEdit,
+              data: props.id,
               text: "Edit"
             },
             {
