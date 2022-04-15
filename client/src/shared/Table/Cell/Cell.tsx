@@ -5,7 +5,7 @@ type PermissionName = keyof Permissions
 
 type CellProps = {
   header?: boolean
-  width?: number
+  width?: string
   permissions?: PermissionName[]
   requireAllPermissions?: boolean
   children?: React.ReactChild | React.ReactChild[]
@@ -51,7 +51,7 @@ function Cell(props: CellProps) {
   if (props.header) {
     let styles: React.CSSProperties = {};
     if (props.width) {
-      styles.width = props.width + "%";
+      styles.width = props.width;
     }
 
     return (
