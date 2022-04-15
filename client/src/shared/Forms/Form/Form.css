@@ -74,6 +74,7 @@
   flex-grow: 0 !important;
   position: absolute !important;
   pointer-events: none !important;
+  top: 2px;
 }
 
 .form-item.checkbox div {
@@ -82,6 +83,7 @@
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
+  position: relative;
 }
 
 .form-item.checkbox label {
