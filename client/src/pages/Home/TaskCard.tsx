@@ -1,5 +1,4 @@
-import ActionMenu from "../../shared/ActionMenu";
-import { Action } from "../../shared/ActionMenu/ActionMenu";
+import ActionMenu, { Action } from "../../shared/ActionMenu";
 import "./TaskCard.css";
 
 type TaskCardProps = {
