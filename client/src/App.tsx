@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
+import Tasks from "./pages/admin/Tasks";
 
 function App() {
   useEffect(() => {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/" element={<Home />} />
 
           <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/tasks" element={<Tasks />} />
 
           <Route path="/logout" element={<Logout />} />
 
