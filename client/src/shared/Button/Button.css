@@ -25,6 +25,16 @@
   text-decoration: none !important;
 }
 
+.btn-primary:disabled {
+  background: rgba(33, 36, 44, 0.32) !important;
+  color: rgba(255, 255, 255, 0.64) !important;
+  cursor: default !important;
+}
+
+.btn-primary:disabled:hover {
+  box-shadow: none !important;
+}
+
 .btn-secondary {
   color: #1865f2 !important;
   border: 1px solid rgba(33, 36, 44, 0.50) !important;
@@ -49,6 +59,22 @@
   background-color: #b5cefb !important;
   color: #1b50b3 !important;
   border-color: #1b50b3 !important;
+}
+
+.btn-secondary:disabled {
+  color: rgba(33, 36, 44, 0.32) !important;
+  border-color: rgba(33, 36, 44, 0.32) !important;
+  cursor: default !important;
+}
+
+.btn-secondary:disabled:hover {
+  border: 1px solid rgba(33, 36, 44, 0.32) !important;
+}
+
+.btn-secondary:disabled:active {
+  background-color: #ffffff !important;
+  color: rgba(33, 36, 44, 0.32) !important;
+  border-color: rgba(33, 36, 44, 0.32) !important;
 }
 
 .btn-tertiary {
@@ -87,6 +113,15 @@
   bottom: calc(50% - 11px) !important;
   background: #1b50b3 !important;
   border-radius: 2px !important;
+}
+
+.btn-tertiary:disabled {
+  color: rgba(33, 36, 44, 0.32) !important;
+  cursor: default !important;
+}
+
+.btn-tertiary:disabled:hover::after {
+  height: 0px !important;
 }
 
 .btn-tertiary-inverse {

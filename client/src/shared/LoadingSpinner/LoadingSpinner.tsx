@@ -13,6 +13,7 @@ function LoadingSpinner(props: LoadingSpinnerProps) {
     <img src={spinner}
       className={"loading-spinner " + props.size.toLowerCase()}
       data-testid={props.testId}
+      alt=""
     />
   );
 }

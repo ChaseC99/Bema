@@ -1,7 +1,5 @@
 import { screen } from '@testing-library/react';
 import AnnouncementCard from "./AnnouncementCard";
-import TimeAgo from "javascript-time-ago";
-import en from 'javascript-time-ago/locale/en.json';
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../../util/testing-utils';
 import useAppState from '../../state/useAppState';
 
@@ -14,7 +12,7 @@ jest.mock("../../state/useAppState", () => {
 const useAppStateMock = useAppState as unknown as jest.Mock<Partial<ReturnType<typeof useAppState>>>;
 
 const sampleAnnouncement = (
-  <AnnouncementCard author="Test User" date="04-01-2022" id={5} title="Test Announcement" isPublic={true} testId="test-announcement" handleDelete={jest.fn()}>
+  <AnnouncementCard author="Test User" date="04-01-2022" id={5} title="Test Announcement" isPublic={true} testId="test-announcement" handleDelete={jest.fn()} handleEdit={jest.fn()}>
     <p>Sample announcement content.</p>
     <p>Announcement line 2.</p>
   </AnnouncementCard>

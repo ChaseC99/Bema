@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
-import { renderWithRouter } from '../../util/testing-utils';
+import { renderWithRouter } from '../../../util/testing-utils';
 import ConfirmModal from "./ConfirmModal";
 
 test("renders the modal correctly", () => {

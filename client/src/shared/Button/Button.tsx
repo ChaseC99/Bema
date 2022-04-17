@@ -4,7 +4,7 @@ import "./Button.css";
 
 type ButtonProps =
   | {
-    style: "primary" | "secondary" | "tertiary"
+    type: "primary" | "secondary" | "tertiary"
     role: "link"
     action: string
     text: string
@@ -13,13 +13,14 @@ type ButtonProps =
     testId?: string
   }
   | {
-    style: "primary" | "secondary" | "tertiary"
+    type: "primary" | "secondary" | "tertiary"
     role: "button"
     action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
     text: string
     data?: any
     inverse?: boolean
     destructive?: boolean
+    disabled?: boolean
     testId?: string
   }
 
@@ -30,13 +31,13 @@ type ButtonProps =
  * @returns 
  */
 function Button(props: ButtonProps) {
-  let c = "btn-" + props.style;
-  if (props.inverse && props.style === "tertiary") {
+  let c = "btn-" + props.type;
+  if (props.inverse && props.type === "tertiary") {
     c += "-inverse";
   }
 
   if (props.destructive) {
-    c = "btn-destructive-" + props.style;
+    c = "btn-destructive-" + props.type;
   }
 
   if (props.role === "link") {
@@ -51,7 +52,7 @@ function Button(props: ButtonProps) {
   else {
     if (props.data) {
       return (
-        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId}>
+        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId} disabled={props.disabled}>
           <span>
             {props.text}
           </span>
@@ -60,7 +61,7 @@ function Button(props: ButtonProps) {
     }
 
     return (
-      <button className={c} onClick={props.action} data-testid={props.testId}>
+      <button className={c} onClick={props.action} data-testid={props.testId} disabled={props.disabled}>
         <span>
           {props.text}
         </span>

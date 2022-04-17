@@ -50,7 +50,7 @@ export function defaultAppStateLoggedOut(): AppState {
  * The logged in user also has the default permissions.
  * @returns The default app state
  */
-export function defaultAppStateLoggedIn(permissions?: PermissionsConfig): AppState {
+export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permissions]+?: boolean}): AppState {
   return {
     user: {
       evaluator_id: 10,
@@ -108,46 +108,13 @@ export function defaultPermissions(): Permissions {
   }
 }
 
-type PermissionsConfig = {
-  judge_entries?: boolean
-  view_admin_stats?: boolean
-  manage_announcements?: boolean
-  manage_winners?: boolean
-  edit_contests?: boolean
-  delete_contests?: boolean
-  add_entries?: boolean
-  edit_entries?: boolean
-  delete_entries?: boolean
-  assign_entry_groups?: boolean
-  view_all_evaluations?: boolean
-  edit_all_evaluations?: boolean
-  delete_all_evaluations?: boolean
-  view_all_tasks?: boolean
-  edit_all_tasks?: boolean
-  delete_all_tasks?: boolean
-  view_judging_settings?: boolean
-  manage_judging_groups?: boolean
-  assign_evaluator_groups?: boolean
-  manage_judging_criteria?: boolean
-  view_all_users?: boolean
-  add_users?: boolean
-  edit_user_profiles?: boolean
-  change_user_passwords?: boolean
-  assume_user_identities?: boolean
-  view_errors?: boolean
-  delete_errors?: boolean
-  edit_kb_content?: boolean
-  delete_kb_content?: boolean
-  publish_kb_content?: boolean
-}
-
 /**
  * Creates an object with custom permissions. All permissions not specified
  * by the user in the config object will default to false.
  * @param permissions A configuration object that will override the default permissions
  * @returns A permissions object
  */
-export function customPermissions(permissions: PermissionsConfig): Permissions {
+export function customPermissions(permissions: {[Property in keyof Permissions]+?: boolean}): Permissions {
   return {
     judge_entries: false,
     view_admin_stats: false,

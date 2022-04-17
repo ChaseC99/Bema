@@ -1,4 +1,4 @@
-.confirm-modal-background-container {
+.modal-background-container {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,15 +13,14 @@
   z-index: 400;
 }
 
-.confirm-modal-container {
+.modal-container {
   background-color: #ffffff;
   border-radius: 5px;
   min-width: 400px;
-  max-width: 40%;
   z-index: 401;
 }
 
-.confirm-modal-header {
+.modal-header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -30,17 +29,24 @@
   padding: 20px;
 }
 
-.confirm-modal-header h2 {
+.modal-header h2 {
   margin: 0;
 }
 
-.confirm-modal-body {
+.modal-body,
+.form-fields-wrapper {
   padding: 30px 20px;
   max-height: 40vh;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
-.confirm-modal-footer {
+.form-fields-wrapper {
+  padding: 30px 20px 100px 20px;
+}
+
+.modal-footer,
+.form-actions {
   padding: 20px;
   border-top: 1px solid #ddd;
   display: flex;
@@ -48,7 +54,8 @@
   justify-content: flex-end;
 }
 
-.confirm-modal-footer .btn-tertiary {
+.modal-footer .btn-tertiary,
+.form-actions .btn-tertiary {
   margin-right: 16px;
 }
 

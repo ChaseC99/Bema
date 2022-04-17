@@ -1,6 +1,6 @@
 import { MouseEventHandler, useEffect } from "react"
-import Button from "../Button/Button"
-import "./ConfirmModal.css";
+import Button from "../../Button/Button"
+import "../Modals.css";
 
 type ConfirmModalProps = {
   title: string
@@ -35,21 +35,21 @@ function ConfirmModal(props: ConfirmModalProps) {
   }
 
   return (
-    <div className="confirm-modal-background-container">
-      <div className="confirm-modal-container" data-testId={props.testId}>
-        <div className="confirm-modal-header">
+    <div className="modal-background-container">
+      <div className="modal-container col-4" data-testid={props.testId}>
+        <div className="modal-header">
           <h2>{props.title}</h2>
-          <button className="close-modal" onClick={handleClose} data-testId={props.testId + "-close"}>
+          <button className="close-modal" onClick={handleClose} data-testid={props.testId + "-close"}>
             <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.586L7.706 6.293a1 1 0 1 0-1.413 1.413L10.586 12l-4.293 4.294a1 1 0 0 0 1.413 1.413L12 13.414l4.294 4.293a1 1 0 0 0 1.413-1.413L13.414 12l4.293-4.294a1 1 0 1 0-1.413-1.413L12 10.586z"></path></svg>
           </button>
         </div>
-        <div className="confirm-modal-body">
+        <div className="modal-body">
           {props.children}
         </div>
-        <div className="confirm-modal-footer">
+        <div className="modal-footer">
           <div>
-            <Button style="tertiary" role="button" action={handleClose} text="Cancel" testId={props.testId + "-cancel"} />
-            <Button style="primary" role="button" action={handleConfirm} text={props.confirmLabel} destructive={props.destructive} testId={props.testId + "-confirm"} />
+            <Button type="tertiary" role="button" action={handleClose} text="Cancel" testId={props.testId + "-cancel"} />
+            <Button type="primary" role="button" action={handleConfirm} text={props.confirmLabel} destructive={props.destructive} testId={props.testId + "-confirm"} />
           </div>
         </div>
       </div>

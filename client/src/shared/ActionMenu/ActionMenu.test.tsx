@@ -1,7 +1,8 @@
 import { MouseEvent } from "react";
 import { render, screen } from '@testing-library/react';
 import { renderWithRouter } from '../../util/testing-utils';
-import ActionMenu, { Action } from "./ActionMenu";
+import ActionMenu from "./ActionMenu";
+import { Action } from ".";
 
 const actions: Action[] = [
     {
