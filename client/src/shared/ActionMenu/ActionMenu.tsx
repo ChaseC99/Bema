@@ -1,21 +1,7 @@
-import { MouseEvent, MouseEventHandler } from "react";
+import { MouseEvent } from "react";
+import { Action } from ".";
 import ActionItem from "./ActionItem";
 import "./ActionMenu.css";
-
-export type Action =
-  | {
-    role: "button"
-    action: MouseEventHandler<HTMLSpanElement> | ((data: any) => any)
-    text: string
-    data?: any
-    testId?: string
-  }
-  | {
-    role: "link"
-    action: string
-    text: string
-    testId?: string
-  }
 
 type ActionMenuProps = {
   actions: Action[]
