@@ -29,7 +29,7 @@ function SelectField(props: SelectFieldProps) {
     setIsOpen(!isOpen);
   }
 
-  const handleChange = (value: string) => {
+  const handleChange = (value: any) => {
     setIsOpen(false);
     props.onChange(props.name, value);
   }
@@ -69,8 +69,6 @@ function SelectField(props: SelectFieldProps) {
                   <svg width="16" height="16" viewBox="0 0 16 16"><path d="M6.072 10.4l6.175-7.058a1 1 0 1 1 1.506 1.317L6.769 12.64a1 1 0 0 1-1.55-.054L2.203 8.604a1 1 0 1 1 1.594-1.208L6.072 10.4z"></path></svg>
                   <span>{choice.text}</span>
                 </div>
-
-// fill="#21242c"
               );
             })}
           </div>

@@ -80,11 +80,11 @@ export type SelectField = {
   fieldType: "SELECT"
   name: string
   id: string
-  defaultValue: string
+  defaultValue: any
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   placeholder?: string
-  choices: ({ value: string, text: string })[]
+  choices: ({ text: string, value: any })[]
   description?: string
   testId?: string
 }
