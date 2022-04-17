@@ -716,7 +716,8 @@ router.get("/internal/admin/skillLevels/getNextEntryToReview", admin.getNextEntr
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Tasks
-router.get("/internal/tasks", tasks.get);
+router.get("/internal/tasks/incomplete", tasks.getIncomplete);
+router.get("/internal/tasks/complete", tasks.getComplete);
 router.get("/internal/tasks/user", tasks.getForUser);
 router.get("/internal/tasks/available", tasks.getAvailable);
 router.post("/internal/tasks", routeChecks.tasks.add, wasValidated, tasks.add);
