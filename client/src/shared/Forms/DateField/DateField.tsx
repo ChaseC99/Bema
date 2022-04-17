@@ -16,7 +16,14 @@ type DateFieldProps = {
 
 function DateField(props: DateFieldProps) {
   const handleChange = (date: Date | null, event: React.SyntheticEvent<any, Event> | undefined) => {
-    props.onChange(props.name, date?.toLocaleString("en-US") || "");
+    let d = date?.toLocaleString("en-US") || "";
+    
+    if (d.length > 0) {
+      const parts = d.split(",")[0].split("/");
+      d = parts[0] + "-" + parts[1] + "-" + parts[2];
+    }
+
+    props.onChange(props.name, d);
   }
 
   let size;
