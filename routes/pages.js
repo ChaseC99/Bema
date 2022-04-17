@@ -8,7 +8,6 @@ router.get("/results/:contestId", handlers.results);
 router.get("/entries/:contestId", handlers.entries)
 router.get("/admin/contests", handlers.adminContests);
 router.get("/admin/skill-levels", handlers.adminSkillLevels);
-router.get("/admin/tasks", handlers.adminTasks);
 router.get("/admin/users", handlers.adminUsers);
 router.get("/admin/judging", handlers.adminJudging);
 router.get("/admin/evaluations/:userId/:contestId", handlers.adminEvaluations);

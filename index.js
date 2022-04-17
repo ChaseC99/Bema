@@ -1,4 +1,3 @@
-require('newrelic');
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const express = require("express");
@@ -36,27 +35,27 @@ app.use("/api/", apiRoutes);
 app.use("/api/auth/", authRoutes);
 
 app.use("/", (req, res, next) => {
-    res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+  res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 });
 
 // Handler for any undefined routes.
 app.use((req, res, next) => {
-    if (req.decodedToken) {
-        res.render("pages/notFound", {
-            logged_in: true,
-            is_admin: req.decodedToken.is_admin,
-            permissions: req.decodedToken.permissions,
-            is_impersonated: req.decodedToken.is_impersonated,
-            evaluator_id: req.decodedToken.evaluator_id
-        });
-    } else {
-        res.render("pages/notFound", {
-            logged_in: false,
-            is_admin: false,
-            is_impersonated: false,
-            permissions: publicPermissions
-        });
-    }
+  if (req.decodedToken) {
+    res.render("pages/notFound", {
+      logged_in: true,
+      is_admin: req.decodedToken.is_admin,
+      permissions: req.decodedToken.permissions,
+      is_impersonated: req.decodedToken.is_impersonated,
+      evaluator_id: req.decodedToken.evaluator_id
+    });
+  } else {
+    res.render("pages/notFound", {
+      logged_in: false,
+      is_admin: false,
+      is_impersonated: false,
+      permissions: publicPermissions
+    });
+  }
 });
 
 // Handler for standardizing error format.
@@ -64,12 +63,12 @@ app.use(errorHandler);
 
 let time = new Date().toLocaleTimeString();
 db.connect(
-    (process.env.APP_STATE === "dev" ? db.MODE_DEV : db.MODE_PROD),
-    () => {
-        console.log(time, "Connected to Postgres");
-        app.listen(PORT, () => {
-            console.log(time, `Started in ${process.env.APP_STATE === "dev" ? "dev" : "prod"} mode`)
-            console.log(time, `Council app is listening on port ${PORT}, http://localhost:${PORT}/`);
-        });
-    }
+  (process.env.APP_STATE === "dev" ? db.MODE_DEV : db.MODE_PROD),
+  () => {
+    console.log(time, "Connected to Postgres");
+    app.listen(PORT, () => {
+      console.log(time, `Started in ${process.env.APP_STATE === "dev" ? "dev" : "prod"} mode`)
+      console.log(time, `Council app is listening on port ${PORT}, http://localhost:${PORT}/`);
+    });
+  }
 );

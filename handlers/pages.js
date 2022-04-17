@@ -78,20 +78,6 @@ exports.adminSkillLevels = (request, response, next) => {
   }
 }
 
-exports.adminTasks = (request, response, next) => {
-  if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
-    return response.render("pages/admin/tasks", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
 exports.adminUsers = (request, response, next) => {
   if (request.decodedToken && (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
     return response.render("pages/admin/users", {
