@@ -1,6 +1,6 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
-import useAppState from "../../state/useAppState";
-import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../util/testing-utils";
+import useAppState from "../../../state/useAppState";
+import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../../util/testing-utils";
 import { fetchCurrentContest, fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import AdminSidebar from "./AdminSidebar";
 

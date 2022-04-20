@@ -1,9 +1,9 @@
-import useAppState from "../../state/useAppState";
-import SidebarItem from "../SidebarItem/SidebarItem";
-import "./AdminSidebar.css";
+import useAppState from "../../../state/useAppState";
+import SidebarItem from "../../SidebarItem/SidebarItem";
+import "../sidebars.css";
 import { useEffect, useState } from "react";
 import { fetchCurrentContest, fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
-import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
+import LoadingSpinner from "../../LoadingSpinner/LoadingSpinner";
 
 function AdminSidebar() {
   const { state } = useAppState();
