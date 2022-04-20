@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AdminSidebar from "../../shared/AdminSidebar";
+import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
 import ProgressRing from "../../shared/ProgressRing/ProgressRing";
 import useAppState from "../../state/useAppState";
