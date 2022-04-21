@@ -20,7 +20,7 @@ exports.get = (request, response, next) => {
 
       // Private data that we don't want public.
       if (request.decodedToken) {
-        return db.query("SELECT entry_level, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false GROUP BY entry_level ORDER BY entry_level", [contest_id], res => {
+        return db.query("SELECT entry_level, CAST(COUNT(*) as INTEGER) FROM entry WHERE contest_id = $1 AND disqualified = false GROUP BY entry_level ORDER BY entry_level", [contest_id], res => {
           if (res.error) {
             return handleNext(next, 400, "There was a problem getting the evaluations per level.", res.error);
           }
@@ -81,9 +81,9 @@ exports.get = (request, response, next) => {
             { nickname: 'Evaluator 5', eval_count: '?' }
           ];
           entriesPerLevel = [
-            { entry_level: 'Beginner', count: '?' },
-            { entry_level: 'Intermediate', count: '?' },
-            { entry_level: 'Advanced', count: '?' }
+            { entry_level: 'Beginner', count: 0 },
+            { entry_level: 'Intermediate', count: 0 },
+            { entry_level: 'Advanced', count: 0 }
           ];
           return response.json({
             logged_in: false,
