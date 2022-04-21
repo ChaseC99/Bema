@@ -87,6 +87,7 @@
   position: relative !important;
   background-color: inherit !important;
   border: none !important;
+  padding: 0;
 }
 
 .btn-tertiary:hover::after {
