@@ -15,12 +15,9 @@ a {
   text-decoration: none;
 }
 
-
-/* a:hover,
-a:focus,
-a:active {
-  text-decoration: none;
-} */
+.link-underline:hover {
+  text-decoration: underline;
+}
 
 .noscroll {
   overflow: hidden;
