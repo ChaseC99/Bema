@@ -23,7 +23,7 @@ function ContestsSidebar(props: ContestSidebarProps) {
         setContests(data);
         setIsLoading(false);
       });
-  });
+  }, []);
 
   if (isLoading) {
     return (
