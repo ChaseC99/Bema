@@ -40,7 +40,7 @@ function ContestsSidebar(props: ContestSidebarProps) {
 
         {contests.map((c) => {
           return (
-            <SidebarItem text={c.contest_name} to={props.rootPath + "/" + c.contest_id} />
+            <SidebarItem text={c.contest_name.split("Contest: ")[1]} to={props.rootPath + "/" + c.contest_id} key={"contest-sidebar-" + c.contest_id} />
           );
         })}
       </div>
