@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
+import Entries from "./pages/Entries";
 
 function App() {
   useEffect(() => {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<Tasks />} />
 
+          <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
 
           <Route path="/logout" element={<Logout />} />
