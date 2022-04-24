@@ -14,6 +14,10 @@ type ActionMenuProps = {
  * @returns 
  */
 function ActionMenu(props: ActionMenuProps) {
+  if (props.actions.length == 0) {
+    return null;
+  }
+
   return (
     <div className="actions-dropdown" data-testid={props.testId}>
       <div className="actions-dropdown-wrapper" >
