@@ -8,7 +8,7 @@ on:
 jobs:
   deployment:
     runs-on: ubuntu-latest
-    environment: development
+    environment: bema-development
     steps:
       - uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.12.12
