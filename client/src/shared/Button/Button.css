@@ -203,13 +203,48 @@
 
 .btn-destructive-tertiary {
   color: #d92916 !important;
-  padding: 10px 16px !important;
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer !important;
-  text-decoration: none;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+  position: relative !important;
+  background-color: inherit !important;
+  border: none !important;
+  padding: 0;
 }
 
-.btn-destructive-tertiary:hover {
-  text-decoration: underline !important;
+.btn-destructive-tertiary:hover::after {
+  content: '' !important;
+  position: absolute !important;
+  height: 2px !important;
+  width: calc(100% - 0px) !important;
+  right: 0px !important;
+  bottom: 0px !important;
+  background: #d92916 !important;
+  border-radius: 2px !important;
+}
+
+.btn-destructive-tertiary:active {
+  color: #9e271d !important;
+}
+
+.btn-destructive-tertiary:active::after {
+  content: '' !important;
+  position: absolute !important;
+  height: 2px !important;
+  width: calc(100% - 0px) !important;
+  right: 0px !important;
+  bottom: calc(50% - 11px) !important;
+  background: #9e271d !important;
+  border-radius: 2px !important;
+}
+
+.btn-destructive-tertiary:disabled {
+  color: rgba(33, 36, 44, 0.32) !important;
+  cursor: default !important;
+}
+
+.btn-destructive-tertiary:disabled:hover::after {
+  height: 0px !important;
 }
