@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
-import { FormModal } from "../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../shared/Modals";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
@@ -50,6 +50,7 @@ function Entries() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
+  const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchEntries(contestId || "")
@@ -96,22 +97,30 @@ function Entries() {
         newEntries[i].group_name = groups.find((g) => g.group_id === values.group_id)?.group_name || "None";
         newEntries[i].flagged = values.flagged;
         newEntries[i].disqualified = values.disqualified;
+        break;
       }
     }
 
+    setEntries(newEntries);
     hideEditEntryForm();
   }
 
   const openConfirmDeleteEntryModal = (id: number) => {
-
+    setDeleteEntryId(id);
   }
 
   const closeConfirmDeleteEntryModal = () => {
-
+    setDeleteEntryId(null);
   }
 
-  const handleDeleteEntry = () => {
-    
+  const handleDeleteEntry = async (id: number) => {
+    await request("DELETE", "/api/internal/entries", {
+      entry_id: id
+    });
+
+    const newEntries = entries.filter((e) => e.entry_id !== id);
+    setEntries(newEntries);
+    closeConfirmDeleteEntryModal();
   }
 
   return (
@@ -290,6 +299,20 @@ function Entries() {
             }
           ]}
         />
+      }
+
+      {deleteEntryId && 
+        <ConfirmModal
+          title="Delete entry?"
+          confirmLabel="Delete"
+          handleConfirm={handleDeleteEntry}
+          handleCancel={closeConfirmDeleteEntryModal}
+          destructive
+          data={deleteEntryId}
+        >
+          <p>Are you sure you want to delete this entry? All data associated with this entry will be permanently deleted.</p>
+          <p>To remove an entry from the contest while still preserving its data, disqualify the entry instead.</p>
+        </ConfirmModal>
       }
     </React.Fragment>
   );
