@@ -1,14 +1,14 @@
-name: Deploy
+name: Development Deployment
 
 on:
   push:
     branches:
-      - master
       - development
 
 jobs:
-  build:
+  deployment:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.12.12
