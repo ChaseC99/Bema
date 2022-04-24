@@ -4,6 +4,8 @@ import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
 import ProgressRing from "../../shared/ProgressRing/ProgressRing";
 import useAppState from "../../state/useAppState";
 import { fetchStats } from "./fetchStats";
+import ProgressBar from "../../shared/ProgressBar";
+import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 
 type ContestStats = {
   groupEntriesCount: number
@@ -16,6 +18,15 @@ type ContestStats = {
   totalFlaggedEntries?: number
   totalReviewedEntries?: number
   yourReviewedEntriesCount: number
+  evaluationsPerEvaluator?: {
+    eval_count: number
+    group_id: number
+    nickname: string
+  }[]
+  entriesPerGroup?: {
+    entry_count: number
+    group_id: number
+  }[]
 }
 
 const defaultStats = {
@@ -59,15 +70,42 @@ function Dashboard() {
                   <ProgressRing label="Your Progress" count={stats.yourReviewedEntriesCount} total={stats.groupEntriesCount} />
                   <ProgressRing label="Group Progress" count={stats.groupEvaluationsCount} total={stats.groupEntriesCount * stats.groupEvaluatorCount} />
 
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalReviewedEntries && stats.totalEntriesCount) && 
+                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalReviewedEntries && stats.totalEntriesCount) &&
                     <ProgressRing label="Total Reviewed Entries" count={stats.totalReviewedEntries} total={stats.totalEntriesCount} />
                   }
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalEvaluationsCount && stats.totalActiveEvaluators && stats.totalEntriesCount) && 
+                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalEvaluationsCount && stats.totalActiveEvaluators && stats.totalEntriesCount) &&
                     <ProgressRing label="Total Evaluations" count={stats.totalEvaluationsCount} total={stats.totalActiveEvaluators * stats.totalEntriesCount} />
                   }
                 </div>
               </article>
             )}
+
+            {!statsLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
+              <Table label="Evaluator Progress" cols={6}>
+                <TableHead>
+                  <Row>
+                    <Cell></Cell>
+                    <Cell></Cell>
+                  </Row>
+                </TableHead>
+                <TableBody>
+                  {stats.evaluationsPerEvaluator?.map((e) => {
+                    const groupEntryCount = stats.entriesPerGroup?.find((g) => g.group_id === e.group_id)?.entry_count || 0;
+                    return (
+                      <Row key={e.nickname + "-progress"}>
+                        <Cell>
+                          {e.nickname}
+                        </Cell>
+                        <Cell>
+                          <ProgressBar count={e.eval_count} total={groupEntryCount} />
+                        </Cell>
+                      </Row>
+                    );
+                  }) || <div></div>}
+                </TableBody>
+              </Table>
+            )}
+
             {!statsLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
               <article className="card col-6" data-testid="entry-stats">
                 <div className="card-header">
