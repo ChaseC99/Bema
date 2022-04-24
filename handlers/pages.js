@@ -141,24 +141,6 @@ exports.adminErrors = (request, response, next) => {
   }
 }
 
-exports.results = (request, response, next) => {
-  if (request.decodedToken) {
-    return response.render("pages/results", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  }
-  response.render("pages/results", {
-    is_admin: false,
-    logged_in: false,
-    permissions: publicPermissions,
-    is_impersonated: false
-  });
-}
-
 exports.entries = (request, response, next) => {
   if (request.decodedToken) {
     return response.render("pages/entries", {
