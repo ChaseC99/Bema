@@ -25,7 +25,7 @@ function WinnersCard(props: WinnersCardProps) {
       <TableBody testId="winners-table-body">
         {props.winners.map((e) => {
           return (
-            <Row>
+            <Row key={"winner-table-row-" + e.entry_id}>
               <Cell>{e.entry_id}</Cell>
               <Cell>{e.entry_title}</Cell>
               <Cell>{e.entry_author}</Cell>
