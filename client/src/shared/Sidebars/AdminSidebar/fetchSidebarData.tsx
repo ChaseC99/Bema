@@ -1,4 +1,4 @@
-import request from "../../util/request";
+import request from "../../../util/request";
 
 export async function fetchCurrentContest() {
   const data = await request("GET", "/api/internal/contests/getCurrentContest");

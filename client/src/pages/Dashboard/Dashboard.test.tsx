@@ -1,5 +1,5 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
-import AdminSidebar from "../../shared/AdminSidebar";
+import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../state/useAppState";
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../util/testing-utils";
 import Dashboard from "./Dashboard";

@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { renderWithRouter } from '../../../util/testing-utils';
 import ConfirmModal from "./ConfirmModal";
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ActionMenu, { Action } from "../../../shared/ActionMenu";
-import AdminSidebar from "../../../shared/AdminSidebar";
+import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";

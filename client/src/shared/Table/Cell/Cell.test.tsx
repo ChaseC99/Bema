@@ -102,3 +102,25 @@ test("does not render a cell with permissions required when a user is not logged
   const cell = screen.queryByTestId("test-cell");
   expect(cell).not.toBeInTheDocument();
 });
+
+test("renders a cell requiring the user to be logged in when the user is logged in", () => {
+  useAppStateMock.mockReturnValue({
+    state: defaultAppStateLoggedIn()
+  });
+
+  renderWithRouter(<Cell header requireLoggedIn testId="test-cell">Sample Data</Cell>);
+
+  const cell = screen.queryByTestId("test-cell");
+  expect(cell).toBeInTheDocument();
+});
+
+test("does not render a cell requiring the user to be logged in when they are not logged in", () => {
+  useAppStateMock.mockReturnValue({
+    state: defaultAppStateLoggedOut()
+  });
+
+  renderWithRouter(<Cell header requireLoggedIn testId="test-cell">Sample Data</Cell>);
+
+  const cell = screen.queryByTestId("test-cell");
+  expect(cell).not.toBeInTheDocument();
+});
