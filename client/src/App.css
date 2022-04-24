@@ -123,7 +123,7 @@
   flex-direction: row;
   align-content: space-between;
   flex-wrap: wrap;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .section-body.center {

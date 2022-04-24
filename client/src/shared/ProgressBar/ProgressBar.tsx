@@ -1,7 +1,6 @@
 import "./ProgressBar.css";
 
 type ProgressBarProps = {
-  label: string
   count: number
   total: number
   testId?: string
@@ -12,9 +11,6 @@ function ProgressBar(props: ProgressBarProps) {
 
   return (
     <div className="progress-bar-wrapper" data-testid={props.testId}>
-      <div className="progress-bar-label">
-        <p>{props.label}</p>
-      </div>
       <div className="progress-bar-container">
         <div className="progress-bar" style={{ width: percent + "%" }}></div>
       </div>
