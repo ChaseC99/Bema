@@ -1,6 +1,5 @@
 import { MouseEvent } from "react";
 import { Action } from ".";
-import Button from "../Button";
 import ActionItem from "./ActionItem";
 import "./ActionMenu.css";
 
@@ -16,7 +15,7 @@ type ActionMenuProps = {
  * @returns 
  */
 function ActionMenu(props: ActionMenuProps) {
-  if (props.actions.length == 0) {
+  if (props.actions.length === 0) {
     return null;
   }
 
