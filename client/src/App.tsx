@@ -53,7 +53,7 @@ window.addEventListener("click", (e: MouseEvent) => {
   e.preventDefault();
 
   const target = e.target as Node as Element;
-  if (target.classList.contains("actions-dropdown-btn")) {
+  if (target.classList.contains("actions-dropdown-btn-icon") || target.classList.contains("actions-dropdown-btn-text")) {
     return;
   }
 
