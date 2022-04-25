@@ -51,17 +51,18 @@ function Entries() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
+  const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
 
   useEffect(() => {
     fetchEntries(contestId || "")
       .then((data) => {
         setEntries(data.entries);
-        
+
         fetchEvaluatorGroups()
-        .then((data) => {
-          setGroups(data.groups);
-          setIsLoading(false);
-        })
+          .then((data) => {
+            setGroups(data.groups);
+            setIsLoading(false);
+          })
       });
   }, []);
 
@@ -123,6 +124,34 @@ function Entries() {
     closeConfirmDeleteEntryModal();
   }
 
+  const openImportConfirmModal = () => {
+    setShowConfirmImport(true);
+  }
+
+  const closeImportConfirmModal = () => {
+    setShowConfirmImport(false);
+  }
+
+  const handleEntryImport = async () => {
+    await request("POST", "/api/internal/entries/import", {
+      contest_id: contestId
+    });
+
+    window.location.reload();
+  }
+
+  const showImportIndividualEntryForm = () => {
+
+  }
+
+  const hideImportIndividualEntryForm = () => {
+
+  }
+
+  const handleImportIndividualEntry = (values: { [name: string]: any }) => {
+
+  }
+
   return (
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
@@ -131,6 +160,24 @@ function Entries() {
         <div className="col-12">
           <div className="section-header col-12">
             <h2 data-testid="entries-page-section-header">Entries</h2>
+
+            <span className="section-actions" data-testid="entries-section-actions">
+              <ActionMenu
+                actions={[
+                  {
+                    role: "button",
+                    action: openImportConfirmModal,
+                    text: "All Entries"
+                  },
+                  {
+                    role: "button",
+                    action: showImportIndividualEntryForm,
+                    text: "Single Entry"
+                  }
+                ]}
+                label="Import Entries"
+              />
+            </span>
           </div>
 
           {isLoading && <LoadingSpinner size="LARGE" />}
@@ -163,7 +210,7 @@ function Entries() {
                   }
 
                   const entry = e as unknown as Entry;
-                  
+
                   const actions: Action[] = [];
                   if (state.is_admin || state.user?.permissions.edit_entries) {
                     actions.push({
@@ -204,7 +251,7 @@ function Entries() {
         </div>
       </section>
 
-      {editEntry && 
+      {editEntry &&
         <FormModal
           title="Edit Entry"
           submitLabel="Save"
@@ -257,7 +304,7 @@ function Entries() {
               ]
             },
             {
-              fieldType: "SELECT",
+              fieldType: "SELECT", // TODO: Disable for users who can't assign entry groups
               name: "group",
               id: "group",
               size: "MEDIUM",
@@ -301,7 +348,7 @@ function Entries() {
         />
       }
 
-      {deleteEntryId && 
+      {deleteEntryId &&
         <ConfirmModal
           title="Delete entry?"
           confirmLabel="Delete"
@@ -312,6 +359,17 @@ function Entries() {
         >
           <p>Are you sure you want to delete this entry? All data associated with this entry will be permanently deleted.</p>
           <p>To remove an entry from the contest while still preserving its data, disqualify the entry instead.</p>
+        </ConfirmModal>
+      }
+
+      {showConfirmImport && 
+        <ConfirmModal
+          title="Import entries?"
+          confirmLabel="Import"
+          handleConfirm={handleEntryImport}
+          handleCancel={closeImportConfirmModal}
+        >
+          <p>Are you sure you want to import entries? This will add all new spin-offs of the contest program that were created since the most recently imported entry.</p>
         </ConfirmModal>
       }
     </React.Fragment>
