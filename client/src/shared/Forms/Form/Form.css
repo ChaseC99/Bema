@@ -1,0 +1,244 @@
+.form-fields-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  align-content: center;
+}
+
+.form-fields-container input {
+  padding: 12px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 4px;
+  box-sizing: border-box !important;
+  width: 100%;
+  margin-top: 12px;
+  height: 40px;
+  padding-left: 16px;
+  line-height: 20px;
+}
+
+.form-fields-container textarea {
+  padding: 12px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 4px;
+  box-sizing: border-box !important;
+  width: 100%;
+  margin-top: 12px;
+  padding-left: 16px;
+  line-height: 20px;
+}
+
+.form-fields-container input[type="checkbox"] {
+  margin: 0 8px 0 0;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  -webkit-appearance: none !important;
+  padding: 0;
+  border: 1px solid rgba(33, 36, 44, 0.50);
+  border-radius: 3px;
+  background-color: #ffffff;
+}
+
+.form-fields-container input[type="checkbox"]:hover {
+  border: 2px solid #1865f2;
+}
+
+.form-fields-container input[type="checkbox"]:active {
+  background-color: #dae6fd;
+}
+
+.form-fields-container input[type="checkbox"]:checked {
+  background-color: #1865f2;
+  border: none;
+}
+
+.form-fields-container input[type="checkbox"]:checked:hover {
+  box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1865f2;
+}
+
+.form-fields-container input[type="checkbox"]:checked:active {
+  box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1b50b3;
+  background-color: #1b50b3;
+}
+
+.form-item.checkbox svg {
+  display: inline-block !important;
+  vertical-align: text-bottom !important;
+  -webkit-flex-shrink: 0 !important;
+  flex-shrink: 0 !important;
+  -webkit-flex-grow: 0 !important;
+  flex-grow: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  top: 2px;
+}
+
+.form-item.checkbox div {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+}
+
+.form-item.checkbox label {
+  line-height: 20px;
+}
+
+.form-item.checkbox p {
+  margin-left: 24px;
+}
+
+.form-fields-container input.error {
+  background: #fdf2f1;
+  border: 1px solid #d92916;
+  color: #21242c;
+}
+
+.form-fields-container label {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.form-item-description {
+  font-size: 14px;
+  color: rgba(33, 36, 44, 0.64);
+  width: 100%;
+  margin: 4px 0 0 0;
+}
+
+.form-item-error {
+  font-size: 14px;
+  line-height: 18px;
+  color: #d92916;
+  margin: 12px 0 0 0;
+}
+
+.form-item {
+  margin-bottom: 30px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-picker-container {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.select-picker-container button {
+  height: 40px;
+  width: 100%;
+  padding: 0 12px 0 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box !important;
+}
+
+.select-picker-container button.empty {
+  color: rgba(33, 36, 44, 0.64);
+}
+
+.select-picker-container button span {
+  margin-right: 8px;
+}
+
+.select-picker-container button:hover {
+  border: 2px solid #1865f2;
+  padding: 0 11px 0 15px;
+}
+
+.select-picker-container button:disabled:hover {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  padding: 0 12px 0 16px;
+  color: rgba(33, 36, 44, 0.32);
+}
+
+.select-picker-container button:active {
+  border: 2px solid #1b50b3;
+  color: rgba(33, 36, 44, 0.64);
+  padding: 0 11px 0 15px;
+  background: #b5cdfb;
+}
+
+.select-picker-container button:disabled:active {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  padding: 0 12px 0 16px;
+  background-color: #ffffff;
+  color: rgba(33, 36, 44, 0.32);
+}
+
+.select-popup-container {
+  padding: 5px 0px;
+  position: absolute;
+  left: 0px;
+  top: 45px;
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 5px;
+  background-color: #ffffff;
+  min-width: 160px;
+  box-shadow: rgb(0 0 0 / 5%) 1px 2px 2px;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.select-popup-container div {
+  color: #21242c;
+  font-weight: 400;
+  padding: 12px 16px;
+  fill: #21242c;
+  cursor: default !important;
+}
+
+.select-popup-container div:hover {
+  background-color: #1865f2;
+  color: #ffffff;
+  fill: #ffffff;
+}
+
+.select-popup-container div.selected svg {
+  visibility: visible;
+}
+
+.select-popup-container div span {
+  margin-left: 8px;
+}
+
+.select-popup-container div svg {
+  vertical-align: text-bottom;
+  visibility: hidden;
+}
+
+.form-item .quill {
+  margin-top: 12px;
+}
+
+.form-item .quill .ql-toolbar {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 4px 4px 0 0;
+}
+
+.form-item .quill .ql-container {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  border-radius: 0 0 4px 4px;
+}
+
+.react-datepicker__day--selected {
+  background-color: #1865f2;
+}
+
+.react-datepicker__day--selected:hover {
+  background-color: #1b50b3;
+}

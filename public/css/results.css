@@ -1,8 +1,0 @@
-#evals-per-level-table, #evals-per-evaluator-table, #winners-table, #entries-by-avg-score-table {
-	display: none
-}
-
-td .fa-trophy {
-	cursor: pointer;
-	color: goldenrod;
-}

@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  font-size: 16px;
+  font-family: 'Lato', 'Arial', sans-serif;
+  height: 100vh;
+  background-color: #ffffff;
+  color: #21242c;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: #1865f2;
+  text-decoration: none;
+}
+
+p {
+  line-height: 22px
+}
+
+.link-underline:hover {
+  text-decoration: underline;
+}
+
+.noscroll {
+  overflow: hidden;
+}
+
+span.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-right: 5px;
+}
