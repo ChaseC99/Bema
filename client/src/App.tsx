@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
+import Entries from "./pages/Entries";
 
 function App() {
   useEffect(() => {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<Tasks />} />
 
+          <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
 
           <Route path="/logout" element={<Logout />} />
@@ -51,7 +53,7 @@ window.addEventListener("click", (e: MouseEvent) => {
   e.preventDefault();
 
   const target = e.target as Node as Element;
-  if (target.classList.contains("actions-dropdown-btn")) {
+  if (target.classList.contains("actions-dropdown-btn-icon") || target.classList.contains("actions-dropdown-btn-text")) {
     return;
   }
 

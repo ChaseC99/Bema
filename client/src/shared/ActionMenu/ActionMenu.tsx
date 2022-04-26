@@ -5,6 +5,7 @@ import "./ActionMenu.css";
 
 type ActionMenuProps = {
   actions: Action[]
+  label?: string
   testId?: string
 }
 
@@ -14,17 +15,30 @@ type ActionMenuProps = {
  * @returns 
  */
 function ActionMenu(props: ActionMenuProps) {
+  if (props.actions.length === 0) {
+    return null;
+  }
+
   return (
     <div className="actions-dropdown" data-testid={props.testId}>
       <div className="actions-dropdown-wrapper" >
-        <i className="actions-dropdown-btn" onClick={handleClick} />
-        <div className="actions-dropdown-content" hidden>
+
+        {!props.label && <i className="actions-dropdown-btn-icon" onClick={handleClick} />}
+
+        {props.label &&
+          <div className="actions-dropdown-text-container">
+            <span className="actions-dropdown-btn-text btn-tertiary" onClick={handleClick}>{props.label}</span>
+            <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 8.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 1.414-1.414L8 8.586z"></path></svg>
+          </div>
+        }
+
+        <div className={"actions-dropdown-content" + (props.label ? " actions-dropdown-content-text" : "")} hidden>
           {props.actions.map((a, index) => {
             if (a.role === "button") {
-              return <ActionItem role={a.role} action={a.action} data={a.data} text={a.text} testId={a.testId} key={index} />
+              return <ActionItem role={a.role} action={a.action} data={a.data} text={a.text} testId={a.testId} key={index} disabled={a.disabled} />
             }
             else {
-              return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} />
+              return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} disabled={a.disabled} />
             }
           })}
         </div>
@@ -41,9 +55,16 @@ function handleClick(e: MouseEvent) {
     menu.hidden = true;
   });
 
-  const icon = e.target as Node;
-  const actionContent = icon.nextSibling as HTMLDivElement;
-  actionContent.hidden = false;
+  const t = e.target as HTMLElement;
+  if (t.classList.contains("actions-dropdown-btn-icon")) {
+    const actionContent = t.nextSibling as HTMLDivElement;
+    actionContent.hidden = false;
+  }
+
+  if (t.classList.contains("actions-dropdown-btn-text")) {
+    const actionContent = t.parentNode?.nextSibling as HTMLDivElement;
+    actionContent.hidden = false;
+  }
 }
 
 export default ActionMenu;

@@ -181,6 +181,7 @@ function Form(props: FormProps) {
                   choices={field.choices}
                   onChange={handleChange}
                   placeholder={field.placeholder}
+                  disabled={field.disabled}
                   testId={field.testId}
                   key={field.id}
                 />

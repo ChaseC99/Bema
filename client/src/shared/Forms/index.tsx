@@ -86,6 +86,7 @@ export type SelectField = {
   placeholder?: string
   choices: ({ text: string, value: any })[]
   description?: string
+  disabled?: boolean
   testId?: string
 }
 
