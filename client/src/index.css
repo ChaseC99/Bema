@@ -15,6 +15,10 @@ a {
   text-decoration: none;
 }
 
+p {
+  line-height: 22px
+}
+
 .link-underline:hover {
   text-decoration: underline;
 }
