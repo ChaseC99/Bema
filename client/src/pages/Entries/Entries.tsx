@@ -53,6 +53,9 @@ function Entries() {
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
   const [showImportSingleEntryForm, setShowImportSingleEntryForm] = useState<boolean>(false);
+  const [showConfirmAssignAll, setShowConfirmAssignAll] = useState<boolean>(false);
+  const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
+  const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
   useEffect(() => {
     fetchEntries(contestId || "")
@@ -155,6 +158,61 @@ function Entries() {
     // TODO: Make call to API to import a single entry
   }
 
+  const openConfirmAssignAllEntriesModal = () => {
+    setShowConfirmAssignAll(true);
+  }
+
+  const closeConfirmAssignAllEntriesModal = () => {
+    setShowConfirmAssignAll(false);
+  }
+
+  const handleAssignAllEntries = async () => {
+    await request("PUT", "/api/internal/entries/assignToGroups", {
+      contest_id: contestId,
+      assignAll: true
+    });
+
+    closeConfirmAssignAllEntriesModal();
+    window.location.reload();
+  }
+
+  const openConfirmAssignNewEntriesModal = () => {
+    setShowConfirmAssignNew(true);
+  }
+
+  const closeConfirmAssignNewEntriesModal = () => {
+    setShowConfirmAssignNew(false);
+  }
+
+  const handleAssignNewEntries = async () => {
+    await request("PUT", "/api/internal/entries/assignToGroups", {
+      contest_id: contestId,
+      assignAll: false
+    });
+
+    closeConfirmAssignNewEntriesModal();
+    window.location.reload();
+  }
+
+  const openTransferGroupsForm = () => {
+    setShowTransferGroupsForm(true);
+  }
+
+  const closeTransferGroupsForm = () => {
+    setShowTransferGroupsForm(false);
+  }
+
+  const handleTransferGroups = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/entries/transferEntryGroups", {
+      contest_id: contestId,
+      current_entry_group: values.old_group,
+      new_entry_group: values.new_group
+    });
+
+    closeTransferGroupsForm();
+    window.location.reload();
+  }
+
   return (
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
@@ -165,22 +223,46 @@ function Entries() {
             <h2 data-testid="entries-page-section-header">Entries</h2>
 
             <span className="section-actions" data-testid="entries-section-actions">
-              <ActionMenu
-                actions={[
-                  {
-                    role: "button",
-                    action: openImportConfirmModal,
-                    text: "All Entries"
-                  },
-                  {
-                    role: "button",
-                    action: showImportIndividualEntryForm,
-                    text: "Single Entry",
-                    disabled: true
-                  }
-                ]}
-                label="Import Entries"
-              />
+              {(state.is_admin || state.user?.permissions.add_entries) &&
+                <ActionMenu
+                  actions={[
+                    {
+                      role: "button",
+                      action: openImportConfirmModal,
+                      text: "All Entries"
+                    },
+                    {
+                      role: "button",
+                      action: showImportIndividualEntryForm,
+                      text: "Single Entry",
+                      disabled: true
+                    }
+                  ]}
+                  label="Import Entries"
+                />
+              }
+              {(state.is_admin || state.user?.permissions.assign_entry_groups) &&
+                <ActionMenu
+                  actions={[
+                    {
+                      role: "button",
+                      action: openConfirmAssignAllEntriesModal,
+                      text: "Assign All"
+                    },
+                    {
+                      role: "button",
+                      action: openConfirmAssignNewEntriesModal,
+                      text: "Assign New"
+                    },
+                    {
+                      role: "button",
+                      action: openTransferGroupsForm,
+                      text: "Transfer"
+                    }
+                  ]}
+                  label="Update Groups"
+                />
+              }
             </span>
           </div>
 
@@ -319,7 +401,8 @@ function Entries() {
                   text: g.group_id + " - " + g.group_name,
                   value: g.group_id
                 }
-              })
+              }),
+              disabled: !(state.is_admin || state.user?.permissions.assign_entry_groups)
             },
             {
               fieldType: "CHECKBOX",
@@ -394,6 +477,70 @@ function Entries() {
               label: "Entry ID",
               description: "The program ID is the last part of the program URL.",
               defaultValue: "",
+            }
+          ]}
+        />
+      }
+
+      {showConfirmAssignAll &&
+        <ConfirmModal
+          title="Assign all entries to groups?"
+          confirmLabel="Assign Groups"
+          handleConfirm={handleAssignAllEntries}
+          handleCancel={closeConfirmAssignAllEntriesModal}
+        >
+          <p>Are you sure you want to assign all entries to groups? This will evenly assign all entries to the active groups, even if the entry is already assigned to a group.</p>
+        </ConfirmModal>
+      }
+
+      {showConfirmAssignNew &&
+        <ConfirmModal
+          title="Assign new entries to groups?"
+          confirmLabel="Assign Groups"
+          handleConfirm={handleAssignNewEntries}
+          handleCancel={closeConfirmAssignNewEntriesModal}
+        >
+          <p>Are you sure you want to assign all new entries to groups? This will allow evaluators to score the entries if judging for the contest is enabled.</p>
+        </ConfirmModal>
+      }
+
+      {showTransferGroupsForm &&
+        <FormModal
+          title="Transfer Groups"
+          submitLabel="Transfer"
+          handleSubmit={handleTransferGroups}
+          handleCancel={closeTransferGroupsForm}
+          cols={4}
+          fields={[
+            {
+              fieldType: "SELECT",
+              name: "old_group",
+              id: "old-group",
+              size: "MEDIUM",
+              label: "Old Group",
+              placeholder: "Select a group",
+              defaultValue: "",
+              choices: groups.filter((g) => g.is_active).map((g) => {
+                return {
+                  text: g.group_id + " - " + g.group_name,
+                  value: g.group_id
+                }
+              })
+            },
+            {
+              fieldType: "SELECT",
+              name: "new_group",
+              id: "new-group",
+              size: "MEDIUM",
+              label: "New Group",
+              placeholder: "Select a group",
+              defaultValue: "",
+              choices: groups.filter((g) => g.is_active).map((g) => {
+                return {
+                  text: g.group_id + " - " + g.group_name,
+                  value: g.group_id
+                }
+              })
             }
           ]}
         />
