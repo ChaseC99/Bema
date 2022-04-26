@@ -68,7 +68,7 @@ function Entries() {
             setIsLoading(false);
           })
       });
-  }, []);
+  }, [contestId]);
 
   const showEditEntryForm = (id: number) => {
     const entry = entries.find((e) => e.entry_id === id) as Entry;
