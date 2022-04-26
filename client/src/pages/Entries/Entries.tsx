@@ -52,6 +52,7 @@ function Entries() {
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
+  const [showImportSingleEntryForm, setShowImportSingleEntryForm] = useState<boolean>(false);
 
   useEffect(() => {
     fetchEntries(contestId || "")
@@ -137,19 +138,21 @@ function Entries() {
       contest_id: contestId
     });
 
+    closeImportConfirmModal();
+
     window.location.reload();
   }
 
   const showImportIndividualEntryForm = () => {
-
+    setShowImportSingleEntryForm(true);
   }
 
   const hideImportIndividualEntryForm = () => {
-
+    setShowImportSingleEntryForm(false);
   }
 
-  const handleImportIndividualEntry = (values: { [name: string]: any }) => {
-
+  const handleImportIndividualEntry = async (values: { [name: string]: any }) => {
+    // TODO: Make call to API to import a single entry
   }
 
   return (
@@ -172,7 +175,8 @@ function Entries() {
                   {
                     role: "button",
                     action: showImportIndividualEntryForm,
-                    text: "Single Entry"
+                    text: "Single Entry",
+                    disabled: true
                   }
                 ]}
                 label="Import Entries"
@@ -362,7 +366,7 @@ function Entries() {
         </ConfirmModal>
       }
 
-      {showConfirmImport && 
+      {showConfirmImport &&
         <ConfirmModal
           title="Import entries?"
           confirmLabel="Import"
@@ -371,6 +375,28 @@ function Entries() {
         >
           <p>Are you sure you want to import entries? This will add all new spin-offs of the contest program that were created since the most recently imported entry.</p>
         </ConfirmModal>
+      }
+
+      {showImportSingleEntryForm &&
+        <FormModal
+          title="Add Entry"
+          submitLabel="Add Entry"
+          handleSubmit={handleImportIndividualEntry}
+          handleCancel={hideImportIndividualEntryForm}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "program_id",
+              id: "program-id",
+              size: "LARGE",
+              label: "Entry ID",
+              description: "The program ID is the last part of the program URL.",
+              defaultValue: "",
+            }
+          ]}
+        />
       }
     </React.Fragment>
   );
