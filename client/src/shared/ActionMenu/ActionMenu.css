@@ -56,3 +56,13 @@
   color: #ffffff;
   text-decoration: none;
 }
+
+.actions-dropdown-content span.disabled {
+  cursor: default !important;
+  color: rgba(33, 36, 44, 0.32) !important;
+}
+
+.actions-dropdown-content span.disabled:hover {
+  background-color: #ffffff !important;
+  color: rgba(33, 36, 44, 0.32) !important
+}

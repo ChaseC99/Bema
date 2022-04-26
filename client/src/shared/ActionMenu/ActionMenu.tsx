@@ -35,10 +35,10 @@ function ActionMenu(props: ActionMenuProps) {
         <div className={"actions-dropdown-content" + (props.label ? " actions-dropdown-content-text" : "")} hidden>
           {props.actions.map((a, index) => {
             if (a.role === "button") {
-              return <ActionItem role={a.role} action={a.action} data={a.data} text={a.text} testId={a.testId} key={index} />
+              return <ActionItem role={a.role} action={a.action} data={a.data} text={a.text} testId={a.testId} key={index} disabled={a.disabled} />
             }
             else {
-              return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} />
+              return <ActionItem role={a.role} action={a.action} text={a.text} testId={a.testId} key={index} disabled={a.disabled} />
             }
           })}
         </div>
