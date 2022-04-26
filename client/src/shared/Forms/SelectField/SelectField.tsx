@@ -10,6 +10,7 @@ type SelectFieldProps = {
   onChange: (name: string, value: string) => void
   description?: string
   placeholder?: string
+  disabled?: boolean
   testId?: string
 }
 
@@ -55,7 +56,7 @@ function SelectField(props: SelectFieldProps) {
 
       <div className="select-wrapper">
         <div className="select-picker-container">
-          <button className={"select-picker-button" + (props.value === "" ? " empty" : "")} onClick={handleClick} data-testid={props.testId ? props.testId + "-button" : ""}>
+          <button className={"select-picker-button" + (props.value === "" ? " empty" : "")} onClick={handleClick} data-testid={props.testId ? props.testId + "-button" : ""} disabled={props.disabled}>
             <span>{getLabelByValue(props.value) || props.placeholder || "Select a value"}</span>
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path fill="rgba(33,36,44,0.64)" d="M8 8.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 1.414-1.414L8 8.586z"></path></svg>
           </button>

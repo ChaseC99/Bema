@@ -159,11 +159,24 @@
   padding: 0 11px 0 15px;
 }
 
+.select-picker-container button:disabled:hover {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  padding: 0 12px 0 16px;
+  color: rgba(33, 36, 44, 0.32);
+}
+
 .select-picker-container button:active {
   border: 2px solid #1b50b3;
   color: rgba(33, 36, 44, 0.64);
   padding: 0 11px 0 15px;
   background: #b5cdfb;
+}
+
+.select-picker-container button:disabled:active {
+  border: 1px solid rgba(33, 36, 44, 0.16);
+  padding: 0 12px 0 16px;
+  background-color: #ffffff;
+  color: rgba(33, 36, 44, 0.32);
 }
 
 .select-popup-container {
