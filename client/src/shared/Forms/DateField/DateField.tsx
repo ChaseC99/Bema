@@ -46,7 +46,7 @@ function DateField(props: DateFieldProps) {
       }
 
       <DatePicker
-        selected={new Date(props.value)}
+        selected={props.value ? new Date(props.value) : null}
         onChange={handleChange}
         peekNextMonth
         showMonthDropdown

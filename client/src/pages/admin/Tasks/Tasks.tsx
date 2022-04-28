@@ -243,7 +243,7 @@ function Tasks() {
     <React.Fragment>
       <AdminSidebar />
 
-      <section id="tasks-section" className="container">
+      <section id="tasks-section" className="container col-12">
         <div className="col-12">
           <div className="section-header">
             <h2 data-testid="tasks-header">Tasks</h2>

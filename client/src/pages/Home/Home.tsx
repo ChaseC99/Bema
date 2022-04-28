@@ -7,10 +7,10 @@ function Home() {
   const { state } = useAppState();
 
   return (
-    <React.Fragment>
+    <div className="container">
       {state.logged_in && <Tasks />}
       <Announcements />
-    </React.Fragment>
+    </div>
   );
 }
 
