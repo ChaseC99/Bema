@@ -31,6 +31,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
 
+          <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<Tasks />} />
 
