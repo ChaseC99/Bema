@@ -13,6 +13,7 @@ import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
 import Entries from "./pages/Entries";
+import Contests from "./pages/Contests";
 
 function App() {
   useEffect(() => {
@@ -26,6 +27,7 @@ function App() {
       
         <Header />
 
+        <div className="page-container">
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -41,6 +43,7 @@ function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </div>
 
       </BrowserRouter>
       

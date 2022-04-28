@@ -1,3 +1,8 @@
+.page-container {
+  display: flex;
+  flex-direction: row;
+}
+
 .container {
   display: flex;
   flex-wrap: wrap;
@@ -96,6 +101,7 @@
   align-content: space-between;
   flex-wrap: wrap;
   align-items: flex-start;
+  justify-content: space-between;
 }
 
 .section-body.center {

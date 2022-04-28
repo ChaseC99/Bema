@@ -217,7 +217,7 @@ function Entries() {
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
 
-      <section id="entries-page-section" className="container">
+      <section id="entries-page-section" className="container col-12">
         <div className="col-12">
           <div className="section-header col-12">
             <h2 data-testid="entries-page-section-header">Entries</h2>

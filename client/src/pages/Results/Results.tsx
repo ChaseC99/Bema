@@ -168,7 +168,7 @@ function Results() {
     <React.Fragment>
       <ContestsSidebar rootPath="/results" />
 
-      <section id="results-page-section" className="container">
+      <section id="results-page-section" className="container col-12">
         <div className="col-12">
           <div className="section-header">
             <h2 data-testid="results-page-section-header">Results</h2>

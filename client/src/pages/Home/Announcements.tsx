@@ -131,7 +131,7 @@ function Announcements() {
 
   return (
     <React.Fragment>
-      <section id="announcement-section" className="container center">
+      <section id="announcement-section" className="container center col-12">
         <div className="col-6">
           <div className="section-header">
             <h2 data-testid="announcement-header">Announcements</h2>
