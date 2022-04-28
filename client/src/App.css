@@ -151,3 +151,13 @@ span.label {
   height: 100%;
   overflow: hidden;
 }
+
+.badge {
+  background-color: #1865f2;
+  color: #ffffff;
+  padding: 8px 12px;
+  margin-left: 10px;
+  border-radius: 24px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
