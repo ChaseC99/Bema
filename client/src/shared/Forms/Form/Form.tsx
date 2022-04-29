@@ -14,6 +14,7 @@ type FormProps = {
   onCancel?: () => void
   fields: FormFields[]
   submitLabel: string
+  cols?: number
   testId?: string
 }
 
@@ -91,7 +92,7 @@ function Form(props: FormProps) {
 
   return (
     <div className="form" data-testid={props.testId}>
-      <div className="form-fields-wrapper">
+      <div className={"form-fields-wrapper" + (props.cols ? " col-"+props.cols : "")}>
         <div className="form-fields-container">
           {!isLoading && props.fields.map((field) => {
             if (field.fieldType === "INPUT") {
