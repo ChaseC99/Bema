@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { fetchSectionArticles } from "./fetchData";
 import "./SectionCard.css";
 
@@ -30,7 +31,7 @@ function SectionCard(props: SectionCardProps) {
         setArticles(data.articles);
         setIsLoading(false);
       });
-  }, []);
+  }, [props.sectionId]);
 
   return (
     <article className="card kb-section-card col-12" data-testid={props.testId}>
@@ -38,7 +39,9 @@ function SectionCard(props: SectionCardProps) {
         <h3>{props.sectionName}</h3>
       </div>
       <div className="card-body">
-        {articles.map((a) => {
+        {isLoading && <LoadingSpinner size="MEDIUM" />}
+
+        {!isLoading && articles.map((a) => {
           return (
             <Link to={"/kb/article/" + a.article_id} className="col-6">
               <div className="article-container col-12" key={a.article_id}>
