@@ -68,7 +68,7 @@ function ContestantProfile() {
             {isLoading && <LoadingSpinner size="LARGE" />}
 
             {!isLoading &&
-              <div className="card col-12 stats-card">
+              <div className="card col-12 contestant-stats-card">
                 <h2>{stats.profileInfo.name}</h2>
                 <div className="col-12 stats-container">
                   <div className="stats-box">
