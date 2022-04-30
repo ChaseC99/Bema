@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import LoadingSpinner from "../../shared/LoadingSpinner";
-import { FormModal } from "../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
@@ -28,6 +28,7 @@ function Evaluations() {
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
+  const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
   let hasActions = (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations);
 
   useEffect(() => {
@@ -84,15 +85,22 @@ function Evaluations() {
   }
 
   const openDeleteEvaluationModal = (evalId: number) => {
-
+    setDeleteEvaluationId(evalId);
   }
 
   const closeDeleteEvaluatioinModal = () => {
-
+    setDeleteEvaluationId(null);
   }
 
-  const handleDeleteEvaluation = () => {
+  const handleDeleteEvaluation = async (evalId: number) => {
+    await request("DELETE", "/api/internal/evaluations", {
+      evaluation_id: evalId
+    });
 
+    const newEvaluations = evaluations.filter((e) => e.evaluation_id !== evalId);
+    setEvaluations(newEvaluations);
+    
+    closeDeleteEvaluatioinModal();
   }
 
   return (
@@ -255,6 +263,19 @@ function Evaluations() {
             }
           ]}
         />
+      }
+
+      {deleteEvaluationId &&
+        <ConfirmModal
+          title="Delete evaluation?"
+          confirmLabel="Delete"
+          handleConfirm={handleDeleteEvaluation}
+          handleCancel={closeDeleteEvaluatioinModal}
+          destructive
+          data={deleteEvaluationId}
+        >
+          <p>Are you sure you want to delete this evaluation? This action cannot be undone.</p>
+        </ConfirmModal>
       }
     </React.Fragment>
   );
