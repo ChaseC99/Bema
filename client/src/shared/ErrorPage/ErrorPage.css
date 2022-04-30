@@ -1,0 +1,21 @@
+.message-container {
+  height: 100vh;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  max-width: 400px;
+  text-align: center;
+}
+
+.message-container h2 {
+  font-size: 28px;
+  margin-top: 24px;
+}
