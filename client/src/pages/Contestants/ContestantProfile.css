@@ -1,0 +1,30 @@
+.contestant-stats-card {
+  padding: 20px;
+  text-align: center;
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.stats-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stats-box:not(:last-of-type) {
+  margin-right: 20px;
+}
+
+.stats-number {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.contestant-stats-card table {
+  margin-top: 60px;
+}

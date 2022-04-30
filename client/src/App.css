@@ -1,3 +1,8 @@
+.page-container {
+  display: flex;
+  flex-direction: row;
+}
+
 .container {
   display: flex;
   flex-wrap: wrap;
@@ -96,6 +101,7 @@
   align-content: space-between;
   flex-wrap: wrap;
   align-items: flex-start;
+  justify-content: space-between;
 }
 
 .section-body.center {
@@ -144,4 +150,14 @@ span.label {
 .stop-scrolling {
   height: 100%;
   overflow: hidden;
+}
+
+.badge {
+  background-color: #1865f2;
+  color: #ffffff;
+  padding: 8px 12px;
+  margin-left: 10px;
+  border-radius: 24px;
+  font-size: 12px;
+  text-transform: uppercase;
 }

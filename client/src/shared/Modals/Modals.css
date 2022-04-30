@@ -33,25 +33,27 @@
   margin: 0;
 }
 
+.modal-container .form {
+  display: block !important;
+}
+
 .modal-body,
-.form-fields-wrapper {
+.modal-container .form-fields-wrapper {
   padding: 30px 20px;
   max-height: 40vh;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
-.form-fields-wrapper {
+.modal-container .form-fields-wrapper {
   padding: 30px 20px 100px 20px;
+  margin: 0;
 }
 
 .modal-footer,
-.form-actions {
-  padding: 20px;
+.modal-container .form-actions {
   border-top: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  padding: 20px;
 }
 
 .modal-footer .btn-tertiary,
@@ -80,4 +82,10 @@
   color: #1b50b3;
   border: 2px solid #1b50b3 !important;
   cursor: pointer;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }

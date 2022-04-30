@@ -13,6 +13,9 @@ import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
 import Entries from "./pages/Entries";
+import Contests from "./pages/Contests";
+import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
+import Evaluations from "./pages/Evaluations/Evaluations";
 
 function App() {
   useEffect(() => {
@@ -23,14 +26,20 @@ function App() {
   return (
     <AppStateProvider>
       <BrowserRouter>
-      
+        
         <Header />
 
+        <div className="page-container">
         <Routes>
           <Route path="/" element={<Home />} />
 
+          <Route path="/contestants" element={<ContestantSearch />} />
+          <Route path="/contestants/:contestantKaid" element={<ContestantProfile />} />
+
+          <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<Tasks />} />
+          <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<Evaluations />} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
@@ -41,6 +50,7 @@ function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </div>
 
       </BrowserRouter>
       

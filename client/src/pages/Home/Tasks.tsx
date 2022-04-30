@@ -82,7 +82,7 @@ function Tasks() {
   return (
     <React.Fragment>
       { (availableTasksIsLoading || availableTasks.length > 0) &&
-        <section id="available-tasks-section" className="container center">
+        <section id="available-tasks-section" className="container center col-12">
           <div className="col-6">
             <div className="section-header">
               <h2 data-testid="available-tasks-header">Available Tasks</h2>
@@ -111,7 +111,7 @@ function Tasks() {
       }
 
       { (myTasksIsLoading || myTasks.length > 0) && 
-        <section id="my-tasks-section" className="container center">
+        <section id="my-tasks-section" className="container center col-12">
           <div className="col-6">
             <div className="section-header">
               <h2 data-testid="my-tasks-header">My Tasks</h2>

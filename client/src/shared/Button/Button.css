@@ -133,6 +133,8 @@
   font-weight: 400 !important;
   text-decoration: none !important;
   position: relative !important;
+  border: none;
+  background: none;
 }
 
 .btn-tertiary-inverse:hover::after {

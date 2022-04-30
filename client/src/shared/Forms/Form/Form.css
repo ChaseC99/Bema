@@ -1,3 +1,15 @@
+.form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.form-fields-wrapper {
+  padding: 20px 0;
+  margin-right: 20px;
+}
+
 .form-fields-container {
   display: flex;
   flex-direction: row;
@@ -5,6 +17,12 @@
   justify-content: space-between;
   align-items: flex-end;
   align-content: center;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .form-fields-container input {
