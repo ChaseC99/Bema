@@ -53,12 +53,12 @@ function Dashboard() {
     <React.Fragment>
       <AdminSidebar />
 
-      <section id="dashboard-stats-section" className="container">
+      <section id="dashboard-stats-section" className="container col-12">
         <div className="col-12">
           <div className="section-header">
             <h2 data-testid="dashboard-header">Dashboard</h2>
           </div>
-          <div className="section-body container" data-testid="dashboard-section-body">
+          <div className="section-body container col-12" data-testid="dashboard-section-body">
             {statsLoading && <LoadingSpinner size="MEDIUM" testId="stats-spinner" />}
 
             {!statsLoading && (
@@ -66,15 +66,15 @@ function Dashboard() {
                 <div className="card-header">
                   <h3>Contest Summary</h3>
                 </div>
-                <div className="card-body no-footer container space-around">
+                <div className="card-body no-footer container space-around col-12">
                   <ProgressRing label="Your Progress" count={stats.yourReviewedEntriesCount} total={stats.groupEntriesCount} />
                   <ProgressRing label="Group Progress" count={stats.groupEvaluationsCount} total={stats.groupEntriesCount * stats.groupEvaluatorCount} />
 
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalReviewedEntries && stats.totalEntriesCount) &&
-                    <ProgressRing label="Total Reviewed Entries" count={stats.totalReviewedEntries} total={stats.totalEntriesCount} />
+                  {(state.is_admin || state.user?.permissions.view_admin_stats) &&
+                    <ProgressRing label="Total Reviewed Entries" count={stats.totalReviewedEntries || 0} total={stats.totalEntriesCount || 0} />
                   }
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) && (stats.totalEvaluationsCount && stats.totalActiveEvaluators && stats.totalEntriesCount) &&
-                    <ProgressRing label="Total Evaluations" count={stats.totalEvaluationsCount} total={stats.totalActiveEvaluators * stats.totalEntriesCount} />
+                  {(state.is_admin || state.user?.permissions.view_admin_stats) &&
+                    <ProgressRing label="Total Evaluations" count={stats.totalEvaluationsCount || 0} total={(stats.totalActiveEvaluators || 0) * (stats.totalEntriesCount || 0)} />
                   }
                 </div>
               </article>
