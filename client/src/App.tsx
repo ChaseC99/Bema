@@ -14,7 +14,7 @@ import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
 import Entries from "./pages/Entries";
 import Contests from "./pages/Contests";
-import { ContestantSearch } from "./pages/Contestants";
+import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
 
 function App() {
   useEffect(() => {
@@ -25,7 +25,7 @@ function App() {
   return (
     <AppStateProvider>
       <BrowserRouter>
-      
+        
         <Header />
 
         <div className="page-container">
@@ -33,6 +33,7 @@ function App() {
           <Route path="/" element={<Home />} />
 
           <Route path="/contestants" element={<ContestantSearch />} />
+          <Route path="/contestants/:contestantKaid" element={<ContestantProfile />} />
 
           <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
