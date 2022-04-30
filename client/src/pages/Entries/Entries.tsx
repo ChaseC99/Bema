@@ -320,7 +320,7 @@ function Entries() {
 
                     <Row key={entry.entry_id}>
                       <Cell>{entry.entry_id}</Cell>
-                      <Cell>{entry.entry_title}</Cell>
+                      <Cell><ExternalLink to={entry.entry_url}>{entry.entry_title}</ExternalLink></Cell>
                       <Cell>{entry.entry_author}</Cell>
                       <Cell>{entry.entry_created}</Cell>
                       <Cell>{entry.entry_level}</Cell>
