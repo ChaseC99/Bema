@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import LoadingSpinner from "../../shared/LoadingSpinner";
+import { FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
+import request from "../../util/request";
 import { fetchEvaluations } from "./fetchEvaluations";
 
 type Evaluation = {
@@ -25,6 +27,7 @@ function Evaluations() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
   let hasActions = (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations);
 
   useEffect(() => {
@@ -36,16 +39,48 @@ function Evaluations() {
     });
   }, [evaluatorId, contestId]);
 
-  const openEditEvaluationModal = (evalId: number) => {
+  const scoreValidator = (value: string) => {
+    const scores = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
+    if (!scores.includes(value)) {
+      return "Score must be between 0 and 5, in 0.5 increments"
+    }
 
+    return null;
+  }
+
+  const openEditEvaluationModal = (evalId: number) => {
+    const evaluation = evaluations.find((e) => e.evaluation_id === evalId) || null;
+    setEditEvaluation(evaluation);
   }
 
   const closeEditEvaluatioinModal = () => {
-
+    setEditEvaluation(null);
   }
 
-  const handleEditEvaluation = () => {
+  const handleEditEvaluation = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/evaluations", {
+      edit_evaluation_id: editEvaluation?.evaluation_id,
+      edit_entry_id: editEvaluation?.entry_id,
+      edit_creativity: values.creativity,
+      edit_complexity: values.complexity,
+      edit_execution: values.quality,
+      edit_interpretation: values.interpretation,
+      edit_evaluation_level: values.skill_level
+    });
 
+    const newEvaluations = [...evaluations];
+    for (let i = 0; i < newEvaluations.length; i++) {
+      if (newEvaluations[i].evaluation_id === editEvaluation?.evaluation_id) {
+        newEvaluations[i].creativity = parseInt(values.creativity);
+        newEvaluations[i].complexity = parseInt(values.complexity);
+        newEvaluations[i].execution = parseInt(values.quality);
+        newEvaluations[i].interpretation = parseInt(values.interpretation);
+        newEvaluations[i].evaluation_level = values.skill_level;
+        break;
+      }
+    }
+    setEvaluations(newEvaluations);
+    closeEditEvaluatioinModal();
   }
 
   const openDeleteEvaluationModal = (evalId: number) => {
@@ -135,6 +170,92 @@ function Evaluations() {
           </div>
         </div>
       </section>
+
+      {editEvaluation &&
+        <FormModal
+          title="Edit Evaluation"
+          submitLabel="Save"
+          handleSubmit={handleEditEvaluation}
+          handleCancel={closeEditEvaluatioinModal}
+          cols={5}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "number",
+              name: "creativity",
+              id: "creativity",
+              size: "MEDIUM",
+              label: "Creativity",
+              defaultValue: editEvaluation.creativity.toString(),
+              min: 0,
+              max: 5,
+              step: 0.5,
+              validate: scoreValidator
+            },
+            {
+              fieldType: "INPUT",
+              type: "number",
+              name: "complexity",
+              id: "complexity",
+              size: "MEDIUM",
+              label: "Complexity",
+              defaultValue: editEvaluation.complexity.toString(),
+              min: 0,
+              max: 5,
+              step: 0.5,
+              validate: scoreValidator
+            },
+            {
+              fieldType: "INPUT",
+              type: "number",
+              name: "quality",
+              id: "quality",
+              size: "MEDIUM",
+              label: "Quality",
+              defaultValue: editEvaluation.execution.toString(),
+              min: 0,
+              max: 5,
+              step: 0.5,
+              validate: scoreValidator
+            },
+            {
+              fieldType: "INPUT",
+              type: "number",
+              name: "interpretation",
+              id: "interpretation",
+              size: "MEDIUM",
+              label: "Complexity",
+              defaultValue: editEvaluation.interpretation.toString(),
+              min: 0,
+              max: 5,
+              step: 0.5,
+              validate: scoreValidator
+            },
+            {
+              fieldType: "SELECT",
+              name: "skill_level",
+              id: "skill-level",
+              size: "MEDIUM",
+              label: "Skill Level",
+              defaultValue: editEvaluation.evaluation_level,
+              choices: [
+                {
+                  text: "Beginner",
+                  value: "Beginner"
+                },
+                {
+                  text: "Intermediate",
+                  value: "Intermediate"
+                },
+                {
+                  text: "Advanced",
+                  value: "Advanced"
+                }
+              ]
+            }
+          ]}
+        />
+      }
     </React.Fragment>
   );
 }
