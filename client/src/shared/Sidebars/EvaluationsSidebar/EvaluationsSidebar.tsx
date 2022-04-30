@@ -22,7 +22,7 @@ function EvaluationsSidebar(props: EvaluationsSidebarProps) {
       setContests(data.contests);
       setIsLoading(false);
     })
-  }, []);
+  }, [props.evaluatorId]);
 
   if (isLoading) {
     return (

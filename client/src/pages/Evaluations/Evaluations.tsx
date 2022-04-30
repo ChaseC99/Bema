@@ -7,7 +7,7 @@ import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { fetchEvaluations } from "./fetchEvaluations";
+import { fetchEvaluations, fetchUsers } from "./fetchEvaluations";
 
 type Evaluation = {
   complexity: number
@@ -21,11 +21,18 @@ type Evaluation = {
   interpretation: number
 }
 
+interface User {
+  evaluator_id: number
+  evaluator_name: string
+  account_locked: boolean
+}
+
 function Evaluations() {
   const { evaluatorId, contestId } = useParams();
   const { state } = useAppState();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [canEdit, setCanEdit] = useState<boolean>(false);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
   const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
@@ -39,6 +46,15 @@ function Evaluations() {
       setIsLoading(false);
     });
   }, [evaluatorId, contestId]);
+
+  useEffect(() => {
+    if (state.is_admin || state.user?.permissions.view_all_evaluations) {
+      fetchUsers()
+      .then((data) => {
+        setUsers(data.users);
+      });
+    }
+  }, [state.is_admin, state.user?.permissions.view_all_evaluations]);
 
   const scoreValidator = (value: string) => {
     const scores = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
@@ -113,6 +129,16 @@ function Evaluations() {
             <h2>Evaluations</h2>
 
             <span className="section-actions">
+              <ActionMenu
+                actions={users.filter((u) => !u.account_locked).map((u) => {
+                  return {
+                    role: "link",
+                    text: u.evaluator_name,
+                    action: "/admin/evaluations/" + u.evaluator_id + "/" + contestId
+                  }
+                })}
+                label={users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))?.evaluator_name || "Change User"}
+              />
             </span>
           </div>
           <div className="section-body" data-testid="tasks-section-body">
