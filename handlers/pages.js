@@ -188,19 +188,6 @@ exports.evaluatorProfile = (request, response, next) => {
   });
 }
 
-exports.contestants = (request, response, next) => {
-  if (request.decodedToken) {
-    response.render("pages/contestants", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  }
-  response.redirect("/admin/dashboard");
-}
-
 exports.contestantProfile = (request, response, next) => {
   if (request.decodedToken) {
     response.render("pages/contestantProfile", {
