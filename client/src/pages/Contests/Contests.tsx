@@ -131,7 +131,7 @@ function Contests() {
             <div className="section-body grid" data-testid="contests-section-body">
               {contests.map((c) => {
                 return (
-                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} />
+                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} key={c.contest_id} />
                 );
               })}
             </div>
