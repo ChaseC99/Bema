@@ -34,7 +34,7 @@ function KBHome() {
           {!isLoading &&
             sections.map((s) => {
               return (
-                <SectionCard sectionId={s.section_id} sectionName={s.section_name} />
+                <SectionCard sectionId={s.section_id} sectionName={s.section_name} key={s.section_id} />
               );
             })
           }
