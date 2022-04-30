@@ -87,27 +87,6 @@ exports.adminJudging = (request, response, next) => {
   }
 }
 
-exports.adminEvaluations = (request, response, next) => {
-  if (request.decodedToken) {
-    let userId = parseInt(request.params.userId);
-    if (request.decodedToken.evaluator_id === userId || request.decodedToken.permissions.view_all_evaluations || request.decodedToken.is_admin) {
-      return response.render("pages/admin/evaluations", {
-        logged_in: true,
-        is_admin: request.decodedToken.is_admin,
-        evaluator_id: request.decodedToken.evaluator_id,
-        current_contest_id: parseInt(request.params.contestId),
-        current_evaluator_id: userId,
-        permissions: request.decodedToken.permissions,
-        is_impersonated: request.decodedToken.is_impersonated
-      });
-    } else {
-      response.redirect("/admin/dashboard");
-    }
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
 exports.adminErrors = (request, response, next) => {
   if (request.decodedToken && (request.decodedToken.permissions.view_errors || request.decodedToken.is_admin)) {
     return response.render("pages/admin/errors", {
@@ -207,32 +186,6 @@ exports.evaluatorProfile = (request, response, next) => {
     permissions: publicPermissions,
     is_impersonated: false
   });
-}
-
-exports.contestants = (request, response, next) => {
-  if (request.decodedToken) {
-    response.render("pages/contestants", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  }
-  response.redirect("/admin/dashboard");
-}
-
-exports.contestantProfile = (request, response, next) => {
-  if (request.decodedToken) {
-    response.render("pages/contestantProfile", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  }
-  response.redirect("/admin/dashboard");
 }
 
 module.exports = exports;

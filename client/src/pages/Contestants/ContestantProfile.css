@@ -1,4 +1,4 @@
-.stats-card {
+.contestant-stats-card {
   padding: 20px;
   text-align: center;
 }
@@ -25,6 +25,6 @@
   margin-bottom: 10px;
 }
 
-table {
+.contestant-stats-card table {
   margin-top: 60px;
 }

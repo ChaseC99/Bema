@@ -47,7 +47,7 @@ function ConfirmModal(props: ConfirmModalProps) {
           {props.children}
         </div>
         <div className="modal-footer">
-          <div>
+          <div className="confirm-modal-actions">
             <Button type="tertiary" role="button" action={handleClose} text="Cancel" testId={props.testId + "-cancel"} />
             <Button type="primary" role="button" action={handleConfirm} text={props.confirmLabel} destructive={props.destructive} testId={props.testId + "-confirm"} />
           </div>

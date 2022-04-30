@@ -65,7 +65,7 @@ function ContestantSearch() {
                   {(results.length > 0) ?
                     results.map((r) => {
                       return (
-                        <Row>
+                        <Row key={r.contestant_kaid}>
                           <Cell>{r.contestant_names}</Cell>
                           <Cell>{r.contestant_kaid}</Cell>
                           <Cell><Button type="tertiary" role="link" action={"/contestants/" + r.contestant_kaid} text="View Profile" /></Cell>

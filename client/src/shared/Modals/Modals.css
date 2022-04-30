@@ -83,3 +83,9 @@
   border: 2px solid #1b50b3 !important;
   cursor: pointer;
 }
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
