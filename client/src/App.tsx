@@ -16,6 +16,7 @@ import Entries from "./pages/Entries";
 import Contests from "./pages/Contests";
 import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
 import Evaluations from "./pages/Evaluations/Evaluations";
+import KBHome from "./pages/KnowledgeBase/KBHome";
 
 function App() {
   useEffect(() => {
@@ -43,6 +44,8 @@ function App() {
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
+
+          <Route path="/kb" element={<KBHome />} />
 
           <Route path="/logout" element={<Logout />} />
 
