@@ -15,6 +15,7 @@ import Results from "./pages/Results";
 import Entries from "./pages/Entries";
 import Contests from "./pages/Contests";
 import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
+import Evaluations from "./pages/Evaluations/Evaluations";
 
 function App() {
   useEffect(() => {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<Tasks />} />
+          <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<Evaluations />} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
