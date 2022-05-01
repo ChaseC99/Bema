@@ -87,20 +87,6 @@ exports.adminJudging = (request, response, next) => {
   }
 }
 
-exports.adminErrors = (request, response, next) => {
-  if (request.decodedToken && (request.decodedToken.permissions.view_errors || request.decodedToken.is_admin)) {
-    return response.render("pages/admin/errors", {
-      logged_in: true,
-      is_admin: true,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
 exports.kbHome = (request, response, next) => {
   if (request.decodedToken) {
     return response.render("pages/knowledge-base/home", {
