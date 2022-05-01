@@ -1,4 +1,5 @@
 import AllErrors from "./AllErrors";
+import ErrorDetail from "./ErrorDetail";
 
 export type Error = {
   error_id: number
@@ -12,4 +13,4 @@ export type Error = {
 }
 
 
-export { AllErrors };
+export { AllErrors, ErrorDetail };
