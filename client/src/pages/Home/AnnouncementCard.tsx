@@ -1,8 +1,8 @@
 import React from "react";
-import TimeAgo from 'javascript-time-ago';
 import ActionMenu from '../../shared/ActionMenu';
 import "./AnnouncementCard.css";
 import useAppState from "../../state/useAppState";
+import ReactTimeAgo from "react-time-ago";
 
 type AnnouncementCardProps = {
   author: string
@@ -24,9 +24,6 @@ type AnnouncementCardProps = {
  */
 function AnnouncementCard(props: AnnouncementCardProps) {
   const { state } = useAppState();
-
-  const timeAgo = new TimeAgo('en-US')
-  const date = timeAgo.format(new Date(props.date));
 
   return (
     <React.Fragment>
@@ -52,7 +49,7 @@ function AnnouncementCard(props: AnnouncementCardProps) {
           {props.children}
         </div>
         <div className="card-footer announcement-card-footer">
-          <p><em>{props.author} posted <span title={props.date}>{date}</span>.</em></p>
+          <p><em>{props.author} posted <ReactTimeAgo date={new Date(props.date)} locale="en-US"/>.</em></p>
         </div>
       </article>
     </React.Fragment>
