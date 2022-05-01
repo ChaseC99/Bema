@@ -59,7 +59,7 @@ function KBArticle() {
 
               <span className="section-actions" data-testid="announcement-section-actions">
                 {(state.is_admin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
-                  <Button type="tertiary" role="link" action={"/admin/kb/" + article.article_id} text="View in KB admin" />
+                  <Button type="tertiary" role="link" action={"/admin/kb/article/" + article.article_id} text="View in KB admin" />
                 }
               </span>
             </div>
