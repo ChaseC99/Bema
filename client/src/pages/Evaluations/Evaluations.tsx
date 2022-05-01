@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
+import ErrorPage from "../../shared/ErrorPage";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
@@ -117,6 +118,12 @@ function Evaluations() {
     setEvaluations(newEvaluations);
     
     closeDeleteEvaluatioinModal();
+  }
+
+  if (!users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
+    return (
+      <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
+    );
   }
 
   return (

@@ -183,6 +183,12 @@
   text-decoration: none;
 }
 
+.btn-destructive-primary:active {
+  background-color: #9e271d !important;
+  box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #9e271d !important;
+  color: #f3bbb4 !important;
+}
+
 .btn-destructive-secondary {
   color: #d92916 !important;
   background-color: #ffffff;
@@ -200,7 +206,14 @@
 
 .btn-destructive-secondary:hover {
   border: 2px solid #d92916 !important;
+  padding: 10px 15px !important;
   text-decoration: none;
+}
+
+.btn-destructive-secondary:active {
+  background-color: #f3bbb4 !important;
+  color: #9e271d !important;
+  border: 2px solid #9e271d !important;
 }
 
 .btn-destructive-tertiary {
