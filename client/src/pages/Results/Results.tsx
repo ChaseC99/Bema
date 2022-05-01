@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EntriesPerLevel, EntryVote, EntryWithScores, EntryWithScoresPublic, WinningEntry } from ".";
 import Button from "../../shared/Button";
+import ErrorPage from "../../shared/ErrorPage";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
@@ -10,12 +11,14 @@ import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
-import { fetchEntryVotes, fetchResults } from "./fetchResults";
+import { fetchContest, fetchEntryVotes, fetchResults } from "./fetchResults";
 import WinnersCard from "./WinnersCard";
 
 function Results() {
   const { state } = useAppState();
   const { contestId } = useParams();
+  const [contest, setContest] = useState(null);
+  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
   const [winners, setWinners] = useState<WinningEntry[]>([]);
   const [entriesPerLevel, setEntriesPerLevel] = useState<EntriesPerLevel[]>([]);
   const [entries, setEntries] = useState<EntryWithScores[] | EntryWithScoresPublic[]>([]);
@@ -36,6 +39,12 @@ function Results() {
         setEntries(data.results.entriesByAvgScore);
         setVotingEnabled(data.voting_enabled);
         setIsLoading(false);
+      });
+
+    fetchContest(contestId || "")
+      .then((data) => {
+        setContest(data.contest);
+        setContestIsLoading(false);
       });
   }, [contestId]);
 
@@ -162,6 +171,12 @@ function Results() {
     }
 
     hideConfirmAddWinnerModal();
+  }
+
+  if (!contestIsLoading && contest == null) {
+    return (
+      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
+    );
   }
 
   return (
