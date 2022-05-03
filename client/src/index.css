@@ -19,6 +19,11 @@ a:hover {
   text-decoration: underline;
 }
 
+a.no-underline,
+a.no-underline:hover {
+  text-decoration: none !important;
+}
+
 p {
   line-height: 22px
 }
