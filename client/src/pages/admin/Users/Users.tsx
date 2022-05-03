@@ -18,6 +18,7 @@ function Users(props: UserProps) {
   const { state, dispatch } = useAppState();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
   const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
@@ -33,15 +34,25 @@ function Users(props: UserProps) {
   }, []);
 
   const openAddUserModal = () => {
-
+    setShowAddUserModal(true);
   }
 
   const closeAddUserModal = () => {
-
+    setShowAddUserModal(false);
   }
 
-  const handleAddUser = () => {
+  const handleAddUser = async (values: { [name: string]: any }) => {
+    await request("POST", "/api/internal/users", {
+      evaluator_name: values.name,
+      email: values.email,
+      evaluator_kaid: values.kaid,
+      username: values.username,
+      user_start: values.term_start
+    });
 
+    closeAddUserModal();
+
+    window.location.reload();
   }
 
   const openEditUserModal = (user: User) => {
@@ -201,6 +212,66 @@ function Users(props: UserProps) {
           </div>
         </div>
       </section>
+
+      {showAddUserModal &&
+        <FormModal
+          title="Create User"
+          submitLabel="Create"
+          handleSubmit={handleAddUser}
+          handleCancel={closeAddUserModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              label: "Full Name",
+              defaultValue: "",
+              required: true,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "email",
+              id: "email",
+              label: "Email",
+              defaultValue: "",
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "kaid",
+              id: "kaid",
+              label: "KAID",
+              defaultValue: "",
+              required: true,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "username",
+              id: "username",
+              label: "Username",
+              description: "This will be used to login to Bema. This should match their KA username.",
+              defaultValue: "",
+              required: true,
+              size: "LARGE"
+            },
+            {
+              fieldType: "DATE",
+              name: "term_start",
+              id: "term-start",
+              label: "Term Start",
+              defaultValue: "",
+              size: "LARGE"
+            }
+          ]}
+        />
+      }
 
       {editUser && 
         <FormModal
