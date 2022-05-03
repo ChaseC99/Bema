@@ -15,12 +15,12 @@ a {
   text-decoration: none;
 }
 
-p {
-  line-height: 22px
+a:hover {
+  text-decoration: underline;
 }
 
-.link-underline:hover {
-  text-decoration: underline;
+p {
+  line-height: 22px
 }
 
 .noscroll {
