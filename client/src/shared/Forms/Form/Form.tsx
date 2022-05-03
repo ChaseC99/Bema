@@ -145,7 +145,7 @@ function Form(props: FormProps) {
   }
 
   const requiredValidator = (value: string): string | null => {
-    if (value.length == 0) {
+    if (value.length === 0) {
       return "This field is required";
     }
 
