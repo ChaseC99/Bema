@@ -56,6 +56,7 @@ function App() {
           <Route path="/kb" element={<KBHome />} />
           <Route path="/kb/article/:articleId" element={<KBArticle />} />
 
+          <Route path="/login" element={<Login />} />
           <Route path="/logout" element={<Logout />} />
 
           <Route path="/status" element={<ExternalRedirect to="http://status.kachallengecouncil.org" />}/>

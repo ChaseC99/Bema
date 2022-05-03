@@ -1,0 +1,67 @@
+.login-wrapper {
+  background-image: url(https://cdn.kastatic.org/images/signup/mountain.svg), url(https://cdn.kastatic.org/images/signup/stars_white.svg), url(https://cdn.kastatic.org/images/signup/stars_dblue.svg), url(https://cdn.kastatic.org/images/signup/stars_lblue.svg), linear-gradient(to bottom, #066ee2, rgba(6, 110, 226, 0.0)), linear-gradient(315deg, #01d1c1, rgba(0, 209, 193, 0.0)), linear-gradient(#63d9ea, #63d9ea) !important;
+  background-repeat: no-repeat !important;
+  background-position: bottom right, left 50% top 60%, center, center, center, center, center !important;
+  background-size: auto 45%, contain, contain, contain, contain, contain, contain !important;
+  min-height: calc(100vh - 120px) !important;
+  padding-top: 60px !important;
+  margin-top: 0px !important;
+}
+
+.login-card {
+  max-height: 700px;
+  margin: 0 !important;
+}
+
+.login-card>div:first-child {
+  background-color: #0a2a66;
+  color: #ffffff;
+  flex-grow: 1;
+  border-radius: 5px 0 0 5px;
+}
+
+.login-card>div:first-child a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+.login-card>div:last-child {
+  background-color: #ffffff;
+  flex-grow: 1;
+  border-radius: 0 5px 5px 0;
+}
+
+.bema-info {
+  margin-top: 50px;
+}
+
+.card-section {
+  margin-top: 0px !important;
+}
+
+.card-section>div:first-child {
+  margin-top: 80px;
+}
+
+.card-section h1 {
+  margin-top: 0px;
+}
+
+.login-card .form-fields-wrapper {
+  margin-right: 0px !important;
+}
+
+.login-card .form-actions {
+  width: 100%;
+  margin-right: 0px !important;
+}
+
+.login-card .form-actions .btn-primary {
+  width: 100%;
+}
+
+.failed-login {
+  color: #d92916;
+  margin-top: 24px;
+  text-align: center;
+}
