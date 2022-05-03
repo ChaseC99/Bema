@@ -45,7 +45,7 @@ function UserCard(props: UserCardProps) {
     });
   }
 
-  if (state.is_admin || state.user?.permissions.assume_user_identities) {
+  if ((state.is_admin || state.user?.permissions.assume_user_identities) && !props.user.account_locked) {
     actions.push({
       role: "button",
       action: props.handleImpersonateUser,
