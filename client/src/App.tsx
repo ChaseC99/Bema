@@ -19,6 +19,7 @@ import Evaluations from "./pages/Evaluations/Evaluations";
 import KBHome from "./pages/KnowledgeBase/KBHome";
 import KBArticle from "./pages/KnowledgeBase/KBArticle/KBArticle";
 import { AllErrors, ErrorDetail } from "./pages/admin/Errors";
+import Users from "./pages/admin/Users";
 
 function App() {
   useEffect(() => {
@@ -45,6 +46,8 @@ function App() {
           <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<Evaluations />} />
           <Route path="/admin/errors" element={<AllErrors />} />
           <Route path="/admin/errors/:errorId" element={<ErrorDetail />} />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/users/inactive" element={<Users inactive />} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
