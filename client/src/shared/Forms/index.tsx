@@ -39,6 +39,10 @@ export type InputField = {
   min?: number
   minlength?: number
   step?: number
+  button?: {
+    text: string
+    action: () => void
+  }
   testId?: string
 }
 

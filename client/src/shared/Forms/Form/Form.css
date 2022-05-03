@@ -278,3 +278,7 @@
 .react-datepicker__day--selected:hover {
   background-color: #1b50b3;
 }
+
+.form-item .btn-tertiary {
+  margin-top: 16px;
+}

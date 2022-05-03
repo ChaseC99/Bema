@@ -181,6 +181,7 @@ function Form(props: FormProps) {
                   min={field.min}
                   minlength={field.minlength}
                   step={field.step}
+                  button={field.button}
                   testId={field.testId}
                   key={field.id}
                 />
