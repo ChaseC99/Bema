@@ -168,7 +168,8 @@ function Users(props: UserProps) {
               id: "name",
               label: "Name",
               defaultValue: editUser.evaluator_name,
-              size: "LARGE"
+              size: "LARGE",
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -177,7 +178,8 @@ function Users(props: UserProps) {
               id: "kaid",
               label: "KAID",
               defaultValue: editUser.evaluator_kaid,
-              size: "LARGE"
+              size: "LARGE",
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -187,7 +189,8 @@ function Users(props: UserProps) {
               label: "Username",
               description: "This is used to login to Bema. Generally, this should match their KA username.",
               defaultValue: editUser.username,
-              size: "LARGE"
+              size: "LARGE",
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -197,7 +200,8 @@ function Users(props: UserProps) {
               label: "Nickname",
               description: "The name shown to other users.",
               defaultValue: editUser.nickname,
-              size: "LARGE"
+              size: "LARGE",
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -272,7 +276,8 @@ function Users(props: UserProps) {
               label: "New Password",
               defaultValue: "",
               size: "LARGE",
-              validate: validatePassword
+              validate: validatePassword,
+              required: true
             }
           ]}
         />
