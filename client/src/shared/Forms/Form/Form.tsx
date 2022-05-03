@@ -135,6 +135,7 @@ function Form(props: FormProps) {
                   description={field.description}
                   onChange={handleChange}
                   testId={field.testId}
+                  disabled={field.disabled}
                   key={field.id}
                 />
               );

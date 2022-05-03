@@ -50,6 +50,7 @@ export type CheckboxField = {
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   description?: string
+  disabled?: boolean
   testId?: string
 }
 

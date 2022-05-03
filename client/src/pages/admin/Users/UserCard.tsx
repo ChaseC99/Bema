@@ -7,6 +7,7 @@ import useAppState from "../../../state/useAppState";
 type UserCardProps = {
   user: User
   handleEditProfile: (user: User) => void 
+  handleChangePassword: (userId: number) => void
   testId?: string
 }
 
@@ -21,6 +22,15 @@ function UserCard(props: UserCardProps) {
       action: props.handleEditProfile,
       text: "Edit profile",
       data: props.user
+    });
+  }
+
+  if (state.is_admin || state.user?.permissions.change_user_passwords) {
+    actions.push({
+      role: "button",
+      action: props.handleChangePassword,
+      text: "Change password",
+      data: props.user.evaluator_id
     });
   }
 

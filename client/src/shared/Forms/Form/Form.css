@@ -74,6 +74,10 @@
   border: none;
 }
 
+.form-fields-container input[type="checkbox"]:checked:disabled {
+  border: 1px solid rgba(33, 36, 44, 0.16) !important;
+}
+
 .form-fields-container input[type="checkbox"]:checked:hover {
   box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1865f2;
 }
@@ -81,6 +85,20 @@
 .form-fields-container input[type="checkbox"]:checked:active {
   box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #1b50b3;
   background-color: #1b50b3;
+}
+
+.form-fields-container input[type="checkbox"]:disabled,
+.form-fields-container input[type="checkbox"]:checked:disabled {
+  background-color: #f7f8fa !important;
+  border-color: rgba(33, 36, 44, 0.16) !important;
+}
+
+.form-fields-container input[type="checkbox"]:disabled:hover {
+  border: 1px solid rgba(33, 36, 44, 0.16) !important;
+}
+
+.form-fields-container input[type="checkbox"]:disabled:checked:hover {
+  box-shadow: none !important;
 }
 
 .form-item.checkbox svg {

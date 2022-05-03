@@ -18,6 +18,7 @@ function Users(props: UserProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchUsers()
@@ -57,8 +58,8 @@ function Users(props: UserProps) {
       edit_user_email: values.email,
       edit_user_start: values.term_start,
       edit_user_end: values.term_end,
-      edit_user_is_admin: values.is_admin,
-      edit_user_account_locked: values.account_disabled,
+      edit_user_is_admin: state.is_admin ? values.is_admin : editUser?.is_admin,
+      edit_user_account_locked: state.is_admin ? values.account_disabled : editUser?.account_locked,
       edit_user_receive_emails: values.receive_emails
     });
 
@@ -72,8 +73,8 @@ function Users(props: UserProps) {
         newUsers[i].email = values.email;
         newUsers[i].dt_term_start = values.term_start;
         newUsers[i].dt_term_end = values.term_end;
-        newUsers[i].is_admin = values.is_admin;
-        newUsers[i].account_locked = values.account_disabled;
+        newUsers[i].is_admin = state.is_admin ? values.is_admin : editUser?.is_admin;
+        newUsers[i].account_locked = state.is_admin ? values.account_disabled : editUser?.account_locked;
         newUsers[i].receive_emails = values.receive_emails;
 
         break;
@@ -82,6 +83,31 @@ function Users(props: UserProps) {
     setUsers(newUsers);
 
     closeEditUserModal();
+  }
+
+  const openChangePasswordModal = (userId: number) => {
+    setChangePasswordUserId(userId);
+  }
+
+  const closeChangePasswordModal = () => {
+    setChangePasswordUserId(null);
+  }
+
+  const validatePassword = (value: string) => {
+    if (value.length < 8) {
+      return "Password must be at least 8 characters"
+    }
+
+    return null;
+  }
+
+  const handleChangePassword = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/auth/changePassword", {
+      evaluator_id: changePasswordUserId,
+      new_password: values.password
+    });
+
+    closeChangePasswordModal();
   }
 
   return (
@@ -107,6 +133,7 @@ function Users(props: UserProps) {
                 <UserCard
                   user={u}
                   handleEditProfile={openEditUserModal}
+                  handleChangePassword={openChangePasswordModal}
                   key={u.evaluator_id}
                 />
               );
@@ -117,6 +144,7 @@ function Users(props: UserProps) {
                 <UserCard
                   user={u}
                   handleEditProfile={openEditUserModal}
+                  handleChangePassword={openChangePasswordModal}
                   key={u.evaluator_id}
                 />
               );
@@ -203,6 +231,7 @@ function Users(props: UserProps) {
               label: "Administrator",
               description: "Grants the user all permissions. Use this with caution.",
               defaultValue: editUser.is_admin,
+              disabled: !state.is_admin,
               size: "LARGE"
             },
             {
@@ -212,6 +241,7 @@ function Users(props: UserProps) {
               label: "Disable account",
               description: "Makes the user account inactive. The user will no longer be able to login.",
               defaultValue: editUser.account_locked,
+              disabled: !state.is_admin,
               size: "LARGE"
             },
             {
@@ -221,6 +251,28 @@ function Users(props: UserProps) {
               label: "Receive email notifications",
               defaultValue: editUser.receive_emails,
               size: "LARGE"
+            }
+          ]}
+        />
+      }
+
+      {changePasswordUserId &&
+        <FormModal
+          title="Change Password"
+          submitLabel="Change Password"
+          handleSubmit={handleChangePassword}
+          handleCancel={closeChangePasswordModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "password",
+              name: "password",
+              id: "password",
+              label: "New Password",
+              defaultValue: "",
+              size: "LARGE",
+              validate: validatePassword
             }
           ]}
         />
