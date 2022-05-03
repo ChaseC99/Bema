@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { User } from ".";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
+import { FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../../state/useAppState";
+import request from "../../../util/request";
 import { fetchUsers } from "./fetchUsers";
 import UserCard from "./UserCard";
 
@@ -15,6 +17,7 @@ function Users(props: UserProps) {
   const { state } = useAppState();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [editUser, setEditUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers()
@@ -34,6 +37,51 @@ function Users(props: UserProps) {
 
   const handleAddUser = () => {
 
+  }
+
+  const openEditUserModal = (user: User) => {
+    setEditUser(user);
+  }
+
+  const closeEditUserModal = () => {
+    setEditUser(null);
+  }
+
+  const handleEditUser = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/users", {
+      edit_user_id: editUser?.evaluator_id,
+      edit_user_name: values.name,
+      edit_user_kaid: values.kaid,
+      edit_user_username: values.username,
+      edit_user_nickname: values.nickname,
+      edit_user_email: values.email,
+      edit_user_start: values.term_start,
+      edit_user_end: values.term_end,
+      edit_user_is_admin: values.is_admin,
+      edit_user_account_locked: values.account_disabled,
+      edit_user_receive_emails: values.receive_emails
+    });
+
+    const newUsers = [...users];
+    for (let i = 0; i < newUsers.length; i++) {
+      if (newUsers[i].evaluator_id === editUser?.evaluator_id) {
+        newUsers[i].evaluator_name = values.name;
+        newUsers[i].evaluator_kaid = values.kaid;
+        newUsers[i].username = values.username;
+        newUsers[i].nickname = values.nickname;
+        newUsers[i].email = values.email;
+        newUsers[i].dt_term_start = values.term_start;
+        newUsers[i].dt_term_end = values.term_end;
+        newUsers[i].is_admin = values.is_admin;
+        newUsers[i].account_locked = values.account_disabled;
+        newUsers[i].receive_emails = values.receive_emails;
+
+        break;
+      }
+    }
+    setUsers(newUsers);
+
+    closeEditUserModal();
   }
 
   return (
@@ -56,18 +104,127 @@ function Users(props: UserProps) {
 
             {(!isLoading && !props.inactive) && users.filter((u) => !u.account_locked).map((u) => {
               return (
-                <UserCard user={u} key={u.evaluator_id} />
+                <UserCard
+                  user={u}
+                  handleEditProfile={openEditUserModal}
+                  key={u.evaluator_id}
+                />
               );
             })}
 
             {(!isLoading && props.inactive) && users.filter((u) => u.account_locked).map((u) => {
               return (
-                <UserCard user={u} key={u.evaluator_id} />
+                <UserCard
+                  user={u}
+                  handleEditProfile={openEditUserModal}
+                  key={u.evaluator_id}
+                />
               );
             })}
           </div>
         </div>
       </section>
+
+      {editUser && 
+        <FormModal
+          title="Edit User"
+          submitLabel="Save"
+          handleSubmit={handleEditUser}
+          handleCancel={closeEditUserModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              label: "Name",
+              defaultValue: editUser.evaluator_name,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "kaid",
+              id: "kaid",
+              label: "KAID",
+              defaultValue: editUser.evaluator_kaid,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "username",
+              id: "username",
+              label: "Username",
+              description: "This is used to login to Bema. Generally, this should match their KA username.",
+              defaultValue: editUser.username,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "nickname",
+              id: "nickname",
+              label: "Nickname",
+              description: "The name shown to other users.",
+              defaultValue: editUser.nickname,
+              size: "LARGE"
+            },
+            {
+              fieldType: "INPUT",
+              type: "email",
+              name: "email",
+              id: "email",
+              label: "Email",
+              defaultValue: editUser.email || "",
+              size: "LARGE"
+            },
+            {
+              fieldType: "DATE",
+              name: "term_start",
+              id: "term-start",
+              label: "Term Start",
+              defaultValue: editUser.dt_term_start,
+              size: "MEDIUM"
+            },
+            {
+              fieldType: "DATE",
+              name: "term_end",
+              id: "term-end",
+              label: "Term End",
+              defaultValue: editUser.dt_term_end,
+              size: "MEDIUM"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "is_admin",
+              id: "is-admin",
+              label: "Administrator",
+              description: "Grants the user all permissions. Use this with caution.",
+              defaultValue: editUser.is_admin,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "account_disabled",
+              id: "account-disabled",
+              label: "Disable account",
+              description: "Makes the user account inactive. The user will no longer be able to login.",
+              defaultValue: editUser.account_locked,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "receive_emails",
+              id: "receive-emails",
+              label: "Receive email notifications",
+              defaultValue: editUser.receive_emails,
+              size: "LARGE"
+            }
+          ]}
+        />
+      }
     </React.Fragment>
   );
 }

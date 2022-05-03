@@ -2,15 +2,29 @@ import { Link } from "react-router-dom";
 import { User } from ".";
 import ActionMenu, { Action } from "../../../shared/ActionMenu";
 import ExternalLink from "../../../shared/ExternalLink";
+import useAppState from "../../../state/useAppState";
 
 type UserCardProps = {
   user: User
+  handleEditProfile: (user: User) => void 
   testId?: string
 }
 
 function UserCard(props: UserCardProps) {
+  const { state } = useAppState();
 
   const actions: Action[] = [];
+
+  if (state.is_admin || state.user?.permissions.edit_user_profiles) {
+    actions.push({
+      role: "button",
+      action: props.handleEditProfile,
+      text: "Edit profile",
+      data: props.user
+    });
+  }
+
+
   return (
     <article className="card col-4" data-testid={props.testId}>
         <div className="card-header">
@@ -28,7 +42,7 @@ function UserCard(props: UserCardProps) {
           <p><span className="label">Username: </span>{props.user.username}</p>
           <p><span className="label">Nickname: </span>{props.user.nickname}</p>
           <p><span className="label">Email: </span>{props.user.email}</p>
-          <p><span className="label">Notifications Enabled: </span>{props.user.receive_emails}</p>
+          <p><span className="label">Notifications Enabled: </span>{props.user.receive_emails ? "Yes" : "No"}</p>
           <p><span className="label">Term Start: </span>{props.user.dt_term_start}</p>
           <p><span className="label">Term End: </span>{props.user.dt_term_end}</p>
           <p><span className="label">Last Login: </span>{props.user.logged_in_tstz}</p>
