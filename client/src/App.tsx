@@ -9,19 +9,20 @@ import en from 'javascript-time-ago/locale/en.json';
 import { useEffect } from "react";
 import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard";
-import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
+import ExternalRedirect from "./shared/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
 import Entries from "./pages/Entries";
 import Contests from "./pages/Contests";
 import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
-import Evaluations from "./pages/Evaluations/Evaluations";
+import Evaluations from "./pages/Evaluations";
 import KBHome from "./pages/KnowledgeBase/KBHome";
-import KBArticle from "./pages/KnowledgeBase/KBArticle/KBArticle";
+import KBArticle from "./pages/KnowledgeBase/KBArticle";
 import { AllErrors, ErrorDetail } from "./pages/admin/Errors";
 import Users from "./pages/admin/Users";
+import Login from "./pages/Login";
 
-function App() {
+function App() {  
   useEffect(() => {
     TimeAgo.setDefaultLocale(en.locale)
     TimeAgo.addLocale(en)

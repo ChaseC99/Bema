@@ -537,6 +537,7 @@ function Entries() {
               label: "Old Group",
               placeholder: "Select a group",
               defaultValue: "",
+              required: true,
               choices: groups.filter((g) => g.is_active).map((g) => {
                 return {
                   text: g.group_id + " - " + g.group_name,
@@ -552,6 +553,7 @@ function Entries() {
               label: "New Group",
               placeholder: "Select a group",
               defaultValue: "",
+              required: true,
               choices: groups.filter((g) => g.is_active).map((g) => {
                 return {
                   text: g.group_id + " - " + g.group_name,
