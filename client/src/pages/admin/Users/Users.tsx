@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { User } from ".";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
-import { FormModal } from "../../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
-import { Permissions } from "../../../state/appStateReducer";
+import { login, Permissions } from "../../../state/appStateReducer";
 import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
 import { fetchUserPermissions, fetchUsers } from "./fetchUsers";
@@ -15,13 +15,14 @@ type UserProps = {
 }
 
 function Users(props: UserProps) {
-  const { state } = useAppState();
+  const { state, dispatch } = useAppState();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
   const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
   const [editUserPermissions, setEditUserPermissions] = useState<Permissions | null>(null);
+  const [impersonateUserId, setImpersonateUserId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchUsers()
@@ -136,6 +137,24 @@ function Users(props: UserProps) {
     closeEditPermissionsModal();
   }
 
+  const openImpersonateUserModal = (userId: number) => {
+    setImpersonateUserId(userId);
+  }
+
+  const closeImpersonateUserModal = () => {
+    setImpersonateUserId(null);
+  }
+
+  const handleImpersonateUser = async (userKaid: number) => {
+    await request("POST", "/api/auth/assumeUserIdentity", {
+      evaluator_kaid: userKaid
+    });
+
+    const data = await request("GET", "/api/internal/users/getFullUserProfile");
+    closeImpersonateUserModal();
+    dispatch(login(data.user));
+  }
+
   return (
     <React.Fragment>
       <AdminSidebar />
@@ -161,6 +180,7 @@ function Users(props: UserProps) {
                   handleEditProfile={openEditUserModal}
                   handleChangePassword={openChangePasswordModal}
                   handleEditPermissions={openEditPermissionsModal}
+                  handleImpersonateUser={openImpersonateUserModal}
                   key={u.evaluator_id}
                 />
               );
@@ -173,6 +193,7 @@ function Users(props: UserProps) {
                   handleEditProfile={openEditUserModal}
                   handleChangePassword={openChangePasswordModal}
                   handleEditPermissions={openEditPermissionsModal}
+                  handleImpersonateUser={openImpersonateUserModal}
                   key={u.evaluator_id}
                 />
               );
@@ -591,6 +612,19 @@ function Users(props: UserProps) {
             },
           ]}
         />
+      }
+
+      {impersonateUserId &&
+        <ConfirmModal
+          title="Impersonate user?"
+          confirmLabel="Impersonate User"
+          handleConfirm={handleImpersonateUser}
+          handleCancel={closeImpersonateUserModal}
+          data={impersonateUserId}
+        >
+          <p>Are you sure you want to impersonate this user?</p>
+          <p>Any actions you take while impersonating the user will be as if the user took the actions themselves.</p>
+        </ConfirmModal>
       }
     </React.Fragment>
   );

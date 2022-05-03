@@ -9,6 +9,7 @@ type UserCardProps = {
   handleEditProfile: (user: User) => void 
   handleChangePassword: (userId: number) => void
   handleEditPermissions: (userId: number) => void
+  handleImpersonateUser: (userId: number) => void
   testId?: string
 }
 
@@ -41,6 +42,15 @@ function UserCard(props: UserCardProps) {
       action: props.handleEditPermissions,
       text: "Edit permissions",
       data: props.user.evaluator_id
+    });
+  }
+
+  if (state.is_admin || state.user?.permissions.assume_user_identities) {
+    actions.push({
+      role: "button",
+      action: props.handleImpersonateUser,
+      text: "Assume identity",
+      data: props.user.evaluator_kaid
     });
   }
 
