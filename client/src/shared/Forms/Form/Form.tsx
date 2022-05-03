@@ -18,24 +18,43 @@ type FormProps = {
   testId?: string
 }
 
+type Error = {
+  message: string
+  isVisible: boolean
+}
+
 function Form(props: FormProps) {
   const [values, setValues] = useState<{ [name: string]: any }>({});
-  const [errors, setErrors] = useState<{ [name: string]: string }>({});
+  const [errors, setErrors] = useState<{ [name: string]: Error }>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const newValues: { [name: string]: any } = {};
-    const newErrors: { [name: string]: string } = {};
+    const newErrors: { [name: string]: Error } = {};
 
     props.fields.forEach((field) => {
       const value = field.defaultValue;
       newValues[field.name] = value;
 
+      if ((field.fieldType === "INPUT" || field.fieldType === "TEXTAREA" || field.fieldType === "SELECT" || field.fieldType === "DATE") && field.required) {
+        let e = requiredValidator(field.defaultValue || "");
+        
+        if (e) {
+          newErrors[field.name] = {
+            message: e,
+            isVisible: false
+          };
+        }
+      }
+      
       if (field.fieldType === "INPUT" && field.validate) {
         let e = field.validate(field.defaultValue || "");
 
         if (e) {
-          newErrors[field.name] = e;
+          newErrors[field.name] = {
+            message: e,
+            isVisible: false
+          };
         }
       }
     });
@@ -58,15 +77,18 @@ function Form(props: FormProps) {
       const field = props.fields[i];
 
       if (field.name === name) {
-        if (field.fieldType === "INPUT" && field.validate) {
-          let e = field.validate(value);
+        if ((field.fieldType === "INPUT" || field.fieldType === "TEXTAREA" || field.fieldType === "SELECT" || field.fieldType === "DATE") && field.required) {
+          let e = requiredValidator(value);
           
           if (e === null) {
             e = "";
       
             const newErrors = {
               ...errors,
-              [name]: e
+              [name]: {
+                message: e,
+                isVisible: true
+              }
             }
       
             delete newErrors[name];
@@ -75,7 +97,39 @@ function Form(props: FormProps) {
           else {
             const newErrors = {
               ...errors,
-              [name]: e
+              [name]: {
+                message: e,
+                isVisible: true
+              }
+            }
+            setErrors(newErrors);
+          }
+        }
+
+        if (field.fieldType === "INPUT" && field.validate) {
+          let e = field.validate(value);
+          
+          if (e === null) {
+            e = "";
+      
+            const newErrors = {
+              ...errors,
+              [name]: {
+                message: e,
+                isVisible: true
+              }
+            }
+      
+            delete newErrors[name];
+            setErrors(newErrors);
+          }
+          else {
+            const newErrors = {
+              ...errors,
+              [name]: {
+                message: e,
+                isVisible: true
+              }
             }
             setErrors(newErrors);
           }
@@ -88,6 +142,14 @@ function Form(props: FormProps) {
 
   const handleSubmit = () => {
     props.onSubmit(values);
+  }
+
+  const requiredValidator = (value: string): string | null => {
+    if (value.length == 0) {
+      return "This field is required";
+    }
+
+    return null;
   }
 
   return (
@@ -104,7 +166,7 @@ function Form(props: FormProps) {
                   size={field.size}
                   value={values[field.name]}
                   onChange={handleChange}
-                  error={errors[field.name]}
+                  error={errors[field.name]?.isVisible ? errors[field.name].message : ""}
                   label={field.label}
                   description={field.description}
                   required={field.required}

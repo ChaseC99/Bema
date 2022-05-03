@@ -88,6 +88,7 @@ export type SelectField = {
   choices: ({ text: string, value: any })[]
   description?: string
   disabled?: boolean
+  required?: boolean
   testId?: string
 }
 
@@ -101,5 +102,6 @@ export type DateField = {
   description?: string
   minDate?: string
   maxDate?: string
+  required?: boolean
   testId?: string
 }
