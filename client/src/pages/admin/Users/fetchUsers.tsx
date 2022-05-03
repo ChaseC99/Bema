@@ -7,3 +7,11 @@ export async function fetchUsers() {
     users: data.evaluators
   };
 }
+
+export async function fetchUserPermissions(userId: number) {
+  const data = await request("GET", "/api/internal/users/permissions?userId=" + userId);
+
+  return {
+    permissions: data.permissions
+  };
+}

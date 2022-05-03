@@ -4,9 +4,10 @@ import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
+import { Permissions } from "../../../state/appStateReducer";
 import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
-import { fetchUsers } from "./fetchUsers";
+import { fetchUserPermissions, fetchUsers } from "./fetchUsers";
 import UserCard from "./UserCard";
 
 type UserProps = {
@@ -19,6 +20,8 @@ function Users(props: UserProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
+  const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
+  const [editUserPermissions, setEditUserPermissions] = useState<Permissions | null>(null);
 
   useEffect(() => {
     fetchUsers()
@@ -110,6 +113,29 @@ function Users(props: UserProps) {
     closeChangePasswordModal();
   }
 
+  const openEditPermissionsModal = (userId: number) => {
+    setEditUserPermissionsId(userId);
+
+    fetchUserPermissions(userId)
+    .then((data) => {
+      setEditUserPermissions(data.permissions);
+    });
+  }
+
+  const closeEditPermissionsModal = () => {
+    setEditUserPermissionsId(null);
+    setEditUserPermissions(null);
+  }
+
+  const handleEditPermissions = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/users/permissions", {
+      evaluator_id: editUserPermissionsId,
+      ...values
+    });
+
+    closeEditPermissionsModal();
+  }
+
   return (
     <React.Fragment>
       <AdminSidebar />
@@ -134,6 +160,7 @@ function Users(props: UserProps) {
                   user={u}
                   handleEditProfile={openEditUserModal}
                   handleChangePassword={openChangePasswordModal}
+                  handleEditPermissions={openEditPermissionsModal}
                   key={u.evaluator_id}
                 />
               );
@@ -145,6 +172,7 @@ function Users(props: UserProps) {
                   user={u}
                   handleEditProfile={openEditUserModal}
                   handleChangePassword={openChangePasswordModal}
+                  handleEditPermissions={openEditPermissionsModal}
                   key={u.evaluator_id}
                 />
               );
@@ -279,6 +307,288 @@ function Users(props: UserProps) {
               validate: validatePassword,
               required: true
             }
+          ]}
+        />
+      }
+
+      {editUserPermissions &&
+        <FormModal
+          title="Edit Permissions"
+          submitLabel="Save"
+          handleSubmit={handleEditPermissions}
+          handleCancel={closeEditPermissionsModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "CHECKBOX",
+              name: "judge_entries",
+              id: "judge-entries",
+              label: "Judge Entries",
+              description: "Allows the user to score entries. Disable this for view-only users.",
+              defaultValue: editUserPermissions.judge_entries,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "manage_announcements",
+              id: "manage-announcements",
+              label: "Manage Announcements",
+              description: "Allows the user to create, edit, and delete announcements.",
+              defaultValue: editUserPermissions.manage_announcements,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_admin_stats",
+              id: "view-admin-stats",
+              label: "View Admin Stats",
+              description: "Allows the user to view admin stats on the dashboard page.",
+              defaultValue: editUserPermissions.view_admin_stats,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_contests",
+              id: "edit-contests",
+              label: "Edit Contests",
+              description: "Allows the user to create and edit contests.",
+              defaultValue: editUserPermissions.edit_contests,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_contests",
+              id: "delete-contests",
+              label: "Delete Contests",
+              description: "Allows the user to delete contests and all their associated data.",
+              defaultValue: editUserPermissions.delete_contests,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "add_entries",
+              id: "add-entries",
+              label: "Import Entries",
+              description: "Allows the user to bulk import and individually add entries.",
+              defaultValue: editUserPermissions.add_entries,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_entries",
+              id: "edit-entries",
+              label: "Edit Entries",
+              description: "Allows the user to edit all entries.",
+              defaultValue: editUserPermissions.edit_entries,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_entries",
+              id: "delete-entries",
+              label: "Delete Entries",
+              description: "Allows the user to delete entries and their associated data.",
+              defaultValue: editUserPermissions.delete_entries,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "assign_entry_groups",
+              id: "assign-entry-groups",
+              label: "Assign Entry Groups",
+              description: "Allows the user to assign entries to judging groups.",
+              defaultValue: editUserPermissions.assign_entry_groups,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "manage_winners",
+              id: "manage-winners",
+              label: "Manage Winners",
+              description: "Allows the user to add and remove winning entries.",
+              defaultValue: editUserPermissions.manage_winners,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_all_evaluations",
+              id: "view-all-evaluations",
+              label: "View All Evaluations",
+              description: "Allows the user to view all evaluations by other users.",
+              defaultValue: editUserPermissions.view_all_evaluations,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_all_evaluations",
+              id: "edit-all-evaluations",
+              label: "Edit All Evaluations",
+              description: "Allows the user to edit all evaluations by other users.",
+              defaultValue: editUserPermissions.edit_all_evaluations,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_all_evaluations",
+              id: "delete-all-evaluations",
+              label: "Delete All Evaluations",
+              description: "Allows the user to delete all evaluations by other users",
+              defaultValue: editUserPermissions.delete_all_evaluations,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_all_tasks",
+              id: "view-all-tasks",
+              label: "View All Tasks",
+              description: "Allows the user to view all created tasks.",
+              defaultValue: editUserPermissions.view_all_tasks,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_all_tasks",
+              id: "edit-all-tasks",
+              label: "Edit All Tasks",
+              description: "Allows the user to edit all created tasks.",
+              defaultValue: editUserPermissions.edit_all_tasks,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_all_tasks",
+              id: "delete-all-tasks",
+              label: "Delete All Tasks",
+              description: "Allows the user to delete all created tasks.",
+              defaultValue: editUserPermissions.delete_all_tasks,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_judging_settings",
+              id: "view-judging-settings",
+              label: "View Judging Settings",
+              description: "Allows the user to view the judging settings page.",
+              defaultValue: editUserPermissions.view_judging_settings,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "manage_judging_groups",
+              id: "manage-judging-groups",
+              label: "Edit Judging Groups",
+              description: "Allows the user to create and edit judging groups.",
+              defaultValue: editUserPermissions.manage_judging_groups,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "assign_evaluator_groups",
+              id: "assign-evaluator-groups",
+              label: "Assign Judging Groups",
+              description: "Allows the user to assign evaluators to judging groups.",
+              defaultValue: editUserPermissions.assign_evaluator_groups,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "manage_judging_criteria",
+              id: "manage-judging-criteria",
+              label: "Manage Judging Criteria",
+              description: "Allows the user to manage the judging criteria shown on the judging page.",
+              defaultValue: editUserPermissions.manage_judging_criteria,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_kb_content",
+              id: "edit-kb-content",
+              label: "Edit KB Content",
+              description: "Allows the user to create and edit KB sections and articles.",
+              defaultValue: editUserPermissions.edit_kb_content,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "publish_kb_content",
+              id: "publish-kb-content",
+              label: "Publish KB Content",
+              description: "Allows the user to publish all draft KB articles.",
+              defaultValue: editUserPermissions.publish_kb_content,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_kb_content",
+              id: "delete-kb-content",
+              label: "Delete KB Content",
+              description: "Allows the user to delete all KB sections and articles.",
+              defaultValue: editUserPermissions.delete_kb_content,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_all_users",
+              id: "view-all-users",
+              label: "View All Users",
+              description: "Allows the user to view all evaluator accounts and personal information.",
+              defaultValue: editUserPermissions.view_all_users,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "add_users",
+              id: "add-users",
+              label: "Add Users",
+              description: "Allows the user to create new evaluator accounts.",
+              defaultValue: editUserPermissions.add_users,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "edit_user_profiles",
+              id: "edit-user-profiles",
+              label: "Edit User Profiles",
+              description: "Allows the user to edit evaluator profile information.",
+              defaultValue: editUserPermissions.edit_user_profiles,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "change_user_passwords",
+              id: "change-user-passwords",
+              label: "Change User Passwords",
+              description: "Allows the user to change other evaluators' passwords.",
+              defaultValue: editUserPermissions.change_user_passwords,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "assume_user_identities",
+              id: "assume-user-identities",
+              label: "Assume User Identities",
+              description: "Allows the user to log in as another user.",
+              defaultValue: editUserPermissions.assume_user_identities,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "view_errors",
+              id: "view-errors",
+              label: "View Errors",
+              description: "Allows the user to view all logged errors.",
+              defaultValue: editUserPermissions.view_errors,
+              size: "LARGE"
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "delete_errors",
+              id: "delete-errors",
+              label: "Delete Errors",
+              description: "Allows the user to delete all logged errors.",
+              defaultValue: editUserPermissions.delete_errors,
+              size: "LARGE"
+            },
           ]}
         />
       }
