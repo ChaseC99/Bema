@@ -120,7 +120,7 @@ function Evaluations() {
     closeDeleteEvaluatioinModal();
   }
 
-  if (!users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
+  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
