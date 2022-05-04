@@ -5,17 +5,6 @@ const {
 const db = require(process.cwd() + "/util/db");
 const { displayDateFormat, displayFancyDateFormat, publicPermissions } = require(process.cwd() + "/util/variables");
 
-exports.login = (request, response) => {
-  if (request.decodedToken) {
-    return response.redirect("/");
-  }
-  response.render("pages/login", {
-    logged_in: false,
-    permissions: publicPermissions,
-    is_impersonated: false
-  });
-}
-
 exports.judging = (request, response, next) => {
   if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
     return db.query("SELECT * FROM get_entry_and_create_placeholder($1)", [request.decodedToken.evaluator_id], res => {
@@ -48,20 +37,6 @@ exports.judging = (request, response, next) => {
 exports.adminSkillLevels = (request, response, next) => {
   if (request.decodedToken && request.decodedToken.is_admin) {
     return response.render("pages/admin/reviewEntryLevels", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
-exports.adminUsers = (request, response, next) => {
-  if (request.decodedToken && (request.decodedToken.permissions.view_all_users || request.decodedToken.is_admin)) {
-    return response.render("pages/admin/users", {
       logged_in: true,
       is_admin: request.decodedToken.is_admin,
       evaluator_id: request.decodedToken.evaluator_id,
