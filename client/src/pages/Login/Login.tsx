@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
 import ExternalLink from "../../shared/ExternalLink";
 import { Form } from "../../shared/Forms";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
@@ -11,7 +10,6 @@ import "./Login.css";
 function Login() {
   const [showForgotPwModal, setShowForgotPwModal] = useState<boolean>(false);
   const [wasFailedLogin, setWasFailedLogin] = useState<boolean>(false);
-  const [wasSuccessfulLogin, setWasSuccessfulLogin] = useState<boolean>(false);
   const [previousLogin, setPreviousLogin] = useState<{username: string, password: string}>({username: "", password: ""});
   const { dispatch } = useAppState();
 
@@ -31,8 +29,6 @@ function Login() {
     else {
       const userData = await request("GET", "/api/internal/users/getFullUserProfile");
       dispatch(login(userData));
-      setWasFailedLogin(false);
-      setWasSuccessfulLogin(true);
     }
   }
 
@@ -104,10 +100,6 @@ function Login() {
         <InfoModal title="Forgot password?" handleClose={closeForgotPasswordModal}>
           <p>We do not currently have a password reset feature. If you're having problems logging in, please <ExternalLink to="https://support.khanacademy.org/hc/en-us/community/topics/360000022111">contact us here</ExternalLink> so an administrator can reset your password.</p>
         </InfoModal>
-      }
-
-      {wasSuccessfulLogin &&
-        <Navigate to="/" />
       }
     </React.Fragment>
   );

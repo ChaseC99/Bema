@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import useAppState from "../../../state/useAppState";
 
 type UnauthenticatedRouteProps = {
@@ -12,6 +12,7 @@ type UnauthenticatedRouteProps = {
  */
 function UnauthenticatedRoute(props: UnauthenticatedRouteProps) {
   const { state } = useAppState();
+  const [searchParams] = useSearchParams();
 
   if (!state.logged_in) {
     return (
@@ -21,9 +22,16 @@ function UnauthenticatedRoute(props: UnauthenticatedRouteProps) {
     );
   }
   else {
-    return (
-      <Navigate to="/" />
-    );
+    if (searchParams.has("continue")) {
+      return (
+        <Navigate to={searchParams.get("continue") || "/"} />
+      );
+    }
+    else {
+      return (
+        <Navigate to="/" />
+      );
+    }
   }
 }
 

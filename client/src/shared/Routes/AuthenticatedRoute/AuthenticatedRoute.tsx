@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import useAppState from "../../../state/useAppState";
 
 type AuthenticatedRouteProps = {
@@ -13,6 +13,7 @@ type AuthenticatedRouteProps = {
  */
 function AuthenticatedRoute(props: AuthenticatedRouteProps) {
   const { state } = useAppState();
+  const location = useLocation();
 
   if (state.logged_in) {
     return (
@@ -22,6 +23,11 @@ function AuthenticatedRoute(props: AuthenticatedRouteProps) {
     );
   }
   else {
+    if (location.pathname !== "/logout") {
+      return (
+        <Navigate to={"/login?continue=" + location.pathname} />
+      );
+    }
     return (
       <Navigate to="/login" />
     );

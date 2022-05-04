@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Permissions } from "../../../state/appStateReducer";
 import useAppState from "../../../state/useAppState";
 import ErrorPage from "../../ErrorPage";
@@ -20,10 +20,11 @@ type ProtectedRouteProps = {
  */
 function ProtectedRoute(props: ProtectedRouteProps) {
   const { state } = useAppState();
+  const location = useLocation();
 
   if (!state.logged_in) {
     return (
-      <Navigate to="/login" />
+      <Navigate to={"/login?continue=" + location.pathname} />
     );
   }
 
