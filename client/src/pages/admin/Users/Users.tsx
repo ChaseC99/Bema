@@ -25,7 +25,6 @@ function Users(props: UserProps) {
   const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
   const [editUserPermissions, setEditUserPermissions] = useState<Permissions | null>(null);
   const [impersonateUserId, setImpersonateUserId] = useState<number | null>(null);
-  const [hasImpersonatedUser, setHasImpersonatedUser] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUsers()
@@ -166,7 +165,6 @@ function Users(props: UserProps) {
     const data = await request("GET", "/api/internal/users/getFullUserProfile");
     closeImpersonateUserModal();
     dispatch(login(data));
-    setHasImpersonatedUser(true);
   }
 
   return (
@@ -699,10 +697,6 @@ function Users(props: UserProps) {
           <p>Are you sure you want to impersonate this user?</p>
           <p>Any actions you take while impersonating the user will be as if the user took the actions themselves.</p>
         </ConfirmModal>
-      }
-
-      {hasImpersonatedUser &&
-        <Navigate to="/admin/dashboard" />
       }
     </React.Fragment>
   );
