@@ -42,7 +42,7 @@ function Button(props: ButtonProps) {
 
   if (props.role === "link") {
     return (
-      <Link to={props.action} data-testid={props.testId}>
+      <Link to={props.action} className="no-underline" data-testid={props.testId}>
         <span className={c}>
           {props.text}
         </span>

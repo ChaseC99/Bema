@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { login } from "../../state/appStateReducer";
 import useAppState from "../../state/useAppState";
 import { displayError } from "../../util/errors";
 import request from "../../util/request";
@@ -6,7 +7,14 @@ import Button from "../Button/Button";
 import "./Header.css";
 
 function Header() {
-  const { state } = useAppState();
+  const { state, dispatch } = useAppState();
+
+  async function handleReturnToAccount() {
+    const data = await request('POST', '/api/auth/assumeUserIdentity', {});
+  
+    const userData = await request("GET", "/api/internal/users/getFullUserProfile");
+    dispatch(login(userData));
+  }
 
   return (
     <header>
@@ -83,17 +91,6 @@ function Header() {
       </nav>
     </header >
   )
-}
-
-async function handleReturnToAccount() {
-  const data = await request('POST', '/api/auth/assumeUserIdentity', {});
-  
-  if (!data.error) {
-    window.setTimeout(() => window.location.reload(), 1000); // TODO: Instead of page refresh, update global state
-  }
-  else {
-    displayError(data.error);
-  }
 }
 
 export default Header;

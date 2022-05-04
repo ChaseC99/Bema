@@ -6,21 +6,24 @@ import { AppStateProvider } from './state/AppStateContext';
 import Logout from "./pages/Logout";
 import TimeAgo from "javascript-time-ago";
 import en from 'javascript-time-ago/locale/en.json';
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard";
-import ExternalRedirect from "./shared/ExternalRedirect/ExternalRedirect";
+import ExternalRedirect from "./shared/ExternalRedirect";
 import Tasks from "./pages/admin/Tasks";
 import Results from "./pages/Results";
 import Entries from "./pages/Entries";
 import Contests from "./pages/Contests";
 import { ContestantProfile, ContestantSearch } from "./pages/Contestants";
-import Evaluations from "./pages/Evaluations/Evaluations";
+import Evaluations from "./pages/Evaluations";
 import KBHome from "./pages/KnowledgeBase/KBHome";
-import KBArticle from "./pages/KnowledgeBase/KBArticle/KBArticle";
+import KBArticle from "./pages/KnowledgeBase/KBArticle";
 import { AllErrors, ErrorDetail } from "./pages/admin/Errors";
+import Users from "./pages/admin/Users";
+import Login from "./pages/Login";
+import { AuthenticatedRoute, ProtectedRoute, UnauthenticatedRoute } from "./shared/Routes";
 
-function App() {
+function App() {  
   useEffect(() => {
     TimeAgo.setDefaultLocale(en.locale)
     TimeAgo.addLocale(en)
@@ -36,15 +39,17 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
 
-          <Route path="/contestants" element={<ContestantSearch />} />
-          <Route path="/contestants/:contestantKaid" element={<ContestantProfile />} />
+          <Route path="/contestants" element={<AuthenticatedRoute><ContestantSearch /></AuthenticatedRoute>} />
+          <Route path="/contestants/:contestantKaid" element={<AuthenticatedRoute><ContestantProfile /></AuthenticatedRoute>} />
 
           <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/tasks" element={<Tasks />} />
-          <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<Evaluations />} />
-          <Route path="/admin/errors" element={<AllErrors />} />
-          <Route path="/admin/errors/:errorId" element={<ErrorDetail />} />
+          <Route path="/admin/tasks" element={<ProtectedRoute permissions={["view_all_tasks"]}><Tasks /></ProtectedRoute>} />
+          <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<AuthenticatedRoute><Evaluations /></AuthenticatedRoute>} />
+          <Route path="/admin/errors" element={<ProtectedRoute permissions={["view_errors"]}><AllErrors /></ProtectedRoute>} />
+          <Route path="/admin/errors/:errorId" element={<ProtectedRoute permissions={["view_errors"]}><ErrorDetail /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute permissions={["view_all_users"]}><Users /></ProtectedRoute>} />
+          <Route path="/admin/users/inactive" element={<ProtectedRoute permissions={["view_all_users"]}><Users inactive /></ProtectedRoute>} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
@@ -52,7 +57,8 @@ function App() {
           <Route path="/kb" element={<KBHome />} />
           <Route path="/kb/article/:articleId" element={<KBArticle />} />
 
-          <Route path="/logout" element={<Logout />} />
+          <Route path="/login" element={<UnauthenticatedRoute><Login /></UnauthenticatedRoute>} />
+          <Route path="/logout" element={<AuthenticatedRoute><Logout /></AuthenticatedRoute>} />
 
           <Route path="/status" element={<ExternalRedirect to="http://status.kachallengecouncil.org" />}/>
 

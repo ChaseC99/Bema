@@ -1,3 +1,5 @@
+import Button from "../../Button"
+
 type InputFieldProps = {
   type: "email" | "number" | "password" | "text"
   name: string
@@ -20,6 +22,10 @@ type InputFieldProps = {
   min?: number
   minlength?: number
   step?: number
+  button?: {
+    text: string
+    action: () => void
+  }
   testId?: string
 }
 
@@ -71,6 +77,10 @@ function InputField(props: InputFieldProps) {
 
       {props.error &&
         <p className="form-item-error">{props.error}</p>
+      }
+
+      {props.button && 
+        <Button type="tertiary" role="button" action={props.button.action} text={props.button.text} />
       }
     </div>
   );
