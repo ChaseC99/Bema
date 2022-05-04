@@ -120,7 +120,12 @@ function Evaluations() {
     closeDeleteEvaluatioinModal();
   }
 
-  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
+  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !state.user?.permissions.view_all_evaluations) {
+    return (
+      <ErrorPage type="NO PERMISSION" />
+    );
+  }
+  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
