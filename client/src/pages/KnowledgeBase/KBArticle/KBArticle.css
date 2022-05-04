@@ -1,0 +1,16 @@
+.article-content {
+  padding: 20px 20px 20px 30px;
+}
+
+.article-content h2 {
+  font-size: 20px;
+}
+
+.article-content h2:not(:first-of-type) {
+  margin-top: 40px;
+}
+
+.article-footer {
+  font-size: 12px;
+  text-align: right;
+}

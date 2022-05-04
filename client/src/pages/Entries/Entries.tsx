@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
+import ErrorPage from "../../shared/ErrorPage";
 import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
@@ -8,7 +9,7 @@ import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
+import { fetchContest, fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
 
 type Entry = {
   assigned_group_id: number
@@ -48,7 +49,10 @@ function Entries() {
   const { contestId } = useParams();
   const [entries, setEntries] = useState<Entry[] | EntryPublic[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [contest, setContest] = useState(null);
+  const [entriesAreLoading, setEntriesAreLoading] = useState<boolean>(true);
+  const [groupsAreLoading, setGroupsAreLoading] = useState<boolean>(true);
+  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
@@ -61,13 +65,20 @@ function Entries() {
     fetchEntries(contestId || "")
       .then((data) => {
         setEntries(data.entries);
-
-        fetchEvaluatorGroups()
-          .then((data) => {
-            setGroups(data.groups);
-            setIsLoading(false);
-          })
+        setEntriesAreLoading(false);
       });
+
+    fetchEvaluatorGroups()
+      .then((data) => {
+        setGroups(data.groups);
+        setGroupsAreLoading(false);
+      })
+
+    fetchContest(contestId || "")
+    .then((data) => {
+      setContest(data.contest);
+      setContestIsLoading(false);
+    });
   }, [contestId]);
 
   const showEditEntryForm = (id: number) => {
@@ -213,6 +224,12 @@ function Entries() {
     window.location.reload();
   }
 
+  if (!contestIsLoading && contest == null) {
+    return (
+      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
+    );
+  }
+
   return (
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
@@ -266,9 +283,9 @@ function Entries() {
             </span>
           </div>
 
-          {isLoading && <LoadingSpinner size="LARGE" />}
+          {(entriesAreLoading || groupsAreLoading || contestIsLoading) && <LoadingSpinner size="LARGE" />}
 
-          {!isLoading &&
+          {!(entriesAreLoading || groupsAreLoading || contestIsLoading) &&
             <Table>
               <TableHead>
                 <Row>
@@ -320,7 +337,7 @@ function Entries() {
 
                     <Row key={entry.entry_id}>
                       <Cell>{entry.entry_id}</Cell>
-                      <Cell>{entry.entry_title}</Cell>
+                      <Cell><ExternalLink to={entry.entry_url}>{entry.entry_title}</ExternalLink></Cell>
                       <Cell>{entry.entry_author}</Cell>
                       <Cell>{entry.entry_created}</Cell>
                       <Cell>{entry.entry_level}</Cell>
@@ -520,6 +537,7 @@ function Entries() {
               label: "Old Group",
               placeholder: "Select a group",
               defaultValue: "",
+              required: true,
               choices: groups.filter((g) => g.is_active).map((g) => {
                 return {
                   text: g.group_id + " - " + g.group_name,
@@ -535,6 +553,7 @@ function Entries() {
               label: "New Group",
               placeholder: "Select a group",
               defaultValue: "",
+              required: true,
               choices: groups.filter((g) => g.is_active).map((g) => {
                 return {
                   text: g.group_id + " - " + g.group_name,

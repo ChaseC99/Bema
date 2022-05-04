@@ -28,7 +28,6 @@ test("renders the announcement correctly", () => {
   const card = screen.getByTestId("test-announcement");
   expect(card).toBeInTheDocument();
   expect(card.innerHTML).toMatch("Test User");
-  expect(card.innerHTML).toMatch("04-01-2022");
   expect(card.innerHTML).toMatch("Test Announcement");
   expect(card.innerHTML).toMatch("Sample announcement");
   expect(card.innerHTML).toMatch("line 2");

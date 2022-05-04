@@ -86,12 +86,17 @@
 
 .section-actions {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .section-actions>.actions-dropdown:not(:last-child),
 .section-actions>.btn-primary:not(:last-child),
 .section-actions>.btn-secondary:not(:last-child),
-.section-actions>.btn-tertiary:not(:last-child) {
+.section-actions>.btn-tertiary:not(:last-child),
+.section-actions>a:not(:last-child) {
   margin-right: 24px;
 }
 

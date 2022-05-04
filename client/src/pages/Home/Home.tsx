@@ -7,7 +7,7 @@ function Home() {
   const { state } = useAppState();
 
   return (
-    <div className="container">
+    <div className="container col-12">
       {state.logged_in && <Tasks />}
       <Announcements />
     </div>

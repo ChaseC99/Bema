@@ -39,6 +39,10 @@ export type InputField = {
   min?: number
   minlength?: number
   step?: number
+  button?: {
+    text: string
+    action: () => void
+  }
   testId?: string
 }
 
@@ -50,6 +54,7 @@ export type CheckboxField = {
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   description?: string
+  disabled?: boolean
   testId?: string
 }
 
@@ -87,6 +92,7 @@ export type SelectField = {
   choices: ({ text: string, value: any })[]
   description?: string
   disabled?: boolean
+  required?: boolean
   testId?: string
 }
 
@@ -100,5 +106,6 @@ export type DateField = {
   description?: string
   minDate?: string
   maxDate?: string
+  required?: boolean
   testId?: string
 }

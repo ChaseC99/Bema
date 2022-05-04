@@ -12,7 +12,7 @@ function ExternalLink(props: ExternalLinkProps) {
   }
 
   return (
-    <a href={props.to} target={props.target} onClick={handleClick} className="link-underline">{props.children}</a>
+    <a href={props.to} target={props.target} onClick={handleClick}>{props.children}</a>
   );
 }
 
