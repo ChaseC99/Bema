@@ -34,6 +34,7 @@ function FlaggedEntriesCard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [approveEntryId, setApproveEntryId] = useState<number | null>();
   const [disqualifyEntryId, setDisqualifyEntryId] = useState<number | null>();
+  const [deleteEntryId, setDeleteEntryId] = useState<number | null>();
 
   useEffect(() => {
     fetchFlaggedEntries()
@@ -82,15 +83,22 @@ function FlaggedEntriesCard() {
   }
 
   const openDeleteModal = (id: number) => {
-
+    setDeleteEntryId(id);
   }
 
   const closeDeleteModal = () => {
-
+    setDeleteEntryId(null);
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
+    await request("DELETE", "/api/internal/entries", {
+      entry_id: id
+    });
 
+    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
+    setFlaggedEntries(newFlaggedEntries);
+
+    closeDeleteModal();
   }
 
   if (isLoading) {
@@ -160,6 +168,19 @@ function FlaggedEntriesCard() {
           destructive
         >
           <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
+        </ConfirmModal>
+      }
+
+      {deleteEntryId &&
+        <ConfirmModal
+          title="Delete entry?"
+          confirmLabel="Delete"
+          handleConfirm={handleDelete}
+          handleCancel={closeDeleteModal}
+          data={deleteEntryId}
+          destructive
+        >
+          <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
         </ConfirmModal>
       }
     </React.Fragment>
