@@ -32,6 +32,7 @@ function FlaggedEntriesCard() {
   const { state } = useAppState();
   const [flaggedEntries, setFlaggedEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [approveEntryId, setApproveEntryId] = useState<number | null>();
   const [disqualifyEntryId, setDisqualifyEntryId] = useState<number | null>();
 
   useEffect(() => {
@@ -42,8 +43,23 @@ function FlaggedEntriesCard() {
       });
   }, []);
 
-  const handleApprove = (id: number) => {
+  const openApproveModal = (id: number) => {
+    setApproveEntryId(id);
+  }
 
+  const closeApproveModal = () => {
+    setApproveEntryId(null);
+  }
+
+  const handleApprove = async (id: number) => {
+    await request("PUT", "/api/internal/entries/approve", {
+      entry_id: id
+    });
+
+    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
+    setFlaggedEntries(newFlaggedEntries);
+
+    closeApproveModal();
   }
 
   const openDisqualifyModal = (id: number) => {
@@ -108,7 +124,7 @@ function FlaggedEntriesCard() {
                 <Cell>
                   {(state.is_admin || state.user?.permissions.edit_entries) ?
                     <React.Fragment>
-                      <Button type="tertiary" role="button" action={handleApprove} text="Approve" data={e.entry_id} style={{ marginRight: "24px" }} />
+                      <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.entry_id} style={{ marginRight: "24px" }} />
                       <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.entry_id} style={{ marginRight: "24px" }} />
                     </React.Fragment>
                     : ""}
@@ -121,6 +137,18 @@ function FlaggedEntriesCard() {
           })}
         </TableBody>
       </Table>
+
+      {approveEntryId &&
+        <ConfirmModal
+          title="Approve entry?"
+          confirmLabel="Approve"
+          handleConfirm={handleApprove}
+          handleCancel={closeApproveModal}
+          data={approveEntryId}
+        >
+          <p>Are you sure you want to approve this entry? This will place the entry back into the judging queue.</p>
+        </ConfirmModal>
+      }
 
       {disqualifyEntryId &&
         <ConfirmModal
