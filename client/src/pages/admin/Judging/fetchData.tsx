@@ -7,3 +7,11 @@ export async function fetchFlaggedEntries() {
     flaggedEntries: data.flaggedEntries
   };
 }
+
+export async function fetchJudgingGroups() {
+  const data = await request("GET", "/api/internal/admin/getEvaluatorGroups");
+
+  return {
+    groups: data.evaluatorGroups
+  };
+}

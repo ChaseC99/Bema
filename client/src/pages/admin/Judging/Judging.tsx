@@ -1,6 +1,7 @@
 import React from "react";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import FlaggedEntriesCard from "./FlaggedEntriesCard";
+import JudgingGroupsCard from "./JudgingGroupsCard";
 
 function Judging() {
   return (
@@ -14,6 +15,7 @@ function Judging() {
           </div>
           <div className="section-body">
             <FlaggedEntriesCard />
+            <JudgingGroupsCard />
           </div>
         </div>
       </section>

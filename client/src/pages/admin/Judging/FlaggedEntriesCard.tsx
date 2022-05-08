@@ -103,9 +103,14 @@ function FlaggedEntriesCard() {
 
   if (isLoading) {
     return (
-      <Table label="Flagged Entries">
-        <LoadingSpinner size="MEDIUM" />
-      </Table>
+      <article className="card col-12">
+        <div className="card-header">
+          <h3>Flagged Entries</h3>
+        </div>
+        <div className="card-body">
+          <LoadingSpinner size="MEDIUM" />
+        </div>
+      </article>
     );
   }
 
