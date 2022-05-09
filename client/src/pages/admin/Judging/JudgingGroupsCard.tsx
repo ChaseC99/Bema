@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
-import { FormModal } from "../../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
@@ -20,6 +20,7 @@ function JudgingGroupsCard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState<boolean>(false);
   const [editGroup, setEditGroup] = useState<Group | null>(null);
+  const [deleteGroupId, setDeleteGroupId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchJudgingGroups()
@@ -75,16 +76,22 @@ function JudgingGroupsCard() {
     closeEditGroupModal();
   }
 
-  const openDeleteGroupModal = () => {
-
+  const openDeleteGroupModal = (id: number) => {
+    setDeleteGroupId(id);
   }
 
   const closeDeleteGroupModal = () => {
-
+    setDeleteGroupId(null);
   }
 
-  const handleDeleteGroup = () => {
+  const handleDeleteGroup = async (id: number) => {
+    await request("DELETE", "/api/internal/admin/deleteEvaluatorGroup", {
+      group_id: id
+    });
 
+    const newGroups = groups.filter((g) => g.group_id !== id);
+    setGroups(newGroups);
+    closeDeleteGroupModal();
   }
 
   return (
@@ -196,6 +203,19 @@ function JudgingGroupsCard() {
             }
           ]}
         />
+      }
+
+      {deleteGroupId &&
+        <ConfirmModal
+          title="Delete group?"
+          confirmLabel="Delete"
+          handleConfirm={handleDeleteGroup}
+          handleCancel={closeDeleteGroupModal}
+          data={deleteGroupId}
+          destructive
+        >
+          <p>Are you sure you want to delete this group? This will unassign all entries and evaluators that are assigned to the group.</p>
+        </ConfirmModal>
       }
     </React.Fragment>
   );
