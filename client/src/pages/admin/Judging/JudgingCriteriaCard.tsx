@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
-import { FormModal } from "../../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
@@ -22,6 +22,7 @@ function JudgingCriteriaCard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
   const [editCriteria, setEditCriteria] = useState<Criteria | null>(null);
+  const [deleteCriteriaId, setDeleteCriteriaId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchJudgingCriteria()
@@ -84,16 +85,23 @@ function JudgingCriteriaCard() {
     closeEditCriteriaModal();
   }
 
-  const openDeleteCriteriaModal = () => {
-
+  const openDeleteCriteriaModal = (id: number) => {
+    setDeleteCriteriaId(id);
   }
 
   const closeDeleteCriteriaModal = () => {
-
+    setDeleteCriteriaId(null);
   }
 
-  const handleDeleteCriteria = () => {
+  const handleDeleteCriteria = async (id: number) => {
+    await request("DELETE", "/api/internal/judging/criteria", {
+      criteria_id: id
+    });
 
+    const newCriteria = criteria.filter((c) => c.criteria_id !== id);
+    setCriteria(newCriteria);
+
+    closeDeleteCriteriaModal();
   }
 
   return (
@@ -256,6 +264,19 @@ function JudgingCriteriaCard() {
           }
         ]}
         />
+      }
+
+      {deleteCriteriaId &&
+        <ConfirmModal
+          title="Delete criteria?"
+          confirmLabel="Delete"
+          handleConfirm={handleDeleteCriteria}
+          handleCancel={closeDeleteCriteriaModal}
+          destructive
+          data={deleteCriteriaId}
+        >
+          <p>Are you sure you want to delete this criteria? This action cannot be undone.</p>
+        </ConfirmModal>
       }
     </React.Fragment>
   );
