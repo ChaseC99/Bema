@@ -19,6 +19,7 @@ function JudgingGroupsCard() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState<boolean>(false);
+  const [editGroup, setEditGroup] = useState<Group | null>(null);
 
   useEffect(() => {
     fetchJudgingGroups()
@@ -46,15 +47,32 @@ function JudgingGroupsCard() {
   }
 
   const openEditGroupModal = (id: number) => {
-
+    const group = groups.find((g) => g.group_id === id) || null;
+    setEditGroup(group);
   }
 
   const closeEditGroupModal = () => {
-
+    setEditGroup(null);
   }
 
-  const handleEditGroup = () => {
+  const handleEditGroup = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/admin/editEvaluatorGroup", {
+      group_id: editGroup?.group_id,
+      group_name: values.name,
+      is_active: values.is_active
+    });
 
+    const newGroups = [...groups];
+    for (let i = 0; i < newGroups.length; i++) {
+      if (newGroups[i].group_id === editGroup?.group_id) {
+        newGroups[i].group_name = values.name;
+        newGroups[i].is_active = values.is_active;
+        break;
+      }
+    }
+    setGroups(newGroups);
+
+    closeEditGroupModal();
   }
 
   const openDeleteGroupModal = () => {
@@ -144,6 +162,37 @@ function JudgingGroupsCard() {
               size: "LARGE",
               defaultValue: "",
               required: true
+            }
+          ]}
+        />
+      }
+
+      {editGroup &&
+        <FormModal
+          title="Edit Group"
+          submitLabel="Save"
+          handleSubmit={handleEditGroup}
+          handleCancel={closeEditGroupModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              label: "Group Name",
+              size: "LARGE",
+              defaultValue: editGroup.group_name,
+              required: true
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "is_active",
+              id: "is-active",
+              label: "Active",
+              description: "Evaluators and entries can only be assigned to active groups.",
+              size: "LARGE",
+              defaultValue: editGroup.is_active
             }
           ]}
         />
