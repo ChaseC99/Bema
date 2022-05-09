@@ -21,6 +21,7 @@ function JudgingCriteriaCard() {
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
+  const [editCriteria, setEditCriteria] = useState<Criteria | null>(null);
 
   useEffect(() => {
     fetchJudgingCriteria()
@@ -50,16 +51,37 @@ function JudgingCriteriaCard() {
     window.location.reload();
   }
 
-  const openEditCriteriaModal = () => {
-
+  const openEditCriteriaModal = (id: number) => {
+    const c = criteria.find((c) => c.criteria_id === id) || null;
+    setEditCriteria(c);
   }
 
   const closeEditCriteriaModal = () => {
-
+    setEditCriteria(null);
   }
 
-  const handleEditCriteria = () => {
+  const handleEditCriteria = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/judging/criteria", {
+      criteria_id: editCriteria?.criteria_id,
+      criteria_name: values.name,
+      criteria_description: values.description,
+      is_active: values.is_active,
+      sort_order: values.sort_order
+    });
 
+    const newCriteria = [...criteria];
+    for (let i = 0; i < newCriteria.length; i++) {
+      if (newCriteria[i].criteria_id === editCriteria?.criteria_id) {
+        newCriteria[i].criteria_name = values.name;
+        newCriteria[i].criteria_description = values.description;
+        newCriteria[i].sort_order = values.sort_order;
+        newCriteria[i].is_active = values.is_active;
+        break;
+      }
+    }
+    setCriteria(newCriteria);
+
+    closeEditCriteriaModal();
   }
 
   const openDeleteCriteriaModal = () => {
@@ -182,6 +204,57 @@ function JudgingCriteriaCard() {
               defaultValue: true
             }
           ]}
+        />
+      }
+
+      {editCriteria &&
+        <FormModal
+        title="Edit Judging Criteria"
+        submitLabel="Save"
+        handleSubmit={handleEditCriteria}
+        handleCancel={closeEditCriteriaModal}
+        cols={4}
+        fields={[
+          {
+            fieldType: "INPUT",
+            type: "text",
+            name: "name",
+            id: "name",
+            label: "Criteria Name",
+            size: "LARGE",
+            defaultValue: editCriteria.criteria_name,
+            required: true
+          },
+          {
+            fieldType: "TEXTAREA",
+            name: "description",
+            id: "description",
+            label: "Description",
+            size: "LARGE",
+            defaultValue: editCriteria.criteria_description,
+            required: true
+          },
+          {
+            fieldType: "INPUT",
+            type: "number",
+            step: 1,
+            min: 1,
+            name: "sort_order",
+            id: "sort-order",
+            label: "Sort Order",
+            size: "LARGE",
+            defaultValue: editCriteria.sort_order.toString(),
+            required: true
+          },
+          {
+            fieldType: "CHECKBOX",
+            name: "is_active",
+            id: "is-active",
+            label: "Active",
+            size: "LARGE",
+            defaultValue: editCriteria.is_active
+          }
+        ]}
         />
       }
     </React.Fragment>
