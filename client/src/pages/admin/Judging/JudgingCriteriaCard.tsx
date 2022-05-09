@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
+import { FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import request from "../../../util/request";
 import { fetchJudgingCriteria } from "./fetchData";
 
 type Criteria = {
@@ -18,6 +20,7 @@ function JudgingCriteriaCard() {
   const { state } = useAppState();
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchJudgingCriteria()
@@ -28,15 +31,23 @@ function JudgingCriteriaCard() {
   }, []);
 
   const openCreateCriteriaModal = () => {
-
+    setShowCreateCriteriaModal(true);
   }
 
   const closeCreateCriteriaModal = () => {
-
+    setShowCreateCriteriaModal(false);
   }
 
-  const handleCreateCriteria = () => {
+  const handleCreateCriteria = async (values: { [name: string]: any }) => {
+    await request("POST", "/api/internal/judging/criteria", {
+      criteria_name: values.name,
+      criteria_description: values.description,
+      is_active: values.is_active,
+      sort_order: values.sort_order
+    });
 
+    closeCreateCriteriaModal();
+    window.location.reload();
   }
 
   const openEditCriteriaModal = () => {
@@ -122,6 +133,57 @@ function JudgingCriteriaCard() {
           }
         </div>
       </article>
+
+      {showCreateCriteriaModal &&
+        <FormModal
+          title="Create Judging Criteria"
+          submitLabel="Create"
+          handleSubmit={handleCreateCriteria}
+          handleCancel={closeCreateCriteriaModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              label: "Criteria Name",
+              size: "LARGE",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "TEXTAREA",
+              name: "description",
+              id: "description",
+              label: "Description",
+              size: "LARGE",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "INPUT",
+              type: "number",
+              step: 1,
+              min: 1,
+              name: "sort_order",
+              id: "sort-order",
+              label: "Sort Order",
+              size: "LARGE",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "is_active",
+              id: "is-active",
+              label: "Active",
+              size: "LARGE",
+              defaultValue: true
+            }
+          ]}
+        />
+      }
     </React.Fragment>
   );
 }
