@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
+import { FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import request from "../../../util/request";
 import { fetchJudgingGroups } from "./fetchData";
 
 type Group = {
@@ -24,6 +26,7 @@ function AssignedGroupsCard() {
   const [assignedGroups, setAssignedGroups] = useState<AssignedGroup[]>([]);
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [editAssignedGroup, setEditAssignedGroup] = useState<AssignedGroup | null>(null);
 
   useEffect(() => {
     fetchJudgingGroups()
@@ -59,15 +62,31 @@ function AssignedGroupsCard() {
   }
 
   const openEditIndividualModal = (evaluatorId: number) => {
-
+    const a = assignedGroups.find((g) => g.evaluator_id === evaluatorId) || null;
+    setEditAssignedGroup(a);
   }
 
   const closeEditIndividualModal = () => {
-
+    setEditAssignedGroup(null);
   }
 
-  const handleEditIndividual = () => {
+  const handleEditIndividual = async (values: { [name: string]: any }) => {
+    await request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
+      group_id: values.group_id,
+      evaluator_id: editAssignedGroup?.evaluator_id
+    });
 
+    const newAssignedGroups = [...assignedGroups];
+    for (let i = 0; i < newAssignedGroups.length; i++) {
+      if (newAssignedGroups[i].evaluator_id === editAssignedGroup?.evaluator_id) {
+        newAssignedGroups[i].group_id = values.group_id;
+        newAssignedGroups[i].group_name = allGroups.find((g) => g.group_id === values.group_id)?.group_name || "";
+        break;
+      }
+    }
+
+    setAssignedGroups(newAssignedGroups);
+    closeEditIndividualModal();
   }
 
   return (
@@ -119,6 +138,32 @@ function AssignedGroupsCard() {
           }
         </div>
       </article>
+
+      {editAssignedGroup &&
+        <FormModal
+          title="Edit Assigned Group"
+          submitLabel="Save"
+          handleSubmit={handleEditIndividual}
+          handleCancel={closeEditIndividualModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "SELECT",
+              name: "group_id",
+              id: "group-id",
+              label: "Assigned Group",
+              size: "LARGE",
+              defaultValue: editAssignedGroup.group_id,
+              choices: [...allGroups.map((g) => {
+                return {
+                  text: g.group_id + " - " + g.group_name,
+                  value: g.group_id
+                }
+              }), {text: "None", value: null}]
+            }
+          ]}
+        />
+      }
     </React.Fragment>
   );
 }
