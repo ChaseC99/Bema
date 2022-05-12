@@ -16,6 +16,7 @@ export type FormFields =
   | TextEditorField
   | SelectField
   | DateField
+  | SliderField
 
 export type InputField = {
   fieldType: "INPUT"
@@ -107,5 +108,20 @@ export type DateField = {
   minDate?: string
   maxDate?: string
   required?: boolean
+  testId?: string
+}
+
+export type SliderField = {
+  fieldType: "SLIDER"
+  name: string
+  id: string
+  defaultValue: number
+  size: "SMALL" | "MEDIUM" | "LARGE"
+  label: string
+  description?: string
+  min: number
+  max: number
+  step: number
+  tickStep: number
   testId?: string
 }

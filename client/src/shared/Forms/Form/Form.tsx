@@ -5,6 +5,7 @@ import CheckboxField from "../CheckboxField/CheckboxField";
 import DateField from "../DateField/DateField";
 import InputField from "../InputField/InputField";
 import SelectField from "../SelectField/SelectField";
+import SliderField from "../SliderField/SliderField";
 import TextAreaField from "../TextAreaField/TextAreaField";
 import TextEditorField from "../TextEditorField/TextEditorField";
 import "./Form.css";
@@ -153,7 +154,7 @@ function Form(props: FormProps) {
   }
 
   return (
-    <div className="form" data-testid={props.testId}>
+    <div className="form col-12" data-testid={props.testId}>
       <div className={"form-fields-wrapper" + (props.cols ? " col-"+props.cols : "")}>
         <div className="form-fields-container">
           {!isLoading && props.fields.map((field) => {
@@ -264,6 +265,25 @@ function Form(props: FormProps) {
                   description={field.description}
                   minDate={field.minDate}
                   maxDate={field.maxDate}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
+            else if (field.fieldType === "SLIDER") {
+              return (
+                <SliderField 
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  onChange={handleChange}
+                  description={field.description}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                  tickStep={field.tickStep}
                   testId={field.testId}
                   key={field.id}
                 />
