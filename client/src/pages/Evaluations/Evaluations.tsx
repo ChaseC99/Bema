@@ -236,7 +236,8 @@ function Evaluations() {
               min: 0,
               max: 5,
               step: 0.5,
-              validate: scoreValidator
+              validate: scoreValidator,
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -249,7 +250,8 @@ function Evaluations() {
               min: 0,
               max: 5,
               step: 0.5,
-              validate: scoreValidator
+              validate: scoreValidator,
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -262,7 +264,8 @@ function Evaluations() {
               min: 0,
               max: 5,
               step: 0.5,
-              validate: scoreValidator
+              validate: scoreValidator,
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -275,7 +278,8 @@ function Evaluations() {
               min: 0,
               max: 5,
               step: 0.5,
-              validate: scoreValidator
+              validate: scoreValidator,
+              required: true
             },
             {
               fieldType: "SELECT",
@@ -297,7 +301,8 @@ function Evaluations() {
                   text: "Advanced",
                   value: "Advanced"
                 }
-              ]
+              ],
+              required: true
             }
           ]}
         />

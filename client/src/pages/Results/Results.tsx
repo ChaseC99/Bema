@@ -254,7 +254,8 @@ function Results() {
               name: "vote_reason",
               id: "vote-reason",
               defaultValue: "",
-              size: "LARGE"
+              size: "LARGE",
+              required: true
             }
           ]}
         />
