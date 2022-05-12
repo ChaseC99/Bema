@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
+import { FormFields } from "../../../shared/Forms";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
@@ -27,38 +28,53 @@ function AssignedGroupsCard() {
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editAssignedGroup, setEditAssignedGroup] = useState<AssignedGroup | null>(null);
+  const [showBulkEditModal, setShowBulkEditModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchJudgingGroups()
-    .then((data) => {
-      const combinedData: AssignedGroup[] = [];
+      .then((data) => {
+        const combinedData: AssignedGroup[] = [];
 
-      data.evaluators.forEach((e) => {
-        const g = data.groups.find((g) => g.group_id === e.group_id) || null;
-        combinedData.push({
-          group_id: g ? g.group_id : null,
-          group_name: g ? g.group_name : null,
-          evaluator_id: e.evaluator_id,
-          evaluator_name: e.evaluator_name
+        data.evaluators.forEach((e) => {
+          const g = data.groups.find((g) => g.group_id === e.group_id) || null;
+          combinedData.push({
+            group_id: g ? g.group_id : null,
+            group_name: g ? g.group_name : null,
+            evaluator_id: e.evaluator_id,
+            evaluator_name: e.evaluator_name
+          });
         });
-      });
 
-      setAllGroups(data.groups);
-      setAssignedGroups(combinedData);
-      setIsLoading(false);
-    });
+        setAllGroups(data.groups);
+        setAssignedGroups(combinedData);
+        setIsLoading(false);
+      });
   }, []);
 
   const openEditAllModal = () => {
-
+    setShowBulkEditModal(true);
   }
 
   const closeEditAllModal = () => {
-
+    setShowBulkEditModal(false);
   }
 
-  const handleEditAll = () => {
+  const handleEditAll = (values: { [name: string]: any }) => {
+    const newAssignedGroups = [...assignedGroups];
+    for (let i = 0; i < newAssignedGroups.length; i++) {
+      if (newAssignedGroups[i].group_id !== values[newAssignedGroups[i].evaluator_id]) {
+        newAssignedGroups[i].group_id = values[newAssignedGroups[i].evaluator_id];
+        newAssignedGroups[i].group_name = allGroups.find((g) => g.group_id === values[newAssignedGroups[i].evaluator_id])?.group_name || "";
 
+        request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
+          group_id: values[newAssignedGroups[i].evaluator_id],
+          evaluator_id: newAssignedGroups[i].evaluator_id
+        });
+      }
+    }
+
+    setAssignedGroups(newAssignedGroups);
+    closeEditAllModal();
   }
 
   const openEditIndividualModal = (evaluatorId: number) => {
@@ -87,6 +103,23 @@ function AssignedGroupsCard() {
 
     setAssignedGroups(newAssignedGroups);
     closeEditIndividualModal();
+  }
+
+  const createField = (assignedGroup: AssignedGroup): FormFields => {
+    return {
+      fieldType: "SELECT",
+      name: assignedGroup.evaluator_id.toString(),
+      id: assignedGroup.evaluator_id.toString(),
+      label: assignedGroup.evaluator_name,
+      size: "LARGE",
+      defaultValue: assignedGroup.group_id,
+      choices: [...allGroups.map((g) => {
+        return {
+          text: g.group_id + " - " + g.group_name,
+          value: g.group_id
+        }
+      }), { text: "None", value: null }]
+    }
   }
 
   return (
@@ -118,7 +151,7 @@ function AssignedGroupsCard() {
                       <Cell>{a.evaluator_id}</Cell>
                       <Cell>{a.evaluator_name}</Cell>
                       <Cell>{a.group_id ? (a.group_id + " - " + a.group_name) : "Unassigned"}</Cell>
-                      {(state.is_admin || state.user?.permissions.assign_evaluator_groups) ? 
+                      {(state.is_admin || state.user?.permissions.assign_evaluator_groups) ?
                         <Cell>
                           <ActionMenu actions={[
                             {
@@ -127,9 +160,9 @@ function AssignedGroupsCard() {
                               text: "Edit",
                               data: a.evaluator_id
                             }
-                          ]}/>
+                          ]} />
                         </Cell>
-                      : ""}
+                        : ""}
                     </Row>
                   );
                 })}
@@ -159,9 +192,20 @@ function AssignedGroupsCard() {
                   text: g.group_id + " - " + g.group_name,
                   value: g.group_id
                 }
-              }), {text: "None", value: null}]
+              }), { text: "None", value: null }]
             }
           ]}
+        />
+      }
+
+      {showBulkEditModal &&
+        <FormModal
+          title="Edit Assigned Groups"
+          submitLabel="Save"
+          handleSubmit={handleEditAll}
+          handleCancel={closeEditAllModal}
+          cols={4}
+          fields={assignedGroups.map((a) => createField(a))}
         />
       }
     </React.Fragment>
