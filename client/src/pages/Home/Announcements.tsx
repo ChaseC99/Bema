@@ -176,6 +176,7 @@ function Announcements() {
               size: "LARGE",
               label: "Title",
               defaultValue: "",
+              required: true
             },
             {
               fieldType: "TEXTEDITOR",
@@ -213,6 +214,7 @@ function Announcements() {
               size: "LARGE",
               label: "Title",
               defaultValue: announcementToEdit.message_title,
+              required: true
             },
             {
               fieldType: "TEXTEDITOR",

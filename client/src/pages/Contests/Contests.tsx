@@ -155,7 +155,8 @@ function Contests() {
             size: "LARGE",
             label: "Name",
             defaultValue: "",
-            placeholder: "Contest: Name Here"
+            placeholder: "Contest: Name Here",
+            required: true
           },
           {
             fieldType: "INPUT",
@@ -165,7 +166,8 @@ function Contests() {
             size: "LARGE",
             label: "URL",
             description: "A link to the contest program. This is where entries will be imported from.",
-            defaultValue: ""
+            defaultValue: "",
+            required: true
           },
           {
             fieldType: "INPUT",
@@ -183,7 +185,8 @@ function Contests() {
             id: "start-date",
             size: "MEDIUM",
             label: "Start Date",
-            defaultValue: ""
+            defaultValue: "",
+            required: true
           },
           {
             fieldType: "DATE",
@@ -191,7 +194,8 @@ function Contests() {
             id: "end-date",
             size: "MEDIUM",
             label: "End Date",
-            defaultValue: ""
+            defaultValue: "",
+            required: true
           },
           {
             fieldType: "CHECKBOX",
@@ -222,7 +226,8 @@ function Contests() {
               size: "LARGE",
               label: "Name",
               defaultValue: editContest.contest_name,
-              placeholder: "Contest: Name Here"
+              placeholder: "Contest: Name Here",
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -232,7 +237,8 @@ function Contests() {
               size: "LARGE",
               label: "URL",
               description: "A link to the contest program. This is where entries will be imported from.",
-              defaultValue: editContest.contest_url
+              defaultValue: editContest.contest_url,
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -250,7 +256,8 @@ function Contests() {
               id: "start-date",
               size: "MEDIUM",
               label: "Start Date",
-              defaultValue: editContest.date_start
+              defaultValue: editContest.date_start,
+              required: true
             },
             {
               fieldType: "DATE",
@@ -258,7 +265,8 @@ function Contests() {
               id: "end-date",
               size: "MEDIUM",
               label: "End Date",
-              defaultValue: editContest.date_end
+              defaultValue: editContest.date_end,
+              required: true
             },
             {
               fieldType: "INPUT",

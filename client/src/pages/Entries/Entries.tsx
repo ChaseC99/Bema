@@ -369,7 +369,8 @@ function Entries() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editEntry.entry_title
+              defaultValue: editEntry.entry_title,
+              required: true
             },
             {
               fieldType: "INPUT",
@@ -378,7 +379,8 @@ function Entries() {
               id: "author",
               size: "LARGE",
               label: "Author",
-              defaultValue: editEntry.entry_author
+              defaultValue: editEntry.entry_author,
+              required: true
             },
             {
               fieldType: "SELECT",
@@ -404,7 +406,8 @@ function Entries() {
                   text: "Advanced",
                   value: "Advanced"
                 }
-              ]
+              ],
+              required: true
             },
             {
               fieldType: "SELECT", // TODO: Disable for users who can't assign entry groups
@@ -494,6 +497,7 @@ function Entries() {
               label: "Entry ID",
               description: "The program ID is the last part of the program URL.",
               defaultValue: "",
+              required: true
             }
           ]}
         />

@@ -360,7 +360,8 @@ function Tasks() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: ""
+              defaultValue: "",
+              required: true
             },
             {
               fieldType: "DATE",
@@ -368,7 +369,8 @@ function Tasks() {
               id: "due-date",
               size: "MEDIUM",
               label: "Due date",
-              defaultValue: (new Date()).toLocaleString()
+              defaultValue: (new Date()).toLocaleString(),
+              required: true
             },
             {
               fieldType: "SELECT",
@@ -410,7 +412,8 @@ function Tasks() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editTask.task_title
+              defaultValue: editTask.task_title,
+              required: true
             },
             {
               fieldType: "DATE",
@@ -418,7 +421,8 @@ function Tasks() {
               id: "due-date",
               size: "MEDIUM",
               label: "Due date",
-              defaultValue: editTask.due_date
+              defaultValue: editTask.due_date,
+              required: true
             },
             {
               fieldType: "SELECT",
@@ -441,7 +445,8 @@ function Tasks() {
                   text: "Completed",
                   value: "Completed"
                 }
-              ]
+              ],
+              required: true
             },
             {
               fieldType: "SELECT",

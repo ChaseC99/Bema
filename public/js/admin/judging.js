@@ -14,15 +14,15 @@ let tab = document.querySelector("#sidebar-judging");
 
 // Load page data
 request("get", "/api/internal/entries/flagged", null, data => {
-    if (!data.error) {
+      if (!data.error) {
         if (data.logged_in) {
-            flaggedEntriesSpinner.style.display = "none";
+          flaggedEntriesSpinner.style.display = "none";
 
-            if (data.flaggedEntries.length === 0) {
-                flaggedEntriesTable.innerHTML = "All flagged entries have been reviewed!"
-            } else {
-                data.flaggedEntries.forEach(e => {
-                    flaggedEntriesTableBody.innerHTML += `
+          if (data.flaggedEntries.length === 0) {
+            flaggedEntriesTable.innerHTML = "All flagged entries have been reviewed!"
+          } else {
+            data.flaggedEntries.forEach(e => {
+                  flaggedEntriesTableBody.innerHTML += `
                     <tr id="${e.entry_id}">
                         <td>${e.entry_id}</td>
                         <td><a href="${e.entry_url}" target="_blank">${e.entry_title}</a></td>

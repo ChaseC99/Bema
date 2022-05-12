@@ -22,6 +22,7 @@ import { AllErrors, ErrorDetail } from "./pages/admin/Errors";
 import Users from "./pages/admin/Users";
 import Login from "./pages/Login";
 import { AuthenticatedRoute, ProtectedRoute, UnauthenticatedRoute } from "./shared/Routes";
+import Judging from "./pages/admin/Judging";
 
 function App() {  
   useEffect(() => {
@@ -50,6 +51,7 @@ function App() {
           <Route path="/admin/errors/:errorId" element={<ProtectedRoute permissions={["view_errors"]}><ErrorDetail /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute permissions={["view_all_users"]}><Users /></ProtectedRoute>} />
           <Route path="/admin/users/inactive" element={<ProtectedRoute permissions={["view_all_users"]}><Users inactive /></ProtectedRoute>} />
+          <Route path="/admin/judging" element={<ProtectedRoute permissions={["view_judging_settings"]}><Judging /></ProtectedRoute>} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />
