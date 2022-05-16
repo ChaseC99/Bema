@@ -46,7 +46,8 @@ function ContestantSearch() {
                     id: "search-input",
                     label: "",
                     defaultValue: "",
-                    placeholder: "Enter display name or KAID"
+                    placeholder: "Enter display name or KAID",
+                    required: true
                   }
                 ]}
               />

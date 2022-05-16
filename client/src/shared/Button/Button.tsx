@@ -10,6 +10,7 @@ type ButtonProps =
     text: string
     inverse?: boolean
     destructive?: boolean
+    style?: React.CSSProperties
     testId?: string
   }
   | {
@@ -21,6 +22,7 @@ type ButtonProps =
     inverse?: boolean
     destructive?: boolean
     disabled?: boolean
+    style?: React.CSSProperties
     testId?: string
   }
 
@@ -42,7 +44,7 @@ function Button(props: ButtonProps) {
 
   if (props.role === "link") {
     return (
-      <Link to={props.action} className="no-underline" data-testid={props.testId}>
+      <Link to={props.action} className="no-underline" data-testid={props.testId} style={props.style}>
         <span className={c}>
           {props.text}
         </span>
@@ -52,7 +54,7 @@ function Button(props: ButtonProps) {
   else {
     if (props.data) {
       return (
-        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId} disabled={props.disabled}>
+        <button className={c} onClick={() => props.action(props.data)} data-testid={props.testId} disabled={props.disabled} style={props.style}>
           <span>
             {props.text}
           </span>
@@ -61,7 +63,7 @@ function Button(props: ButtonProps) {
     }
 
     return (
-      <button className={c} onClick={props.action} data-testid={props.testId} disabled={props.disabled}>
+      <button className={c} onClick={props.action} data-testid={props.testId} disabled={props.disabled} style={props.style}>
         <span>
           {props.text}
         </span>

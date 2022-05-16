@@ -10,6 +10,7 @@ type ProtectedRouteProps = {
   children: React.ReactChild | React.ReactChild[]
   permissions: PermissionName[]
   requireAll?: boolean
+  requireAdmin?: boolean
 }
 
 /**
@@ -33,6 +34,11 @@ function ProtectedRoute(props: ProtectedRouteProps) {
       <React.Fragment>
         {props.children}
       </React.Fragment>
+    );
+  }
+  else if (props.requireAdmin && !state.is_admin) {
+    return (
+      <ErrorPage type="NO PERMISSION" />
     );
   }
   else if (props.permissions.length > 0 && props.requireAll) {
