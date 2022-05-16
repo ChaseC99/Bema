@@ -5,63 +5,6 @@ const {
 const db = require(process.cwd() + "/util/db");
 const { displayDateFormat, displayFancyDateFormat, publicPermissions } = require(process.cwd() + "/util/variables");
 
-exports.judging = (request, response, next) => {
-  if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
-    return db.query("SELECT * FROM get_entry_and_create_placeholder($1)", [request.decodedToken.evaluator_id], res => {
-      if (res.error) {
-        return handleNext(next, 400, "There was a problem getting an entry");
-      }
-      return response.render("pages/judging", {
-        entry: res.rows[0],
-        logged_in: true,
-        permissions: request.decodedToken.permissions,
-        is_impersonated: request.decodedToken.is_impersonated,
-        evaluator_id: request.decodedToken.evaluator_id
-      });
-    });
-  }
-  // Instead, show the public version with dumby data.
-  response.render("pages/judging", {
-    logged_in: false,
-    entry: {
-      o_entry_id: 1316,
-      o_entry_url: 'https://www.khanacademy.org/computer-programming/example-entry/6586620957786112',
-      o_entry_title: 'Example entry',
-      o_entry_height: 400
-    },
-    permissions: publicPermissions,
-    is_impersonated: false
-  });
-}
-
-exports.adminSkillLevels = (request, response, next) => {
-  if (request.decodedToken && request.decodedToken.is_admin) {
-    return response.render("pages/admin/reviewEntryLevels", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
-exports.adminJudging = (request, response, next) => {
-  if (request.decodedToken && (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin)) {
-    return response.render("pages/admin/judging", {
-      logged_in: true,
-      is_admin: request.decodedToken.is_admin,
-      evaluator_id: request.decodedToken.evaluator_id,
-      permissions: request.decodedToken.permissions,
-      is_impersonated: request.decodedToken.is_impersonated
-    });
-  } else {
-    response.redirect("/admin/dashboard");
-  }
-}
-
 exports.kbHome = (request, response, next) => {
   if (request.decodedToken) {
     return response.render("pages/knowledge-base/home", {
