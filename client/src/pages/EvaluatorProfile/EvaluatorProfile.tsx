@@ -90,8 +90,21 @@ function EvaluatorProfile() {
     setShowChangePasswordModal(false);
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async (values: { [name: string]: any}) => {
+    await request("PUT", "/api/auth/changePassword", {
+      evaluator_id: parseInt(evaluatorId || ""),
+      new_password: values.password
+    });
 
+    closeChangePasswordModal();
+  }
+
+  const validatePassword = (value: string) => {
+    if (value.length < 8) {
+      return "Password must be at least 8 characters"
+    }
+
+    return null;
   }
 
   return (
@@ -233,6 +246,29 @@ function EvaluatorProfile() {
               label: "Receive email notifications",
               size: "LARGE",
               defaultValue: user?.receive_emails || false
+            }
+          ]}
+        />
+      }
+
+      {showChangePasswordModal &&
+        <FormModal
+          title="Change Password"
+          submitLabel="Change Password"
+          handleSubmit={handleChangePassword}
+          handleCancel={closeChangePasswordModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "password",
+              name: "password",
+              id: "password",
+              label: "New Password",
+              size: "LARGE",
+              defaultValue: "",
+              required: true,
+              validate: validatePassword
             }
           ]}
         />
