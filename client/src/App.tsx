@@ -24,6 +24,8 @@ import Login from "./pages/Login";
 import { AuthenticatedRoute, ProtectedRoute, UnauthenticatedRoute } from "./shared/Routes";
 import Judging from "./pages/Judging";
 import AdminJudging from "./pages/admin/Judging";
+import Levels from "./pages/admin/Levels";
+import EvaluatorProfile from "./pages/EvaluatorProfile";
 
 function App() {  
   useEffect(() => {
@@ -45,6 +47,8 @@ function App() {
           <Route path="/contestants" element={<AuthenticatedRoute><ContestantSearch /></AuthenticatedRoute>} />
           <Route path="/contestants/:contestantKaid" element={<AuthenticatedRoute><ContestantProfile /></AuthenticatedRoute>} />
 
+          <Route path="/evaluator/:evaluatorId" element={<AuthenticatedRoute><EvaluatorProfile /></AuthenticatedRoute>} />
+
           <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/tasks" element={<ProtectedRoute permissions={["view_all_tasks"]}><Tasks /></ProtectedRoute>} />
@@ -54,6 +58,7 @@ function App() {
           <Route path="/admin/users" element={<ProtectedRoute permissions={["view_all_users"]}><Users /></ProtectedRoute>} />
           <Route path="/admin/users/inactive" element={<ProtectedRoute permissions={["view_all_users"]}><Users inactive /></ProtectedRoute>} />
           <Route path="/admin/judging" element={<ProtectedRoute permissions={["view_judging_settings"]}><AdminJudging /></ProtectedRoute>} />
+          <Route path="/admin/skill-levels" element={<ProtectedRoute permissions={[]} requireAdmin><Levels /></ProtectedRoute>} />
 
           <Route path="/entries/:contestId" element={<Entries />} />
           <Route path="/results/:contestId" element={<Results />} />

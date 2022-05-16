@@ -294,9 +294,6 @@ const routeChecks = {
           check("nickname")
           .not().isEmpty()
           .withMessage("Display name cannot be empty"),
-          check("email")
-          .isEmail()
-          .withMessage("Email must be a valid email address"),
           check("receive_emails")
           .isBoolean()
           .withMessage("receive_emails must be a boolean")
