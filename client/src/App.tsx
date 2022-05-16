@@ -25,6 +25,7 @@ import { AuthenticatedRoute, ProtectedRoute, UnauthenticatedRoute } from "./shar
 import Judging from "./pages/Judging";
 import AdminJudging from "./pages/admin/Judging";
 import Levels from "./pages/admin/Levels";
+import EvaluatorProfile from "./pages/EvaluatorProfile";
 
 function App() {  
   useEffect(() => {
@@ -45,6 +46,8 @@ function App() {
 
           <Route path="/contestants" element={<AuthenticatedRoute><ContestantSearch /></AuthenticatedRoute>} />
           <Route path="/contestants/:contestantKaid" element={<AuthenticatedRoute><ContestantProfile /></AuthenticatedRoute>} />
+
+          <Route path="/evaluator/:evaluatorId" element={<AuthenticatedRoute><EvaluatorProfile /></AuthenticatedRoute>} />
 
           <Route path="/admin/contests" element={<Contests />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
