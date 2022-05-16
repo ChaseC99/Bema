@@ -196,17 +196,17 @@ const routeChecks = {
       .isInt()
       .withMessage("entry_id must be an integer"),
       check("creativity")
-      .isInt(scoreChars)
-      .withMessage("creativity score must be >= 0 and <= 10"),
+      .isIn(scores)
+      .withMessage("creativity score must be >= 0 and <= 5"),
       check("complexity")
-      .isInt(scoreChars)
-      .withMessage("complexity score must be >= 0 and <= 10"),
+      .isIn(scores)
+      .withMessage("complexity score must be >= 0 and <= 5"),
       check("quality_code")
-      .isInt(scoreChars)
-      .withMessage("quality_code score must be >= 0 and <= 10"),
+      .isIn(scores)
+      .withMessage("quality_code score must be >= 0 and <= 5"),
       check("interpretation")
-      .isInt(scoreChars)
-      .withMessage("interpretation score must be >= 0 and <= 10"),
+      .isIn(scores)
+      .withMessage("interpretation score must be >= 0 and <= 5"),
       check("skill_level")
       .isIn(skillLevels)
       .withMessage("skill_level must be 'Advanced', 'Intermediate', or 'Beginner'")
@@ -673,6 +673,7 @@ router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messag
 router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
 
 // Judging
+router.get("/internal/judging/getNextEntry", judging.getNextEntry);
 router.get("/internal/judging/criteria", judging.getJudgingCriteria);
 router.get("/internal/judging/allCriteria", judging.getAllJudgingCriteria);
 router.post("/internal/judging/criteria", routeChecks.judging.addCriteria, wasValidated, judging.addJudgingCriteria);

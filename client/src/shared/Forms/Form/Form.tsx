@@ -5,6 +5,7 @@ import CheckboxField from "../CheckboxField/CheckboxField";
 import DateField from "../DateField/DateField";
 import InputField from "../InputField/InputField";
 import SelectField from "../SelectField/SelectField";
+import SliderField from "../SliderField/SliderField";
 import TextAreaField from "../TextAreaField/TextAreaField";
 import TextEditorField from "../TextEditorField/TextEditorField";
 import "./Form.css";
@@ -15,6 +16,7 @@ type FormProps = {
   fields: FormFields[]
   submitLabel: string
   cols?: number
+  disabled?: boolean
   testId?: string
 }
 
@@ -153,7 +155,7 @@ function Form(props: FormProps) {
   }
 
   return (
-    <div className="form" data-testid={props.testId}>
+    <div className="form col-12" data-testid={props.testId}>
       <div className={"form-fields-wrapper" + (props.cols ? " col-"+props.cols : "")}>
         <div className="form-fields-container">
           {!isLoading && props.fields.map((field) => {
@@ -269,6 +271,25 @@ function Form(props: FormProps) {
                 />
               );
             }
+            else if (field.fieldType === "SLIDER") {
+              return (
+                <SliderField 
+                  name={field.name}
+                  id={field.id}
+                  value={values[field.name]}
+                  size={field.size}
+                  label={field.label}
+                  onChange={handleChange}
+                  description={field.description}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                  tickStep={field.tickStep}
+                  testId={field.testId}
+                  key={field.id}
+                />
+              );
+            }
 
             return null;
           })}
@@ -277,7 +298,7 @@ function Form(props: FormProps) {
 
       <div className="form-actions">
         {props.onCancel && <Button type="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} />}
-        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0} />
+        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0 || props.disabled} />
       </div>
     </div>
   );
