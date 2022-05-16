@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import Badge from "../../../shared/Badge";
 import Button from "../../../shared/Button";
 import ExternalLink from "../../../shared/ExternalLink";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
+import { ConfirmModal } from "../../../shared/Modals";
 import ProgramEmbed from "../../../shared/ProgramEmbed";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
@@ -90,8 +92,13 @@ function Levels() {
     setShowDisqualifyModal(false);
   }
 
-  const handleDisqualify = () => {
+  const handleDisqualify = async () => {
+    await request("PUT", "/api/internal/entries/disqualify", {
+      entry_id: entry?.entry_id
+    });
 
+    closeDisqualifyModal();
+    handleFetchNextEntry();
   }
 
   const openDeleteModal = () => {
@@ -102,8 +109,13 @@ function Levels() {
     setShowDeleteModal(false);
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    await request("DELETE", "/api/internal/entries", {
+      entry_id: entry?.entry_id
+    });
 
+    closeDeleteModal();
+    handleFetchNextEntry();
   }
 
   return (
@@ -121,7 +133,7 @@ function Levels() {
             {!entryIsLoading &&
               <React.Fragment>
                 <h2 style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}><ExternalLink to={entry?.entry_url || ""}>{entry?.entry_title || ""}</ExternalLink></h2>
-                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entry?.entry_author_kaid}>{entry?.entry_author || ""}</ExternalLink></p>
+                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entry?.entry_author_kaid + "/projects"}>{entry?.entry_author || ""}</ExternalLink></p>
                 <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entry?.entry_votes || 0}</p>
 
                 {programIsLoading && <LoadingSpinner size="MEDIUM" />}
@@ -159,7 +171,11 @@ function Levels() {
                     return (
                       <Row key={e.entry_id}>
                         <Cell>{e.entry_id}</Cell>
-                        <Cell>{e.entry_title}</Cell>
+                        <Cell>
+                          {e.entry_title}
+                          {e.disqualified ? <Badge color="#d92916" text="Disqualified" type="secondary" /> : ""}
+                          {e.is_winner ? <Badge color="#ffb100" text="Winner" type="secondary" /> : ""}
+                        </Cell>
                         <Cell>{e.contest_name}</Cell>
                         <Cell>{e.entry_level}</Cell>
                         <Cell>{e.avg_score}</Cell>
@@ -172,6 +188,30 @@ function Levels() {
           </div>
         </div>
       </section>
+
+      {showDisqualifyModal &&
+        <ConfirmModal
+          title="Disqualify entry?"
+          confirmLabel="Disqualify"
+          handleConfirm={handleDisqualify}
+          handleCancel={closeDisqualifyModal}
+          destructive
+        >
+          <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
+        </ConfirmModal>
+      }
+
+      {showDeleteModal &&
+        <ConfirmModal
+          title="Delete entry?"
+          confirmLabel="Delete"
+          handleConfirm={handleDelete}
+          handleCancel={closeDeleteModal}
+          destructive
+        >
+          <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
+        </ConfirmModal>
+      }
     </React.Fragment>
   );
 }
