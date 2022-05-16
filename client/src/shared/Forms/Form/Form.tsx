@@ -16,6 +16,7 @@ type FormProps = {
   fields: FormFields[]
   submitLabel: string
   cols?: number
+  disabled?: boolean
   testId?: string
 }
 
@@ -297,7 +298,7 @@ function Form(props: FormProps) {
 
       <div className="form-actions">
         {props.onCancel && <Button type="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} />}
-        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0} />
+        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0 || props.disabled} />
       </div>
     </div>
   );
