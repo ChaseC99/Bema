@@ -7,6 +7,16 @@ on:
       - main
 
 jobs:
+  publish_schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: danielsinclair/rover-publish@v1
+        with:
+          graph: Bema
+          variant: current
+          artifact: graph/schema.graphqls
+        env:
+          APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
   deployment:
     runs-on: ubuntu-latest
     environment: bema
