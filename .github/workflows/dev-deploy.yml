@@ -14,6 +14,8 @@ jobs:
         with:
           graph: Bema
           variant: development
+          federated: false
+          subgraph: main
           artifact: graph/schema.graphqls
         env:
           APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
