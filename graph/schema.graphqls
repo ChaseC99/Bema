@@ -1,0 +1,56 @@
+type Query {
+  currentUser: FullUserProfile!
+}
+
+type FullUserProfile {
+  isAdmin: Boolean!
+  isImpersonated: Boolean!
+  loggedIn: Boolean!
+  originKaid: String
+  user: User
+}
+
+type User {
+  id: ID!
+  kaid: String!
+  name: String
+  nickname: String
+  username: String
+  email: String
+  accountLocked: Boolean
+  permissions: Permissions
+  isAdmin: Boolean
+}
+
+type Permissions {
+  add_entries: Boolean!
+  add_users: Boolean!
+  assign_entry_groups: Boolean!
+  assign_evaluator_groups: Boolean!
+  assume_user_identities: Boolean!
+  change_user_passwords: Boolean!
+  delete_all_evaluations: Boolean!
+  delete_all_tasks: Boolean!
+  delete_contests: Boolean!
+  delete_entries: Boolean!
+  delete_errors: Boolean!
+  delete_kb_content: Boolean!
+  edit_all_evaluations: Boolean!
+  edit_all_tasks: Boolean!
+  edit_contests: Boolean!
+  edit_entries: Boolean!
+  edit_kb_content: Boolean!
+  edit_user_profiles: Boolean!
+  judge_entries: Boolean!
+  manage_announcements: Boolean!
+  manage_judging_criteria: Boolean!
+  manage_judging_groups: Boolean!
+  manage_winners: Boolean!
+  publish_kb_content: Boolean!
+  view_admin_stats: Boolean!
+  view_all_evaluations: Boolean!
+  view_all_tasks: Boolean!
+  view_all_users: Boolean!
+  view_errors: Boolean!
+  view_judging_settings: Boolean!
+}

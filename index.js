@@ -13,7 +13,10 @@ const apiRoutes = require("./routes/api");
 const pagesRoutes = require("./routes/pages");
 const authRoutes = require("./routes/auth");
 const publicPermissions = require("./util/variables");
+const httpProxy = require('express-http-proxy')
 const app = express();
+const graphqlProxy = httpProxy('http://localhost:8080/api/internal/graphql')
+
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
@@ -33,6 +36,11 @@ app.use(isLoggedIn);
 app.use("/", pagesRoutes);
 app.use("/api/", apiRoutes);
 app.use("/api/auth/", authRoutes);
+
+// Redirect graphql requests
+app.post('/api/internal/graphql', (req, res, next) => {
+  graphqlProxy(req, res, next);
+});
 
 app.use("/", (req, res, next) => {
   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
