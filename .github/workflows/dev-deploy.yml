@@ -10,15 +10,14 @@ jobs:
   publish_schema:
     runs-on: ubuntu-latest
     steps:
-      - uses: danielsinclair/rover-publish@v1
-        with:
-          graph: Bema
-          variant: development
-          federated: false
-          subgraph: main
-          artifact: graph/schema.graphqls
-        env:
-          APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+      - uses: actions/checkout@v2
+      - name: Publish schema to Apollo
+        run: |
+          npx apollo service:push \
+            --graph=Bema \
+            --key=${{secrets.APOLLO_KEY}} \
+            --variant=development
+            --localSchemaFile=./graph/schema.graphqls
   deployment:
     runs-on: ubuntu-latest
     environment: bema-development
