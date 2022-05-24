@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/KA-Challenge-Council/Bema/graph"
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
@@ -32,6 +33,11 @@ func main() {
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 	router.Handle("/api/internal/graphql", srv)
+
+	mode := os.Getenv("APP_STATE")
+	if mode == "dev" {
+		router.Handle("/", playground.Handler("Bema", "/api/internal/graphql"))
+	}
 
 	fmt.Println("Running server on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
