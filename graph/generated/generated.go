@@ -36,13 +36,29 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Contest() ContestResolver
 	Query() QueryResolver
 }
 
 type DirectiveRoot struct {
+	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission) (res interface{}, err error)
+	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
+	Contest struct {
+		Author          func(childComplexity int) int
+		BadgeImageURL   func(childComplexity int) int
+		BadgeSlug       func(childComplexity int) int
+		EndDate         func(childComplexity int) int
+		ID              func(childComplexity int) int
+		IsCurrent       func(childComplexity int) int
+		IsVotingEnabled func(childComplexity int) int
+		Name            func(childComplexity int) int
+		StartDate       func(childComplexity int) int
+		URL             func(childComplexity int) int
+	}
+
 	FullUserProfile struct {
 		IsAdmin        func(childComplexity int) int
 		IsImpersonated func(childComplexity int) int
@@ -85,6 +101,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Contests    func(childComplexity int) int
 		CurrentUser func(childComplexity int) int
 	}
 
@@ -101,7 +118,13 @@ type ComplexityRoot struct {
 	}
 }
 
+type ContestResolver interface {
+	Author(ctx context.Context, obj *model.Contest) (*string, error)
+
+	IsVotingEnabled(ctx context.Context, obj *model.Contest) (*bool, error)
+}
 type QueryResolver interface {
+	Contests(ctx context.Context) ([]*model.Contest, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 }
 
@@ -119,6 +142,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Contest.author":
+		if e.complexity.Contest.Author == nil {
+			break
+		}
+
+		return e.complexity.Contest.Author(childComplexity), true
+
+	case "Contest.badgeImageUrl":
+		if e.complexity.Contest.BadgeImageURL == nil {
+			break
+		}
+
+		return e.complexity.Contest.BadgeImageURL(childComplexity), true
+
+	case "Contest.badgeSlug":
+		if e.complexity.Contest.BadgeSlug == nil {
+			break
+		}
+
+		return e.complexity.Contest.BadgeSlug(childComplexity), true
+
+	case "Contest.endDate":
+		if e.complexity.Contest.EndDate == nil {
+			break
+		}
+
+		return e.complexity.Contest.EndDate(childComplexity), true
+
+	case "Contest.id":
+		if e.complexity.Contest.ID == nil {
+			break
+		}
+
+		return e.complexity.Contest.ID(childComplexity), true
+
+	case "Contest.isCurrent":
+		if e.complexity.Contest.IsCurrent == nil {
+			break
+		}
+
+		return e.complexity.Contest.IsCurrent(childComplexity), true
+
+	case "Contest.isVotingEnabled":
+		if e.complexity.Contest.IsVotingEnabled == nil {
+			break
+		}
+
+		return e.complexity.Contest.IsVotingEnabled(childComplexity), true
+
+	case "Contest.name":
+		if e.complexity.Contest.Name == nil {
+			break
+		}
+
+		return e.complexity.Contest.Name(childComplexity), true
+
+	case "Contest.startDate":
+		if e.complexity.Contest.StartDate == nil {
+			break
+		}
+
+		return e.complexity.Contest.StartDate(childComplexity), true
+
+	case "Contest.url":
+		if e.complexity.Contest.URL == nil {
+			break
+		}
+
+		return e.complexity.Contest.URL(childComplexity), true
 
 	case "FullUserProfile.isAdmin":
 		if e.complexity.FullUserProfile.IsAdmin == nil {
@@ -365,6 +458,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Permissions.ViewJudgingSettings(childComplexity), true
 
+	case "Query.contests":
+		if e.complexity.Query.Contests == nil {
+			break
+		}
+
+		return e.complexity.Query.Contests(childComplexity), true
+
 	case "Query.currentUser":
 		if e.complexity.Query.CurrentUser == nil {
 			break
@@ -487,60 +587,171 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphqls", Input: `type Query {
+	{Name: "graph/graphql/contests.graphqls", Input: `extend type Query {
+    # A list of contests
+    contests: [Contest!]!
+}
+
+# A contest
+type Contest {
+  # A unique integer id of the contest
+  id: ID!
+  # The name of the contest
+  name: String!
+  # The url of the contest program page
+  url: String
+  # The author of the announcement program code. Only visible to contest editors
+  author: String @hasPermission(permission: EDIT_CONTESTS)
+  # The url slug of the contest badge
+  badgeSlug: String
+  # A url to the badge image
+  badgeImageUrl: String
+  # Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  isCurrent: Boolean!
+  # The start date of the contest
+  startDate: String
+  # The end date (deadline) of the contest
+  endDate: String
+  # Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+  isVotingEnabled: Boolean @isAuthenticated
+}`, BuiltIn: false},
+	{Name: "graph/graphql/directives.graphqls", Input: `directive @isAuthenticated on FIELD_DEFINITION
+directive @hasPermission(permission: Permission!) on FIELD_DEFINITION
+
+enum Permission {
+    ADD_ENTRIES,
+    ADD_USERS,
+    ASSIGN_ENTRY_GROUPS,
+    ASSIGN_EVALUATOR_GROUPS,
+    ASSUME_USER_IDENTITIES,
+    CHANGE_USER_PASSWORDS,
+    DELETE_ALL_EVALUATIONS,
+    DELETE_ALL_TASKS,
+    DELETE_CONTESTS,
+    DELETE_ENTRIES,
+    DELETE_ERRORS,
+    DELETE_KB_CONTENT,
+    EDIT_ALL_EVALUATIONS,
+    EDIT_ALL_TASKS,
+    EDIT_CONTESTS,
+    EDIT_ENTRIES,
+    EDIT_KB_CONTENT,
+    EDIT_USER_PROFILES,
+    JUDGE_ENTRIES,
+    MANAGE_ANNOUNCEMENTS,
+    MANAGE_JUDGING_CRITERIA,
+    MANAGE_JUDGING_GROUPS,
+    MANAGE_WINNERS,
+    PUBLISH_KB_CONTENT,
+    VIEW_ADMIN_STATS,
+    VIEW_ALL_EVALUATIONS,
+    VIEW_ALL_TASKS,
+    VIEW_ALL_USERS,
+    VIEW_ERRORS,
+    VIEW_JUDGING_SETTINGS,
+}`, BuiltIn: false},
+	{Name: "graph/graphql/users.graphqls", Input: `extend type Query {
+  # The full profile associated with the logged in user
   currentUser: FullUserProfile!
 }
 
+# The full profile of a logged in user
 type FullUserProfile {
+  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
   isAdmin: Boolean!
+  # Indicates whether the acting user is being impersonated by an admin user
   isImpersonated: Boolean!
+  # Indicates whether the actor is logged in
   loggedIn: Boolean!
+  # The kaid of the actual user, if the current actor is being impersonated
   originKaid: String
+  # The logged in user
   user: User
 }
 
+# An evaluator account
 type User {
+  # The unique integer id of the user
   id: ID!
+  # The kaid associated with the user's KA account
   kaid: String!
+  # The user's real name
   name: String
+  # The user's display name
   nickname: String
+  # The user's username that is used to log in
   username: String
+  # The user's email address
   email: String
+  # Indicates if the account has been deactivated
   accountLocked: Boolean
+  # The permission set of the user
   permissions: Permissions
+  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
   isAdmin: Boolean
 }
 
+# The permissions set, associated with the User type
 type Permissions {
+  # Allows the user to add individual and bulk import entries
   add_entries: Boolean!
+  # Allows the user to create new user accounts
   add_users: Boolean!
+  # Allows the user to assign entries to judging groups
   assign_entry_groups: Boolean!
+  # Allows the user to assign evaluators to judging groups
   assign_evaluator_groups: Boolean!
+  # Allows the user to impersonate other users
   assume_user_identities: Boolean!
+  # Allows the user to change the passwords of other users
   change_user_passwords: Boolean!
+  # Allows the user to delete all evaluations
   delete_all_evaluations: Boolean!
+  # Allows the user to delete all tasks
   delete_all_tasks: Boolean!
+  # Allows the user to delete all contests and associated data
   delete_contests: Boolean!
+  # Allows the user to delete all entries
   delete_entries: Boolean!
+  # Allows the user to delete all errors
   delete_errors: Boolean!
+  # Allows the user to delete all KB articles and sections
   delete_kb_content: Boolean!
+  # Allows the user to edit all evaluations
   edit_all_evaluations: Boolean!
+  # Allows the user to edit all tasks
   edit_all_tasks: Boolean!
+  # Allows the user to edit all contests
   edit_contests: Boolean!
+  # Allows the user to edit all entries
   edit_entries: Boolean!
+  # Allows the user to edit all KB articles and sections
   edit_kb_content: Boolean!
+  # Allows the user to edit all user profiles
   edit_user_profiles: Boolean!
+  # Allows the user to score entries
   judge_entries: Boolean!
+  # Allows the user to create, edit, and delete announcements
   manage_announcements: Boolean!
+  # Allows the user to create, edit, and delete judging criteria
   manage_judging_criteria: Boolean!
+  # Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
   manage_judging_groups: Boolean!
+  # Allows the user to add and remove winning entries
   manage_winners: Boolean!
+  # Allows the user to publish draft KB articles
   publish_kb_content: Boolean!
+  # Allows the user to view admin stats on the dashboard
   view_admin_stats: Boolean!
+  # Allows the user to view all evaluations
   view_all_evaluations: Boolean!
+  # Allows the user to view all tasks
   view_all_tasks: Boolean!
+  # Allows the user to view all user accounts
   view_all_users: Boolean!
+  # Allows the user to view all errors
   view_errors: Boolean!
+  # Allows the user to view all judging settings
   view_judging_settings: Boolean!
 }`, BuiltIn: false},
 }
@@ -549,6 +760,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Permission
+	if tmp, ok := rawArgs["permission"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("permission"))
+		arg0, err = ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["permission"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -602,6 +828,469 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Contest_id(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_name(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_url(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_author(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_author(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Contest().Author(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_CONTESTS")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_badgeSlug(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_badgeSlug(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BadgeSlug, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_badgeSlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_badgeImageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_badgeImageUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BadgeImageURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_badgeImageUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_isCurrent(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_isCurrent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCurrent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_isCurrent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_startDate(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_startDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_startDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_endDate(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_endDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_endDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contest_isVotingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Contest().IsVotingEnabled(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_isVotingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _FullUserProfile_isAdmin(ctx context.Context, field graphql.CollectedField, obj *model.FullUserProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FullUserProfile_isAdmin(ctx, field)
@@ -2157,6 +2846,72 @@ func (ec *executionContext) fieldContext_Permissions_view_judging_settings(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_contests(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contests(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Contests(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contest)
+	fc.Result = res
+	return ec.marshalNContest2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contest_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Contest_name(ctx, field)
+			case "url":
+				return ec.fieldContext_Contest_url(ctx, field)
+			case "author":
+				return ec.fieldContext_Contest_author(ctx, field)
+			case "badgeSlug":
+				return ec.fieldContext_Contest_badgeSlug(ctx, field)
+			case "badgeImageUrl":
+				return ec.fieldContext_Contest_badgeImageUrl(ctx, field)
+			case "isCurrent":
+				return ec.fieldContext_Contest_isCurrent(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Contest_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Contest_endDate(ctx, field)
+			case "isVotingEnabled":
+				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_currentUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_currentUser(ctx, field)
 	if err != nil {
@@ -2368,9 +3123,9 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4560,6 +5315,102 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** object.gotpl ****************************
 
+var contestImplementors = []string{"Contest"}
+
+func (ec *executionContext) _Contest(ctx context.Context, sel ast.SelectionSet, obj *model.Contest) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, contestImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Contest")
+		case "id":
+
+			out.Values[i] = ec._Contest_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+
+			out.Values[i] = ec._Contest_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "url":
+
+			out.Values[i] = ec._Contest_url(ctx, field, obj)
+
+		case "author":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contest_author(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "badgeSlug":
+
+			out.Values[i] = ec._Contest_badgeSlug(ctx, field, obj)
+
+		case "badgeImageUrl":
+
+			out.Values[i] = ec._Contest_badgeImageUrl(ctx, field, obj)
+
+		case "isCurrent":
+
+			out.Values[i] = ec._Contest_isCurrent(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "startDate":
+
+			out.Values[i] = ec._Contest_startDate(ctx, field, obj)
+
+		case "endDate":
+
+			out.Values[i] = ec._Contest_endDate(ctx, field, obj)
+
+		case "isVotingEnabled":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contest_isVotingEnabled(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var fullUserProfileImplementors = []string{"FullUserProfile"}
 
 func (ec *executionContext) _FullUserProfile(ctx context.Context, sel ast.SelectionSet, obj *model.FullUserProfile) graphql.Marshaler {
@@ -4860,6 +5711,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "contests":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contests(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "currentUser":
 			field := field
 
@@ -5302,6 +6176,60 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNContest2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contest) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx context.Context, sel ast.SelectionSet, v *model.Contest) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Contest(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNFullUserProfile2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐFullUserProfile(ctx context.Context, sel ast.SelectionSet, v model.FullUserProfile) graphql.Marshaler {
 	return ec._FullUserProfile(ctx, sel, &v)
 }
@@ -5316,19 +6244,29 @@ func (ec *executionContext) marshalNFullUserProfile2ᚖgithubᚗcomᚋKAᚑChall
 	return ec._FullUserProfile(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalID(v)
+func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalIntID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
+func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalIntID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, v interface{}) (model.Permission, error) {
+	var res model.Permission
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, sel ast.SelectionSet, v model.Permission) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

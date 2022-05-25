@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 	"github.com/golang-jwt/jwt"
 )
@@ -151,4 +153,106 @@ func Middleware(db *sql.DB) func(http.Handler) http.Handler {
 func GetUserFromContext(ctx context.Context) *User {
 	user, _ := ctx.Value(userCtxKey).(*User)
 	return user
+}
+
+// Handler for the @isAuthenticated directive. Only calls the resolver if the user is logged in.
+func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+	user := GetUserFromContext(ctx)
+
+	if user == nil {
+		return nil, nil
+	}
+
+	return next(ctx)
+}
+
+// Handler for the @hasPermission directive. Only calls the resolver if the user is an admin or if they are logged in and have the required permission.
+func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission) (interface{}, error) {
+	user := GetUserFromContext(ctx)
+
+	// Hide the field if the user is not logged in
+	if user == nil {
+		return nil, nil
+	}
+
+	// If logged in, make sure the user has the required permission
+	hasPermission := getPermissionFromEnum(user, permission.String())
+	if !hasPermission && !user.IsAdmin {
+		return nil, nil
+	}
+
+	// If they have permission, call the resolver
+	return next(ctx)
+}
+
+// Retrieves the user's permission value based on the enum string value that comes from the GraphQL Permission enum type
+func getPermissionFromEnum(user *User, enumValue string) bool {
+	if user == nil {
+		return false
+	}
+
+	switch enumValue {
+	case "ADD_ENTRIES":
+		return user.Permissions.AddEntries
+	case "ADD_USERS":
+		return user.Permissions.AddUsers
+	case "ASSIGN_ENTRY_GROUPS":
+		return user.Permissions.AssignEntryGroups
+	case "ASSIGN_EVALUATOR_GROUPS":
+		return user.Permissions.AssignEvaluatorGroups
+	case "ASSUME_USER_IDENTITIES":
+		return user.Permissions.AssumeUserIdentities
+	case "CHANGE_USER_PASSWORDS":
+		return user.Permissions.ChangeUserPasswords
+	case "DELETE_ALL_EVALUATIONS":
+		return user.Permissions.DeleteAllEvaluations
+	case "DELETE_ALL_TASKS":
+		return user.Permissions.DeleteAllTasks
+	case "DELETE_CONTESTS":
+		return user.Permissions.DeleteContests
+	case "DELETE_ENTRIES":
+		return user.Permissions.DeleteEntries
+	case "DELETE_ERRORS":
+		return user.Permissions.DeleteErrors
+	case "DELETE_KB_CONTENT":
+		return user.Permissions.DeleteKbContent
+	case "EDIT_ALL_EVALUATIONS":
+		return user.Permissions.EditAllEvaluations
+	case "EDIT_ALL_TASKS":
+		return user.Permissions.EditAllTasks
+	case "EDIT_CONTESTS":
+		return user.Permissions.EditContests
+	case "EDIT_ENTRIES":
+		return user.Permissions.EditEntries
+	case "EDIT_KB_CONTENT":
+		return user.Permissions.EditKbContent
+	case "EDIT_USER_PROFILES":
+		return user.Permissions.EditUserProfiles
+	case "JUDGE_ENTRIES":
+		return user.Permissions.JudgeEntries
+	case "MANAGE_ANNOUNCEMENTS":
+		return user.Permissions.ManageAnnouncements
+	case "MANAGE_JUDGING_CRITERIA":
+		return user.Permissions.ManageJudgingCriteria
+	case "MANAGE_JUDGING_GROUPS":
+		return user.Permissions.ManageJudgingGroups
+	case "MANAGE_WINNERS":
+		return user.Permissions.ManageWinners
+	case "PUBLISH_KB_CONTENT":
+		return user.Permissions.PublishKbContent
+	case "VIEW_ADMIN_STATS":
+		return user.Permissions.ViewAdminStats
+	case "VIEW_ALL_EVALUATIONS":
+		return user.Permissions.ViewAllEvaluations
+	case "VIEW_ALL_TASKS":
+		return user.Permissions.ViewAllTasks
+	case "VIEW_ALL_USERS":
+		return user.Permissions.ViewAllUsers
+	case "VIEW_ERRORS":
+		return user.Permissions.ViewErrors
+	case "VIEW_JUDGING_SETTINGS":
+		return user.Permissions.ViewJudgingSettings
+	default:
+		return false
+	}
 }

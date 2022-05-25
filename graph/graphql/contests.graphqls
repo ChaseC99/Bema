@@ -1,0 +1,28 @@
+extend type Query {
+    # A list of contests
+    contests: [Contest!]!
+}
+
+# A contest
+type Contest {
+  # A unique integer id of the contest
+  id: ID!
+  # The name of the contest
+  name: String!
+  # The url of the contest program page
+  url: String
+  # The author of the announcement program code. Only visible to contest editors
+  author: String @hasPermission(permission: EDIT_CONTESTS)
+  # The url slug of the contest badge
+  badgeSlug: String
+  # A url to the badge image
+  badgeImageUrl: String
+  # Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  isCurrent: Boolean!
+  # The start date of the contest
+  startDate: String
+  # The end date (deadline) of the contest
+  endDate: String
+  # Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+  isVotingEnabled: Boolean @isAuthenticated
+}

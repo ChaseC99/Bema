@@ -2,6 +2,25 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Contest struct {
+	ID              int     `json:"id"`
+	Name            string  `json:"name"`
+	URL             *string `json:"url"`
+	Author          *string `json:"author"`
+	BadgeSlug       *string `json:"badgeSlug"`
+	BadgeImageURL   *string `json:"badgeImageUrl"`
+	IsCurrent       bool    `json:"isCurrent"`
+	StartDate       *string `json:"startDate"`
+	EndDate         *string `json:"endDate"`
+	IsVotingEnabled *bool   `json:"isVotingEnabled"`
+}
+
 type FullUserProfile struct {
 	IsAdmin        bool    `json:"isAdmin"`
 	IsImpersonated bool    `json:"isImpersonated"`
@@ -44,7 +63,7 @@ type Permissions struct {
 }
 
 type User struct {
-	ID            string       `json:"id"`
+	ID            int          `json:"id"`
 	Kaid          string       `json:"kaid"`
 	Name          *string      `json:"name"`
 	Nickname      *string      `json:"nickname"`
@@ -53,4 +72,101 @@ type User struct {
 	AccountLocked *bool        `json:"accountLocked"`
 	Permissions   *Permissions `json:"permissions"`
 	IsAdmin       *bool        `json:"isAdmin"`
+}
+
+type Permission string
+
+const (
+	PermissionAddEntries            Permission = "ADD_ENTRIES"
+	PermissionAddUsers              Permission = "ADD_USERS"
+	PermissionAssignEntryGroups     Permission = "ASSIGN_ENTRY_GROUPS"
+	PermissionAssignEvaluatorGroups Permission = "ASSIGN_EVALUATOR_GROUPS"
+	PermissionAssumeUserIDEntities  Permission = "ASSUME_USER_IDENTITIES"
+	PermissionChangeUserPasswords   Permission = "CHANGE_USER_PASSWORDS"
+	PermissionDeleteAllEvaluations  Permission = "DELETE_ALL_EVALUATIONS"
+	PermissionDeleteAllTasks        Permission = "DELETE_ALL_TASKS"
+	PermissionDeleteContests        Permission = "DELETE_CONTESTS"
+	PermissionDeleteEntries         Permission = "DELETE_ENTRIES"
+	PermissionDeleteErrors          Permission = "DELETE_ERRORS"
+	PermissionDeleteKbContent       Permission = "DELETE_KB_CONTENT"
+	PermissionEditAllEvaluations    Permission = "EDIT_ALL_EVALUATIONS"
+	PermissionEditAllTasks          Permission = "EDIT_ALL_TASKS"
+	PermissionEditContests          Permission = "EDIT_CONTESTS"
+	PermissionEditEntries           Permission = "EDIT_ENTRIES"
+	PermissionEditKbContent         Permission = "EDIT_KB_CONTENT"
+	PermissionEditUserProfiles      Permission = "EDIT_USER_PROFILES"
+	PermissionJudgeEntries          Permission = "JUDGE_ENTRIES"
+	PermissionManageAnnouncements   Permission = "MANAGE_ANNOUNCEMENTS"
+	PermissionManageJudgingCriteria Permission = "MANAGE_JUDGING_CRITERIA"
+	PermissionManageJudgingGroups   Permission = "MANAGE_JUDGING_GROUPS"
+	PermissionManageWinners         Permission = "MANAGE_WINNERS"
+	PermissionPublishKbContent      Permission = "PUBLISH_KB_CONTENT"
+	PermissionViewAdminStats        Permission = "VIEW_ADMIN_STATS"
+	PermissionViewAllEvaluations    Permission = "VIEW_ALL_EVALUATIONS"
+	PermissionViewAllTasks          Permission = "VIEW_ALL_TASKS"
+	PermissionViewAllUsers          Permission = "VIEW_ALL_USERS"
+	PermissionViewErrors            Permission = "VIEW_ERRORS"
+	PermissionViewJudgingSettings   Permission = "VIEW_JUDGING_SETTINGS"
+)
+
+var AllPermission = []Permission{
+	PermissionAddEntries,
+	PermissionAddUsers,
+	PermissionAssignEntryGroups,
+	PermissionAssignEvaluatorGroups,
+	PermissionAssumeUserIDEntities,
+	PermissionChangeUserPasswords,
+	PermissionDeleteAllEvaluations,
+	PermissionDeleteAllTasks,
+	PermissionDeleteContests,
+	PermissionDeleteEntries,
+	PermissionDeleteErrors,
+	PermissionDeleteKbContent,
+	PermissionEditAllEvaluations,
+	PermissionEditAllTasks,
+	PermissionEditContests,
+	PermissionEditEntries,
+	PermissionEditKbContent,
+	PermissionEditUserProfiles,
+	PermissionJudgeEntries,
+	PermissionManageAnnouncements,
+	PermissionManageJudgingCriteria,
+	PermissionManageJudgingGroups,
+	PermissionManageWinners,
+	PermissionPublishKbContent,
+	PermissionViewAdminStats,
+	PermissionViewAllEvaluations,
+	PermissionViewAllTasks,
+	PermissionViewAllUsers,
+	PermissionViewErrors,
+	PermissionViewJudgingSettings,
+}
+
+func (e Permission) IsValid() bool {
+	switch e {
+	case PermissionAddEntries, PermissionAddUsers, PermissionAssignEntryGroups, PermissionAssignEvaluatorGroups, PermissionAssumeUserIDEntities, PermissionChangeUserPasswords, PermissionDeleteAllEvaluations, PermissionDeleteAllTasks, PermissionDeleteContests, PermissionDeleteEntries, PermissionDeleteErrors, PermissionDeleteKbContent, PermissionEditAllEvaluations, PermissionEditAllTasks, PermissionEditContests, PermissionEditEntries, PermissionEditKbContent, PermissionEditUserProfiles, PermissionJudgeEntries, PermissionManageAnnouncements, PermissionManageJudgingCriteria, PermissionManageJudgingGroups, PermissionManageWinners, PermissionPublishKbContent, PermissionViewAdminStats, PermissionViewAllEvaluations, PermissionViewAllTasks, PermissionViewAllUsers, PermissionViewErrors, PermissionViewJudgingSettings:
+		return true
+	}
+	return false
+}
+
+func (e Permission) String() string {
+	return string(e)
+}
+
+func (e *Permission) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Permission(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Permission", str)
+	}
+	return nil
+}
+
+func (e Permission) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

@@ -1,18 +1,22 @@
+//go:generate go run github.com/99designs/gqlgen generate
+
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/KA-Challenge-Council/Bema/graph"
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
+	"github.com/KA-Challenge-Council/Bema/graph/resolvers"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
+
+	_ "github.com/lib/pq"
 )
 
 const defaultPort = "8080"
@@ -28,17 +32,29 @@ func main() {
 		port = defaultPort
 	}
 
+	// Create database connection
+	db.InitDB()
+
+	// Create configuration and set directive handlers
+	config := generated.Config{Resolvers: &resolvers.Resolver{}}
+	config.Directives.HasPermission = auth.HasPermission
+	config.Directives.IsAuthenticated = auth.IsAuthenticated
+
+	// Create router
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(nil))
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	// Create graphql handler
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 	router.Handle("/api/internal/graphql", srv)
 
+	// Render a playground editor in dev mode
 	mode := os.Getenv("APP_STATE")
 	if mode == "dev" {
 		router.Handle("/", playground.Handler("Bema", "/api/internal/graphql"))
 	}
 
-	fmt.Println("Running server on port :" + port)
+	// Start the server
+	log.Println("Running server on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

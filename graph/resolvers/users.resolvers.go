@@ -1,13 +1,11 @@
-package graph
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
 )
@@ -32,7 +30,7 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 			LoggedIn:       true,
 			OriginKaid:     user.OriginKaid,
 			User: &model.User{
-				ID:            fmt.Sprint(user.ID),
+				ID:            user.ID,
 				Kaid:          user.Kaid,
 				Name:          &user.Name,
 				Nickname:      &user.Nickname,
@@ -78,8 +76,3 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 
 	return userProfile, nil
 }
-
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
-type queryResolver struct{ *Resolver }
