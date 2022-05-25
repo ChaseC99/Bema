@@ -3,6 +3,8 @@ extend type Query {
     contests: [Contest!]!
     # A single contest
     contest(id: ID!): Contest
+    # The most recent contest
+    currentContest: Contest
 }
 
 # A contest

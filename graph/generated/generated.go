@@ -101,9 +101,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Contest     func(childComplexity int, id int) int
-		Contests    func(childComplexity int) int
-		CurrentUser func(childComplexity int) int
+		Contest        func(childComplexity int, id int) int
+		Contests       func(childComplexity int) int
+		CurrentContest func(childComplexity int) int
+		CurrentUser    func(childComplexity int) int
 	}
 
 	User struct {
@@ -127,6 +128,7 @@ type ContestResolver interface {
 type QueryResolver interface {
 	Contests(ctx context.Context) ([]*model.Contest, error)
 	Contest(ctx context.Context, id int) (*model.Contest, error)
+	CurrentContest(ctx context.Context) (*model.Contest, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 }
 
@@ -479,6 +481,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contests(childComplexity), true
 
+	case "Query.currentContest":
+		if e.complexity.Query.CurrentContest == nil {
+			break
+		}
+
+		return e.complexity.Query.CurrentContest(childComplexity), true
+
 	case "Query.currentUser":
 		if e.complexity.Query.CurrentUser == nil {
 			break
@@ -606,6 +615,8 @@ var sources = []*ast.Source{
     contests: [Contest!]!
     # A single contest
     contest(id: ID!): Contest
+    # The most recent contest
+    currentContest: Contest
 }
 
 # A contest
@@ -3013,6 +3024,69 @@ func (ec *executionContext) fieldContext_Query_contest(ctx context.Context, fiel
 	if fc.Args, err = ec.field_Query_contest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_currentContest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_currentContest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CurrentContest(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contest)
+	fc.Result = res
+	return ec.marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_currentContest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contest_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Contest_name(ctx, field)
+			case "url":
+				return ec.fieldContext_Contest_url(ctx, field)
+			case "author":
+				return ec.fieldContext_Contest_author(ctx, field)
+			case "badgeSlug":
+				return ec.fieldContext_Contest_badgeSlug(ctx, field)
+			case "badgeImageUrl":
+				return ec.fieldContext_Contest_badgeImageUrl(ctx, field)
+			case "isCurrent":
+				return ec.fieldContext_Contest_isCurrent(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Contest_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Contest_endDate(ctx, field)
+			case "isVotingEnabled":
+				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -5849,6 +5923,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_contest(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "currentContest":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currentContest(ctx, field)
 				return res
 			}
 
