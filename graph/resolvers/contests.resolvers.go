@@ -20,9 +20,9 @@ func (r *contestResolver) IsVotingEnabled(ctx context.Context, obj *model.Contes
 }
 
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
-	arr := contests.GetAllContests(ctx)
+	arr, err := contests.GetAllContests(ctx)
 
-	return arr, nil
+	return arr, err
 }
 
 func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, error) {
