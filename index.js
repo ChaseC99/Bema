@@ -71,7 +71,7 @@ app.use(errorHandler);
 
 let time = new Date().toLocaleTimeString();
 db.connect(
-  (process.env.APP_STATE === "dev" ? db.MODE_DEV : db.MODE_PROD),
+  (process.env.MODE === "prod" ? db.MODE_PROD : (process.env.APP_STATE === "dev" ? db.MODE_DEV : db.MODE_PROD)),
   () => {
     console.log(time, "Connected to Postgres");
     app.listen(PORT, () => {

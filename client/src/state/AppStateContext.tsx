@@ -26,7 +26,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         const data = d.data.currentUser;
 
         dispatch(login({
-          user: {...data.user, evaluator_id: data.user.id},
+          user: data.user ? {...data.user, evaluator_id: data.user?.id} : null,
           loggedIn: data.loggedIn,
           isAdmin: data.isAdmin,
           isImpersonated: data.isImpersonated,
