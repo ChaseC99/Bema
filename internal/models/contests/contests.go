@@ -11,7 +11,7 @@ import (
 func GetAllContests(ctx context.Context) []*model.Contest {
 	contests := []*model.Contest{}
 
-	rows, err := db.DB.Query("SELECT contest_id, contest_name, contest_url, contest_author, to_char(date_start, $1) as date_start, to_char(date_end, $1) as date_end, current, voting_enabled, badge_name, badge_image_url FROM contest", util.DisplayDateFormat)
+	rows, err := db.DB.Query("SELECT contest_id, contest_name, contest_url, contest_author, to_char(date_start, $1) as date_start, to_char(date_end, $1) as date_end, current, voting_enabled, badge_name, badge_image_url FROM contest ORDER BY contest_id DESC;", util.DisplayDateFormat)
 	if err != nil {
 		return contests
 	}

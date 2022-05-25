@@ -20,8 +20,8 @@ function AdminSidebar() {
       setCurrentContestIdLoading(false);
     });
 
-    if (state.logged_in && state.user) {
-      fetchLastContestEvaluatedByUser(state.user.evaluator_id)
+    if (state.loggedIn && state.user) {
+      fetchLastContestEvaluatedByUser(state.user.id)
       .then(id => {
         setEvaluationContestId(id);
         setEvaluationContestIdLoading(false);
@@ -30,7 +30,7 @@ function AdminSidebar() {
     else {
       setEvaluationContestIdLoading(false);
     }
-  }, [state.logged_in, state.user]);
+  }, [state.loggedIn, state.user]);
 
   if (currentContestIdLoading || evaluationContestIdLoading) {
     return (
@@ -48,25 +48,25 @@ function AdminSidebar() {
         <SidebarItem text="Contests" to="/admin/contests" testId="sidebar-contests" />
         <SidebarItem text="Entries" to={"/entries/" + currentContestId} testId="sidebar-entries" />
 
-        {state.logged_in && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
+        {state.loggedIn && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
         
-        {state.logged_in && <SidebarItem text="Evaluations" 
+        {state.loggedIn && <SidebarItem text="Evaluations" 
           to={evaluationContestId ? 
-            ("/admin/evaluations/" + state.user?.evaluator_id + "/" + evaluationContestId) : 
-            ("/admin/evaluations/" + state.user?.evaluator_id + "/" + currentContestId)} 
+            ("/admin/evaluations/" + state.user?.id + "/" + evaluationContestId) : 
+            ("/admin/evaluations/" + state.user?.id + "/" + currentContestId)} 
           testId="sidebar-evaluations" />}
 
         <SidebarItem text="Results" to={"/results/" + currentContestId} testId="sidebar-results" />
       </div>
 
-      {state.logged_in && (permissions?.view_all_tasks || permissions?.view_judging_settings || permissions?.view_all_users || permissions?.view_errors || state.is_admin) && 
+      {state.loggedIn && (permissions?.view_all_tasks || permissions?.view_judging_settings || permissions?.view_all_users || permissions?.view_errors || state.isAdmin) && 
         <div className="sidebar-section">
           <h3>Admin</h3>
-          {state.is_admin && <SidebarItem text="Skill Levels" to="/admin/skill-levels" testId="sidebar-skill-levels" />}
-          {(state.is_admin || permissions?.view_all_tasks) && <SidebarItem text="Tasks" to="/admin/tasks" testId="sidebar-tasks" />}
-          {(state.is_admin || permissions?.view_judging_settings) && <SidebarItem text="Judging" to="/admin/judging" testId="sidebar-judging" />}
-          {(state.is_admin || permissions?.view_all_users) && <SidebarItem text="Users" to="/admin/users" testId="sidebar-users" />}
-          {(state.is_admin || permissions?.view_errors) && <SidebarItem text="Errors" to="/admin/errors" testId="sidebar-errors" />}
+          {state.isAdmin && <SidebarItem text="Skill Levels" to="/admin/skill-levels" testId="sidebar-skill-levels" />}
+          {(state.isAdmin || permissions?.view_all_tasks) && <SidebarItem text="Tasks" to="/admin/tasks" testId="sidebar-tasks" />}
+          {(state.isAdmin || permissions?.view_judging_settings) && <SidebarItem text="Judging" to="/admin/judging" testId="sidebar-judging" />}
+          {(state.isAdmin || permissions?.view_all_users) && <SidebarItem text="Users" to="/admin/users" testId="sidebar-users" />}
+          {(state.isAdmin || permissions?.view_errors) && <SidebarItem text="Errors" to="/admin/errors" testId="sidebar-errors" />}
         </div>
       }
     </div>

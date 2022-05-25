@@ -8,22 +8,36 @@ import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import ContestCard from "./ContestCard";
 import fetchContests from "./fetchContestData";
+import { gql, useQuery } from "@apollo/client";
+
+const GET_ALL_CONTESTS = gql`
+  query GetAllContests {
+    contests {
+      id
+      name
+      url
+      author
+      badgeSlug
+      badgeImageUrl
+      startDate
+      endDate
+      isCurrent
+      isVotingEnabled
+    }
+  }
+`;
+
+type ContestData = {
+  contests: Contest[]
+}
 
 function Contests() {
   const { state } = useAppState();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [contests, setContests] = useState<Contest[]>([]);
   const [showCreateContest, setShowCreateContest] = useState<boolean>(false);
   const [editContest, setEditContest] = useState<Contest | null>(null);
   const [deleteContestId, setDeleteContestId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchContests()
-      .then((data) => {
-        setContests(data.contests);
-        setIsLoading(false);
-      })
-  }, []);
+  const { loading: isLoading, error, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS);
 
   const openCreateContestModal = () => {
     setShowCreateContest(true);
@@ -43,13 +57,12 @@ function Contests() {
       contest_current: values.is_current,
     });
 
+    refetchContests();
     closeCreateContestModal();
-
-    window.location.reload();
   }
 
   const openEditContestModal = (id: number) => {
-    const contest = contests.find((c) => c.contest_id === id) || null;
+    const contest = contestData?.contests.find((c) => c.id === id) || null;
     setEditContest(contest);
   }
 
@@ -59,7 +72,7 @@ function Contests() {
 
   const handleEditContest = async (values: { [name: string]: any }) => {
     await request("PUT", "/api/internal/contests", {
-      edit_contest_id: editContest?.contest_id,
+      edit_contest_id: editContest?.id,
       edit_contest_name: values.name,
       edit_contest_url: values.url,
       edit_contest_author: values.author,
@@ -71,23 +84,7 @@ function Contests() {
       edit_voting_enabled: values.voting_enabled
     });
 
-    const newContests = [...contests];
-    for (let i = 0; i < newContests.length; i++) {
-      if (newContests[i].contest_id === editContest?.contest_id) {
-        newContests[i].contest_name = values.name;
-        newContests[i].contest_url = values.url;
-        newContests[i].contest_author = values.author;
-        newContests[i].date_start = values.start_date;
-        newContests[i].date_end = values.end_date;
-        newContests[i].badge_name = values.badge_name;
-        newContests[i].badge_image_url = values.badge_image_url;
-        newContests[i].current = values.is_current;
-        newContests[i].voting_enabled = values.voting_enabled;
-        break;
-      }
-    }
-
-    setContests(newContests);
+    refetchContests();
     closeEditContestModal();
   }
 
@@ -104,9 +101,7 @@ function Contests() {
       contest_id: id
     });
 
-    const newContests = contests.filter((c) => c.contest_id !== id);
-    setContests(newContests);
-
+    refetchContests();
     closeDeleteContestModal();
   }
 
@@ -123,15 +118,15 @@ function Contests() {
               <h2 data-testid="contests-header">Contests</h2>
 
               <span className="section-actions" data-testid="contests-section-actions">
-                {(state.is_admin || state.user?.permissions.edit_contests) &&
+                {(state.isAdmin || state.user?.permissions.edit_contests) &&
                   <Button type="primary" role="button" action={openCreateContestModal} text="New Contest" />
                 }
               </span>
             </div>
             <div className="section-body grid" data-testid="contests-section-body">
-              {contests.map((c) => {
+              {contestData?.contests.map((c) => {
                 return (
-                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} key={c.contest_id} />
+                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} key={c.id} />
                 );
               })}
             </div>
@@ -225,7 +220,7 @@ function Contests() {
               id: "name",
               size: "LARGE",
               label: "Name",
-              defaultValue: editContest.contest_name,
+              defaultValue: editContest.name,
               placeholder: "Contest: Name Here",
               required: true
             },
@@ -237,7 +232,7 @@ function Contests() {
               size: "LARGE",
               label: "URL",
               description: "A link to the contest program. This is where entries will be imported from.",
-              defaultValue: editContest.contest_url,
+              defaultValue: editContest.url || "",
               required: true
             },
             {
@@ -248,7 +243,7 @@ function Contests() {
               size: "LARGE",
               label: "Author",
               description: "The creator of the announcement program code.",
-              defaultValue: editContest.contest_author || ""
+              defaultValue: editContest.author || ""
             },
             {
               fieldType: "DATE",
@@ -256,7 +251,7 @@ function Contests() {
               id: "start-date",
               size: "MEDIUM",
               label: "Start Date",
-              defaultValue: editContest.date_start,
+              defaultValue: editContest.startDate || "",
               required: true
             },
             {
@@ -265,7 +260,7 @@ function Contests() {
               id: "end-date",
               size: "MEDIUM",
               label: "End Date",
-              defaultValue: editContest.date_end,
+              defaultValue: editContest.endDate || "",
               required: true
             },
             {
@@ -276,7 +271,7 @@ function Contests() {
               size: "LARGE",
               label: "Badge Name",
               description: "The badge slug in the badge URL. (e.g. contest-fantasy-landscape)",
-              defaultValue: editContest.badge_name || "",
+              defaultValue: editContest.badgeSlug || "",
               placeholder: "e.x. contest-fantasy-landscape"
             },
             {
@@ -286,7 +281,7 @@ function Contests() {
               id: "badge-image-url",
               size: "LARGE",
               label: "Badge Image URL",
-              defaultValue: editContest.badge_image_url || ""
+              defaultValue: editContest.badgeImageUrl || ""
             },
             {
               fieldType: "CHECKBOX",
@@ -295,7 +290,7 @@ function Contests() {
               size: "LARGE",
               label: "Current Contest",
               description: "Enables judging for the contest, and shows an Active badge on the contests page.",
-              defaultValue: editContest.current
+              defaultValue: editContest.isCurrent
             },
             {
               fieldType: "CHECKBOX",
@@ -304,7 +299,7 @@ function Contests() {
               size: "LARGE",
               label: "Enable Voting",
               description: "Enables judges to vote for winning entries.",
-              defaultValue: editContest.voting_enabled || false
+              defaultValue: editContest.isVotingEnabled || false
             }
           ]}
         />

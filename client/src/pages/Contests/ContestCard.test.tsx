@@ -1,19 +1,20 @@
 import { screen } from "@testing-library/react";
+import { Contest } from ".";
 import useAppState from "../../state/useAppState";
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../util/testing-utils";
 import ContestCard from "./ContestCard";
 
-const contest = {
-  badge_image_url: null,
-  badge_name: null,
-  contest_author: null,
-  contest_id: 1,
-  contest_name: "Test Contest",
-  contest_url: "test-url",
-  current: false,
-  date_end: "test-date-end",
-  date_start: "test-date-start",
-  voting_enabled: null
+const contest: Contest = {
+  badgeImageUrl: null,
+  badgeSlug: null,
+  author: null,
+  id: 1,
+  name: "Test Contest",
+  url: "test-url",
+  isCurrent: false,
+  endDate: "test-date-end",
+  startDate: "test-date-start",
+  isVotingEnabled: null,
 }
 
 jest.mock("../../state/useAppState", () => {
@@ -97,7 +98,7 @@ test("renders the delete action for contest deleters", () => {
 
 test("renders the delete action for admin users", () => {
   let s = defaultAppStateLoggedIn();
-  s.is_admin = true;
+  s.isAdmin = true;
   useAppStateMock.mockReturnValue({
     state: s
   });
