@@ -25,6 +25,14 @@ func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) 
 	return arr, nil
 }
 
+func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, error) {
+	contest, err := contests.GetContest(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return contest, nil
+}
+
 // Contest returns generated.ContestResolver implementation.
 func (r *Resolver) Contest() generated.ContestResolver { return &contestResolver{r} }
 

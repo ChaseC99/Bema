@@ -1,6 +1,8 @@
 extend type Query {
-    # A list of contests
+    # A list of all contests
     contests: [Contest!]!
+    # A single contest
+    contest(id: ID!): Contest
 }
 
 # A contest
