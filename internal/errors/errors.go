@@ -37,7 +37,7 @@ func NewInternalError(ctx context.Context, publicMessage string, err error) *gql
 		Path:    graphql.GetPath(ctx),
 		Message: publicMessage,
 		Extensions: map[string]interface{}{
-			"code": 500,
+			"status": 500,
 		},
 	}
 }
@@ -48,7 +48,7 @@ func NewNotFoundError(ctx context.Context, message string) *gqlerror.Error {
 		Path:    graphql.GetPath(ctx),
 		Message: message,
 		Extensions: map[string]interface{}{
-			"code": 404,
+			"status": 404,
 		},
 	}
 }
