@@ -46,8 +46,10 @@ type Group = {
   is_active: boolean
 }
 
-type Contest = {
-  name: string
+type GetContestResponse = {
+  contest: {
+    name: string
+  }
 }
 
 const GET_CONTEST = gql`
@@ -73,7 +75,7 @@ function Entries() {
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
-  const { loading: contestIsLoading, error: contestError, refetch: refetchContest } = useQuery<Contest | null>(GET_CONTEST, {
+  const { loading: contestIsLoading, error: contestError, refetch: refetchContest } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
     }
@@ -238,7 +240,7 @@ function Entries() {
     window.location.reload();
   }
 
-  if (contestError?.graphQLErrors[0].extensions.status === 404) {
+  if (contestError) {
     return handleGqlError(contestError, "This contest does not exist.");
   }
 

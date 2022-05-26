@@ -1,3 +1,4 @@
+import { gql, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EntriesPerLevel, EntryVote, EntryWithScores, EntryWithScoresPublic, WinningEntry } from ".";
@@ -8,17 +9,31 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import useAppState from "../../state/useAppState";
+import { handleGqlError } from "../../util/errors";
 import request from "../../util/request";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
-import { fetchContest, fetchEntryVotes, fetchResults } from "./fetchResults";
+import { fetchEntryVotes, fetchResults } from "./fetchResults";
 import WinnersCard from "./WinnersCard";
+
+type GetContestResponse = {
+  contest: {
+    name: string
+  }
+}
+
+const GET_CONTEST = gql`
+  query GetContest($id: ID!) {
+    contest(id: $id) {
+      name
+    }
+  }
+`;
+
 
 function Results() {
   const { state } = useAppState();
   const { contestId } = useParams();
-  const [contest, setContest] = useState(null);
-  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
   const [winners, setWinners] = useState<WinningEntry[]>([]);
   const [entriesPerLevel, setEntriesPerLevel] = useState<EntriesPerLevel[]>([]);
   const [entries, setEntries] = useState<EntryWithScores[] | EntryWithScoresPublic[]>([]);
@@ -31,6 +46,12 @@ function Results() {
   const [showVotesForEntryId, setShowVotesForEntryId] = useState<number | null>(null);
   const [entryVotes, setEntryVotes] = useState<EntryVote[]>([]);
 
+  const { loading: contestIsLoading, data: contestData, error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+    variables: {
+      id: contestId
+    }
+  });
+
   useEffect(() => {
     fetchResults(contestId || "")
       .then((data) => {
@@ -39,12 +60,6 @@ function Results() {
         setEntries(data.results.entriesByAvgScore);
         setVotingEnabled(data.voting_enabled);
         setIsLoading(false);
-      });
-
-    fetchContest(contestId || "")
-      .then((data) => {
-        setContest(data.contest);
-        setContestIsLoading(false);
       });
   }, [contestId]);
 
@@ -173,10 +188,8 @@ function Results() {
     hideConfirmAddWinnerModal();
   }
 
-  if (!contestIsLoading && contest == null) {
-    return (
-      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
-    );
+  if (contestError) {
+    return handleGqlError(contestError, "This contest does not exist.");
   }
 
   return (
