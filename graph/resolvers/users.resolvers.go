@@ -5,7 +5,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
@@ -41,7 +40,7 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users, err := users.GetAllUsers(ctx)
+	users, err := users.GetAllActiveUsers(ctx)
 	if err != nil {
 		return []*model.User{}, err
 	}
@@ -49,7 +48,11 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 }
 
 func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	users, err := users.GetAllInactiveUsers(ctx)
+	if err != nil {
+		return []*model.User{}, err
+	}
+	return users, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {

@@ -10,18 +10,37 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
-func GetAllUsers(ctx context.Context) ([]*model.User, error) {
+func GetAllActiveUsers(ctx context.Context) ([]*model.User, error) {
 	users := []*model.User{}
 
-	rows, err := db.DB.Query("SELECT evaluator_id, evaluator_kaid, evaluator_name, nickname, username, email, account_locked, is_admin, to_char(logged_in_tstz, $1) as logged_in_tstz, to_char(dt_term_start, $1) as dt_term_start, to_char(dt_term_end, $1) as dt_term_end, receive_emails FROM evaluator ORDER BY evaluator_id DESC", util.DisplayDateFormat)
+	rows, err := db.DB.Query("SELECT evaluator_id, evaluator_kaid, evaluator_name, nickname, username, email, account_locked, is_admin, to_char(logged_in_tstz, $1) as logged_in_tstz, to_char(dt_term_start, $1) as dt_term_start, to_char(dt_term_end, $1) as dt_term_end, receive_emails FROM evaluator WHERE account_locked = false ORDER BY evaluator_id DESC", util.DisplayDateFormat)
 	if err != nil {
-		return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of users", err)
+		return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of active users", err)
 	}
 
 	for rows.Next() {
 		var user model.User
 		if err := rows.Scan(&user.ID, &user.Kaid, &user.Name, &user.Nickname, &user.Username, &user.Email, &user.AccountLocked, &user.IsAdmin, &user.LastLogin, &user.TermStart, &user.TermEnd, &user.NotificationsEnabled); err != nil {
-			return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of users", err)
+			return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of active users", err)
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
+}
+
+func GetAllInactiveUsers(ctx context.Context) ([]*model.User, error) {
+	users := []*model.User{}
+
+	rows, err := db.DB.Query("SELECT evaluator_id, evaluator_kaid, evaluator_name, nickname, username, email, account_locked, is_admin, to_char(logged_in_tstz, $1) as logged_in_tstz, to_char(dt_term_start, $1) as dt_term_start, to_char(dt_term_end, $1) as dt_term_end, receive_emails FROM evaluator WHERE account_locked = true ORDER BY evaluator_id DESC", util.DisplayDateFormat)
+	if err != nil {
+		return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of inactive users", err)
+	}
+
+	for rows.Next() {
+		var user model.User
+		if err := rows.Scan(&user.ID, &user.Kaid, &user.Name, &user.Nickname, &user.Username, &user.Email, &user.AccountLocked, &user.IsAdmin, &user.LastLogin, &user.TermStart, &user.TermEnd, &user.NotificationsEnabled); err != nil {
+			return []*model.User{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of inactive users", err)
 		}
 		users = append(users, &user)
 	}
