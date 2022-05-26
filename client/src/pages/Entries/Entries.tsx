@@ -9,7 +9,9 @@ import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { fetchContest, fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
+import { fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
+import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../util/errors";
 
 type Entry = {
   assigned_group_id: number
@@ -44,15 +46,25 @@ type Group = {
   is_active: boolean
 }
 
+type Contest = {
+  name: string
+}
+
+const GET_CONTEST = gql`
+  query GetContest($id: ID!) {
+    contest(id: $id) {
+      name
+    }
+  }
+`;
+
 function Entries() {
   const { state } = useAppState();
   const { contestId } = useParams();
   const [entries, setEntries] = useState<Entry[] | EntryPublic[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [contest, setContest] = useState(null);
   const [entriesAreLoading, setEntriesAreLoading] = useState<boolean>(true);
   const [groupsAreLoading, setGroupsAreLoading] = useState<boolean>(true);
-  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
@@ -61,7 +73,15 @@ function Entries() {
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
+  const { loading: contestIsLoading, error: contestError, refetch: refetchContest } = useQuery<Contest | null>(GET_CONTEST, {
+    variables: {
+      id: contestId
+    }
+  });
+
   useEffect(() => {
+    refetchContest();
+
     fetchEntries(contestId || "")
       .then((data) => {
         setEntries(data.entries);
@@ -73,12 +93,6 @@ function Entries() {
         setGroups(data.groups);
         setGroupsAreLoading(false);
       })
-
-    fetchContest(contestId || "")
-    .then((data) => {
-      setContest(data.contest);
-      setContestIsLoading(false);
-    });
   }, [contestId]);
 
   const showEditEntryForm = (id: number) => {
@@ -224,10 +238,8 @@ function Entries() {
     window.location.reload();
   }
 
-  if (!contestIsLoading && contest == null) {
-    return (
-      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
-    );
+  if (contestError?.graphQLErrors[0].extensions.status === 404) {
+    return handleGqlError(contestError, "This contest does not exist.");
   }
 
   return (

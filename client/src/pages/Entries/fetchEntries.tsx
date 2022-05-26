@@ -13,11 +13,3 @@ export async function fetchEvaluatorGroups() {
     groups: data.evaluatorGroups
   }
 }
-
-export async function fetchContest(contestId: string) {
-  const data = await request("GET", "/api/internal/contests?id=" + contestId);
-
-  return {
-    contest: data.contest
-  }
-}
