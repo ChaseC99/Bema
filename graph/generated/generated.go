@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Contest() ContestResolver
 	Query() QueryResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -109,15 +110,19 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		AccountLocked func(childComplexity int) int
-		Email         func(childComplexity int) int
-		ID            func(childComplexity int) int
-		IsAdmin       func(childComplexity int) int
-		Kaid          func(childComplexity int) int
-		Name          func(childComplexity int) int
-		Nickname      func(childComplexity int) int
-		Permissions   func(childComplexity int) int
-		Username      func(childComplexity int) int
+		AccountLocked        func(childComplexity int) int
+		Email                func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		IsAdmin              func(childComplexity int) int
+		Kaid                 func(childComplexity int) int
+		LastLogin            func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		Nickname             func(childComplexity int) int
+		NotificationsEnabled func(childComplexity int) int
+		Permissions          func(childComplexity int) int
+		TermEnd              func(childComplexity int) int
+		TermStart            func(childComplexity int) int
+		Username             func(childComplexity int) int
 	}
 }
 
@@ -132,6 +137,17 @@ type QueryResolver interface {
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 	Users(ctx context.Context) ([]*model.User, error)
+}
+type UserResolver interface {
+	Name(ctx context.Context, obj *model.User) (*string, error)
+
+	Email(ctx context.Context, obj *model.User) (*string, error)
+	AccountLocked(ctx context.Context, obj *model.User) (*bool, error)
+	Permissions(ctx context.Context, obj *model.User) (*model.Permissions, error)
+	IsAdmin(ctx context.Context, obj *model.User) (*bool, error)
+	LastLogin(ctx context.Context, obj *model.User) (*string, error)
+
+	NotificationsEnabled(ctx context.Context, obj *model.User) (*bool, error)
 }
 
 type executableSchema struct {
@@ -539,6 +555,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Kaid(childComplexity), true
 
+	case "User.lastLogin":
+		if e.complexity.User.LastLogin == nil {
+			break
+		}
+
+		return e.complexity.User.LastLogin(childComplexity), true
+
 	case "User.name":
 		if e.complexity.User.Name == nil {
 			break
@@ -553,12 +576,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Nickname(childComplexity), true
 
+	case "User.notificationsEnabled":
+		if e.complexity.User.NotificationsEnabled == nil {
+			break
+		}
+
+		return e.complexity.User.NotificationsEnabled(childComplexity), true
+
 	case "User.permissions":
 		if e.complexity.User.Permissions == nil {
 			break
 		}
 
 		return e.complexity.User.Permissions(childComplexity), true
+
+	case "User.termEnd":
+		if e.complexity.User.TermEnd == nil {
+			break
+		}
+
+		return e.complexity.User.TermEnd(childComplexity), true
+
+	case "User.termStart":
+		if e.complexity.User.TermStart == nil {
+			break
+		}
+
+		return e.complexity.User.TermStart(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -795,7 +839,7 @@ type User {
   """
   The user's real name
   """
-  name: String
+  name: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   The user's display name
@@ -810,22 +854,42 @@ type User {
   """
   The user's email address
   """
-  email: String
+  email: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   Indicates if the account has been deactivated
   """
-  accountLocked: Boolean
+  accountLocked: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   The permission set of the user
   """
-  permissions: Permissions
+  permissions: Permissions @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   Indicates whether the user is an admin, which allows them to perform all actions and access all data
   """
-  isAdmin: Boolean
+  isAdmin: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The timestamp of the user's last login
+  """
+  lastLogin: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The start date of the user's term
+  """
+  termStart: String
+
+  """
+  The end date of the user's term
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 }
 
 """
@@ -1786,6 +1850,14 @@ func (ec *executionContext) fieldContext_FullUserProfile_user(ctx context.Contex
 				return ec.fieldContext_User_permissions(ctx, field)
 			case "isAdmin":
 				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3461,6 +3533,14 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_permissions(ctx, field)
 			case "isAdmin":
 				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3698,8 +3778,40 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().Name(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3717,8 +3829,8 @@ func (ec *executionContext) fieldContext_User_name(ctx context.Context, field gr
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -3821,8 +3933,40 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().Email(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3840,8 +3984,8 @@ func (ec *executionContext) fieldContext_User_email(ctx context.Context, field g
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -3862,8 +4006,40 @@ func (ec *executionContext) _User_accountLocked(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AccountLocked, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().AccountLocked(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3881,8 +4057,8 @@ func (ec *executionContext) fieldContext_User_accountLocked(ctx context.Context,
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -3903,8 +4079,40 @@ func (ec *executionContext) _User_permissions(ctx context.Context, field graphql
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Permissions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().Permissions(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Permissions); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Permissions`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3922,8 +4130,8 @@ func (ec *executionContext) fieldContext_User_permissions(ctx context.Context, f
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "add_entries":
@@ -4006,8 +4214,40 @@ func (ec *executionContext) _User_isAdmin(ctx context.Context, field graphql.Col
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsAdmin, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().IsAdmin(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4025,8 +4265,236 @@ func (ec *executionContext) fieldContext_User_isAdmin(ctx context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_lastLogin(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_lastLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().LastLogin(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_lastLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_termStart(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_termStart(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TermStart, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_termStart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_termEnd(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_termEnd(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TermEnd, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_termEnd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_notificationsEnabled(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_notificationsEnabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().NotificationsEnabled(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_notificationsEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -6358,19 +6826,32 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "kaid":
 
 			out.Values[i] = ec._User_kaid(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
+			field := field
 
-			out.Values[i] = ec._User_name(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_name(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "nickname":
 
 			out.Values[i] = ec._User_nickname(ctx, field, obj)
@@ -6380,21 +6861,115 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_username(ctx, field, obj)
 
 		case "email":
+			field := field
 
-			out.Values[i] = ec._User_email(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_email(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "accountLocked":
+			field := field
 
-			out.Values[i] = ec._User_accountLocked(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_accountLocked(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "permissions":
+			field := field
 
-			out.Values[i] = ec._User_permissions(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_permissions(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "isAdmin":
+			field := field
 
-			out.Values[i] = ec._User_isAdmin(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_isAdmin(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "lastLogin":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_lastLogin(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "termStart":
+
+			out.Values[i] = ec._User_termStart(ctx, field, obj)
+
+		case "termEnd":
+
+			out.Values[i] = ec._User_termEnd(ctx, field, obj)
+
+		case "notificationsEnabled":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_notificationsEnabled(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

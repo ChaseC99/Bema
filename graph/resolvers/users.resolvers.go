@@ -6,8 +6,10 @@ package resolvers
 import (
 	"context"
 
+	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	"github.com/KA-Challenge-Council/Bema/internal/models/users"
 )
 
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
@@ -78,6 +80,43 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users := []*model.User{}
+	users, err := users.GetAllUsers(ctx)
+	if err != nil {
+		return []*model.User{}, err
+	}
 	return users, nil
 }
+
+func (r *userResolver) Name(ctx context.Context, obj *model.User) (*string, error) {
+	return obj.Name, nil
+}
+
+func (r *userResolver) Email(ctx context.Context, obj *model.User) (*string, error) {
+	return obj.Email, nil
+}
+
+func (r *userResolver) AccountLocked(ctx context.Context, obj *model.User) (*bool, error) {
+	return obj.AccountLocked, nil
+}
+
+func (r *userResolver) Permissions(ctx context.Context, obj *model.User) (*model.Permissions, error) {
+	permissions, err := users.GetUserPermissionsById(ctx, obj.ID)
+	return permissions, err
+}
+
+func (r *userResolver) IsAdmin(ctx context.Context, obj *model.User) (*bool, error) {
+	return obj.IsAdmin, nil
+}
+
+func (r *userResolver) LastLogin(ctx context.Context, obj *model.User) (*string, error) {
+	return obj.LastLogin, nil
+}
+
+func (r *userResolver) NotificationsEnabled(ctx context.Context, obj *model.User) (*bool, error) {
+	return obj.NotificationsEnabled, nil
+}
+
+// User returns generated.UserResolver implementation.
+func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
+
+type userResolver struct{ *Resolver }

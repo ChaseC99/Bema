@@ -129,6 +129,14 @@ type User struct {
 	Permissions *Permissions `json:"permissions"`
 	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
 	IsAdmin *bool `json:"isAdmin"`
+	// The timestamp of the user's last login
+	LastLogin *string `json:"lastLogin"`
+	// The start date of the user's term
+	TermStart *string `json:"termStart"`
+	// The end date of the user's term
+	TermEnd *string `json:"termEnd"`
+	// Indicates whether the user has email notifications enabled for new announcements
+	NotificationsEnabled *bool `json:"notificationsEnabled"`
 }
 
 type NullType string

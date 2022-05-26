@@ -21,8 +21,10 @@ func (r *contestResolver) IsVotingEnabled(ctx context.Context, obj *model.Contes
 
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
 	arr, err := contests.GetAllContests(ctx)
-
-	return arr, err
+	if err != nil {
+		return []*model.Contest{}, err
+	}
+	return arr, nil
 }
 
 func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, error) {

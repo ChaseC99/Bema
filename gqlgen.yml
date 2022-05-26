@@ -62,3 +62,19 @@ models:
         resolver: true
       isVotingEnabled:
         resolver: true
+  User:
+    fields:
+      name:
+        resolver: true
+      email:
+        resolver: true
+      accountLocked:
+        resolver: true
+      permissions:
+        resolver: true
+      isAdmin:
+        resolver: true
+      lastLogin:
+        resolver: true
+      notificationsEnabled:
+        resolver: true

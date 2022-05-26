@@ -57,7 +57,7 @@ type User {
   """
   The user's real name
   """
-  name: String
+  name: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   The user's display name
@@ -72,22 +72,42 @@ type User {
   """
   The user's email address
   """
-  email: String
+  email: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   Indicates if the account has been deactivated
   """
-  accountLocked: Boolean
+  accountLocked: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   The permission set of the user
   """
-  permissions: Permissions
+  permissions: Permissions @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 
   """
   Indicates whether the user is an admin, which allows them to perform all actions and access all data
   """
-  isAdmin: Boolean
+  isAdmin: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The timestamp of the user's last login
+  """
+  lastLogin: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The start date of the user's term
+  """
+  termStart: String
+
+  """
+  The end date of the user's term
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
 }
 
 """
