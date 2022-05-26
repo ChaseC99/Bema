@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { login } from "../../state/appStateReducer";
 import useAppState from "../../state/useAppState";
-import { displayError } from "../../util/errors";
 import request from "../../util/request";
 import Button from "../Button/Button";
 import "./Header.css";
