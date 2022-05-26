@@ -14,70 +14,30 @@ import (
 )
 
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
-	var userProfile *model.FullUserProfile
-
 	user := auth.GetUserFromContext(ctx)
 
 	if user == nil {
-		userProfile = &model.FullUserProfile{
+		return &model.FullUserProfile{
 			IsAdmin:        false,
 			IsImpersonated: false,
 			LoggedIn:       false,
 			OriginKaid:     nil,
 			User:           nil,
-		}
+		}, nil
 	} else {
-		userProfile = &model.FullUserProfile{
-			IsAdmin:        user.IsAdmin,
+		userData, err := r.Query().User(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		return &model.FullUserProfile{
+			IsAdmin:        *userData.IsAdmin,
 			IsImpersonated: user.IsImpersonated,
 			LoggedIn:       true,
 			OriginKaid:     user.OriginKaid,
-			User: &model.User{
-				ID:            user.ID,
-				Kaid:          user.Kaid,
-				Name:          &user.Name,
-				Nickname:      &user.Nickname,
-				Username:      &user.Username,
-				Email:         &user.Email,
-				AccountLocked: &user.AccountLocked,
-				IsAdmin:       &user.IsAdmin,
-				Permissions: &model.Permissions{
-					AddEntries:            user.Permissions.AddEntries,
-					AddUsers:              user.Permissions.AddUsers,
-					AssignEntryGroups:     user.Permissions.AssignEntryGroups,
-					AssignEvaluatorGroups: user.Permissions.AssignEvaluatorGroups,
-					AssumeUserIdentities:  user.Permissions.AssumeUserIdentities,
-					ChangeUserPasswords:   user.Permissions.ChangeUserPasswords,
-					DeleteAllEvaluations:  user.Permissions.DeleteAllEvaluations,
-					DeleteAllTasks:        user.Permissions.DeleteAllTasks,
-					DeleteContests:        user.Permissions.DeleteContests,
-					DeleteEntries:         user.Permissions.DeleteEntries,
-					DeleteErrors:          user.Permissions.DeleteErrors,
-					DeleteKbContent:       user.Permissions.DeleteKbContent,
-					EditAllEvaluations:    user.Permissions.EditAllEvaluations,
-					EditAllTasks:          user.Permissions.EditAllTasks,
-					EditContests:          user.Permissions.EditContests,
-					EditEntries:           user.Permissions.EditEntries,
-					EditKbContent:         user.Permissions.EditKbContent,
-					EditUserProfiles:      user.Permissions.EditUserProfiles,
-					JudgeEntries:          user.Permissions.JudgeEntries,
-					ManageAnnouncements:   user.Permissions.ManageAnnouncements,
-					ManageJudgingCriteria: user.Permissions.ManageJudgingCriteria,
-					ManageJudgingGroups:   user.Permissions.ManageJudgingGroups,
-					ManageWinners:         user.Permissions.ManageWinners,
-					PublishKbContent:      user.Permissions.PublishKbContent,
-					ViewAdminStats:        user.Permissions.ViewAdminStats,
-					ViewAllEvaluations:    user.Permissions.ViewAllEvaluations,
-					ViewAllTasks:          user.Permissions.ViewAllTasks,
-					ViewAllUsers:          user.Permissions.ViewAllUsers,
-					ViewErrors:            user.Permissions.ViewErrors,
-					ViewJudgingSettings:   user.Permissions.ViewJudgingSettings,
-				},
-			},
-		}
+			User:           userData,
+		}, nil
 	}
-
-	return userProfile, nil
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
