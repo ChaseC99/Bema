@@ -7,7 +7,6 @@ import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import ContestCard from "./ContestCard";
-import fetchContests from "./fetchContestData";
 import { gql, useQuery } from "@apollo/client";
 
 const GET_ALL_CONTESTS = gql`
