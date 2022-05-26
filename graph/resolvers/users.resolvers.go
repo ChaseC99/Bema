@@ -76,3 +76,8 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 
 	return userProfile, nil
 }
+
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	users := []*model.User{}
+	return users, nil
+}

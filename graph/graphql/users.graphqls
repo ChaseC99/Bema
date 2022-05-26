@@ -1,104 +1,244 @@
 extend type Query {
-  # The full profile associated with the logged in user
+  """
+  The full profile associated with the logged in user
+  """
   currentUser: FullUserProfile!
+
+  """
+  A list of all evaluator accounts
+  """
+  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_ARRAY, objType: USER)
 }
 
-# The full profile of a logged in user
+"""
+The full profile of a logged in user
+"""
 type FullUserProfile {
-  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
   isAdmin: Boolean!
-  # Indicates whether the acting user is being impersonated by an admin user
+
+  """
+  Indicates whether the acting user is being impersonated by an admin user
+  """
   isImpersonated: Boolean!
-  # Indicates whether the actor is logged in
+
+  """
+  Indicates whether the actor is logged in
+  """
   loggedIn: Boolean!
-  # The kaid of the actual user, if the current actor is being impersonated
+
+  """
+  The kaid of the actual user, if the current actor is being impersonated
+  """
   originKaid: String
-  # The logged in user
+
+  """
+  The logged in user
+  """
   user: User
 }
 
-# An evaluator account
+"""
+An evaluator account
+"""
 type User {
-  # The unique integer id of the user
+  """
+  The unique integer id of the user
+  """
   id: ID!
-  # The kaid associated with the user's KA account
+
+  """
+  The kaid associated with the user's KA account
+  """
   kaid: String!
-  # The user's real name
+
+  """
+  The user's real name
+  """
   name: String
-  # The user's display name
+
+  """
+  The user's display name
+  """
   nickname: String
-  # The user's username that is used to log in
+
+  """
+  The user's username that is used to log in
+  """
   username: String
-  # The user's email address
+
+  """
+  The user's email address
+  """
   email: String
-  # Indicates if the account has been deactivated
+
+  """
+  Indicates if the account has been deactivated
+  """
   accountLocked: Boolean
-  # The permission set of the user
+
+  """
+  The permission set of the user
+  """
   permissions: Permissions
-  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
   isAdmin: Boolean
 }
 
-# The permissions set, associated with the User type
+"""
+The permissions set, associated with the User type
+"""
 type Permissions {
-  # Allows the user to add individual and bulk import entries
+  """
+  Allows the user to add individual and bulk import entries
+  """
   add_entries: Boolean!
-  # Allows the user to create new user accounts
+
+  """
+  Allows the user to create new user accounts
+  """
   add_users: Boolean!
-  # Allows the user to assign entries to judging groups
+
+  """
+  Allows the user to assign entries to judging groups
+  """
   assign_entry_groups: Boolean!
-  # Allows the user to assign evaluators to judging groups
+
+  """
+  Allows the user to assign evaluators to judging groups
+  """
   assign_evaluator_groups: Boolean!
-  # Allows the user to impersonate other users
+
+  """
+  Allows the user to impersonate other users
+  """
   assume_user_identities: Boolean!
-  # Allows the user to change the passwords of other users
+
+  """
+  Allows the user to change the passwords of other users
+  """
   change_user_passwords: Boolean!
-  # Allows the user to delete all evaluations
+
+  """
+  Allows the user to delete all evaluations
+  """
   delete_all_evaluations: Boolean!
-  # Allows the user to delete all tasks
+
+  """
+  Allows the user to delete all tasks
+  """
   delete_all_tasks: Boolean!
-  # Allows the user to delete all contests and associated data
+
+  """
+  Allows the user to delete all contests and associated data
+  """
   delete_contests: Boolean!
-  # Allows the user to delete all entries
+
+  """
+  Allows the user to delete all entries
+  """
   delete_entries: Boolean!
-  # Allows the user to delete all errors
+
+  """
+  Allows the user to delete all errors
+  """
   delete_errors: Boolean!
-  # Allows the user to delete all KB articles and sections
+
+  """
+  Allows the user to delete all KB articles and sections
+  """
   delete_kb_content: Boolean!
-  # Allows the user to edit all evaluations
+
+  """
+  Allows the user to edit all evaluations
+  """
   edit_all_evaluations: Boolean!
-  # Allows the user to edit all tasks
+
+  """
+  Allows the user to edit all tasks
+  """
   edit_all_tasks: Boolean!
-  # Allows the user to edit all contests
+
+  """
+  Allows the user to edit all contests
+  """
   edit_contests: Boolean!
-  # Allows the user to edit all entries
+
+  """
+  Allows the user to edit all entries
+  """
   edit_entries: Boolean!
-  # Allows the user to edit all KB articles and sections
+
+  """
+  Allows the user to edit all KB articles and sections
+  """
   edit_kb_content: Boolean!
-  # Allows the user to edit all user profiles
+
+  """
+  Allows the user to edit all user profiles
+  """
   edit_user_profiles: Boolean!
+
   # Allows the user to score entries
   judge_entries: Boolean!
-  # Allows the user to create, edit, and delete announcements
+
+  """
+  Allows the user to create, edit, and delete announcements
+  """
   manage_announcements: Boolean!
-  # Allows the user to create, edit, and delete judging criteria
+
+  """
+  Allows the user to create, edit, and delete judging criteria
+  """
   manage_judging_criteria: Boolean!
-  # Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+
+  """
+  Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+  """
   manage_judging_groups: Boolean!
-  # Allows the user to add and remove winning entries
+
+  """
+  Allows the user to add and remove winning entries
+  """
   manage_winners: Boolean!
-  # Allows the user to publish draft KB articles
+
+  """
+  Allows the user to publish draft KB articles
+  """
   publish_kb_content: Boolean!
-  # Allows the user to view admin stats on the dashboard
+
+  """
+  Allows the user to view admin stats on the dashboard
+  """
   view_admin_stats: Boolean!
-  # Allows the user to view all evaluations
+
+  """
+  Allows the user to view all evaluations
+  """
   view_all_evaluations: Boolean!
-  # Allows the user to view all tasks
+
+  """
+  Allows the user to view all tasks
+  """
   view_all_tasks: Boolean!
-  # Allows the user to view all user accounts
+
+  """
+  Allows the user to view all user accounts
+  """
   view_all_users: Boolean!
-  # Allows the user to view all errors
+
+  """
+  Allows the user to view all errors
+  """
   view_errors: Boolean!
-  # Allows the user to view all judging settings
+
+  """
+  Allows the user to view all judging settings
+  """
   view_judging_settings: Boolean!
 }

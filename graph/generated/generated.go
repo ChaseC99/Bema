@@ -41,7 +41,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission) (res interface{}, err error)
+	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType model.ObjectType) (res interface{}, err error)
 	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
@@ -105,6 +105,7 @@ type ComplexityRoot struct {
 		Contests       func(childComplexity int) int
 		CurrentContest func(childComplexity int) int
 		CurrentUser    func(childComplexity int) int
+		Users          func(childComplexity int) int
 	}
 
 	User struct {
@@ -130,6 +131,7 @@ type QueryResolver interface {
 	Contest(ctx context.Context, id int) (*model.Contest, error)
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
+	Users(ctx context.Context) ([]*model.User, error)
 }
 
 type executableSchema struct {
@@ -495,6 +497,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.CurrentUser(childComplexity), true
 
+	case "Query.users":
+		if e.complexity.Query.Users == nil {
+			break
+		}
+
+		return e.complexity.Query.Users(childComplexity), true
+
 	case "User.accountLocked":
 		if e.complexity.User.AccountLocked == nil {
 			break
@@ -611,39 +620,78 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "graph/graphql/contests.graphqls", Input: `extend type Query {
-    # A list of all contests
+    """
+    A list of all contests
+    """
     contests: [Contest!]!
-    # A single contest
+
+    """
+    A single contest
+    """
     contest(id: ID!): Contest
-    # The most recent contest
+
+    """
+    The most recent contest
+    """
     currentContest: Contest
 }
 
-# A contest
+"""
+A contest
+"""
 type Contest {
-  # A unique integer id of the contest
+  """
+  A unique integer id of the contest
+  """
   id: ID!
-  # The name of the contest
+
+  """
+  The name of the contest
+  """
   name: String!
-  # The url of the contest program page
+
+  """
+  The url of the contest program page
+  """
   url: String
-  # The author of the announcement program code. Only visible to contest editors
-  author: String @hasPermission(permission: EDIT_CONTESTS)
-  # The url slug of the contest badge
+
+  """
+  The author of the announcement program code. Only visible to contest editors
+  """
+  author: String @hasPermission(permission: EDIT_CONTESTS, nullType: NULL, objType: CONTEST)
+
+  """
+  The url slug of the contest badge
+  """
   badgeSlug: String
-  # A url to the badge image
+
+  """
+  A url to the badge image
+  """
   badgeImageUrl: String
-  # Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+
+  """
+  Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  """
   isCurrent: Boolean!
-  # The start date of the contest
+
+  """
+  The start date of the contest
+  """
   startDate: String
-  # The end date (deadline) of the contest
+
+  """
+  The end date (deadline) of the contest
+  """
   endDate: String
-  # Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+
+  """
+  Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+  """
   isVotingEnabled: Boolean @isAuthenticated
 }`, BuiltIn: false},
 	{Name: "graph/graphql/directives.graphqls", Input: `directive @isAuthenticated on FIELD_DEFINITION
-directive @hasPermission(permission: Permission!) on FIELD_DEFINITION
+directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType!) on FIELD_DEFINITION
 
 enum Permission {
     ADD_ENTRIES,
@@ -676,109 +724,260 @@ enum Permission {
     VIEW_ALL_USERS,
     VIEW_ERRORS,
     VIEW_JUDGING_SETTINGS,
-}`, BuiltIn: false},
-	{Name: "graph/graphql/users.graphqls", Input: `extend type Query {
-  # The full profile associated with the logged in user
-  currentUser: FullUserProfile!
 }
 
-# The full profile of a logged in user
+enum NullType {
+    EMPTY_ARRAY
+    EMPTY_STRING
+    NULL
+}
+
+enum ObjectType {
+    CONTEST
+    USER
+}`, BuiltIn: false},
+	{Name: "graph/graphql/users.graphqls", Input: `extend type Query {
+  """
+  The full profile associated with the logged in user
+  """
+  currentUser: FullUserProfile!
+
+  """
+  A list of all evaluator accounts
+  """
+  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_ARRAY, objType: USER)
+}
+
+"""
+The full profile of a logged in user
+"""
 type FullUserProfile {
-  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
   isAdmin: Boolean!
-  # Indicates whether the acting user is being impersonated by an admin user
+
+  """
+  Indicates whether the acting user is being impersonated by an admin user
+  """
   isImpersonated: Boolean!
-  # Indicates whether the actor is logged in
+
+  """
+  Indicates whether the actor is logged in
+  """
   loggedIn: Boolean!
-  # The kaid of the actual user, if the current actor is being impersonated
+
+  """
+  The kaid of the actual user, if the current actor is being impersonated
+  """
   originKaid: String
-  # The logged in user
+
+  """
+  The logged in user
+  """
   user: User
 }
 
-# An evaluator account
+"""
+An evaluator account
+"""
 type User {
-  # The unique integer id of the user
+  """
+  The unique integer id of the user
+  """
   id: ID!
-  # The kaid associated with the user's KA account
+
+  """
+  The kaid associated with the user's KA account
+  """
   kaid: String!
-  # The user's real name
+
+  """
+  The user's real name
+  """
   name: String
-  # The user's display name
+
+  """
+  The user's display name
+  """
   nickname: String
-  # The user's username that is used to log in
+
+  """
+  The user's username that is used to log in
+  """
   username: String
-  # The user's email address
+
+  """
+  The user's email address
+  """
   email: String
-  # Indicates if the account has been deactivated
+
+  """
+  Indicates if the account has been deactivated
+  """
   accountLocked: Boolean
-  # The permission set of the user
+
+  """
+  The permission set of the user
+  """
   permissions: Permissions
-  # Indicates whether the user is an admin, which allows them to perform all actions and access all data
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  """
   isAdmin: Boolean
 }
 
-# The permissions set, associated with the User type
+"""
+The permissions set, associated with the User type
+"""
 type Permissions {
-  # Allows the user to add individual and bulk import entries
+  """
+  Allows the user to add individual and bulk import entries
+  """
   add_entries: Boolean!
-  # Allows the user to create new user accounts
+
+  """
+  Allows the user to create new user accounts
+  """
   add_users: Boolean!
-  # Allows the user to assign entries to judging groups
+
+  """
+  Allows the user to assign entries to judging groups
+  """
   assign_entry_groups: Boolean!
-  # Allows the user to assign evaluators to judging groups
+
+  """
+  Allows the user to assign evaluators to judging groups
+  """
   assign_evaluator_groups: Boolean!
-  # Allows the user to impersonate other users
+
+  """
+  Allows the user to impersonate other users
+  """
   assume_user_identities: Boolean!
-  # Allows the user to change the passwords of other users
+
+  """
+  Allows the user to change the passwords of other users
+  """
   change_user_passwords: Boolean!
-  # Allows the user to delete all evaluations
+
+  """
+  Allows the user to delete all evaluations
+  """
   delete_all_evaluations: Boolean!
-  # Allows the user to delete all tasks
+
+  """
+  Allows the user to delete all tasks
+  """
   delete_all_tasks: Boolean!
-  # Allows the user to delete all contests and associated data
+
+  """
+  Allows the user to delete all contests and associated data
+  """
   delete_contests: Boolean!
-  # Allows the user to delete all entries
+
+  """
+  Allows the user to delete all entries
+  """
   delete_entries: Boolean!
-  # Allows the user to delete all errors
+
+  """
+  Allows the user to delete all errors
+  """
   delete_errors: Boolean!
-  # Allows the user to delete all KB articles and sections
+
+  """
+  Allows the user to delete all KB articles and sections
+  """
   delete_kb_content: Boolean!
-  # Allows the user to edit all evaluations
+
+  """
+  Allows the user to edit all evaluations
+  """
   edit_all_evaluations: Boolean!
-  # Allows the user to edit all tasks
+
+  """
+  Allows the user to edit all tasks
+  """
   edit_all_tasks: Boolean!
-  # Allows the user to edit all contests
+
+  """
+  Allows the user to edit all contests
+  """
   edit_contests: Boolean!
-  # Allows the user to edit all entries
+
+  """
+  Allows the user to edit all entries
+  """
   edit_entries: Boolean!
-  # Allows the user to edit all KB articles and sections
+
+  """
+  Allows the user to edit all KB articles and sections
+  """
   edit_kb_content: Boolean!
-  # Allows the user to edit all user profiles
+
+  """
+  Allows the user to edit all user profiles
+  """
   edit_user_profiles: Boolean!
+
   # Allows the user to score entries
   judge_entries: Boolean!
-  # Allows the user to create, edit, and delete announcements
+
+  """
+  Allows the user to create, edit, and delete announcements
+  """
   manage_announcements: Boolean!
-  # Allows the user to create, edit, and delete judging criteria
+
+  """
+  Allows the user to create, edit, and delete judging criteria
+  """
   manage_judging_criteria: Boolean!
-  # Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+
+  """
+  Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+  """
   manage_judging_groups: Boolean!
-  # Allows the user to add and remove winning entries
+
+  """
+  Allows the user to add and remove winning entries
+  """
   manage_winners: Boolean!
-  # Allows the user to publish draft KB articles
+
+  """
+  Allows the user to publish draft KB articles
+  """
   publish_kb_content: Boolean!
-  # Allows the user to view admin stats on the dashboard
+
+  """
+  Allows the user to view admin stats on the dashboard
+  """
   view_admin_stats: Boolean!
-  # Allows the user to view all evaluations
+
+  """
+  Allows the user to view all evaluations
+  """
   view_all_evaluations: Boolean!
-  # Allows the user to view all tasks
+
+  """
+  Allows the user to view all tasks
+  """
   view_all_tasks: Boolean!
-  # Allows the user to view all user accounts
+
+  """
+  Allows the user to view all user accounts
+  """
   view_all_users: Boolean!
-  # Allows the user to view all errors
+
+  """
+  Allows the user to view all errors
+  """
   view_errors: Boolean!
-  # Allows the user to view all judging settings
+
+  """
+  Allows the user to view all judging settings
+  """
   view_judging_settings: Boolean!
 }`, BuiltIn: false},
 }
@@ -800,6 +999,24 @@ func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["permission"] = arg0
+	var arg1 model.NullType
+	if tmp, ok := rawArgs["nullType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nullType"))
+		arg1, err = ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nullType"] = arg1
+	var arg2 model.ObjectType
+	if tmp, ok := rawArgs["objType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("objType"))
+		arg2, err = ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["objType"] = arg2
 	return args, nil
 }
 
@@ -1022,10 +1239,18 @@ func (ec *executionContext) _Contest_author(ctx context.Context, field graphql.C
 			if err != nil {
 				return nil, err
 			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "CONTEST")
+			if err != nil {
+				return nil, err
+			}
 			if ec.directives.HasPermission == nil {
 				return nil, errors.New("directive hasPermission is not implemented")
 			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission)
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
 		}
 
 		tmp, err := directive1(rctx)
@@ -3142,6 +3367,102 @@ func (ec *executionContext) fieldContext_Query_currentUser(ctx context.Context, 
 				return ec.fieldContext_FullUserProfile_user(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FullUserProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Users(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -5976,6 +6297,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "users":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_users(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -6478,6 +6822,26 @@ func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.Selectio
 	return res
 }
 
+func (ec *executionContext) unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx context.Context, v interface{}) (model.NullType, error) {
+	var res model.NullType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx context.Context, sel ast.SelectionSet, v model.NullType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (model.ObjectType, error) {
+	var res model.ObjectType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, sel ast.SelectionSet, v model.ObjectType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, v interface{}) (model.Permission, error) {
 	var res model.Permission
 	err := res.UnmarshalGQL(v)
@@ -6501,6 +6865,60 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

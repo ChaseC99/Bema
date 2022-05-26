@@ -167,17 +167,24 @@ func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver
 }
 
 // Handler for the @hasPermission directive. Only calls the resolver if the user is an admin or if they are logged in and have the required permission.
-func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission) (interface{}, error) {
+func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType model.ObjectType) (interface{}, error) {
 	user := GetUserFromContext(ctx)
 
-	// Hide the field if the user is not logged in
-	if user == nil {
-		return nil, nil
+	// Allow admin users through
+	if user != nil && user.IsAdmin {
+		return next(ctx)
 	}
 
-	// If logged in, make sure the user has the required permission
+	// Make sure the user has the required permission
 	hasPermission := getPermissionFromEnum(user, permission.String())
-	if !hasPermission && !user.IsAdmin {
+	if !hasPermission {
+		if nullType == model.NullTypeEmptyArray {
+			return getEmptyArray(objType), nil
+		} else if nullType == model.NullTypeEmptyString {
+			return "", nil
+		} else if nullType == model.NullTypeNull {
+			return nil, nil
+		}
 		return nil, nil
 	}
 
@@ -255,4 +262,12 @@ func getPermissionFromEnum(user *User, enumValue string) bool {
 	default:
 		return false
 	}
+}
+
+func getEmptyArray(objType model.ObjectType) interface{} {
+	if objType == model.ObjectTypeUser {
+		return []*model.User{}
+	}
+
+	return nil
 }

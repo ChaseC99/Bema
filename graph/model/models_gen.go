@@ -8,70 +8,211 @@ import (
 	"strconv"
 )
 
+// A contest
 type Contest struct {
-	ID              int     `json:"id"`
-	Name            string  `json:"name"`
-	URL             *string `json:"url"`
-	Author          *string `json:"author"`
-	BadgeSlug       *string `json:"badgeSlug"`
-	BadgeImageURL   *string `json:"badgeImageUrl"`
-	IsCurrent       bool    `json:"isCurrent"`
-	StartDate       *string `json:"startDate"`
-	EndDate         *string `json:"endDate"`
-	IsVotingEnabled *bool   `json:"isVotingEnabled"`
+	// A unique integer id of the contest
+	ID int `json:"id"`
+	// The name of the contest
+	Name string `json:"name"`
+	// The url of the contest program page
+	URL *string `json:"url"`
+	// The author of the announcement program code. Only visible to contest editors
+	Author *string `json:"author"`
+	// The url slug of the contest badge
+	BadgeSlug *string `json:"badgeSlug"`
+	// A url to the badge image
+	BadgeImageURL *string `json:"badgeImageUrl"`
+	// Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+	IsCurrent bool `json:"isCurrent"`
+	// The start date of the contest
+	StartDate *string `json:"startDate"`
+	// The end date (deadline) of the contest
+	EndDate *string `json:"endDate"`
+	// Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+	IsVotingEnabled *bool `json:"isVotingEnabled"`
 }
 
+// The full profile of a logged in user
 type FullUserProfile struct {
-	IsAdmin        bool    `json:"isAdmin"`
-	IsImpersonated bool    `json:"isImpersonated"`
-	LoggedIn       bool    `json:"loggedIn"`
-	OriginKaid     *string `json:"originKaid"`
-	User           *User   `json:"user"`
+	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
+	IsAdmin bool `json:"isAdmin"`
+	// Indicates whether the acting user is being impersonated by an admin user
+	IsImpersonated bool `json:"isImpersonated"`
+	// Indicates whether the actor is logged in
+	LoggedIn bool `json:"loggedIn"`
+	// The kaid of the actual user, if the current actor is being impersonated
+	OriginKaid *string `json:"originKaid"`
+	// The logged in user
+	User *User `json:"user"`
 }
 
+// The permissions set, associated with the User type
 type Permissions struct {
-	AddEntries            bool `json:"add_entries"`
-	AddUsers              bool `json:"add_users"`
-	AssignEntryGroups     bool `json:"assign_entry_groups"`
+	// Allows the user to add individual and bulk import entries
+	AddEntries bool `json:"add_entries"`
+	// Allows the user to create new user accounts
+	AddUsers bool `json:"add_users"`
+	// Allows the user to assign entries to judging groups
+	AssignEntryGroups bool `json:"assign_entry_groups"`
+	// Allows the user to assign evaluators to judging groups
 	AssignEvaluatorGroups bool `json:"assign_evaluator_groups"`
-	AssumeUserIdentities  bool `json:"assume_user_identities"`
-	ChangeUserPasswords   bool `json:"change_user_passwords"`
-	DeleteAllEvaluations  bool `json:"delete_all_evaluations"`
-	DeleteAllTasks        bool `json:"delete_all_tasks"`
-	DeleteContests        bool `json:"delete_contests"`
-	DeleteEntries         bool `json:"delete_entries"`
-	DeleteErrors          bool `json:"delete_errors"`
-	DeleteKbContent       bool `json:"delete_kb_content"`
-	EditAllEvaluations    bool `json:"edit_all_evaluations"`
-	EditAllTasks          bool `json:"edit_all_tasks"`
-	EditContests          bool `json:"edit_contests"`
-	EditEntries           bool `json:"edit_entries"`
-	EditKbContent         bool `json:"edit_kb_content"`
-	EditUserProfiles      bool `json:"edit_user_profiles"`
-	JudgeEntries          bool `json:"judge_entries"`
-	ManageAnnouncements   bool `json:"manage_announcements"`
+	// Allows the user to impersonate other users
+	AssumeUserIdentities bool `json:"assume_user_identities"`
+	// Allows the user to change the passwords of other users
+	ChangeUserPasswords bool `json:"change_user_passwords"`
+	// Allows the user to delete all evaluations
+	DeleteAllEvaluations bool `json:"delete_all_evaluations"`
+	// Allows the user to delete all tasks
+	DeleteAllTasks bool `json:"delete_all_tasks"`
+	// Allows the user to delete all contests and associated data
+	DeleteContests bool `json:"delete_contests"`
+	// Allows the user to delete all entries
+	DeleteEntries bool `json:"delete_entries"`
+	// Allows the user to delete all errors
+	DeleteErrors bool `json:"delete_errors"`
+	// Allows the user to delete all KB articles and sections
+	DeleteKbContent bool `json:"delete_kb_content"`
+	// Allows the user to edit all evaluations
+	EditAllEvaluations bool `json:"edit_all_evaluations"`
+	// Allows the user to edit all tasks
+	EditAllTasks bool `json:"edit_all_tasks"`
+	// Allows the user to edit all contests
+	EditContests bool `json:"edit_contests"`
+	// Allows the user to edit all entries
+	EditEntries bool `json:"edit_entries"`
+	// Allows the user to edit all KB articles and sections
+	EditKbContent bool `json:"edit_kb_content"`
+	// Allows the user to edit all user profiles
+	EditUserProfiles bool `json:"edit_user_profiles"`
+	JudgeEntries     bool `json:"judge_entries"`
+	// Allows the user to create, edit, and delete announcements
+	ManageAnnouncements bool `json:"manage_announcements"`
+	// Allows the user to create, edit, and delete judging criteria
 	ManageJudgingCriteria bool `json:"manage_judging_criteria"`
-	ManageJudgingGroups   bool `json:"manage_judging_groups"`
-	ManageWinners         bool `json:"manage_winners"`
-	PublishKbContent      bool `json:"publish_kb_content"`
-	ViewAdminStats        bool `json:"view_admin_stats"`
-	ViewAllEvaluations    bool `json:"view_all_evaluations"`
-	ViewAllTasks          bool `json:"view_all_tasks"`
-	ViewAllUsers          bool `json:"view_all_users"`
-	ViewErrors            bool `json:"view_errors"`
-	ViewJudgingSettings   bool `json:"view_judging_settings"`
+	// Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+	ManageJudgingGroups bool `json:"manage_judging_groups"`
+	// Allows the user to add and remove winning entries
+	ManageWinners bool `json:"manage_winners"`
+	// Allows the user to publish draft KB articles
+	PublishKbContent bool `json:"publish_kb_content"`
+	// Allows the user to view admin stats on the dashboard
+	ViewAdminStats bool `json:"view_admin_stats"`
+	// Allows the user to view all evaluations
+	ViewAllEvaluations bool `json:"view_all_evaluations"`
+	// Allows the user to view all tasks
+	ViewAllTasks bool `json:"view_all_tasks"`
+	// Allows the user to view all user accounts
+	ViewAllUsers bool `json:"view_all_users"`
+	// Allows the user to view all errors
+	ViewErrors bool `json:"view_errors"`
+	// Allows the user to view all judging settings
+	ViewJudgingSettings bool `json:"view_judging_settings"`
 }
 
+// An evaluator account
 type User struct {
-	ID            int          `json:"id"`
-	Kaid          string       `json:"kaid"`
-	Name          *string      `json:"name"`
-	Nickname      *string      `json:"nickname"`
-	Username      *string      `json:"username"`
-	Email         *string      `json:"email"`
-	AccountLocked *bool        `json:"accountLocked"`
-	Permissions   *Permissions `json:"permissions"`
-	IsAdmin       *bool        `json:"isAdmin"`
+	// The unique integer id of the user
+	ID int `json:"id"`
+	// The kaid associated with the user's KA account
+	Kaid string `json:"kaid"`
+	// The user's real name
+	Name *string `json:"name"`
+	// The user's display name
+	Nickname *string `json:"nickname"`
+	// The user's username that is used to log in
+	Username *string `json:"username"`
+	// The user's email address
+	Email *string `json:"email"`
+	// Indicates if the account has been deactivated
+	AccountLocked *bool `json:"accountLocked"`
+	// The permission set of the user
+	Permissions *Permissions `json:"permissions"`
+	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
+	IsAdmin *bool `json:"isAdmin"`
+}
+
+type NullType string
+
+const (
+	NullTypeEmptyArray  NullType = "EMPTY_ARRAY"
+	NullTypeEmptyString NullType = "EMPTY_STRING"
+	NullTypeNull        NullType = "NULL"
+)
+
+var AllNullType = []NullType{
+	NullTypeEmptyArray,
+	NullTypeEmptyString,
+	NullTypeNull,
+}
+
+func (e NullType) IsValid() bool {
+	switch e {
+	case NullTypeEmptyArray, NullTypeEmptyString, NullTypeNull:
+		return true
+	}
+	return false
+}
+
+func (e NullType) String() string {
+	return string(e)
+}
+
+func (e *NullType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = NullType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid NullType", str)
+	}
+	return nil
+}
+
+func (e NullType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ObjectType string
+
+const (
+	ObjectTypeContest ObjectType = "CONTEST"
+	ObjectTypeUser    ObjectType = "USER"
+)
+
+var AllObjectType = []ObjectType{
+	ObjectTypeContest,
+	ObjectTypeUser,
+}
+
+func (e ObjectType) IsValid() bool {
+	switch e {
+	case ObjectTypeContest, ObjectTypeUser:
+		return true
+	}
+	return false
+}
+
+func (e ObjectType) String() string {
+	return string(e)
+}
+
+func (e *ObjectType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ObjectType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ObjectType", str)
+	}
+	return nil
+}
+
+func (e ObjectType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type Permission string

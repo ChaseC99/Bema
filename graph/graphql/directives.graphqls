@@ -1,5 +1,5 @@
 directive @isAuthenticated on FIELD_DEFINITION
-directive @hasPermission(permission: Permission!) on FIELD_DEFINITION
+directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType!) on FIELD_DEFINITION
 
 enum Permission {
     ADD_ENTRIES,
@@ -32,4 +32,15 @@ enum Permission {
     VIEW_ALL_USERS,
     VIEW_ERRORS,
     VIEW_JUDGING_SETTINGS,
+}
+
+enum NullType {
+    EMPTY_ARRAY
+    EMPTY_STRING
+    NULL
+}
+
+enum ObjectType {
+    CONTEST
+    USER
 }
