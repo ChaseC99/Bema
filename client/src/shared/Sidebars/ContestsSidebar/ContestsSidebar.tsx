@@ -2,6 +2,7 @@ import LoadingSpinner from "../../LoadingSpinner";
 import SidebarItem from "../../SidebarItem/SidebarItem";
 import "../sidebars.css";
 import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../../util/errors";
 
 type ContestSidebarProps = {
   rootPath: string
@@ -34,6 +35,10 @@ function ContestsSidebar(props: ContestSidebarProps) {
         <LoadingSpinner size="SMALL" testId="sidebar-spinner" />
       </div>
     );
+  }
+
+  if (error) {
+    return handleGqlError(error);
   }
 
   return (
