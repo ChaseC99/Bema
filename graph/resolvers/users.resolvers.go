@@ -87,6 +87,14 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
+func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {
+	user, err := users.GetUserById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (r *userResolver) Name(ctx context.Context, obj *model.User) (*string, error) {
 	return obj.Name, nil
 }

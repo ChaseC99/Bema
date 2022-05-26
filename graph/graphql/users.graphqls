@@ -8,6 +8,11 @@ extend type Query {
   A list of all evaluator accounts
   """
   users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_ARRAY, objType: USER)
+
+  """
+  A single user
+  """
+  user(id: ID!): User
 }
 
 """
@@ -43,7 +48,7 @@ type FullUserProfile {
 """
 An evaluator account
 """
-type User {
+type User @isAuthenticated {
   """
   The unique integer id of the user
   """

@@ -1,4 +1,4 @@
-directive @isAuthenticated on FIELD_DEFINITION
+directive @isAuthenticated on FIELD_DEFINITION | OBJECT
 directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType!) on FIELD_DEFINITION
 
 enum Permission {

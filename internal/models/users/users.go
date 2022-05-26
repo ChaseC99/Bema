@@ -29,8 +29,18 @@ func GetAllUsers(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
-func GetUserById(ctx context.Context) (*model.User, error) {
-	return &model.User{}, nil
+func GetUserById(ctx context.Context, id int) (*model.User, error) {
+	row := db.DB.QueryRow("SELECT evaluator_id, evaluator_kaid, evaluator_name, nickname, username, email, account_locked, is_admin, to_char(logged_in_tstz, $1) as logged_in_tstz, to_char(dt_term_start, $1) as dt_term_start, to_char(dt_term_end, $1) as dt_term_end, receive_emails FROM evaluator WHERE evaluator_id = $2", util.DisplayDateFormat, id)
+
+	user := &model.User{}
+	if err := row.Scan(&user.ID, &user.Kaid, &user.Name, &user.Nickname, &user.Username, &user.Email, &user.AccountLocked, &user.IsAdmin, &user.LastLogin, &user.TermStart, &user.TermEnd, &user.NotificationsEnabled); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError("The requested user does not exist")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the requested user", err)
+	}
+
+	return user, nil
 }
 
 func GetUserPermissionsById(ctx context.Context, id int) (*model.Permissions, error) {
