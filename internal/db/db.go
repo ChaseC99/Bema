@@ -26,6 +26,8 @@ func InitDB() {
 		log.Panic(err)
 	}
 
+	db.SetMaxOpenConns(10)
+
 	DB = db
 
 	log.Println("Connection to database established")
