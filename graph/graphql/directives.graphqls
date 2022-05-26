@@ -1,4 +1,8 @@
-directive @isAuthenticated on FIELD_DEFINITION | OBJECT
+"""
+Restricts access to a field if the user is not logged in.
+nullType - The null value to be returned if the user is not logged in
+"""
+directive @isAuthenticated(nullType: NullType!) on FIELD_DEFINITION | OBJECT
 
 """
 Restricts access to the field based on a user's permissions. Admins and object owners are allowed to access the field.

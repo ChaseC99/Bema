@@ -5,9 +5,14 @@ extend type Query {
   currentUser: FullUserProfile!
 
   """
-  A list of all evaluator accounts
+  A list of all active evaluator accounts
   """
-  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_USER_ARRAY)
+  users: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+
+  """
+  A list of all inactive evaluator accounts
+  """
+  inactiveUsers: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
 
   """
   A single user
@@ -48,7 +53,7 @@ type FullUserProfile {
 """
 An evaluator account
 """
-type User @isAuthenticated {
+type User @isAuthenticated(nullType: NULL) {
   """
   The unique integer id of the user
   """

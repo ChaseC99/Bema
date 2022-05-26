@@ -156,14 +156,22 @@ func GetUserFromContext(ctx context.Context) *User {
 }
 
 // Handler for the @isAuthenticated directive. Only calls the resolver if the user is logged in.
-func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver, nullType model.NullType) (interface{}, error) {
 	user := GetUserFromContext(ctx)
 
-	if user == nil {
-		return nil, nil
+	// Let logged in users through
+	if user != nil {
+		return next(ctx)
 	}
 
-	return next(ctx)
+	switch nullType {
+	case model.NullTypeEmptyString:
+		return "", nil
+	case model.NullTypeNull:
+		return nil, nil
+	default:
+		return getEmptyArray(nullType), nil
+	}
 }
 
 // Handler for the @hasPermission directive. Only calls the resolver if the user is an admin or if they are logged in and have the required permission.

@@ -5,6 +5,7 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
@@ -85,6 +86,10 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 		return []*model.User{}, err
 	}
 	return users, nil
+}
+
+func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {

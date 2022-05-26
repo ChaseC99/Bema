@@ -43,7 +43,7 @@ type ResolverRoot interface {
 
 type DirectiveRoot struct {
 	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (res interface{}, err error)
-	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver, nullType model.NullType) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 		Contests       func(childComplexity int) int
 		CurrentContest func(childComplexity int) int
 		CurrentUser    func(childComplexity int) int
+		InactiveUsers  func(childComplexity int) int
 		User           func(childComplexity int, id int) int
 		Users          func(childComplexity int) int
 	}
@@ -138,6 +139,7 @@ type QueryResolver interface {
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 	Users(ctx context.Context) ([]*model.User, error)
+	InactiveUsers(ctx context.Context) ([]*model.User, error)
 	User(ctx context.Context, id int) (*model.User, error)
 }
 type UserResolver interface {
@@ -515,6 +517,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.CurrentUser(childComplexity), true
 
+	case "Query.inactiveUsers":
+		if e.complexity.Query.InactiveUsers == nil {
+			break
+		}
+
+		return e.complexity.Query.InactiveUsers(childComplexity), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -746,9 +755,13 @@ type Contest {
   """
   Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
   """
-  isVotingEnabled: Boolean @isAuthenticated
+  isVotingEnabled: Boolean @isAuthenticated(nullType: NULL)
 }`, BuiltIn: false},
-	{Name: "graph/graphql/directives.graphqls", Input: `directive @isAuthenticated on FIELD_DEFINITION | OBJECT
+	{Name: "graph/graphql/directives.graphqls", Input: `"""
+Restricts access to a field if the user is not logged in.
+nullType - The null value to be returned if the user is not logged in
+"""
+directive @isAuthenticated(nullType: NullType!) on FIELD_DEFINITION | OBJECT
 
 """
 Restricts access to the field based on a user's permissions. Admins and object owners are allowed to access the field.
@@ -808,9 +821,14 @@ enum ObjectType {
   currentUser: FullUserProfile!
 
   """
-  A list of all evaluator accounts
+  A list of all active evaluator accounts
   """
-  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_USER_ARRAY)
+  users: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+
+  """
+  A list of all inactive evaluator accounts
+  """
+  inactiveUsers: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
 
   """
   A single user
@@ -851,7 +869,7 @@ type FullUserProfile {
 """
 An evaluator account
 """
-type User @isAuthenticated {
+type User @isAuthenticated(nullType: NULL) {
   """
   The unique integer id of the user
   """
@@ -1107,6 +1125,21 @@ func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["objType"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) dir_isAuthenticated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.NullType
+	if tmp, ok := rawArgs["nullType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nullType"))
+		arg0, err = ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nullType"] = arg0
 	return args, nil
 }
 
@@ -1621,10 +1654,14 @@ func (ec *executionContext) _Contest_isVotingEnabled(ctx context.Context, field 
 			return ec.resolvers.Contest().IsVotingEnabled(rctx, obj)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
 			if ec.directives.IsAuthenticated == nil {
 				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0)
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1855,10 +1892,14 @@ func (ec *executionContext) _FullUserProfile_user(ctx context.Context, field gra
 			return obj.User, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
 			if ec.directives.IsAuthenticated == nil {
 				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0)
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
 		}
 
 		tmp, err := directive1(rctx)
@@ -3523,24 +3564,24 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 			return ec.resolvers.Query().Users(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
 			if err != nil {
 				return nil, err
 			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_USER_ARRAY")
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
+			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
 		}
 
 		tmp, err := directive2(rctx)
@@ -3611,6 +3652,112 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_inactiveUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_inactiveUsers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().InactiveUsers(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_USER_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_inactiveUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_user(ctx, field)
 	if err != nil {
@@ -3629,10 +3776,14 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().User(rctx, fc.Args["id"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
 			if ec.directives.IsAuthenticated == nil {
 				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
 		}
 
 		tmp, err := directive1(rctx)
@@ -6938,6 +7089,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_users(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "inactiveUsers":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_inactiveUsers(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
