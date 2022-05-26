@@ -15,11 +15,3 @@ export async function fetchNextEntry() {
     entry: data.entry
   };
 }
-
-export async function fetchCurrentContest() {
-  const data = await request("GET", "/api/internal/contests/getCurrentContest");
-
-  return {
-    id: data.currentContest.contest_id
-  };
-}

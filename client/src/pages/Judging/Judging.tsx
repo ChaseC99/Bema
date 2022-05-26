@@ -1,3 +1,4 @@
+import { gql, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../shared/Button";
@@ -6,8 +7,9 @@ import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../shared/Modals";
 import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
+import { handleGqlError } from "../../util/errors";
 import request from "../../util/request";
-import { fetchCurrentContest, fetchJudgingCriteria, fetchNextEntry } from "./fetchData";
+import { fetchJudgingCriteria, fetchNextEntry } from "./fetchData";
 
 type Criteria = {
   criteria_description: string
@@ -21,6 +23,20 @@ type Entry = {
   o_entry_url: "https://www.khanacademy.org/computer-programming/spin-off-of-contest-animation/4554572617007104"
 }
 
+type CurrentContest = {
+  currentContest: {
+    id: number
+  }
+}
+
+const GET_CURRENT_CONTEST = gql`
+  query GetCurrentContest {
+    currentContest {
+      id
+    }
+  }
+`;
+
 function Judging() {
   const { state } = useAppState();
   const [criteria, setCriteria] = useState<Criteria[]>([]);
@@ -30,6 +46,8 @@ function Judging() {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [currentContestId, setCurrentContestId] = useState<number>(1);
   const [showFlagEntryModal, setShowFlagEntryModal] = useState<boolean>(false);
+
+  const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<CurrentContest>(GET_CURRENT_CONTEST);
 
   useEffect(() => {
     fetchJudgingCriteria()
@@ -43,12 +61,11 @@ function Judging() {
         setEntry(data.entry);
         setEntryIsLoading(false);
       });
-
-      fetchCurrentContest()
-      .then((data) => {
-        setCurrentContestId(data.id);
-      })
   }, []);
+
+  if (currentContestError) {
+    return handleGqlError(currentContestError);
+  }
 
   const handleSubmit = async (values: { [name: string]: any }) => {
     await request("POST", "/api/internal/judging/submit", {
@@ -98,7 +115,7 @@ function Judging() {
       <div className="container center col-12" style={{ height: "80vh", alignItems: "center" }}>
         <div className="container center col-8" style={{flexDirection: "column", alignItems: "center"}}>
           <h2>Woohoo! All the entries have been scored!</h2>
-          <p>Visit the <Link to={"/results/" + currentContestId}>results</Link> page to view entry scores.</p>
+          <p>Visit the <Link to={"/results/" + (currentContestIsLoading ? 1 : currentContestData?.currentContest.id)}>results</Link> page to view entry scores.</p>
         </div>
       </div >
     );
