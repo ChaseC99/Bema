@@ -2,24 +2,34 @@ import useAppState from "../../../state/useAppState";
 import SidebarItem from "../../SidebarItem/SidebarItem";
 import "../sidebars.css";
 import { useEffect, useState } from "react";
-import { fetchCurrentContest, fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
+import { fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import LoadingSpinner from "../../LoadingSpinner/LoadingSpinner";
+import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../../util/errors";
+
+type GetCurrentContestResponse = {
+  currentContest: {
+    id: number
+  }
+}
+
+const GET_CURRENT_CONTEST = gql`
+  query GetCurrentContest {
+    currentContest {
+      id
+    }
+  }
+`;
 
 function AdminSidebar() {
   const { state } = useAppState();
   const permissions = state.user?.permissions;
-  const [currentContestId, setCurrentContestId] = useState<number>();
   const [evaluationContestId, setEvaluationContestId] = useState<number>();
-  const [currentContestIdLoading, setCurrentContestIdLoading] = useState<boolean>(true);
   const [evaluationContestIdLoading, setEvaluationContestIdLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    fetchCurrentContest()
-    .then(id => {
-      setCurrentContestId(id);
-      setCurrentContestIdLoading(false);
-    });
+  const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<GetCurrentContestResponse>(GET_CURRENT_CONTEST);
 
+  useEffect(() => {
     if (state.loggedIn && state.user) {
       fetchLastContestEvaluatedByUser(state.user.id)
       .then(id => {
@@ -32,12 +42,16 @@ function AdminSidebar() {
     }
   }, [state.loggedIn, state.user]);
 
-  if (currentContestIdLoading || evaluationContestIdLoading) {
+  if (currentContestIsLoading || evaluationContestIdLoading) {
     return (
       <div className="sidebar">
         <LoadingSpinner size="SMALL" testId="sidebar-spinner" />
       </div>
     );
+  }
+
+  if (currentContestError) {
+    return handleGqlError(currentContestError);
   }
 
   return (
@@ -46,17 +60,17 @@ function AdminSidebar() {
         <h3>Info</h3>
         <SidebarItem text="Dashboard" to="/admin/dashboard" testId="sidebar-dashboard" />
         <SidebarItem text="Contests" to="/admin/contests" testId="sidebar-contests" />
-        <SidebarItem text="Entries" to={"/entries/" + currentContestId} testId="sidebar-entries" />
+        <SidebarItem text="Entries" to={"/entries/" + currentContestData?.currentContest.id} testId="sidebar-entries" />
 
         {state.loggedIn && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
         
         {state.loggedIn && <SidebarItem text="Evaluations" 
           to={evaluationContestId ? 
             ("/admin/evaluations/" + state.user?.id + "/" + evaluationContestId) : 
-            ("/admin/evaluations/" + state.user?.id + "/" + currentContestId)} 
+            ("/admin/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)} 
           testId="sidebar-evaluations" />}
 
-        <SidebarItem text="Results" to={"/results/" + currentContestId} testId="sidebar-results" />
+        <SidebarItem text="Results" to={"/results/" + currentContestData?.currentContest.id} testId="sidebar-results" />
       </div>
 
       {state.loggedIn && (permissions?.view_all_tasks || permissions?.view_judging_settings || permissions?.view_all_users || permissions?.view_errors || state.isAdmin) && 
