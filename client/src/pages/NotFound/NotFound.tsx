@@ -1,15 +1,7 @@
-import { useEffect } from "react";
+import ErrorPage from "../../shared/ErrorPage";
 
 function NotFound() {
-    useEffect(() => {
-        reloadPage();
-    }, []);
-
-    return <div></div>
-}
-
-function reloadPage() {
-    window.location.reload();
+    return <ErrorPage type="NOT FOUND" />
 }
 
 export default NotFound;
