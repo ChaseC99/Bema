@@ -5,54 +5,6 @@ const {
   successMsg
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const { displayDateFormat } = require(process.cwd() + "/util/variables");
-
-exports.get = (request, response, next) => {
-  try {
-    const { id } = request.query;
-
-    if (parseInt(id)) {
-      return db.query("SELECT *, to_char(date_start, $1) as date_start, to_char(date_end, $2) as date_end FROM contest WHERE contest_id = $3 ORDER BY contest_id DESC", [displayDateFormat, displayDateFormat, id], res => {
-        if (res.error) {
-          return handleNext(next, 500, "There was a problem getting the requested contest.", res.error);
-        }
-        response.json({
-          is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
-          contest: res.rows.length > 0 ? res.rows[0] : null
-        });
-      });
-    }
-
-    return db.query("SELECT *, to_char(date_start, $1) as date_start, to_char(date_end, $2) as date_end FROM contest ORDER BY contest_id DESC", [displayDateFormat, displayDateFormat], res => {
-      if (res.error) {
-        return handleNext(next, 500, "There was a problem getting the list of contests.", res.error);
-      }
-      response.json({
-        is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
-        contests: res.rows
-      });
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retriving the list of contests.", error);
-  }
-};
-
-exports.getCurrentContest = (request, response, next) => {
-  try {
-    return db.query("SELECT * FROM contest ORDER BY contest_id DESC LIMIT 1", [], res => {
-      if (res.error) {
-        return handleNext(next, 500, "There was a problem getting the current contest.", res.error);
-      }
-      response.json({
-        logged_in: request.decodedToken ? true : false,
-        is_admin: request.decodedToken ? request.decodedToken.is_admin : false,
-        currentContest: res.rows[0]
-      });
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the current contest.", error);
-  }
-};
 
 exports.getContestsEvaluatedByUser = (request, response, next) => {
   try {

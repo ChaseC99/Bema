@@ -7,7 +7,7 @@ extend type Query {
   """
   A list of all evaluator accounts
   """
-  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_ARRAY, objType: USER)
+  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_USER_ARRAY)
 
   """
   A single user

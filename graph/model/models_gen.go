@@ -142,20 +142,20 @@ type User struct {
 type NullType string
 
 const (
-	NullTypeEmptyArray  NullType = "EMPTY_ARRAY"
-	NullTypeEmptyString NullType = "EMPTY_STRING"
-	NullTypeNull        NullType = "NULL"
+	NullTypeEmptyUserArray NullType = "EMPTY_USER_ARRAY"
+	NullTypeEmptyString    NullType = "EMPTY_STRING"
+	NullTypeNull           NullType = "NULL"
 )
 
 var AllNullType = []NullType{
-	NullTypeEmptyArray,
+	NullTypeEmptyUserArray,
 	NullTypeEmptyString,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyArray, NullTypeEmptyString, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyString, NullTypeNull:
 		return true
 	}
 	return false

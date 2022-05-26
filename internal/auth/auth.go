@@ -167,7 +167,7 @@ func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver
 }
 
 // Handler for the @hasPermission directive. Only calls the resolver if the user is an admin or if they are logged in and have the required permission.
-func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType model.ObjectType) (interface{}, error) {
+func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (interface{}, error) {
 	user := GetUserFromContext(ctx)
 
 	// Allow admin users through
@@ -175,17 +175,20 @@ func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, 
 		return next(ctx)
 	}
 
+	if objType != nil && isOwner(user, obj, *objType) {
+		return next(ctx)
+	}
+
 	// Make sure the user has the required permission
 	hasPermission := getPermissionFromEnum(user, permission.String())
 	if !hasPermission {
-		if nullType == model.NullTypeEmptyArray {
-			return getEmptyArray(objType), nil
-		} else if nullType == model.NullTypeEmptyString {
+		if nullType == model.NullTypeEmptyString {
 			return "", nil
 		} else if nullType == model.NullTypeNull {
 			return nil, nil
+		} else {
+			return getEmptyArray(nullType), nil
 		}
-		return nil, nil
 	}
 
 	// If they have permission, call the resolver
@@ -264,10 +267,20 @@ func getPermissionFromEnum(user *User, enumValue string) bool {
 	}
 }
 
-func getEmptyArray(objType model.ObjectType) interface{} {
-	if objType == model.ObjectTypeUser {
+func getEmptyArray(nullType model.NullType) interface{} {
+	if nullType == model.NullTypeEmptyUserArray {
 		return []*model.User{}
 	}
 
 	return nil
+}
+
+// Checks if an object type is ownable
+func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
+	switch objType {
+	case model.ObjectTypeUser:
+		return obj.(*model.User).ID == user.ID
+	default:
+		return false
+	}
 }

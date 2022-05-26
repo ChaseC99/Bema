@@ -42,7 +42,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType model.ObjectType) (res interface{}, err error)
+	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (res interface{}, err error)
 	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
@@ -749,7 +749,14 @@ type Contest {
   isVotingEnabled: Boolean @isAuthenticated
 }`, BuiltIn: false},
 	{Name: "graph/graphql/directives.graphqls", Input: `directive @isAuthenticated on FIELD_DEFINITION | OBJECT
-directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType!) on FIELD_DEFINITION
+
+"""
+Restricts access to the field based on a user's permissions. Admins and object owners are allowed to access the field.
+permission - The permission to check
+nullType - The null value to be returned if the user does not pass the permission check
+objType - The type of object the directive is associated with (used to check object ownership)
+"""
+directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType) on FIELD_DEFINITION
 
 enum Permission {
     ADD_ENTRIES,
@@ -785,7 +792,7 @@ enum Permission {
 }
 
 enum NullType {
-    EMPTY_ARRAY
+    EMPTY_USER_ARRAY
     EMPTY_STRING
     NULL
 }
@@ -803,7 +810,7 @@ enum ObjectType {
   """
   A list of all evaluator accounts
   """
-  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_ARRAY, objType: USER)
+  users: [User!]! @hasPermission(permission: VIEW_ALL_USERS, nullType: EMPTY_USER_ARRAY)
 
   """
   A single user
@@ -1091,10 +1098,10 @@ func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["nullType"] = arg1
-	var arg2 model.ObjectType
+	var arg2 *model.ObjectType
 	if tmp, ok := rawArgs["objType"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("objType"))
-		arg2, err = ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, tmp)
+		arg2, err = ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1341,7 +1348,7 @@ func (ec *executionContext) _Contest_author(ctx context.Context, field graphql.C
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "CONTEST")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "CONTEST")
 			if err != nil {
 				return nil, err
 			}
@@ -3526,18 +3533,14 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 			if err != nil {
 				return nil, err
 			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_USER_ARRAY")
 			if err != nil {
 				return nil, err
 			}
 			if ec.directives.HasPermission == nil {
 				return nil, errors.New("directive hasPermission is not implemented")
 			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, objType)
+			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
 		}
 
 		tmp, err := directive2(rctx)
@@ -3951,7 +3954,7 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4106,7 +4109,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4179,7 +4182,7 @@ func (ec *executionContext) _User_accountLocked(ctx context.Context, field graph
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4252,7 +4255,7 @@ func (ec *executionContext) _User_permissions(ctx context.Context, field graphql
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4387,7 +4390,7 @@ func (ec *executionContext) _User_isAdmin(ctx context.Context, field graphql.Col
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4460,7 +4463,7 @@ func (ec *executionContext) _User_lastLogin(ctx context.Context, field graphql.C
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -4615,7 +4618,7 @@ func (ec *executionContext) _User_notificationsEnabled(ctx context.Context, fiel
 			if err != nil {
 				return nil, err
 			}
-			objType, err := ec.unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
 			if err != nil {
 				return nil, err
 			}
@@ -7587,16 +7590,6 @@ func (ec *executionContext) marshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCou
 	return v
 }
 
-func (ec *executionContext) unmarshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (model.ObjectType, error) {
-	var res model.ObjectType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNObjectType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, sel ast.SelectionSet, v model.ObjectType) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, v interface{}) (model.Permission, error) {
 	var res model.Permission
 	err := res.UnmarshalGQL(v)
@@ -7960,6 +7953,22 @@ func (ec *executionContext) marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑC
 		return graphql.Null
 	}
 	return ec._Contest(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (*model.ObjectType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ObjectType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, sel ast.SelectionSet, v *model.ObjectType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOPermissions2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermissions(ctx context.Context, sel ast.SelectionSet, v *model.Permissions) graphql.Marshaler {
