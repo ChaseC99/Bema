@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/pkg/errors"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 type stackTracer interface {
@@ -17,64 +19,40 @@ type causer interface {
 	Cause() error
 }
 
-// Represents an unexpected internal server error. These errors are logged in the database, and only the public
-// message is shown to the end user.
-type InternalError struct {
-	PublicMessage string
-	InternalError error
-	UserId        *int
-	Origin        string
-	Referer       string
-	UserAgent     string
-	CallStack     string
-}
-
-func (e *InternalError) Error() string {
-	return e.PublicMessage
-}
-
 // Creates and logs a new internal error
-func NewInternalError(ctx context.Context, publicMessage string, err error) *InternalError {
+func NewInternalError(ctx context.Context, publicMessage string, err error) *gqlerror.Error {
 	internalError := errors.WithStack(err) // Wraps the passed in error so a stack trace can be added
-
+	callStack := fmt.Sprintf("%v\n%v", internalError.(causer).Cause(), internalError.(stackTracer).StackTrace())
 	request := GetRequestFromContext(ctx)
 
-	newError := &InternalError{
-		PublicMessage: publicMessage,
-		InternalError: internalError,
-		UserId:        nil,
-		Origin:        request.RemoteAddr,
-		Referer:       request.Referer(),
-		UserAgent:     request.UserAgent(),
-		CallStack:     fmt.Sprintf("%v\n%v", internalError.(causer).Cause(), internalError.(stackTracer).StackTrace()),
-	}
-
+	var userId *int = nil
 	user := auth.GetUserFromContext(ctx)
 	if user != nil {
-		newError.UserId = &user.ID
+		userId = &user.ID
 	}
 
-	logError(newError)
+	logError(publicMessage, callStack, userId, request.RemoteAddr, request.Referer(), request.UserAgent())
 
-	return newError
-}
-
-// Represents a not found error that occurs when the requested resource does not exist.
-type NotFoundError struct {
-	message string
-}
-
-func (e *NotFoundError) Error() string {
-	return e.message
+	return &gqlerror.Error{
+		Path:    graphql.GetPath(ctx),
+		Message: publicMessage,
+		Extensions: map[string]interface{}{
+			"code": 500,
+		},
+	}
 }
 
 // Creates a new not found error
-func NewNotFoundError(message string) *NotFoundError {
-	return &NotFoundError{
-		message: message,
+func NewNotFoundError(ctx context.Context, message string) *gqlerror.Error {
+	return &gqlerror.Error{
+		Path:    graphql.GetPath(ctx),
+		Message: message,
+		Extensions: map[string]interface{}{
+			"code": 404,
+		},
 	}
 }
 
-func logError(err *InternalError) {
-	db.DB.Query("SELECT log_error($1, $2, $3, $4, $5, $6);", err.PublicMessage, err.CallStack, *err.UserId, err.Origin, err.Referer, err.UserAgent)
+func logError(publicMessage string, callStack string, userId *int, origin string, referer string, userAgent string) {
+	db.DB.Query("SELECT log_error($1, $2, $3, $4, $5, $6);", publicMessage, callStack, userId, origin, referer, userAgent)
 }
