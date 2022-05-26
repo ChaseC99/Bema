@@ -1,3 +1,4 @@
+import Button from "../Button";
 import ExternalLink from "../ExternalLink";
 import "./ErrorPage.css";
 
@@ -7,6 +8,10 @@ type ErrorPageProps = {
 }
 
 function ErrorPage(props: ErrorPageProps) {
+  const handleReload = () => {
+    window.location.reload();
+  }
+
   return (
     <div className="message-container col-12">
       <div className="message-wrapper">
@@ -22,8 +27,8 @@ function ErrorPage(props: ErrorPageProps) {
 
         {(props.type === "ERROR" && !props.message) &&
           <div>
-            <h2>Oops! An unexpected error has occurred, please refresh the page.</h2>
-            <p>This issue has already been reported, but if this problem persists, <ExternalLink to="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-">please tell us</ExternalLink>.</p>
+            <h2>Oops! An unexpected error has occurred, please try again.</h2>
+            <p>Uh oh, it looks like we ran into an error. You need to <Button type="tertiary" role="button" action={handleReload} text="refresh"/>. If this issue persists, <ExternalLink to="https://support.khanacademy.org/hc/en-us/community/topics/360000022111-KACP-Challenge-Council-Discussion-restricted-access-">please tell us</ExternalLink>.</p>
           </div>
         }
 
