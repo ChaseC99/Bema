@@ -35,7 +35,8 @@ func GetContest(ctx context.Context, id int) (*model.Contest, error) {
 	c := &model.Contest{}
 	if err := row.Scan(&c.ID, &c.Name, &c.URL, &c.Author, &c.StartDate, &c.EndDate, &c.IsCurrent, &c.IsVotingEnabled, &c.BadgeSlug, &c.BadgeImageURL); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError("This contest does not exist")
+			// return nil, errors.NewNotFoundError("This contest does not exist")
+			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a contest", err)
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a contest", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/resolvers"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
+	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 
@@ -43,6 +44,7 @@ func main() {
 	// Create router
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(nil))
+	router.Use(errors.Middleware(nil))
 
 	// Create graphql handler
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
