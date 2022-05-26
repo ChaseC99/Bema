@@ -1,7 +1,7 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import useAppState from "../../../state/useAppState";
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../../util/testing-utils";
-import { fetchCurrentContest, fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
+import { fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import AdminSidebar from "./AdminSidebar";
 
 jest.mock("../../state/useAppState", () => {
@@ -19,15 +19,10 @@ jest.mock("./fetchSidebarData.tsx", () => {
     fetchLastContestEvaluatedByUser: jest.fn()
   }
 });
-const fetchCurrentContestMock = fetchCurrentContest as unknown as jest.Mock<Partial<ReturnType<typeof fetchCurrentContest>>>;
 const fetchLastContestEvaluatedByUserMock = fetchLastContestEvaluatedByUser as unknown as jest.Mock<Partial<ReturnType<typeof fetchLastContestEvaluatedByUser>>>;
 
 
 beforeEach(() => {
-  fetchCurrentContestMock.mockReturnValue(new Promise(resolve => {
-    resolve(1);
-  }));
-
   fetchLastContestEvaluatedByUserMock.mockReturnValue(new Promise(resolve => {
     resolve(2);
   }));
