@@ -1256,7 +1256,7 @@ type JudgingGroup {
     """
     Indicates whether new entries and users can be assigned to this group
     """
-    isActive: String!
+    isActive: Boolean!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/users.graphqls", Input: `extend type Query {
   """
@@ -3473,9 +3473,9 @@ func (ec *executionContext) _JudgingGroup_isActive(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JudgingGroup_isActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3485,7 +3485,7 @@ func (ec *executionContext) fieldContext_JudgingGroup_isActive(ctx context.Conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
