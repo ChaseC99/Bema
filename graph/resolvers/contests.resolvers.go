@@ -28,7 +28,7 @@ func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) 
 }
 
 func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, error) {
-	contest, err := models.GetContest(ctx, id)
+	contest, err := models.GetContestById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
