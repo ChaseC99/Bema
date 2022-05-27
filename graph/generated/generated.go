@@ -1136,7 +1136,7 @@ type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
     """
     A list of all judging criteria (both active and inactive)
     """
-    allCriteria: [JudgingCriteria!]! @hasPermission(permission: MANAGE_JUDGING_CRITERIA, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
+    allCriteria: [JudgingCriteria!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
 
     """
     A list of active judging criteria. Sample data is returned for unauthenticated users.
@@ -5078,7 +5078,7 @@ func (ec *executionContext) _Query_allCriteria(ctx context.Context, field graphq
 			return ec.resolvers.Query().AllCriteria(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "MANAGE_JUDGING_CRITERIA")
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
 			if err != nil {
 				return nil, err
 			}

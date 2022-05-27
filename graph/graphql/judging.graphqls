@@ -2,7 +2,7 @@ extend type Query {
     """
     A list of all judging criteria (both active and inactive)
     """
-    allCriteria: [JudgingCriteria!]! @hasPermission(permission: MANAGE_JUDGING_CRITERIA, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
+    allCriteria: [JudgingCriteria!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
 
     """
     A list of active judging criteria. Sample data is returned for unauthenticated users.
