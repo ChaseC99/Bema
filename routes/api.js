@@ -659,7 +659,6 @@ router.get("/internal/contestants/entries", contestants.getEntries);
 router.get("/internal/contestants/stats", contestants.stats);
 
 // Messages
-router.get("/internal/messages", messages.get);
 router.post("/internal/messages", routeChecks.messages.add, wasValidated, messages.add);
 router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messages.edit);
 router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
