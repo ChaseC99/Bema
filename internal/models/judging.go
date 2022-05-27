@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
@@ -77,4 +78,57 @@ func GetActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	}
 
 	return criteria, nil
+}
+
+func GetAllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	groups := []*model.JudgingGroup{}
+
+	rows, err := db.DB.Query("SELECT group_id, group_name, is_active FROM evaluator_group ORDER BY group_id ASC;")
+	if err != nil {
+		return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of judging groups", err)
+	}
+
+	for rows.Next() {
+		var g model.JudgingGroup
+		if err := rows.Scan(&g.ID, &g.Name, &g.IsActive); err != nil {
+			return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of judging groups", err)
+		}
+		groups = append(groups, &g)
+	}
+
+	return groups, nil
+}
+
+func GetActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	groups := []*model.JudgingGroup{}
+
+	rows, err := db.DB.Query("SELECT group_id, group_name, is_active FROM evaluator_group WHERE is_active = true ORDER BY group_id ASC;")
+	if err != nil {
+		return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of active judging groups", err)
+	}
+
+	for rows.Next() {
+		var g model.JudgingGroup
+		if err := rows.Scan(&g.ID, &g.Name, &g.IsActive); err != nil {
+			return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of active judging groups", err)
+		}
+		groups = append(groups, &g)
+	}
+
+	return groups, nil
+}
+
+func GetJudgingGroupById(ctx context.Context, id int) (*model.JudgingGroup, error) {
+	row := db.DB.QueryRow("SELECT group_id, group_name, is_active FROM evaluator_group WHERE group_id = $1", id)
+
+	var group model.JudgingGroup
+	err := row.Scan(&group.ID, &group.Name, &group.IsActive)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "The requested judging group does not exist")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a judging group", err)
+	}
+
+	return &group, nil
 }

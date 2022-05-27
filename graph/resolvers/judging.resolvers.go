@@ -36,3 +36,19 @@ func (r *queryResolver) ActiveCriteria(ctx context.Context) ([]*model.JudgingCri
 		return criteria, nil
 	}
 }
+
+func (r *queryResolver) AllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	groups, err := models.GetAllJudgingGroups(ctx)
+	if err != nil {
+		return []*model.JudgingGroup{}, err
+	}
+	return groups, err
+}
+
+func (r *queryResolver) ActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	groups, err := models.GetActiveJudgingGroups(ctx)
+	if err != nil {
+		return []*model.JudgingGroup{}, err
+	}
+	return groups, err
+}

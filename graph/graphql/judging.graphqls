@@ -8,6 +8,16 @@ extend type Query {
     A list of active judging criteria. Sample data is returned for unauthenticated users.
     """
     activeCriteria: [JudgingCriteria!]!
+
+    """
+    A list of all judging groups
+    """
+    allJudgingGroups: [JudgingGroup!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_GROUP_ARRAY)
+
+    """
+    A list of all active judging groups
+    """
+    activeJudgingGroups: [JudgingGroup!]! @isAuthenticated(nullType: EMPTY_JUDGING_GROUP_ARRAY)
 }
 
 """
@@ -38,4 +48,24 @@ type JudgingCriteria {
     The order in which the criteria appears
     """
     sortOrder: Int!
+}
+
+"""
+A group of evaluators that can be assigned entries to judge
+"""
+type JudgingGroup {
+    """
+    A uniqune integer ID
+    """
+    id: ID!
+
+    """
+    The name of the group
+    """
+    name: String!
+
+    """
+    Indicates whether new entries and users can be assigned to this group
+    """
+    isActive: String!
 }

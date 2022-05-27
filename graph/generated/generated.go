@@ -98,6 +98,12 @@ type ComplexityRoot struct {
 		SortOrder   func(childComplexity int) int
 	}
 
+	JudgingGroup struct {
+		ID       func(childComplexity int) int
+		IsActive func(childComplexity int) int
+		Name     func(childComplexity int) int
+	}
+
 	Permissions struct {
 		AddEntries            func(childComplexity int) int
 		AddUsers              func(childComplexity int) int
@@ -132,22 +138,25 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		ActiveCriteria func(childComplexity int) int
-		AllCriteria    func(childComplexity int) int
-		Announcements  func(childComplexity int) int
-		Contest        func(childComplexity int, id int) int
-		Contests       func(childComplexity int) int
-		CurrentContest func(childComplexity int) int
-		CurrentUser    func(childComplexity int) int
-		Error          func(childComplexity int, id int) int
-		Errors         func(childComplexity int) int
-		InactiveUsers  func(childComplexity int) int
-		User           func(childComplexity int, id int) int
-		Users          func(childComplexity int) int
+		ActiveCriteria      func(childComplexity int) int
+		ActiveJudgingGroups func(childComplexity int) int
+		AllCriteria         func(childComplexity int) int
+		AllJudgingGroups    func(childComplexity int) int
+		Announcements       func(childComplexity int) int
+		Contest             func(childComplexity int, id int) int
+		Contests            func(childComplexity int) int
+		CurrentContest      func(childComplexity int) int
+		CurrentUser         func(childComplexity int) int
+		Error               func(childComplexity int, id int) int
+		Errors              func(childComplexity int) int
+		InactiveUsers       func(childComplexity int) int
+		User                func(childComplexity int, id int) int
+		Users               func(childComplexity int) int
 	}
 
 	User struct {
 		AccountLocked        func(childComplexity int) int
+		AssignedGroup        func(childComplexity int) int
 		Email                func(childComplexity int) int
 		ID                   func(childComplexity int) int
 		IsAdmin              func(childComplexity int) int
@@ -183,6 +192,8 @@ type QueryResolver interface {
 	Error(ctx context.Context, id int) (*model.Error, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
 	ActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
+	AllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error)
+	ActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 	Users(ctx context.Context) ([]*model.User, error)
 	InactiveUsers(ctx context.Context) ([]*model.User, error)
@@ -198,6 +209,7 @@ type UserResolver interface {
 	LastLogin(ctx context.Context, obj *model.User) (*string, error)
 
 	NotificationsEnabled(ctx context.Context, obj *model.User) (*bool, error)
+	AssignedGroup(ctx context.Context, obj *model.User) (*model.JudgingGroup, error)
 }
 
 type executableSchema struct {
@@ -453,6 +465,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JudgingCriteria.SortOrder(childComplexity), true
 
+	case "JudgingGroup.id":
+		if e.complexity.JudgingGroup.ID == nil {
+			break
+		}
+
+		return e.complexity.JudgingGroup.ID(childComplexity), true
+
+	case "JudgingGroup.isActive":
+		if e.complexity.JudgingGroup.IsActive == nil {
+			break
+		}
+
+		return e.complexity.JudgingGroup.IsActive(childComplexity), true
+
+	case "JudgingGroup.name":
+		if e.complexity.JudgingGroup.Name == nil {
+			break
+		}
+
+		return e.complexity.JudgingGroup.Name(childComplexity), true
+
 	case "Permissions.add_entries":
 		if e.complexity.Permissions.AddEntries == nil {
 			break
@@ -670,12 +703,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ActiveCriteria(childComplexity), true
 
+	case "Query.activeJudgingGroups":
+		if e.complexity.Query.ActiveJudgingGroups == nil {
+			break
+		}
+
+		return e.complexity.Query.ActiveJudgingGroups(childComplexity), true
+
 	case "Query.allCriteria":
 		if e.complexity.Query.AllCriteria == nil {
 			break
 		}
 
 		return e.complexity.Query.AllCriteria(childComplexity), true
+
+	case "Query.allJudgingGroups":
+		if e.complexity.Query.AllJudgingGroups == nil {
+			break
+		}
+
+		return e.complexity.Query.AllJudgingGroups(childComplexity), true
 
 	case "Query.announcements":
 		if e.complexity.Query.Announcements == nil {
@@ -768,6 +815,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.AccountLocked(childComplexity), true
+
+	case "User.assignedGroup":
+		if e.complexity.User.AssignedGroup == nil {
+			break
+		}
+
+		return e.complexity.User.AssignedGroup(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -1069,6 +1123,7 @@ enum NullType {
     EMPTY_ERRORS_ARRAY
     EMPTY_STRING
     EMPTY_JUDGING_CRITERIA_ARRAY
+    EMPTY_JUDGING_GROUP_ARRAY
     NULL
 }
 
@@ -1142,6 +1197,16 @@ type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
     A list of active judging criteria. Sample data is returned for unauthenticated users.
     """
     activeCriteria: [JudgingCriteria!]!
+
+    """
+    A list of all judging groups
+    """
+    allJudgingGroups: [JudgingGroup!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_GROUP_ARRAY)
+
+    """
+    A list of all active judging groups
+    """
+    activeJudgingGroups: [JudgingGroup!]! @isAuthenticated(nullType: EMPTY_JUDGING_GROUP_ARRAY)
 }
 
 """
@@ -1172,6 +1237,26 @@ type JudgingCriteria {
     The order in which the criteria appears
     """
     sortOrder: Int!
+}
+
+"""
+A group of evaluators that can be assigned entries to judge
+"""
+type JudgingGroup {
+    """
+    A uniqune integer ID
+    """
+    id: ID!
+
+    """
+    The name of the group
+    """
+    name: String!
+
+    """
+    Indicates whether new entries and users can be assigned to this group
+    """
+    isActive: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/users.graphqls", Input: `extend type Query {
   """
@@ -1293,6 +1378,11 @@ type User @isAuthenticated(nullType: NULL) {
   Indicates whether the user has email notifications enabled for new announcements
   """
   notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The judging group the user is assigned to
+  """
+  assignedGroup: JudgingGroup @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: NULL, objType: USER)
 }
 
 """
@@ -1730,6 +1820,8 @@ func (ec *executionContext) fieldContext_Announcement_author(ctx context.Context
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2770,6 +2862,8 @@ func (ec *executionContext) fieldContext_Error_user(ctx context.Context, field g
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3036,6 +3130,8 @@ func (ec *executionContext) fieldContext_FullUserProfile_user(ctx context.Contex
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3258,6 +3354,138 @@ func (ec *executionContext) fieldContext_JudgingCriteria_sortOrder(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JudgingGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.JudgingGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JudgingGroup_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JudgingGroup_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JudgingGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JudgingGroup_name(ctx context.Context, field graphql.CollectedField, obj *model.JudgingGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JudgingGroup_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JudgingGroup_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JudgingGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JudgingGroup_isActive(ctx context.Context, field graphql.CollectedField, obj *model.JudgingGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JudgingGroup_isActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JudgingGroup_isActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JudgingGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5200,6 +5428,162 @@ func (ec *executionContext) fieldContext_Query_activeCriteria(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_allJudgingGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_allJudgingGroups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().AllJudgingGroups(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_JUDGING_GROUP_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.JudgingGroup); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.JudgingGroup)
+	fc.Result = res
+	return ec.marshalNJudgingGroup2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_allJudgingGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingGroup_name(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingGroup_isActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_activeJudgingGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_activeJudgingGroups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ActiveJudgingGroups(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_JUDGING_GROUP_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.JudgingGroup); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.JudgingGroup)
+	fc.Result = res
+	return ec.marshalNJudgingGroup2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_activeJudgingGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingGroup_name(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingGroup_isActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_currentUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_currentUser(ctx, field)
 	if err != nil {
@@ -5355,6 +5739,8 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5461,6 +5847,8 @@ func (ec *executionContext) fieldContext_Query_inactiveUsers(ctx context.Context
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5554,6 +5942,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_termEnd(ctx, field)
 			case "notificationsEnabled":
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -6521,6 +6911,87 @@ func (ec *executionContext) fieldContext_User_notificationsEnabled(ctx context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_assignedGroup(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_assignedGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().AssignedGroup(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.JudgingGroup); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.JudgingGroup)
+	fc.Result = res
+	return ec.marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_assignedGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingGroup_name(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingGroup_isActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingGroup", field.Name)
 		},
 	}
 	return fc, nil
@@ -8657,6 +9128,48 @@ func (ec *executionContext) _JudgingCriteria(ctx context.Context, sel ast.Select
 	return out
 }
 
+var judgingGroupImplementors = []string{"JudgingGroup"}
+
+func (ec *executionContext) _JudgingGroup(ctx context.Context, sel ast.SelectionSet, obj *model.JudgingGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, judgingGroupImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("JudgingGroup")
+		case "id":
+
+			out.Values[i] = ec._JudgingGroup_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._JudgingGroup_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "isActive":
+
+			out.Values[i] = ec._JudgingGroup_isActive(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var permissionsImplementors = []string{"Permissions"}
 
 func (ec *executionContext) _Permissions(ctx context.Context, sel ast.SelectionSet, obj *model.Permissions) graphql.Marshaler {
@@ -9082,6 +9595,52 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "allJudgingGroups":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allJudgingGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "activeJudgingGroups":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_activeJudgingGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "currentUser":
 			field := field
 
@@ -9346,6 +9905,23 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_notificationsEnabled(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "assignedGroup":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_assignedGroup(ctx, field, obj)
 				return res
 			}
 
@@ -9957,6 +10533,60 @@ func (ec *executionContext) marshalNJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChall
 	return ec._JudgingCriteria(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNJudgingGroup2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.JudgingGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx context.Context, sel ast.SelectionSet, v *model.JudgingGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._JudgingGroup(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx context.Context, v interface{}) (model.NullType, error) {
 	var res model.NullType
 	err := res.UnmarshalGQL(v)
@@ -10337,6 +10967,13 @@ func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCou
 		return graphql.Null
 	}
 	return ec._Error(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx context.Context, sel ast.SelectionSet, v *model.JudgingGroup) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._JudgingGroup(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (*model.ObjectType, error) {

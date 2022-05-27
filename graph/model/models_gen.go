@@ -96,6 +96,16 @@ type JudgingCriteria struct {
 	SortOrder int `json:"sortOrder"`
 }
 
+// A group of evaluators that can be assigned entries to judge
+type JudgingGroup struct {
+	// A uniqune integer ID
+	ID int `json:"id"`
+	// The name of the group
+	Name string `json:"name"`
+	// Indicates whether new entries and users can be assigned to this group
+	IsActive string `json:"isActive"`
+}
+
 // The permissions set, associated with the User type
 type Permissions struct {
 	// Allows the user to add individual and bulk import entries
@@ -187,6 +197,8 @@ type User struct {
 	TermEnd *string `json:"termEnd"`
 	// Indicates whether the user has email notifications enabled for new announcements
 	NotificationsEnabled *bool `json:"notificationsEnabled"`
+	// The judging group the user is assigned to
+	AssignedGroup *JudgingGroup `json:"assignedGroup"`
 }
 
 type NullType string
@@ -196,6 +208,7 @@ const (
 	NullTypeEmptyErrorsArray          NullType = "EMPTY_ERRORS_ARRAY"
 	NullTypeEmptyString               NullType = "EMPTY_STRING"
 	NullTypeEmptyJudgingCriteriaArray NullType = "EMPTY_JUDGING_CRITERIA_ARRAY"
+	NullTypeEmptyJudgingGroupArray    NullType = "EMPTY_JUDGING_GROUP_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -204,12 +217,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyErrorsArray,
 	NullTypeEmptyString,
 	NullTypeEmptyJudgingCriteriaArray,
+	NullTypeEmptyJudgingGroupArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeNull:
 		return true
 	}
 	return false

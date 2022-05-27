@@ -92,6 +92,20 @@ func (r *userResolver) NotificationsEnabled(ctx context.Context, obj *model.User
 	return obj.NotificationsEnabled, nil
 }
 
+func (r *userResolver) AssignedGroup(ctx context.Context, obj *model.User) (*model.JudgingGroup, error) {
+	groupId, err := models.GetUserGroupById(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	group, err := models.GetJudgingGroupById(ctx, *groupId)
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
+}
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 

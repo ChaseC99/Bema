@@ -78,6 +78,8 @@ models:
         resolver: true
       notificationsEnabled:
         resolver: true
+      assignedGroup:
+        resolver: true
   Announcement:
     fields:
       author:

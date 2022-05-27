@@ -118,6 +118,11 @@ type User @isAuthenticated(nullType: NULL) {
   Indicates whether the user has email notifications enabled for new announcements
   """
   notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+
+  """
+  The judging group the user is assigned to
+  """
+  assignedGroup: JudgingGroup @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: NULL, objType: USER)
 }
 
 """
