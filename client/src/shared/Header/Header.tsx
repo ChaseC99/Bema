@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { login } from "../../state/appStateReducer";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import Button from "../Button/Button";
@@ -9,7 +8,7 @@ function Header() {
   const { state } = useAppState();
 
   async function handleReturnToAccount() {
-    const data = await request('POST', '/api/auth/assumeUserIdentity', {});
+    await request('POST', '/api/auth/assumeUserIdentity', {});
   
     window.location.reload();
   }

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
-import ErrorPage from "../../shared/ErrorPage";
 import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
@@ -75,15 +74,13 @@ function Entries() {
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
-  const { loading: contestIsLoading, error: contestError, refetch: refetchContest } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+  const { loading: contestIsLoading, error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
     }
   });
 
   useEffect(() => {
-    refetchContest();
-
     fetchEntries(contestId || "")
       .then((data) => {
         setEntries(data.entries);

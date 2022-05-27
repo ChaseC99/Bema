@@ -44,7 +44,6 @@ function Judging() {
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
   const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
   const [entry, setEntry] = useState<Entry | null>(null);
-  const [currentContestId, setCurrentContestId] = useState<number>(1);
   const [showFlagEntryModal, setShowFlagEntryModal] = useState<boolean>(false);
 
   const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<CurrentContest>(GET_CURRENT_CONTEST);

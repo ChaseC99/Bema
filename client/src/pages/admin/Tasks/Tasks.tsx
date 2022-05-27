@@ -60,7 +60,7 @@ function Tasks() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
-  const { loading: usersIsLoading, data: usersData, error: usersError } = useQuery<GetUsersResponse>(GET_USERS);
+  const { data: usersData, error: usersError } = useQuery<GetUsersResponse>(GET_USERS);
 
   useEffect(() => {
     fetchIncompleteTasks()

@@ -7,6 +7,7 @@ import AnnouncementCard from "./AnnouncementCard";
 import request from "../../util/request";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../util/errors";
 
 type CreateAnnouncement = {
   message_title: string
@@ -67,7 +68,7 @@ function Announcements() {
   const deleteAnnouncement = async (id: number) => {
     setConfirmDeleteId(undefined);
 
-    const data = await request("DELETE", "/api/internal/messages", {
+    await request("DELETE", "/api/internal/messages", {
       message_id: id
     });
 
@@ -120,6 +121,10 @@ function Announcements() {
 
   const hideEditAnnouncementModal = () => {
     setAnnouncementToEdit(null);
+  }
+
+  if (announcementsError) {
+    return handleGqlError(announcementsError);
   }
 
   return (

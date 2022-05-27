@@ -1,11 +1,10 @@
 import { gql, useLazyQuery, useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { User } from ".";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
-import { login } from "../../../state/appStateReducer";
 import useAppState from "../../../state/useAppState";
 import { handleGqlError } from "../../../util/errors";
 import request from "../../../util/request";
@@ -134,7 +133,7 @@ const GET_USER_PERMISSIONS = gql`
 `;
 
 function Users(props: UserProps) {
-  const { state, dispatch } = useAppState();
+  const { state } = useAppState();
   const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);

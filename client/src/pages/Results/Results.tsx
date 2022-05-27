@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EntriesPerLevel, EntryVote, EntryWithScores, EntryWithScoresPublic, WinningEntry } from ".";
 import Button from "../../shared/Button";
-import ErrorPage from "../../shared/ErrorPage";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
@@ -46,7 +45,7 @@ function Results() {
   const [showVotesForEntryId, setShowVotesForEntryId] = useState<number | null>(null);
   const [entryVotes, setEntryVotes] = useState<EntryVote[]>([]);
 
-  const { loading: contestIsLoading, data: contestData, error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+  const { error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
     }

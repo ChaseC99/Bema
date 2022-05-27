@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import ExternalLink from "../../shared/ExternalLink";
 import { Form } from "../../shared/Forms";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
-import { login } from "../../state/appStateReducer";
-import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import "./Login.css";
 

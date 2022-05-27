@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Contest } from ".";
 import Button from "../../shared/Button";
 import LoadingSpinner from "../../shared/LoadingSpinner";
@@ -8,6 +8,7 @@ import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import ContestCard from "./ContestCard";
 import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../util/errors";
 
 const GET_ALL_CONTESTS = gql`
   query GetAllContests {
@@ -36,7 +37,7 @@ function Contests() {
   const [editContest, setEditContest] = useState<Contest | null>(null);
   const [deleteContestId, setDeleteContestId] = useState<number | null>(null);
 
-  const { loading: isLoading, error, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS);
+  const { loading: isLoading, error: contestError, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS);
 
   const openCreateContestModal = () => {
     setShowCreateContest(true);
@@ -102,6 +103,10 @@ function Contests() {
 
     refetchContests();
     closeDeleteContestModal();
+  }
+
+  if (contestError) {
+    return handleGqlError(contestError);
   }
 
   return (

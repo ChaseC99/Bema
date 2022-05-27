@@ -67,7 +67,7 @@ function Evaluations() {
     if (state.is_admin || state.user?.permissions.view_all_evaluations) {
       fetchUsers();
     }
-  }, [state.is_admin, state.user?.permissions.view_all_evaluations]);
+  }, [state.is_admin, state.user?.permissions.view_all_evaluations, fetchUsers]);
 
   const scoreValidator = (value: string) => {
     const scores = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];

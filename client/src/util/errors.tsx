@@ -1,5 +1,4 @@
 import { ApolloError } from "@apollo/client";
-import { useState } from "react";
 import ErrorPage from "../shared/ErrorPage";
 
 export function handleGqlError(error: ApolloError, notFoundMessage?: string) {
