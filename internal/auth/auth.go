@@ -281,12 +281,14 @@ func getEmptyArray(nullType model.NullType) interface{} {
 		return []*model.User{}
 	case model.NullTypeEmptyErrorsArray:
 		return []*model.Error{}
+	case model.NullTypeEmptyJudgingCriteriaArray:
+		return []*model.JudgingCriteria{}
 	default:
 		return nil
 	}
 }
 
-// Checks if an object type is ownable
+// Checks if the provided user owns the given object
 func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 	switch objType {
 	case model.ObjectTypeUser:

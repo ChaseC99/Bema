@@ -1,0 +1,41 @@
+extend type Query {
+    """
+    A list of all judging criteria (both active and inactive)
+    """
+    allCriteria: [JudgingCriteria!]! @hasPermission(permission: MANAGE_JUDGING_CRITERIA, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
+
+    """
+    A list of active judging criteria. Sample data is returned for unauthenticated users.
+    """
+    activeCriteria: [JudgingCriteria!]!
+}
+
+"""
+Represents a criterium used for scoring entries
+"""
+type JudgingCriteria {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The name of the criteria
+    """
+    name: String!
+
+    """
+    An explanation of how to use the criteria
+    """
+    description: String!
+
+    """
+    Indicates if the criteria should be displayed on the judging page
+    """
+    isActive: Boolean!
+
+    """
+    The order in which the criteria appears
+    """
+    sortOrder: Int!
+}

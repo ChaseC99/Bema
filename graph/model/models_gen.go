@@ -82,6 +82,20 @@ type FullUserProfile struct {
 	User *User `json:"user"`
 }
 
+// Represents a criterium used for scoring entries
+type JudgingCriteria struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The name of the criteria
+	Name string `json:"name"`
+	// An explanation of how to use the criteria
+	Description string `json:"description"`
+	// Indicates if the criteria should be displayed on the judging page
+	IsActive bool `json:"isActive"`
+	// The order in which the criteria appears
+	SortOrder int `json:"sortOrder"`
+}
+
 // The permissions set, associated with the User type
 type Permissions struct {
 	// Allows the user to add individual and bulk import entries
@@ -178,22 +192,24 @@ type User struct {
 type NullType string
 
 const (
-	NullTypeEmptyUserArray   NullType = "EMPTY_USER_ARRAY"
-	NullTypeEmptyErrorsArray NullType = "EMPTY_ERRORS_ARRAY"
-	NullTypeEmptyString      NullType = "EMPTY_STRING"
-	NullTypeNull             NullType = "NULL"
+	NullTypeEmptyUserArray            NullType = "EMPTY_USER_ARRAY"
+	NullTypeEmptyErrorsArray          NullType = "EMPTY_ERRORS_ARRAY"
+	NullTypeEmptyString               NullType = "EMPTY_STRING"
+	NullTypeEmptyJudgingCriteriaArray NullType = "EMPTY_JUDGING_CRITERIA_ARRAY"
+	NullTypeNull                      NullType = "NULL"
 )
 
 var AllNullType = []NullType{
 	NullTypeEmptyUserArray,
 	NullTypeEmptyErrorsArray,
 	NullTypeEmptyString,
+	NullTypeEmptyJudgingCriteriaArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeNull:
 		return true
 	}
 	return false
