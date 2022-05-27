@@ -8,7 +8,7 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import useAppState from "../../state/useAppState";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
@@ -32,6 +32,7 @@ const GET_CONTEST = gql`
 
 function Results() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const { contestId } = useParams();
   const [winners, setWinners] = useState<WinningEntry[]>([]);
   const [entriesPerLevel, setEntriesPerLevel] = useState<EntriesPerLevel[]>([]);
@@ -45,10 +46,11 @@ function Results() {
   const [showVotesForEntryId, setShowVotesForEntryId] = useState<number | null>(null);
   const [entryVotes, setEntryVotes] = useState<EntryVote[]>([]);
 
-  const { error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+  useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
-    }
+    },
+    onError: handleGQLError
   });
 
   useEffect(() => {
@@ -185,10 +187,6 @@ function Results() {
     }
 
     hideConfirmAddWinnerModal();
-  }
-
-  if (contestError) {
-    return handleGqlError(contestError, "This contest does not exist.");
   }
 
   return (

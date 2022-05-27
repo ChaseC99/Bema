@@ -13,7 +13,7 @@ import (
 func GetAllErrors(ctx context.Context) ([]*model.Error, error) {
 	errs := []*model.Error{}
 
-	rows, err := db.DB.Query("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error;", util.DisplayFancyDateFormat)
+	rows, err := db.DB.Query("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error ORDER BY error_id DESC;", util.DisplayFancyDateFormat)
 	if err != nil {
 		return []*model.Error{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of logged errors", err)
 	}

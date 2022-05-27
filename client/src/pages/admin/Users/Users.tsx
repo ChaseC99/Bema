@@ -6,7 +6,7 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../../state/useAppState";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
 import UserCard from "./UserCard";
 
@@ -134,14 +134,15 @@ const GET_USER_PERMISSIONS = gql`
 
 function Users(props: UserProps) {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
   const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
   const [impersonateUserId, setImpersonateUserId] = useState<number | null>(null);
 
-  const { loading: userIsLoading, data: usersData, error: usersError, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS);
-  const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData, error: permissionsError }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS);
+  const { loading: userIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS, { onError: handleGQLError });
+  const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -255,13 +256,6 @@ function Users(props: UserProps) {
     });
 
     window.location.reload();
-  }
-
-  if (usersError) {
-    return handleGqlError(usersError);
-  }
-  if (permissionsError) {
-    return handleGqlError(permissionsError);
   }
 
   return (

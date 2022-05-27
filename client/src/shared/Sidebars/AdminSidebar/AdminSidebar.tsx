@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import LoadingSpinner from "../../LoadingSpinner/LoadingSpinner";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 
 type GetCurrentContestResponse = {
   currentContest: {
@@ -23,19 +23,20 @@ const GET_CURRENT_CONTEST = gql`
 
 function AdminSidebar() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const permissions = state.user?.permissions;
   const [evaluationContestId, setEvaluationContestId] = useState<number>();
   const [evaluationContestIdLoading, setEvaluationContestIdLoading] = useState<boolean>(false);
 
-  const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<GetCurrentContestResponse>(GET_CURRENT_CONTEST);
+  const { loading: currentContestIsLoading, data: currentContestData } = useQuery<GetCurrentContestResponse>(GET_CURRENT_CONTEST, { onError: handleGQLError });
 
   useEffect(() => {
     if (state.loggedIn && state.user) {
       fetchLastContestEvaluatedByUser(state.user.id)
-      .then(id => {
-        setEvaluationContestId(id);
-        setEvaluationContestIdLoading(false);
-      });
+        .then(id => {
+          setEvaluationContestId(id);
+          setEvaluationContestIdLoading(false);
+        });
     }
     else {
       setEvaluationContestIdLoading(false);
@@ -50,10 +51,6 @@ function AdminSidebar() {
     );
   }
 
-  if (currentContestError) {
-    return handleGqlError(currentContestError);
-  }
-
   return (
     <div className="sidebar">
       <div className="sidebar-section">
@@ -63,17 +60,17 @@ function AdminSidebar() {
         <SidebarItem text="Entries" to={"/entries/" + currentContestData?.currentContest.id} testId="sidebar-entries" />
 
         {state.loggedIn && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
-        
-        {state.loggedIn && <SidebarItem text="Evaluations" 
-          to={evaluationContestId ? 
-            ("/admin/evaluations/" + state.user?.id + "/" + evaluationContestId) : 
-            ("/admin/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)} 
+
+        {state.loggedIn && <SidebarItem text="Evaluations"
+          to={evaluationContestId ?
+            ("/admin/evaluations/" + state.user?.id + "/" + evaluationContestId) :
+            ("/admin/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)}
           testId="sidebar-evaluations" />}
 
         <SidebarItem text="Results" to={"/results/" + currentContestData?.currentContest.id} testId="sidebar-results" />
       </div>
 
-      {state.loggedIn && (permissions?.view_all_tasks || permissions?.view_judging_settings || permissions?.view_all_users || permissions?.view_errors || state.isAdmin) && 
+      {state.loggedIn && (permissions?.view_all_tasks || permissions?.view_judging_settings || permissions?.view_all_users || permissions?.view_errors || state.isAdmin) &&
         <div className="sidebar-section">
           <h3>Admin</h3>
           {state.isAdmin && <SidebarItem text="Skill Levels" to="/admin/skill-levels" testId="sidebar-skill-levels" />}

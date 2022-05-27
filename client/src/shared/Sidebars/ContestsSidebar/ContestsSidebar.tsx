@@ -2,7 +2,7 @@ import LoadingSpinner from "../../LoadingSpinner";
 import SidebarItem from "../../SidebarItem/SidebarItem";
 import "../sidebars.css";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 
 type ContestSidebarProps = {
   rootPath: string
@@ -27,7 +27,8 @@ const GET_ALL_CONTESTS = gql`
 `;
 
 function ContestsSidebar(props: ContestSidebarProps) {
-  const { loading, data, error } = useQuery<GetAllContestsResponse>(GET_ALL_CONTESTS);
+  const { handleGQLError } = useAppError();
+  const { loading, data, error } = useQuery<GetAllContestsResponse>(GET_ALL_CONTESTS, { onError: handleGQLError });
 
   if (loading) {
     return (
@@ -38,7 +39,7 @@ function ContestsSidebar(props: ContestSidebarProps) {
   }
 
   if (error) {
-    return handleGqlError(error);
+
   }
 
   return (

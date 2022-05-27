@@ -6,7 +6,7 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../../state/useAppState";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
 
 type Error = {
@@ -27,8 +27,8 @@ type GetErrorDetailsResponse = {
 }
 
 const GET_ERROR_DETAILS = gql`
-  query GetErrorDetails {
-    error(id: 255) {
+  query GetErrorDetails($id: ID!) {
+    error(id: $id) {
       id
       message
       stack
@@ -46,10 +46,16 @@ const GET_ERROR_DETAILS = gql`
 function ErrorDetail() {
   const { errorId } = useParams();
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [deleteErrorId, setDeleteErrorId] = useState<number | null>(null);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
 
-  const { loading, data, error } = useQuery<GetErrorDetailsResponse>(GET_ERROR_DETAILS);
+  const { loading, data } = useQuery<GetErrorDetailsResponse>(GET_ERROR_DETAILS, {
+    variables: {
+      id: errorId
+    },
+    onError: handleGQLError
+  });
 
   const openDeleteErrorModal = (id: number) => {
     setDeleteErrorId(id);
@@ -72,10 +78,6 @@ function ErrorDetail() {
     return (
       <Navigate to="/admin/errors" />
     );
-  }
-
-  if (error) {
-    return handleGqlError(error, "This error does not exist.");
   }
 
   return (

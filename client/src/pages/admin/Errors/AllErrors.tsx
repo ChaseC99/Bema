@@ -4,7 +4,7 @@ import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 
 type Error = {
   id: string
@@ -33,11 +33,8 @@ const GET_ALL_ERRORS = gql`
 `;
 
 function AllErrors() {
-  const { loading, data, error } = useQuery<GetAllErrorsResponse>(GET_ALL_ERRORS);
-
-  if (error) {
-    return handleGqlError(error)
-  }
+  const { handleGQLError } = useAppError();
+  const { loading, data } = useQuery<GetAllErrorsResponse>(GET_ALL_ERRORS, { onError: handleGQLError });
 
   return (
     <React.Fragment>
@@ -73,7 +70,7 @@ function AllErrors() {
                         <Cell><Button type="tertiary" role="link" action={"/admin/errors/" + e.id} text="View" /></Cell>
                       </Row>
                     );
-                  }): ""}
+                  }) : ""}
                 </TableBody>
               </Table>
             }

@@ -8,7 +8,7 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
 import { fetchEvaluations } from "./fetchEvaluations";
 
@@ -44,6 +44,7 @@ const GET_USERS = gql`
 
 function Evaluations() {
   const { evaluatorId, contestId } = useParams();
+  const { handleGQLError } = useAppError();
   const { state } = useAppState();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -52,15 +53,15 @@ function Evaluations() {
   const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
   let hasActions = (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations);
 
-  const [fetchUsers, { loading: usersIsLoading, data: usersData, error: usersError }] = useLazyQuery<GetUsersResponse>(GET_USERS);
+  const [fetchUsers, { loading: usersIsLoading, data: usersData }] = useLazyQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
 
   useEffect(() => {
     fetchEvaluations(parseInt(contestId || ""), parseInt(evaluatorId || ""))
-    .then((data) => {
-      setEvaluations(data.evaluations);
-      setCanEdit(data.canEdit);
-      setIsLoading(false);
-    });
+      .then((data) => {
+        setEvaluations(data.evaluations);
+        setCanEdit(data.canEdit);
+        setIsLoading(false);
+      });
   }, [evaluatorId, contestId]);
 
   useEffect(() => {
@@ -128,23 +129,19 @@ function Evaluations() {
 
     const newEvaluations = evaluations.filter((e) => e.evaluation_id !== evalId);
     setEvaluations(newEvaluations);
-    
+
     closeDeleteEvaluatioinModal();
   }
 
-  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !state.user?.permissions.view_all_evaluations) {
+  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id) && !state.user?.permissions.view_all_evaluations) {
     return (
       <ErrorPage type="NO PERMISSION" />
     );
   }
-  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
+  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
-  }
-
-  if (usersError) {
-    return handleGqlError(usersError);
   }
 
   return (
@@ -220,9 +217,9 @@ function Evaluations() {
                         <Cell>{e.interpretation}</Cell>
                         <Cell>{e.creativity + e.complexity + e.execution + e.interpretation}</Cell>
                         <Cell>{e.evaluation_level}</Cell>
-                        {hasActions ? 
+                        {hasActions ?
                           <Cell><ActionMenu actions={evaluationActions} /></Cell>
-                        : ""}
+                          : ""}
                       </Row>
                     );
                   })}

@@ -6,7 +6,7 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
 
 type Criteria = {
@@ -35,11 +35,12 @@ const GET_ALL_CRITERIA = gql`
 
 function JudgingCriteriaCard() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
   const [editCriteria, setEditCriteria] = useState<Criteria | null>(null);
   const [deleteCriteriaId, setDeleteCriteriaId] = useState<number | null>(null);
 
-  const { loading, data, error, refetch } = useQuery<GetAllCriteriaResponse>(GET_ALL_CRITERIA);
+  const { loading, data, refetch } = useQuery<GetAllCriteriaResponse>(GET_ALL_CRITERIA, { onError: handleGQLError });
 
   const openCreateCriteriaModal = () => {
     setShowCreateCriteriaModal(true);
@@ -98,10 +99,6 @@ function JudgingCriteriaCard() {
 
     refetch();
     closeDeleteCriteriaModal();
-  }
-
-  if (error) {
-    return handleGqlError(error);
   }
 
   return (

@@ -98,6 +98,10 @@ func (r *userResolver) AssignedGroup(ctx context.Context, obj *model.User) (*mod
 		return nil, err
 	}
 
+	if groupId == nil {
+		return nil, err
+	}
+
 	group, err := models.GetJudgingGroupById(ctx, *groupId)
 	if err != nil {
 		return nil, err

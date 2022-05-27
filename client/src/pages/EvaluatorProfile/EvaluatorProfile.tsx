@@ -6,7 +6,7 @@ import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { FormModal } from "../../shared/Modals";
 import useAppState from "../../state/useAppState";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
 import { fetchEvaluatorStats } from "./fetchEvaluatorData";
 
@@ -47,15 +47,17 @@ const GET_USER_PROFILE = gql`
 
 function EvaluatorProfile() {
   const { evaluatorId } = useParams();
+  const { handleGQLError } = useAppError();
   const { state } = useAppState();
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [showEditProfileModal, setShowEditProfileModal] = useState<boolean>(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState<boolean>(false);
 
-  const { loading: profileIsLoading, data: profileData, error: profileError, refetch: refetchProfile } = useQuery<GetUserProfileResponse>(GET_USER_PROFILE, {
+  const { loading: profileIsLoading, data: profileData, refetch: refetchProfile } = useQuery<GetUserProfileResponse>(GET_USER_PROFILE, {
     variables: {
       userId: evaluatorId
-    }
+    },
+    onError: handleGQLError
   });
 
   useEffect(() => {
@@ -108,10 +110,6 @@ function EvaluatorProfile() {
     }
 
     return null;
-  }
-
-  if (profileError) {
-    return handleGqlError(profileError, "This evaluator does not exist.");
   }
 
   return (

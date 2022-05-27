@@ -7,7 +7,7 @@ import AnnouncementCard from "./AnnouncementCard";
 import request from "../../util/request";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 
 type CreateAnnouncement = {
   message_title: string
@@ -55,11 +55,12 @@ const GET_ANNOUNCEMENTS = gql`
 
 function Announcements() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number>();
   const [shouldShowCreateModal, setShouldShowCreateModal] = useState<boolean>(false);
   const [announcementToEdit, setAnnouncementToEdit] = useState<Announcement | null>(null);
 
-  const { loading: announcementsIsLoading, data: announcementsData, error: announcementsError, refetch: refetchAnnouncements } = useQuery<GetAnnouncementsResponse>(GET_ANNOUNCEMENTS);
+  const { loading: announcementsIsLoading, data: announcementsData, refetch: refetchAnnouncements } = useQuery<GetAnnouncementsResponse>(GET_ANNOUNCEMENTS, { onError: handleGQLError });
 
   const confirmDeleteAnnouncement = (id: number) => {
     setConfirmDeleteId(id);
@@ -121,10 +122,6 @@ function Announcements() {
 
   const hideEditAnnouncementModal = () => {
     setAnnouncementToEdit(null);
-  }
-
-  if (announcementsError) {
-    return handleGqlError(announcementsError);
   }
 
   return (

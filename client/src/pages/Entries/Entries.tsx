@@ -10,7 +10,7 @@ import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import { fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 
 type Entry = {
   assigned_group_id: number
@@ -61,6 +61,7 @@ const GET_CONTEST = gql`
 
 function Entries() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const { contestId } = useParams();
   const [entries, setEntries] = useState<Entry[] | EntryPublic[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -74,10 +75,11 @@ function Entries() {
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
-  const { loading: contestIsLoading, error: contestError } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+  const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
-    }
+    },
+    onError: handleGQLError
   });
 
   useEffect(() => {
@@ -235,10 +237,6 @@ function Entries() {
 
     closeTransferGroupsForm();
     window.location.reload();
-  }
-
-  if (contestError) {
-    return handleGqlError(contestError, "This contest does not exist.");
   }
 
   return (

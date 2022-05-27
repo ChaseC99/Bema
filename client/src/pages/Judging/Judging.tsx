@@ -7,7 +7,7 @@ import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../shared/Modals";
 import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
 import { fetchNextEntry } from "./fetchData";
 
@@ -52,13 +52,14 @@ const GET_JUDGING_CRITERIA = gql`
 
 function Judging() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
   const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
   const [entry, setEntry] = useState<Entry | null>(null);
   const [showFlagEntryModal, setShowFlagEntryModal] = useState<boolean>(false);
 
-  const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<CurrentContest>(GET_CURRENT_CONTEST);
-  const { loading: criteriaIsLoading, data: criteriaData, error: criteriaError } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA);
+  const { loading: currentContestIsLoading, data: currentContestData } = useQuery<CurrentContest>(GET_CURRENT_CONTEST, { onError: handleGQLError });
+  const { loading: criteriaIsLoading, data: criteriaData } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA, { onError: handleGQLError });
 
   useEffect(() => {
     fetchNextEntry()
@@ -111,17 +112,10 @@ function Judging() {
       });
   }
 
-  if (currentContestError) {
-    return handleGqlError(currentContestError);
-  }
-  if (criteriaError) {
-    return handleGqlError(criteriaError);
-  }
-
   if (!entryIsLoading && entry?.o_entry_id === -1) {
     return (
       <div className="container center col-12" style={{ height: "80vh", alignItems: "center" }}>
-        <div className="container center col-8" style={{flexDirection: "column", alignItems: "center"}}>
+        <div className="container center col-8" style={{ flexDirection: "column", alignItems: "center" }}>
           <h2>Woohoo! All the entries have been scored!</h2>
           <p>Visit the <Link to={"/results/" + (currentContestIsLoading ? 1 : currentContestData?.currentContest.id)}>results</Link> page to view entry scores.</p>
         </div>

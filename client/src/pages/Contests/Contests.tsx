@@ -8,7 +8,7 @@ import useAppState from "../../state/useAppState";
 import request from "../../util/request";
 import ContestCard from "./ContestCard";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../util/errors";
+import useAppError from "../../util/errors";
 
 const GET_ALL_CONTESTS = gql`
   query GetAllContests {
@@ -33,11 +33,12 @@ type ContestData = {
 
 function Contests() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [showCreateContest, setShowCreateContest] = useState<boolean>(false);
   const [editContest, setEditContest] = useState<Contest | null>(null);
   const [deleteContestId, setDeleteContestId] = useState<number | null>(null);
 
-  const { loading: isLoading, error: contestError, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS);
+  const { loading: isLoading, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS, { onError: handleGQLError });
 
   const openCreateContestModal = () => {
     setShowCreateContest(true);
@@ -105,10 +106,6 @@ function Contests() {
     closeDeleteContestModal();
   }
 
-  if (contestError) {
-    return handleGqlError(contestError);
-  }
-
   return (
     <React.Fragment>
       <AdminSidebar />
@@ -140,73 +137,73 @@ function Contests() {
 
       {showCreateContest &&
         <FormModal
-        title="Create Contest"
-        submitLabel="Create"
-        handleSubmit={handleCreateContest}
-        handleCancel={closeCreateContestModal}
-        cols={4}
-        fields={[
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "name",
-            id: "name",
-            size: "LARGE",
-            label: "Name",
-            defaultValue: "",
-            placeholder: "Contest: Name Here",
-            required: true
-          },
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "url",
-            id: "url",
-            size: "LARGE",
-            label: "URL",
-            description: "A link to the contest program. This is where entries will be imported from.",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "author",
-            id: "author",
-            size: "LARGE",
-            label: "Author",
-            description: "The creator of the announcement program code.",
-            defaultValue: ""
-          },
-          {
-            fieldType: "DATE",
-            name: "start_date",
-            id: "start-date",
-            size: "MEDIUM",
-            label: "Start Date",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "DATE",
-            name: "end_date",
-            id: "end-date",
-            size: "MEDIUM",
-            label: "End Date",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "CHECKBOX",
-            name: "is_current",
-            id: "is-current",
-            size: "LARGE",
-            label: "Current Contest",
-            description: "Enables judging for the contest, and shows an Active badge on the contests page.",
-            defaultValue: false
-          }
-        ]}
-      />
+          title="Create Contest"
+          submitLabel="Create"
+          handleSubmit={handleCreateContest}
+          handleCancel={closeCreateContestModal}
+          cols={4}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              size: "LARGE",
+              label: "Name",
+              defaultValue: "",
+              placeholder: "Contest: Name Here",
+              required: true
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "url",
+              id: "url",
+              size: "LARGE",
+              label: "URL",
+              description: "A link to the contest program. This is where entries will be imported from.",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "author",
+              id: "author",
+              size: "LARGE",
+              label: "Author",
+              description: "The creator of the announcement program code.",
+              defaultValue: ""
+            },
+            {
+              fieldType: "DATE",
+              name: "start_date",
+              id: "start-date",
+              size: "MEDIUM",
+              label: "Start Date",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "DATE",
+              name: "end_date",
+              id: "end-date",
+              size: "MEDIUM",
+              label: "End Date",
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "is_current",
+              id: "is-current",
+              size: "LARGE",
+              label: "Current Contest",
+              description: "Enables judging for the contest, and shows an Active badge on the contests page.",
+              defaultValue: false
+            }
+          ]}
+        />
       }
 
       {editContest &&

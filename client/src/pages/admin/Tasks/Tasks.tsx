@@ -9,7 +9,7 @@ import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
 import { fetchCompleteTasks, fetchIncompleteTasks } from "./fetchTaskData";
 import { gql, useQuery } from "@apollo/client";
-import { handleGqlError } from "../../../util/errors";
+import useAppError from "../../../util/errors";
 
 type Task = {
   assigned_member: number | null
@@ -51,6 +51,7 @@ const GET_USERS = gql`
 
 function Tasks() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [incompleteTasks, setIncompleteTasks] = useState<Task[]>([]);
   const [incompleteTasksIsLoading, setIncompleteTasksIsLoading] = useState<boolean>(true);
   const [completeTasks, setCompleteTasks] = useState<Task[]>([]);
@@ -60,7 +61,7 @@ function Tasks() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
-  const { data: usersData, error: usersError } = useQuery<GetUsersResponse>(GET_USERS);
+  const { data: usersData } = useQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
 
   useEffect(() => {
     fetchIncompleteTasks()
@@ -245,10 +246,6 @@ function Tasks() {
     const e = usersData?.users.find((e) => e.id === id);
 
     return e?.nickname || null;
-  }
-
-  if (usersError) {
-    return handleGqlError(usersError);
   }
 
   return (
