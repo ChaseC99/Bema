@@ -9,7 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
-	"github.com/KA-Challenge-Council/Bema/internal/models/users"
+	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
@@ -40,7 +40,7 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users, err := users.GetAllActiveUsers(ctx)
+	users, err := models.GetAllActiveUsers(ctx)
 	if err != nil {
 		return []*model.User{}, err
 	}
@@ -48,7 +48,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 }
 
 func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error) {
-	users, err := users.GetAllInactiveUsers(ctx)
+	users, err := models.GetAllInactiveUsers(ctx)
 	if err != nil {
 		return []*model.User{}, err
 	}
@@ -56,7 +56,7 @@ func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error
 }
 
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {
-	user, err := users.GetUserById(ctx, id)
+	user, err := models.GetUserById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (r *userResolver) AccountLocked(ctx context.Context, obj *model.User) (*boo
 }
 
 func (r *userResolver) Permissions(ctx context.Context, obj *model.User) (*model.Permissions, error) {
-	permissions, err := users.GetUserPermissionsById(ctx, obj.ID)
+	permissions, err := models.GetUserPermissionsById(ctx, obj.ID)
 	return permissions, err
 }
 

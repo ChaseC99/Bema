@@ -9,11 +9,10 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
-	"github.com/KA-Challenge-Council/Bema/internal/models/users"
 )
 
 func (r *errorResolver) User(ctx context.Context, obj *model.Error) (*model.User, error) {
-	user, err := users.GetUserById(ctx, obj.User.ID)
+	user, err := models.GetUserById(ctx, obj.User.ID)
 	if err != nil {
 		return nil, err
 	}

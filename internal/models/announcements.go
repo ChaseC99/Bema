@@ -1,4 +1,4 @@
-package announcements
+package models
 
 import (
 	"context"

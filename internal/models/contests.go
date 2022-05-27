@@ -1,4 +1,4 @@
-package contests
+package models
 
 import (
 	"context"

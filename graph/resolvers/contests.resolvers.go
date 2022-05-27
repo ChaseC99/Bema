@@ -8,7 +8,7 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
-	"github.com/KA-Challenge-Council/Bema/internal/models/contests"
+	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
 func (r *contestResolver) Author(ctx context.Context, obj *model.Contest) (*string, error) {
@@ -20,7 +20,7 @@ func (r *contestResolver) IsVotingEnabled(ctx context.Context, obj *model.Contes
 }
 
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
-	arr, err := contests.GetAllContests(ctx)
+	arr, err := models.GetAllContests(ctx)
 	if err != nil {
 		return []*model.Contest{}, err
 	}
@@ -28,7 +28,7 @@ func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) 
 }
 
 func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, error) {
-	contest, err := contests.GetContest(ctx, id)
+	contest, err := models.GetContest(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (r *queryResolver) Contest(ctx context.Context, id int) (*model.Contest, er
 }
 
 func (r *queryResolver) CurrentContest(ctx context.Context) (*model.Contest, error) {
-	contest, err := contests.GetCurrentContest(ctx)
+	contest, err := models.GetCurrentContest(ctx)
 	if err != nil {
 		return nil, err
 	}

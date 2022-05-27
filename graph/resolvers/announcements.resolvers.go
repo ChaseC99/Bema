@@ -9,12 +9,11 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
-	"github.com/KA-Challenge-Council/Bema/internal/models/announcements"
-	"github.com/KA-Challenge-Council/Bema/internal/models/users"
+	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
 func (r *announcementResolver) Author(ctx context.Context, obj *model.Announcement) (*model.User, error) {
-	user, err := users.GetUserById(ctx, obj.Author.ID)
+	user, err := models.GetUserById(ctx, obj.Author.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -25,13 +24,13 @@ func (r *queryResolver) Announcements(ctx context.Context) ([]*model.Announcemen
 	// If the user is logged in, return all messages. Otherwise, return only public messages
 	user := auth.GetUserFromContext(ctx)
 	if user != nil {
-		announcements, err := announcements.GetAllAnnouncements(ctx)
+		announcements, err := models.GetAllAnnouncements(ctx)
 		if err != nil {
 			return []*model.Announcement{}, err
 		}
 		return announcements, nil
 	} else {
-		announcements, err := announcements.GetPublicAnnouncements(ctx)
+		announcements, err := models.GetPublicAnnouncements(ctx)
 		if err != nil {
 			return []*model.Announcement{}, err
 		}
