@@ -3,6 +3,11 @@ extend type Query {
     A list of all logged errors
     """
     errors: [Error!]! @hasPermission(permission: VIEW_ERRORS, nullType: EMPTY_ERRORS_ARRAY)
+
+    """
+    A single logged error
+    """
+    error(id: ID!): Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL)
 }
 
 """

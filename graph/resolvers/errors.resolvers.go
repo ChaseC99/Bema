@@ -29,6 +29,14 @@ func (r *queryResolver) Errors(ctx context.Context) ([]*model.Error, error) {
 	return errors, nil
 }
 
+func (r *queryResolver) Error(ctx context.Context, id int) (*model.Error, error) {
+	e, err := models.GetErrorById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 // Error returns generated.ErrorResolver implementation.
 func (r *Resolver) Error() generated.ErrorResolver { return &errorResolver{r} }
 

@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
@@ -29,4 +30,19 @@ func GetAllErrors(ctx context.Context) ([]*model.Error, error) {
 	}
 
 	return errs, nil
+}
+
+func GetErrorById(ctx context.Context, id int) (*model.Error, error) {
+	row := db.DB.QueryRow("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error WHERE error_id = $2;", util.DisplayFancyDateFormat, id)
+
+	e := &model.Error{}
+	e.User = &model.User{}
+	if err := row.Scan(&e.ID, &e.Message, &e.Stack, &e.Timestamp, &e.RequestOrigin, &e.RequestReferrer, &e.RequestUserAgent, &e.User.ID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "The requested error does not exist")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the requested error", err)
+	}
+
+	return e, nil
 }

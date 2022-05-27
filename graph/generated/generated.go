@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 		Contests       func(childComplexity int) int
 		CurrentContest func(childComplexity int) int
 		CurrentUser    func(childComplexity int) int
+		Error          func(childComplexity int, id int) int
 		Errors         func(childComplexity int) int
 		InactiveUsers  func(childComplexity int) int
 		User           func(childComplexity int, id int) int
@@ -169,6 +170,7 @@ type QueryResolver interface {
 	Contest(ctx context.Context, id int) (*model.Contest, error)
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	Errors(ctx context.Context) ([]*model.Error, error)
+	Error(ctx context.Context, id int) (*model.Error, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 	Users(ctx context.Context) ([]*model.User, error)
 	InactiveUsers(ctx context.Context) ([]*model.User, error)
@@ -654,6 +656,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.CurrentUser(childComplexity), true
 
+	case "Query.error":
+		if e.complexity.Query.Error == nil {
+			break
+		}
+
+		args, err := ec.field_Query_error_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Error(childComplexity, args["id"].(int)), true
+
 	case "Query.errors":
 		if e.complexity.Query.Errors == nil {
 			break
@@ -1005,6 +1019,11 @@ enum ObjectType {
     A list of all logged errors
     """
     errors: [Error!]! @hasPermission(permission: VIEW_ERRORS, nullType: EMPTY_ERRORS_ARRAY)
+
+    """
+    A single logged error
+    """
+    error(id: ID!): Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL)
 }
 
 """
@@ -1396,6 +1415,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_contest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_error_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -4587,6 +4621,118 @@ func (ec *executionContext) fieldContext_Query_errors(ctx context.Context, field
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Error", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_error(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_error(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Error(rctx, fc.Args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Error); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Error`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Error)
+	fc.Result = res
+	return ec.marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_error(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Error_id(ctx, field)
+			case "message":
+				return ec.fieldContext_Error_message(ctx, field)
+			case "stack":
+				return ec.fieldContext_Error_stack(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_Error_timestamp(ctx, field)
+			case "requestOrigin":
+				return ec.fieldContext_Error_requestOrigin(ctx, field)
+			case "requestReferrer":
+				return ec.fieldContext_Error_requestReferrer(ctx, field)
+			case "requestUserAgent":
+				return ec.fieldContext_Error_requestUserAgent(ctx, field)
+			case "user":
+				return ec.fieldContext_Error_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Error", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_error_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -8351,6 +8497,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "error":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_error(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "currentUser":
 			field := field
 
@@ -9530,6 +9696,13 @@ func (ec *executionContext) marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑC
 		return graphql.Null
 	}
 	return ec._Contest(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx context.Context, sel ast.SelectionSet, v *model.Error) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Error(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (*model.ObjectType, error) {
