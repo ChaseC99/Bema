@@ -1,34 +1,42 @@
-import React, { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchJudgingGroups } from "./fetchData";
 
 type Group = {
-  group_id: number
-  group_name: string
-  is_active: boolean
+  id: string
+  name: string
+  isActive: boolean
 }
+
+type GetAllGroupsResponse = {
+  groups: Group[]
+}
+
+const GET_ALL_GROUPS = gql`
+  query GetAllJudgingGroups {
+    groups: allJudgingGroups {
+      id
+      name
+      isActive
+    }
+  }
+`;
 
 function JudgingGroupsCard() {
   const { state } = useAppState();
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
   const [showCreateGroupModal, setShowCreateGroupModal] = useState<boolean>(false);
   const [editGroup, setEditGroup] = useState<Group | null>(null);
   const [deleteGroupId, setDeleteGroupId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchJudgingGroups()
-      .then((data) => {
-        setGroups(data.groups);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading, data: groupsData, refetch } = useQuery<GetAllGroupsResponse>(GET_ALL_GROUPS, { onError: handleGQLError });
 
   const openCreateGroupModal = () => {
     setShowCreateGroupModal(true);
@@ -47,8 +55,8 @@ function JudgingGroupsCard() {
     window.location.reload();
   }
 
-  const openEditGroupModal = (id: number) => {
-    const group = groups.find((g) => g.group_id === id) || null;
+  const openEditGroupModal = (id: string) => {
+    const group = groupsData?.groups.find((g) => g.id === id) || null;
     setEditGroup(group);
   }
 
@@ -58,21 +66,12 @@ function JudgingGroupsCard() {
 
   const handleEditGroup = async (values: { [name: string]: any }) => {
     await request("PUT", "/api/internal/admin/editEvaluatorGroup", {
-      group_id: editGroup?.group_id,
+      group_id: editGroup?.id,
       group_name: values.name,
       is_active: values.is_active
     });
 
-    const newGroups = [...groups];
-    for (let i = 0; i < newGroups.length; i++) {
-      if (newGroups[i].group_id === editGroup?.group_id) {
-        newGroups[i].group_name = values.name;
-        newGroups[i].is_active = values.is_active;
-        break;
-      }
-    }
-    setGroups(newGroups);
-
+    refetch();
     closeEditGroupModal();
   }
 
@@ -89,8 +88,7 @@ function JudgingGroupsCard() {
       group_id: id
     });
 
-    const newGroups = groups.filter((g) => g.group_id !== id);
-    setGroups(newGroups);
+    refetch();
     closeDeleteGroupModal();
   }
 
@@ -104,9 +102,9 @@ function JudgingGroupsCard() {
           }
         </div>
         <div className="card-body">
-          {isLoading && <LoadingSpinner size="MEDIUM" />}
+          {loading && <LoadingSpinner size="MEDIUM" />}
 
-          {!isLoading &&
+          {!loading &&
             <Table noCard>
               <TableHead>
                 <Row>
@@ -117,12 +115,12 @@ function JudgingGroupsCard() {
                 </Row>
               </TableHead>
               <TableBody>
-                {groups.map((g) => {
+                {groupsData ? groupsData.groups.map((g) => {
                   return (
-                    <Row key={g.group_id}>
-                      <Cell>{g.group_id}</Cell>
-                      <Cell>{g.group_name}</Cell>
-                      <Cell>{g.is_active ? "Active" : "Inactive"}</Cell>
+                    <Row key={g.id}>
+                      <Cell>{g.id}</Cell>
+                      <Cell>{g.name}</Cell>
+                      <Cell>{g.isActive ? "Active" : "Inactive"}</Cell>
                       {(state.is_admin || state.user?.permissions.manage_judging_groups) ? (
                         <Cell>
                           <ActionMenu
@@ -131,13 +129,13 @@ function JudgingGroupsCard() {
                                 role: "button",
                                 action: openEditGroupModal,
                                 text: "Edit",
-                                data: g.group_id
+                                data: g.id
                               },
                               {
                                 role: "button",
                                 action: openDeleteGroupModal,
                                 text: "Delete",
-                                data: g.group_id
+                                data: g.id
                               }
                             ]}
                           />
@@ -145,7 +143,7 @@ function JudgingGroupsCard() {
                       ) : ""}
                     </Row>
                   );
-                })}
+                }) : ""}
               </TableBody>
             </Table>
           }
@@ -189,7 +187,7 @@ function JudgingGroupsCard() {
               id: "name",
               label: "Group Name",
               size: "LARGE",
-              defaultValue: editGroup.group_name,
+              defaultValue: editGroup.name,
               required: true
             },
             {
@@ -199,7 +197,7 @@ function JudgingGroupsCard() {
               label: "Active",
               description: "Evaluators and entries can only be assigned to active groups.",
               size: "LARGE",
-              defaultValue: editGroup.is_active
+              defaultValue: editGroup.isActive
             }
           ]}
         />

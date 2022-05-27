@@ -43,8 +43,8 @@ const GET_ALL_USERS_AND_GROUPS = gql`
 `;
 
 const GET_ALL_GROUPS = gql`
-  query GetAllActiveGroups {
-    groups: activeJudgingGroups {
+  query GetAllJudgingGroups {
+    groups: allJudgingGroups {
       id
       name
     }
@@ -80,21 +80,21 @@ function AssignedGroupsCard() {
   }
 
   const handleEditAll = (values: { [name: string]: any }) => {
-    // const newAssignedGroups = [...assignedGroups];
-    // for (let i = 0; i < newAssignedGroups.length; i++) {
-    //   if (newAssignedGroups[i].group_id !== values[newAssignedGroups[i].evaluator_id]) {
-    //     newAssignedGroups[i].group_id = values[newAssignedGroups[i].evaluator_id];
-    //     newAssignedGroups[i].group_name = allGroups.find((g) => g.group_id === values[newAssignedGroups[i].evaluator_id])?.group_name || "";
+    if (!usersData) {
+      return;
+    }
 
-    //     request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
-    //       group_id: values[newAssignedGroups[i].evaluator_id],
-    //       evaluator_id: newAssignedGroups[i].evaluator_id
-    //     });
-    //   }
-    // }
+    for (let i = 0; i < usersData.users.length; i++) {
+      if (usersData.users[i].assignedGroup !== values[usersData.users[i].id]) {
+        request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
+          group_id: values[usersData.users[i].id],
+          evaluator_id: usersData.users[i].id
+        });
+      }
 
-    // setAssignedGroups(newAssignedGroups);
-    // closeEditAllModal();
+      refetchUsers();
+      closeEditAllModal();
+    }
   }
 
   const openEditIndividualModal = (evaluatorId: string) => {

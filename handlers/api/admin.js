@@ -181,37 +181,6 @@ exports.stats = (request, response, next) => {
   }
 };
 
-exports.getEvaluatorGroups = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.permissions.edit_entries || request.decodedToken.permissions.assign_entry_groups || request.decodedToken.is_admin) {
-        return db.query("SELECT * FROM evaluator_group ORDER BY group_id", [], res => {
-          if (res.error) {
-            return handleNext(next, 500, "There was a problem getting the evaluator groups", res.error);
-          }
-          let evaluatorGroups = res.rows;
-          return db.query("SELECT evaluator_id, evaluator_name, group_id FROM evaluator WHERE account_locked = false ORDER BY group_id", [], res => {
-            if (res.error) {
-              return handleNext(next, 500, "There was a problem getting the evaluators", res.error);
-            }
-            response.json({
-              logged_in: true,
-              is_admin: request.decodedToken.is_admin,
-              evaluatorGroups: evaluatorGroups,
-              evaluators: request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin ? res.rows : null
-            });
-          });
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to access evaluator group information.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to access this information.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the evaluator groups.", error);
-  }
-};
-
 exports.addEvaluatorGroup = (request, response, next) => {
   try {
     if (request.decodedToken) {

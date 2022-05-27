@@ -8,7 +8,7 @@ import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
+import { fetchEntries } from "./fetchEntries";
 import { gql, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 
@@ -39,12 +39,6 @@ type EntryPublic = {
   entry_url: string
 }
 
-type Group = {
-  group_id: number
-  group_name: string
-  is_active: boolean
-}
-
 type GetContestResponse = {
   contest: {
     name: string
@@ -59,14 +53,30 @@ const GET_CONTEST = gql`
   }
 `;
 
+type Group = {
+  id: string
+  name: string
+}
+
+type GetActiveGroupsResponse = {
+  groups: Group[]
+}
+
+const GET_ACTIVE_GROUPS = gql`
+  query GetActiveGroups {
+    groups: activeJudgingGroups {
+      id
+      name
+    }
+  }
+`;
+
 function Entries() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const { contestId } = useParams();
   const [entries, setEntries] = useState<Entry[] | EntryPublic[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [entriesAreLoading, setEntriesAreLoading] = useState<boolean>(true);
-  const [groupsAreLoading, setGroupsAreLoading] = useState<boolean>(true);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
@@ -74,6 +84,8 @@ function Entries() {
   const [showConfirmAssignAll, setShowConfirmAssignAll] = useState<boolean>(false);
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
+
+  const { loading: groupsIsLoading, data: groupsData } = useQuery<GetActiveGroupsResponse>(GET_ACTIVE_GROUPS, { onError: handleGQLError });
 
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -88,12 +100,6 @@ function Entries() {
         setEntries(data.entries);
         setEntriesAreLoading(false);
       });
-
-    fetchEvaluatorGroups()
-      .then((data) => {
-        setGroups(data.groups);
-        setGroupsAreLoading(false);
-      })
   }, [contestId]);
 
   const showEditEntryForm = (id: number) => {
@@ -125,7 +131,7 @@ function Entries() {
         newEntries[i].entry_level = values.skill_level;
         newEntries[i].entry_level_locked = values.skill_level_locked;
         newEntries[i].assigned_group_id = values.group;
-        newEntries[i].group_name = groups.find((g) => g.group_id === values.group_id)?.group_name || "None";
+        newEntries[i].group_name = groupsData?.groups.find((g) => g.id === values.group_id)?.name || "None";
         newEntries[i].flagged = values.flagged;
         newEntries[i].disqualified = values.disqualified;
         break;
@@ -292,9 +298,9 @@ function Entries() {
             </span>
           </div>
 
-          {(entriesAreLoading || groupsAreLoading || contestIsLoading) && <LoadingSpinner size="LARGE" />}
+          {(entriesAreLoading || groupsIsLoading || contestIsLoading) && <LoadingSpinner size="LARGE" />}
 
-          {!(entriesAreLoading || groupsAreLoading || contestIsLoading) &&
+          {!(entriesAreLoading || groupsIsLoading || contestIsLoading) &&
             <Table>
               <TableHead>
                 <Row>
@@ -419,18 +425,18 @@ function Entries() {
               required: true
             },
             {
-              fieldType: "SELECT", // TODO: Disable for users who can't assign entry groups
+              fieldType: "SELECT",
               name: "group",
               id: "group",
               size: "MEDIUM",
               label: "Assigned Group",
-              defaultValue: editEntry.assigned_group_id,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              defaultValue: editEntry.assigned_group_id.toString(),
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              }),
+              }) : [],
               disabled: !(state.is_admin || state.user?.permissions.assign_entry_groups)
             },
             {
@@ -551,12 +557,12 @@ function Entries() {
               placeholder: "Select a group",
               defaultValue: "",
               required: true,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              })
+              }) : [],
             },
             {
               fieldType: "SELECT",
@@ -567,12 +573,12 @@ function Entries() {
               placeholder: "Select a group",
               defaultValue: "",
               required: true,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              })
+              }) : [],
             }
           ]}
         />

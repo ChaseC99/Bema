@@ -694,7 +694,6 @@ router.delete("/internal/contests", routeChecks.contests.delete, wasValidated, c
 
 // Admin
 router.get("/internal/admin/stats", admin.stats);
-router.get("/internal/admin/getEvaluatorGroups", admin.getEvaluatorGroups);
 router.post("/internal/admin/addEvaluatorGroup", routeChecks.admin.addEvaluatorGroup, wasValidated, admin.addEvaluatorGroup);
 router.put("/internal/admin/editEvaluatorGroup", routeChecks.admin.editEvaluatorGroup, wasValidated, admin.editEvaluatorGroup);
 router.delete("/internal/admin/deleteEvaluatorGroup", routeChecks.admin.deleteEvaluatorGroup, wasValidated, admin.deleteEvaluatorGroup);
