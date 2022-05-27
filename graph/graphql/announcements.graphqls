@@ -1,0 +1,41 @@
+extend type Query {
+    """
+    A list of all announcements
+    """
+    announcements: [Announcement!]!
+}
+
+"""
+An announcement message
+"""
+type Announcement {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The author of the announcement
+    """
+    author: User
+
+    """
+    The creation date of the announcement
+    """
+    created: String!
+
+    """
+    The announcement title
+    """
+    title: String!
+
+    """
+    The announcement body
+    """
+    content: String!
+
+    """
+    Indicates whether the announcement is shown to unauthenticated users
+    """
+    isPublic: Boolean!
+}

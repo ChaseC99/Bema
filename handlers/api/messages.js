@@ -5,37 +5,6 @@ const {
   successMsg
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const { displayDateFormat } = require(process.cwd() + "/util/variables");
-const nodemailer = require('nodemailer');
-
-exports.get = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      return db.query("SELECT *, to_char(m.message_date, $1) as message_date FROM messages m ORDER BY m.message_date DESC", [displayDateFormat], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting the messages.", res.error);
-        }
-        response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          messages: res.rows
-        });
-      });
-    }
-    return db.query("SELECT *, to_char(m.message_date, $1) as message_date FROM messages m WHERE public = true ORDER BY m.message_date DESC", [displayDateFormat], res => {
-      if (res.error) {
-        return handleNext(next, 400, "There was a problem getting the public messages.", res.error);
-      }
-      response.json({
-        logged_in: false,
-        is_admin: false,
-        messages: res.rows
-      });
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retriving messages.", error);
-  }
-};
 
 exports.add = (request, response, next) => {
   try {

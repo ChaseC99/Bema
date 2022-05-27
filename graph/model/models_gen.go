@@ -8,6 +8,22 @@ import (
 	"strconv"
 )
 
+// An announcement message
+type Announcement struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The author of the announcement
+	Author *User `json:"author"`
+	// The creation date of the announcement
+	Created string `json:"created"`
+	// The announcement title
+	Title string `json:"title"`
+	// The announcement body
+	Content string `json:"content"`
+	// Indicates whether the announcement is shown to unauthenticated users
+	IsPublic bool `json:"isPublic"`
+}
+
 // A contest
 type Contest struct {
 	// A unique integer id of the contest

@@ -46,8 +46,4 @@ func (r *queryResolver) CurrentContest(ctx context.Context) (*model.Contest, err
 // Contest returns generated.ContestResolver implementation.
 func (r *Resolver) Contest() generated.ContestResolver { return &contestResolver{r} }
 
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
 type contestResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }

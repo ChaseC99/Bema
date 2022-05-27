@@ -78,3 +78,7 @@ models:
         resolver: true
       notificationsEnabled:
         resolver: true
+  Announcement:
+    fields:
+      author:
+        resolver: true
