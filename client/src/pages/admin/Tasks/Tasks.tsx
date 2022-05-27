@@ -7,7 +7,9 @@ import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
 import request from "../../../util/request";
-import { fetchCompleteTasks, fetchEvaluators, fetchIncompleteTasks } from "./fetchTaskData";
+import { fetchCompleteTasks, fetchIncompleteTasks } from "./fetchTaskData";
+import { gql, useQuery } from "@apollo/client";
+import { handleGqlError } from "../../../util/errors";
 
 type Task = {
   assigned_member: number | null
@@ -31,11 +33,21 @@ type EditTaskData = {
   status: "Not Started" | "Started" | "Completed"
 }
 
-type Evaluator = {
-  evaluator_id: number
-  evaluator_name: string
-  nickname: string
+type GetUsersResponse = {
+  users: {
+    id: number
+    nickname: string
+  }[]
 }
+
+const GET_USERS = gql`
+  query GetAllUsers {
+    users{
+      id
+      nickname
+    }
+  }
+`;
 
 function Tasks() {
   const { state } = useAppState();
@@ -47,18 +59,14 @@ function Tasks() {
   const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
-  const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
+
+  const { loading: usersIsLoading, data: usersData, error: usersError } = useQuery<GetUsersResponse>(GET_USERS);
 
   useEffect(() => {
     fetchIncompleteTasks()
       .then(data => {
         setIncompleteTasks(data);
         setIncompleteTasksIsLoading(false);
-      });
-
-    fetchEvaluators()
-      .then(data => {
-        setEvaluators(data);
       });
   }, []);
 
@@ -234,9 +242,13 @@ function Tasks() {
   }
 
   const getEvaluatorNameById = (id: number) => {
-    const e = evaluators.find((e) => e.evaluator_id === id);
+    const e = usersData?.users.find((e) => e.id === id);
 
-    return e?.evaluator_name || null;
+    return e?.nickname || null;
+  }
+
+  if (usersError) {
+    return handleGqlError(usersError);
   }
 
   return (
@@ -385,12 +397,12 @@ function Tasks() {
                   text: "Available for Sign Up",
                   value: null
                 },
-                ...evaluators.map((e) => {
+                ...(usersData ? usersData.users.map((u) => {
                   return {
-                    text: e.evaluator_name,
-                    value: e.evaluator_id
+                    text: u.nickname,
+                    value: u.id
                   }
-                })
+                }) : [])
               ]
             }
           ]}
@@ -461,12 +473,12 @@ function Tasks() {
                   text: "Available for Sign Up",
                   value: null
                 },
-                ...evaluators.map((e) => {
+                ...(usersData ? usersData.users.map((u) => {
                   return {
-                    text: e.evaluator_name,
-                    value: e.evaluator_id
+                    text: u.nickname,
+                    value: u.id
                   }
-                })
+                }) : [])
               ]
             }
           ]}

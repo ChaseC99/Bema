@@ -6,13 +6,12 @@ import Button from "../Button/Button";
 import "./Header.css";
 
 function Header() {
-  const { state, dispatch } = useAppState();
+  const { state } = useAppState();
 
   async function handleReturnToAccount() {
     const data = await request('POST', '/api/auth/assumeUserIdentity', {});
   
-    const userData = await request("GET", "/api/internal/users/getFullUserProfile");
-    dispatch(login(userData));
+    window.location.reload();
   }
 
   return (

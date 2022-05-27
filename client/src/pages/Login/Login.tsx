@@ -11,7 +11,6 @@ function Login() {
   const [showForgotPwModal, setShowForgotPwModal] = useState<boolean>(false);
   const [wasFailedLogin, setWasFailedLogin] = useState<boolean>(false);
   const [previousLogin, setPreviousLogin] = useState<{username: string, password: string}>({username: "", password: ""});
-  const { dispatch } = useAppState();
 
   const handleLogin = async (values: { [name: string]: any }) => {
     const loginData = await request("POST", "/api/auth/login", {
@@ -27,8 +26,7 @@ function Login() {
       setWasFailedLogin(true);
     }
     else {
-      const userData = await request("GET", "/api/internal/users/getFullUserProfile");
-      dispatch(login(userData));
+      window.location.reload();
     }
   }
 

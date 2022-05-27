@@ -11,9 +11,3 @@ export async function fetchCompleteTasks() {
 
   return data.tasks;
 }
-
-export async function fetchEvaluators() {
-  const data = await request("GET", "/api/internal/users");
-
-  return data.evaluators;
-}

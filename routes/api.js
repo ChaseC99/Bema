@@ -647,16 +647,11 @@ router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated
 router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 
 // Users
-router.get("/internal/users", users.get);
-router.get("/internal/users/id", users.getId);
 router.get("/internal/users/stats", users.stats);
-router.get("/internal/users/permissions", users.getPermissions);
 router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
-router.get("/internal/users/getFullUserProfile", users.getFullUserProfile);
-
 
 // Contestants
 router.get("/internal/contestants/search", contestants.search);
@@ -695,8 +690,6 @@ router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transfer
 router.get("/internal/results", results.get);
 
 // Contests
-router.get("/internal/contests/", contests.get);
-router.get("/internal/contests/getCurrentContest", contests.getCurrentContest);
 router.get("/internal/contests/getContestsEvaluatedByUser", contests.getContestsEvaluatedByUser);
 router.post("/internal/contests", routeChecks.contests.add, wasValidated, contests.add);
 router.put("/internal/contests", routeChecks.contests.edit, wasValidated, contests.edit);

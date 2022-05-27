@@ -1,3 +1,4 @@
+import { gql, useLazyQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
@@ -7,8 +8,9 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
+import { handleGqlError } from "../../util/errors";
 import request from "../../util/request";
-import { fetchEvaluations, fetchUsers } from "./fetchEvaluations";
+import { fetchEvaluations } from "./fetchEvaluations";
 
 type Evaluation = {
   complexity: number
@@ -22,22 +24,35 @@ type Evaluation = {
   interpretation: number
 }
 
-interface User {
-  evaluator_id: number
-  evaluator_name: string
-  account_locked: boolean
+type User = {
+  id: string
+  nickname: string
 }
+
+type GetUsersResponse = {
+  users: User[]
+}
+
+const GET_USERS = gql`
+  query GetAllUsers {
+    users {
+      id
+      nickname
+    }
+  }
+`;
 
 function Evaluations() {
   const { evaluatorId, contestId } = useParams();
   const { state } = useAppState();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [canEdit, setCanEdit] = useState<boolean>(false);
-  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
   const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
   let hasActions = (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations);
+
+  const [fetchUsers, { loading: usersIsLoading, data: usersData, error: usersError }] = useLazyQuery<GetUsersResponse>(GET_USERS);
 
   useEffect(() => {
     fetchEvaluations(parseInt(contestId || ""), parseInt(evaluatorId || ""))
@@ -50,10 +65,7 @@ function Evaluations() {
 
   useEffect(() => {
     if (state.is_admin || state.user?.permissions.view_all_evaluations) {
-      fetchUsers()
-      .then((data) => {
-        setUsers(data.users);
-      });
+      fetchUsers();
     }
   }, [state.is_admin, state.user?.permissions.view_all_evaluations]);
 
@@ -125,10 +137,14 @@ function Evaluations() {
       <ErrorPage type="NO PERMISSION" />
     );
   }
-  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && !users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))) {
+  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id ) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
+  }
+
+  if (usersError) {
+    return handleGqlError(usersError);
   }
 
   return (
@@ -142,14 +158,14 @@ function Evaluations() {
 
             <span className="section-actions">
               <ActionMenu
-                actions={users.filter((u) => !u.account_locked).map((u) => {
+                actions={usersData ? usersData.users.map((u) => {
                   return {
                     role: "link",
-                    text: u.evaluator_name,
-                    action: "/admin/evaluations/" + u.evaluator_id + "/" + contestId
+                    text: u.nickname,
+                    action: "/admin/evaluations/" + u.id + "/" + contestId
                   }
-                })}
-                label={users.find((u) => u.evaluator_id === parseInt(evaluatorId || ""))?.evaluator_name || "Change User"}
+                }) : []}
+                label={usersData?.users.find((u) => u.id === evaluatorId)?.nickname || "Change User"}
               />
             </span>
           </div>
