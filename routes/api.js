@@ -736,7 +736,6 @@ router.post("/internal/kb/articles/drafts", routeChecks.kb.addArticleDraft, wasV
 router.put("/internal/kb/articles/drafts", routeChecks.kb.editArticleDraft, wasValidated, kb.editArticleDraft);
 
 // Errors
-router.get("/internal/errors", errors.get);
 router.delete("/internal/errors", routeChecks.errors.delete, wasValidated, errors.delete);
 
 module.exports = router;
