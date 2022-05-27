@@ -80,7 +80,7 @@ func GetUserPermissionsById(ctx context.Context, id int) (*model.Permissions, er
 func GetUserGroupById(ctx context.Context, id int) (*int, error) {
 	row := db.DB.QueryRow("SELECT group_id FROM evaluator WHERE evaluator_id = $1", id)
 
-	var groupId int
+	var groupId *int
 	if err := row.Scan(&groupId); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NewNotFoundError(ctx, "Oops! The requested user does not exist.")
@@ -88,5 +88,5 @@ func GetUserGroupById(ctx context.Context, id int) (*int, error) {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a user's assigned group", err)
 	}
 
-	return &groupId, nil
+	return groupId, nil
 }
