@@ -67,5 +67,5 @@ type JudgingGroup {
     """
     Indicates whether new entries and users can be assigned to this group
     """
-    isActive: String!
+    isActive: Boolean!
 }

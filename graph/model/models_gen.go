@@ -103,7 +103,7 @@ type JudgingGroup struct {
 	// The name of the group
 	Name string `json:"name"`
 	// Indicates whether new entries and users can be assigned to this group
-	IsActive string `json:"isActive"`
+	IsActive bool `json:"isActive"`
 }
 
 // The permissions set, associated with the User type
