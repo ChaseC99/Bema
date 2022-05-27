@@ -1,30 +1,55 @@
-import React, { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { Error } from ".";
 import Button from "../../../shared/Button";
-import ErrorPage from "../../../shared/ErrorPage";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../../state/useAppState";
+import { handleGqlError } from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchErrorDetails } from "./fetchErrorDetails";
+
+type Error = {
+  id: string
+  message: string
+  stack: string | null
+  timestamp: string
+  requestOrigin: string | null
+  requestReferrer: string | null
+  requestUserAgent: string | null
+  user: {
+    id: string
+  }
+}
+
+type GetErrorDetailsResponse = {
+  error: Error
+}
+
+const GET_ERROR_DETAILS = gql`
+  query GetErrorDetails {
+    error(id: 255) {
+      id
+      message
+      stack
+      timestamp
+      requestOrigin
+      requestReferrer
+      requestUserAgent
+      user {
+        id
+      }
+    }
+  }
+`;
 
 function ErrorDetail() {
   const { errorId } = useParams();
   const { state } = useAppState();
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [deleteErrorId, setDeleteErrorId] = useState<number | null>(null);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
 
-  useEffect(() => {
-    fetchErrorDetails(parseInt(errorId || ""))
-    .then((data) => {
-      setError(data.error);
-      setIsLoading(false);
-    });
-  }, [errorId]);
+  const { loading, data, error } = useQuery<GetErrorDetailsResponse>(GET_ERROR_DETAILS);
 
   const openDeleteErrorModal = (id: number) => {
     setDeleteErrorId(id);
@@ -49,6 +74,10 @@ function ErrorDetail() {
     );
   }
 
+  if (error) {
+    return handleGqlError(error, "This error does not exist.");
+  }
+
   return (
     <React.Fragment>
       <AdminSidebar />
@@ -66,22 +95,18 @@ function ErrorDetail() {
             </span>
           </div>
           <div className="section-body">
-            {isLoading && <LoadingSpinner size="LARGE" />}
+            {loading && <LoadingSpinner size="LARGE" />}
 
-            {(!isLoading && error) &&
+            {(!loading && data?.error) &&
               <div className="card col-12" style={{ padding: "30px" }}>
-                <p><strong>User ID:</strong> {error.evaluator_id}</p>
-                <p><strong>Date:</strong> {error.error_tstz}</p>
-                <p><strong>Request Origin:</strong> {error.request_origin}</p>
-                <p><strong>Request Referrer:</strong> {error.request_referer}</p>
-                <p><strong>User Agent:</strong> {error.user_agent}</p>
-                <p><strong>Error Message:</strong> {error.error_message}</p>
-                <p><strong>Call Stack:</strong> {error.error_stack}</p>
+                <p><strong>User ID:</strong> {data.error.user?.id}</p>
+                <p><strong>Date:</strong> {data.error.timestamp}</p>
+                <p><strong>Request Origin:</strong> {data.error.requestOrigin}</p>
+                <p><strong>Request Referrer:</strong> {data.error.requestReferrer}</p>
+                <p><strong>User Agent:</strong> {data.error.requestUserAgent}</p>
+                <p><strong>Error Message:</strong> {data.error.message}</p>
+                <p><strong>Call Stack:</strong> {data.error.stack}</p>
               </div>
-            }
-
-            {(!isLoading && !error) && 
-              <ErrorPage type="NOT FOUND" />
             }
           </div>
         </div>

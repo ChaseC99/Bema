@@ -1,22 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { Error } from ".";
+import { gql, useQuery } from "@apollo/client";
+import React from "react";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
-import { fetchAllErrors } from "./fetchAllErrors";
+import { handleGqlError } from "../../../util/errors";
+
+type Error = {
+  id: string
+  message: string
+  timestamp: string
+  user: {
+    id: string
+  } | null
+}
+
+type GetAllErrorsResponse = {
+  errors: Error[]
+}
+
+const GET_ALL_ERRORS = gql`
+  query GetAllErrors {
+    errors {
+      id
+      message
+      timestamp
+      user {
+        id
+      }
+    }
+  }
+`;
 
 function AllErrors() {
-  const [errors, setErrors] = useState<Error[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { loading, data, error } = useQuery<GetAllErrorsResponse>(GET_ALL_ERRORS);
 
-  useEffect(() => {
-    fetchAllErrors()
-    .then((data) => {
-      setErrors(data.errors);
-      setIsLoading(false);
-    });
-  }, []);
+  if (error) {
+    return handleGqlError(error)
+  }
 
   return (
     <React.Fragment>
@@ -28,9 +49,9 @@ function AllErrors() {
             <h2>Errors</h2>
           </div>
           <div className="section-body">
-            {isLoading && <LoadingSpinner size="LARGE" />}
+            {loading && <LoadingSpinner size="LARGE" />}
 
-            {!isLoading &&
+            {!loading &&
               <Table>
                 <TableHead>
                   <Row>
@@ -42,17 +63,17 @@ function AllErrors() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {errors.map((e) => {
+                  {data ? data.errors.map((e) => {
                     return (
-                      <Row key={e.error_id}>
-                        <Cell>{e.error_id}</Cell>
-                        <Cell>{e.evaluator_id}</Cell>
-                        <Cell>{e.error_tstz}</Cell>
-                        <Cell>{e.error_message}</Cell>
-                        <Cell><Button type="tertiary" role="link" action={"/admin/errors/" + e.error_id} text="View" /></Cell>
+                      <Row key={e.id}>
+                        <Cell>{e.id}</Cell>
+                        <Cell>{e.user?.id}</Cell>
+                        <Cell>{e.timestamp}</Cell>
+                        <Cell>{e.message}</Cell>
+                        <Cell><Button type="tertiary" role="link" action={"/admin/errors/" + e.id} text="View" /></Cell>
                       </Row>
                     );
-                  })}
+                  }): ""}
                 </TableBody>
               </Table>
             }
