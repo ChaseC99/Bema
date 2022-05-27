@@ -125,7 +125,7 @@ func GetJudgingGroupById(ctx context.Context, id int) (*model.JudgingGroup, erro
 	err := row.Scan(&group.ID, &group.Name, &group.IsActive)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "The requested judging group does not exist")
+			return nil, errors.NewNotFoundError(ctx, "Oops! The requested judging group does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a judging group", err)
 	}

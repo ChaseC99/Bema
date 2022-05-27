@@ -39,7 +39,7 @@ func GetErrorById(ctx context.Context, id int) (*model.Error, error) {
 	e.User = &model.User{}
 	if err := row.Scan(&e.ID, &e.Message, &e.Stack, &e.Timestamp, &e.RequestOrigin, &e.RequestReferrer, &e.RequestUserAgent, &e.User.ID); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "The requested error does not exist")
+			return nil, errors.NewNotFoundError(ctx, "Oops! The requested error does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the requested error", err)
 	}

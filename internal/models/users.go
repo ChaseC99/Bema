@@ -54,7 +54,7 @@ func GetUserById(ctx context.Context, id int) (*model.User, error) {
 	user := &model.User{}
 	if err := row.Scan(&user.ID, &user.Kaid, &user.Name, &user.Nickname, &user.Username, &user.Email, &user.AccountLocked, &user.IsAdmin, &user.LastLogin, &user.TermStart, &user.TermEnd, &user.NotificationsEnabled); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "The requested user does not exist")
+			return nil, errors.NewNotFoundError(ctx, "Oops! The requested user does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the requested user", err)
 	}
@@ -68,7 +68,7 @@ func GetUserPermissionsById(ctx context.Context, id int) (*model.Permissions, er
 	p := &model.Permissions{}
 	if err := row.Scan(&p.ViewAdminStats, &p.EditContests, &p.DeleteContests, &p.AddEntries, &p.EditEntries, &p.DeleteEntries, &p.AssignEntryGroups, &p.ViewAllEvaluations, &p.EditAllEvaluations, &p.DeleteAllEvaluations, &p.ManageWinners, &p.ViewAllTasks, &p.EditAllTasks, &p.DeleteAllTasks, &p.ViewJudgingSettings, &p.ManageJudgingGroups, &p.AssignEvaluatorGroups, &p.ManageJudgingCriteria, &p.ViewAllUsers, &p.EditUserProfiles, &p.ChangeUserPasswords, &p.AssumeUserIdentities, &p.AddUsers, &p.ViewErrors, &p.DeleteErrors, &p.JudgeEntries, &p.EditKbContent, &p.DeleteKbContent, &p.PublishKbContent, &p.ManageAnnouncements); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "The requested user does not exist")
+			return nil, errors.NewNotFoundError(ctx, "Oops! The requested user does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving user permissions", err)
 	}
@@ -83,7 +83,7 @@ func GetUserGroupById(ctx context.Context, id int) (*int, error) {
 	var groupId int
 	if err := row.Scan(&groupId); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "The requested user does not exist")
+			return nil, errors.NewNotFoundError(ctx, "Oops! The requested user does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a user's assigned group", err)
 	}
