@@ -3,7 +3,6 @@ const {
   successMsg
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
 
 exports.delete = (request, response, next) => {
   try {

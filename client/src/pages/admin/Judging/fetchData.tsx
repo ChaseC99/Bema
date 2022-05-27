@@ -31,11 +31,3 @@ export async function fetchJudgingGroups() {
     evaluators: Evaluator[]
   };
 }
-
-export async function fetchJudgingCriteria() {
-  const data = await request("GET", "/api/internal/judging/allCriteria");
-
-  return {
-    criteria: data.judging_criteria
-  };
-}

@@ -72,60 +72,6 @@ exports.submit = (request, response, next) => {
   }
 }
 
-exports.getJudgingCriteria = (request, response, next) => {
-  try {
-    if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
-      return db.query("SELECT criteria_name, criteria_description FROM judging_criteria WHERE is_active = true ORDER BY sort_order LIMIT 4", [], res => {
-        if (res.error) {
-          return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
-        }
-        return response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          judging_criteria: res.rows
-        });
-      });
-    } else {
-      return response.json({
-        logged_in: false,
-        is_admin: false,
-        judging_criteria: [
-          { criteria_name: "CREATIVITY", criteria_description: "Does this program put an unexpected spin on the ordinary? Do they use shapes or ideas in cool ways?" },
-          { criteria_name: "COMPLEXITY", criteria_description: "Does this program appear to have taken lots of work? Is the code complex or output intricate?" },
-          { criteria_name: "QUALITY CODE", criteria_description: "Does this program have cleanly indented, commented code? Are there any syntax errors or program logic errors?" },
-          { criteria_name: "INTERPRETATION", criteria_description: "Does this program portray the overall theme of the contest?" }
-        ]
-      });
-    }
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the judging criteria.", error);
-  }
-}
-
-exports.getAllJudgingCriteria = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      if (request.decodedToken.permissions.view_judging_settings || request.decodedToken.is_admin) {
-        return db.query("SELECT * FROM judging_criteria ORDER BY is_active DESC", [], res => {
-          if (res.error) {
-            return handleNext(next, 500, "There was a problem getting the judging criteria.", res.error);
-          }
-          return response.json({
-            logged_in: true,
-            is_admin: request.decodedToken.is_admin,
-            judging_criteria: res.rows
-          });
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to access the judging criteria.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to access the judging criteria.");
-  } catch (error) {
-    handleNext(next, 500, "Unexpected error while retrieving the judging criteria.", error);
-  }
-}
-
 exports.addJudgingCriteria = (request, response, next) => {
   try {
     if (request.decodedToken) {

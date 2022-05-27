@@ -9,12 +9,7 @@ import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
 import { handleGqlError } from "../../util/errors";
 import request from "../../util/request";
-import { fetchJudgingCriteria, fetchNextEntry } from "./fetchData";
-
-type Criteria = {
-  criteria_description: string
-  criteria_name: string
-}
+import { fetchNextEntry } from "./fetchData";
 
 type Entry = {
   o_entry_height: number
@@ -29,6 +24,15 @@ type CurrentContest = {
   }
 }
 
+type JudgingCriteria = {
+  name: string
+  description: string
+}
+
+type GetJudgingCriteriaResponse = {
+  criteria: JudgingCriteria[]
+}
+
 const GET_CURRENT_CONTEST = gql`
   query GetCurrentContest {
     currentContest {
@@ -37,34 +41,32 @@ const GET_CURRENT_CONTEST = gql`
   }
 `;
 
+const GET_JUDGING_CRITERIA = gql`
+  query GetJudgingCriteria {
+    criteria: activeCriteria {
+      name
+      description
+    }
+  }
+`;
+
 function Judging() {
   const { state } = useAppState();
-  const [criteria, setCriteria] = useState<Criteria[]>([]);
-  const [criteriaIsLoading, setCriteriaIsLoading] = useState<boolean>(true);
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
   const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
   const [entry, setEntry] = useState<Entry | null>(null);
   const [showFlagEntryModal, setShowFlagEntryModal] = useState<boolean>(false);
 
   const { loading: currentContestIsLoading, data: currentContestData, error: currentContestError } = useQuery<CurrentContest>(GET_CURRENT_CONTEST);
+  const { loading: criteriaIsLoading, data: criteriaData, error: criteriaError } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA);
 
   useEffect(() => {
-    fetchJudgingCriteria()
-      .then((data) => {
-        setCriteria(data.criteria);
-        setCriteriaIsLoading(false);
-      });
-
     fetchNextEntry()
       .then((data) => {
         setEntry(data.entry);
         setEntryIsLoading(false);
       });
   }, []);
-
-  if (currentContestError) {
-    return handleGqlError(currentContestError);
-  }
 
   const handleSubmit = async (values: { [name: string]: any }) => {
     await request("POST", "/api/internal/judging/submit", {
@@ -107,6 +109,13 @@ function Judging() {
         setEntry(data.entry);
         setEntryIsLoading(false);
       });
+  }
+
+  if (currentContestError) {
+    return handleGqlError(currentContestError);
+  }
+  if (criteriaError) {
+    return handleGqlError(criteriaError);
   }
 
   if (!entryIsLoading && entry?.o_entry_id === -1) {
@@ -152,8 +161,8 @@ function Judging() {
                   fieldType: "SLIDER",
                   name: "creativity",
                   id: "creativity",
-                  label: criteria[0].criteria_name,
-                  description: criteria[0].criteria_description,
+                  label: criteriaData?.criteria[0].name || "",
+                  description: criteriaData?.criteria[0].description,
                   min: 0,
                   max: 5,
                   step: 0.5,
@@ -165,8 +174,8 @@ function Judging() {
                   fieldType: "SLIDER",
                   name: "complexity",
                   id: "complexity",
-                  label: criteria[1].criteria_name,
-                  description: criteria[1].criteria_description,
+                  label: criteriaData?.criteria[1].name || "",
+                  description: criteriaData?.criteria[1].description,
                   min: 0,
                   max: 5,
                   step: 0.5,
@@ -178,8 +187,8 @@ function Judging() {
                   fieldType: "SLIDER",
                   name: "quality",
                   id: "quality",
-                  label: criteria[2].criteria_name,
-                  description: criteria[2].criteria_description,
+                  label: criteriaData?.criteria[2].name || "",
+                  description: criteriaData?.criteria[2].description,
                   min: 0,
                   max: 5,
                   step: 0.5,
@@ -191,8 +200,8 @@ function Judging() {
                   fieldType: "SLIDER",
                   name: "interpretation",
                   id: "interpretation",
-                  label: criteria[3].criteria_name,
-                  description: criteria[3].criteria_description,
+                  label: criteriaData?.criteria[3].name || "",
+                  description: criteriaData?.criteria[3].description,
                   min: 0,
                   max: 5,
                   step: 0.5,

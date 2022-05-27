@@ -1,36 +1,45 @@
-import React, { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import { handleGqlError } from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchJudgingCriteria } from "./fetchData";
 
 type Criteria = {
-  criteria_description: string
-  criteria_id: number
-  criteria_name: string
-  is_active: boolean
-  sort_order: number
+  id: string
+  name: string
+  description: string
+  isActive: boolean
+  sortOrder: number
 }
+
+type GetAllCriteriaResponse = {
+  criteria: Criteria[]
+}
+
+const GET_ALL_CRITERIA = gql`
+  query GetAllJudgingCriteria {
+    criteria: allCriteria {
+      id
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
 
 function JudgingCriteriaCard() {
   const { state } = useAppState();
-  const [criteria, setCriteria] = useState<Criteria[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
   const [editCriteria, setEditCriteria] = useState<Criteria | null>(null);
   const [deleteCriteriaId, setDeleteCriteriaId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchJudgingCriteria()
-      .then((data) => {
-        setCriteria(data.criteria);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading, data, error, refetch } = useQuery<GetAllCriteriaResponse>(GET_ALL_CRITERIA);
 
   const openCreateCriteriaModal = () => {
     setShowCreateCriteriaModal(true);
@@ -48,12 +57,12 @@ function JudgingCriteriaCard() {
       sort_order: values.sort_order
     });
 
+    refetch();
     closeCreateCriteriaModal();
-    window.location.reload();
   }
 
   const openEditCriteriaModal = (id: number) => {
-    const c = criteria.find((c) => c.criteria_id === id) || null;
+    const c = data?.criteria.find((c) => parseInt(c.id) === id) || null;
     setEditCriteria(c);
   }
 
@@ -63,25 +72,14 @@ function JudgingCriteriaCard() {
 
   const handleEditCriteria = async (values: { [name: string]: any }) => {
     await request("PUT", "/api/internal/judging/criteria", {
-      criteria_id: editCriteria?.criteria_id,
+      criteria_id: editCriteria?.id,
       criteria_name: values.name,
       criteria_description: values.description,
       is_active: values.is_active,
       sort_order: values.sort_order
     });
 
-    const newCriteria = [...criteria];
-    for (let i = 0; i < newCriteria.length; i++) {
-      if (newCriteria[i].criteria_id === editCriteria?.criteria_id) {
-        newCriteria[i].criteria_name = values.name;
-        newCriteria[i].criteria_description = values.description;
-        newCriteria[i].sort_order = values.sort_order;
-        newCriteria[i].is_active = values.is_active;
-        break;
-      }
-    }
-    setCriteria(newCriteria);
-
+    refetch();
     closeEditCriteriaModal();
   }
 
@@ -98,10 +96,12 @@ function JudgingCriteriaCard() {
       criteria_id: id
     });
 
-    const newCriteria = criteria.filter((c) => c.criteria_id !== id);
-    setCriteria(newCriteria);
-
+    refetch();
     closeDeleteCriteriaModal();
+  }
+
+  if (error) {
+    return handleGqlError(error);
   }
 
   return (
@@ -114,9 +114,9 @@ function JudgingCriteriaCard() {
           }
         </div>
         <div className="card-body">
-          {isLoading && <LoadingSpinner size="MEDIUM" />}
+          {loading && <LoadingSpinner size="MEDIUM" />}
 
-          {!isLoading &&
+          {!loading &&
             <Table noCard>
               <TableHead>
                 <Row>
@@ -129,14 +129,14 @@ function JudgingCriteriaCard() {
                 </Row>
               </TableHead>
               <TableBody>
-                {criteria.map((c) => {
+                {data ? data.criteria.map((c) => {
                   return (
-                    <Row key={c.criteria_id}>
-                      <Cell>{c.criteria_id}</Cell>
-                      <Cell>{c.criteria_name}</Cell>
-                      <Cell>{c.criteria_description}</Cell>
-                      <Cell>{c.is_active ? "Yes" : "No"}</Cell>
-                      <Cell>{c.sort_order}</Cell>
+                    <Row key={c.id}>
+                      <Cell>{c.id}</Cell>
+                      <Cell>{c.name}</Cell>
+                      <Cell>{c.description}</Cell>
+                      <Cell>{c.isActive ? "Yes" : "No"}</Cell>
+                      <Cell>{c.sortOrder}</Cell>
                       {(state.is_admin || state.user?.permissions.manage_judging_criteria) ? 
                         <Cell>
                           <ActionMenu actions={[
@@ -144,20 +144,20 @@ function JudgingCriteriaCard() {
                               role: "button",
                               action: openEditCriteriaModal,
                               text: "Edit",
-                              data: c.criteria_id
+                              data: c.id
                             },
                             {
                               role: "button",
                               action: openDeleteCriteriaModal,
                               text: "Delete",
-                              data: c.criteria_id
+                              data: c.id
                             }
                           ]} />
                         </Cell>
                       : ""}
                     </Row>
                   );
-                })}
+                }) : ""}
               </TableBody>
             </Table>
           }
@@ -230,7 +230,7 @@ function JudgingCriteriaCard() {
             id: "name",
             label: "Criteria Name",
             size: "LARGE",
-            defaultValue: editCriteria.criteria_name,
+            defaultValue: editCriteria.name,
             required: true
           },
           {
@@ -239,7 +239,7 @@ function JudgingCriteriaCard() {
             id: "description",
             label: "Description",
             size: "LARGE",
-            defaultValue: editCriteria.criteria_description,
+            defaultValue: editCriteria.description,
             required: true
           },
           {
@@ -251,7 +251,7 @@ function JudgingCriteriaCard() {
             id: "sort-order",
             label: "Sort Order",
             size: "LARGE",
-            defaultValue: editCriteria.sort_order.toString(),
+            defaultValue: editCriteria.sortOrder.toString(),
             required: true
           },
           {
@@ -260,7 +260,7 @@ function JudgingCriteriaCard() {
             id: "is-active",
             label: "Active",
             size: "LARGE",
-            defaultValue: editCriteria.is_active
+            defaultValue: editCriteria.isActive
           }
         ]}
         />
