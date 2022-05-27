@@ -48,6 +48,26 @@ type Contest struct {
 	IsVotingEnabled *bool `json:"isVotingEnabled"`
 }
 
+// A logged application error
+type Error struct {
+	// A unique integer id
+	ID int `json:"id"`
+	// A description of the error
+	Message string `json:"message"`
+	// The call stack of when the error occurred
+	Stack *string `json:"stack"`
+	// The date and time the error occurred
+	Timestamp string `json:"timestamp"`
+	// The origin of the network request associated with the error
+	RequestOrigin *string `json:"requestOrigin"`
+	// The referrer of the network request associated with the error
+	RequestReferrer *string `json:"requestReferrer"`
+	// The device and browser the user was using
+	RequestUserAgent *string `json:"requestUserAgent"`
+	// The user that experienced the error, if they were logged in
+	User *User `json:"user"`
+}
+
 // The full profile of a logged in user
 type FullUserProfile struct {
 	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
@@ -158,20 +178,22 @@ type User struct {
 type NullType string
 
 const (
-	NullTypeEmptyUserArray NullType = "EMPTY_USER_ARRAY"
-	NullTypeEmptyString    NullType = "EMPTY_STRING"
-	NullTypeNull           NullType = "NULL"
+	NullTypeEmptyUserArray   NullType = "EMPTY_USER_ARRAY"
+	NullTypeEmptyErrorsArray NullType = "EMPTY_ERRORS_ARRAY"
+	NullTypeEmptyString      NullType = "EMPTY_STRING"
+	NullTypeNull             NullType = "NULL"
 )
 
 var AllNullType = []NullType{
 	NullTypeEmptyUserArray,
+	NullTypeEmptyErrorsArray,
 	NullTypeEmptyString,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyString, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeNull:
 		return true
 	}
 	return false

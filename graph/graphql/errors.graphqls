@@ -1,0 +1,51 @@
+extend type Query {
+    """
+    A list of all logged errors
+    """
+    errors: [Error!]! @hasPermission(permission: VIEW_ERRORS, nullType: EMPTY_ERRORS_ARRAY)
+}
+
+"""
+A logged application error
+"""
+type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
+    """
+    A unique integer id
+    """
+    id: ID!
+
+    """
+    A description of the error
+    """
+    message: String!
+
+    """
+    The call stack of when the error occurred
+    """
+    stack: String
+
+    """
+    The date and time the error occurred
+    """
+    timestamp: String!
+
+    """
+    The origin of the network request associated with the error
+    """
+    requestOrigin: String
+
+    """
+    The referrer of the network request associated with the error
+    """
+    requestReferrer: String
+
+    """
+    The device and browser the user was using
+    """
+    requestUserAgent: String
+
+    """
+    The user that experienced the error, if they were logged in
+    """
+    user: User
+}

@@ -1,0 +1,36 @@
+package resolvers
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+import (
+	"context"
+
+	"github.com/KA-Challenge-Council/Bema/graph/generated"
+	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/models"
+	"github.com/KA-Challenge-Council/Bema/internal/models/users"
+)
+
+func (r *errorResolver) User(ctx context.Context, obj *model.Error) (*model.User, error) {
+	user, err := users.GetUserById(ctx, obj.User.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *queryResolver) Errors(ctx context.Context) ([]*model.Error, error) {
+	errors, err := models.GetAllErrors(ctx)
+	if err != nil {
+		return []*model.Error{}, err
+	}
+
+	return errors, nil
+}
+
+// Error returns generated.ErrorResolver implementation.
+func (r *Resolver) Error() generated.ErrorResolver { return &errorResolver{r} }
+
+type errorResolver struct{ *Resolver }

@@ -82,3 +82,7 @@ models:
     fields:
       author:
         resolver: true
+  Error:
+    fields:
+      user:
+        resolver: true

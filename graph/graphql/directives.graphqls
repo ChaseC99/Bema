@@ -10,7 +10,7 @@ permission - The permission to check
 nullType - The null value to be returned if the user does not pass the permission check
 objType - The type of object the directive is associated with (used to check object ownership)
 """
-directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType) on FIELD_DEFINITION
+directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType) on FIELD_DEFINITION | OBJECT
 
 enum Permission {
     ADD_ENTRIES,
@@ -47,6 +47,7 @@ enum Permission {
 
 enum NullType {
     EMPTY_USER_ARRAY
+    EMPTY_ERRORS_ARRAY
     EMPTY_STRING
     NULL
 }

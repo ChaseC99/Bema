@@ -276,11 +276,14 @@ func getPermissionFromEnum(user *User, enumValue string) bool {
 }
 
 func getEmptyArray(nullType model.NullType) interface{} {
-	if nullType == model.NullTypeEmptyUserArray {
+	switch nullType {
+	case model.NullTypeEmptyUserArray:
 		return []*model.User{}
+	case model.NullTypeEmptyErrorsArray:
+		return []*model.Error{}
+	default:
+		return nil
 	}
-
-	return nil
 }
 
 // Checks if an object type is ownable
