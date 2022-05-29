@@ -285,6 +285,8 @@ func getEmptyArray(nullType model.NullType) interface{} {
 		return []*model.JudgingCriteria{}
 	case model.NullTypeEmptyJudgingGroupArray:
 		return []*model.JudgingGroup{}
+	case model.NullTypeEmptyEntryArray:
+		return []*model.Entry{}
 	default:
 		return nil
 	}

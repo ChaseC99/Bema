@@ -18,7 +18,7 @@ func GetContestantByKaid(ctx context.Context, kaid string) (*model.Contestant, e
 		if err == sql.ErrNoRows {
 			return nil, errors.NewNotFoundError(ctx, "The requested contestant does not exist.")
 		}
-		return nil, err
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a contestant.", err)
 	}
 
 	return contestant, nil

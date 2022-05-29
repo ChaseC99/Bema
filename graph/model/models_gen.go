@@ -54,6 +54,8 @@ type Contestant struct {
 	Kaid string `json:"kaid"`
 	// The user's most recent display name
 	Name string `json:"name"`
+	// A list of entries submitted by the contestant
+	Entries []*Entry `json:"entries"`
 }
 
 // A program submission for a contest
@@ -251,6 +253,7 @@ const (
 	NullTypeEmptyString               NullType = "EMPTY_STRING"
 	NullTypeEmptyJudgingCriteriaArray NullType = "EMPTY_JUDGING_CRITERIA_ARRAY"
 	NullTypeEmptyJudgingGroupArray    NullType = "EMPTY_JUDGING_GROUP_ARRAY"
+	NullTypeEmptyEntryArray           NullType = "EMPTY_ENTRY_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -260,12 +263,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyString,
 	NullTypeEmptyJudgingCriteriaArray,
 	NullTypeEmptyJudgingGroupArray,
+	NullTypeEmptyEntryArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeNull:
 		return true
 	}
 	return false

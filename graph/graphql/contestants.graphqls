@@ -15,4 +15,9 @@ type Contestant {
     The user's most recent display name
     """
     name: String!
+
+    """
+    A list of entries submitted by the contestant
+    """
+    entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
 }

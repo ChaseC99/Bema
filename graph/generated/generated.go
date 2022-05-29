@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Announcement() AnnouncementResolver
 	Contest() ContestResolver
+	Contestant() ContestantResolver
 	Entry() EntryResolver
 	Error() ErrorResolver
 	Query() QueryResolver
@@ -73,8 +74,9 @@ type ComplexityRoot struct {
 	}
 
 	Contestant struct {
-		Kaid func(childComplexity int) int
-		Name func(childComplexity int) int
+		Entries func(childComplexity int) int
+		Kaid    func(childComplexity int) int
+		Name    func(childComplexity int) int
 	}
 
 	Entry struct {
@@ -206,6 +208,9 @@ type ContestResolver interface {
 	Author(ctx context.Context, obj *model.Contest) (*string, error)
 
 	IsVotingEnabled(ctx context.Context, obj *model.Contest) (*bool, error)
+}
+type ContestantResolver interface {
+	Entries(ctx context.Context, obj *model.Contestant) ([]*model.Entry, error)
 }
 type EntryResolver interface {
 	Contest(ctx context.Context, obj *model.Entry) (*model.Contest, error)
@@ -379,6 +384,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contest.URL(childComplexity), true
+
+	case "Contestant.entries":
+		if e.complexity.Contestant.Entries == nil {
+			break
+		}
+
+		return e.complexity.Contestant.Entries(childComplexity), true
 
 	case "Contestant.kaid":
 		if e.complexity.Contestant.Kaid == nil {
@@ -1213,6 +1225,11 @@ type Contestant {
     The user's most recent display name
     """
     name: String!
+
+    """
+    A list of entries submitted by the contestant
+    """
+    entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
 }`, BuiltIn: false},
 	{Name: "graph/graphql/contests.graphqls", Input: `extend type Query {
     """
@@ -1338,6 +1355,7 @@ enum NullType {
     EMPTY_STRING
     EMPTY_JUDGING_CRITERIA_ARRAY
     EMPTY_JUDGING_GROUP_ARRAY
+    EMPTY_ENTRY_ARRAY
     NULL
 }
 
@@ -2918,6 +2936,103 @@ func (ec *executionContext) fieldContext_Contestant_name(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Contestant_entries(ctx context.Context, field graphql.CollectedField, obj *model.Contestant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contestant_entries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Contestant().Entries(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ENTRY_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Entry); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contestant_entries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contestant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Entry_id(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Entry_id(ctx, field)
 	if err != nil {
@@ -3203,6 +3318,8 @@ func (ec *executionContext) fieldContext_Entry_author(ctx context.Context, field
 				return ec.fieldContext_Contestant_kaid(ctx, field)
 			case "name":
 				return ec.fieldContext_Contestant_name(ctx, field)
+			case "entries":
+				return ec.fieldContext_Contestant_entries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contestant", field.Name)
 		},
@@ -6162,6 +6279,8 @@ func (ec *executionContext) fieldContext_Query_contestant(ctx context.Context, f
 				return ec.fieldContext_Contestant_kaid(ctx, field)
 			case "name":
 				return ec.fieldContext_Contestant_name(ctx, field)
+			case "entries":
+				return ec.fieldContext_Contestant_entries(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contestant", field.Name)
 		},
@@ -10484,15 +10603,32 @@ func (ec *executionContext) _Contestant(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._Contestant_kaid(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._Contestant_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "entries":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contestant_entries(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12861,6 +12997,53 @@ func (ec *executionContext) marshalOContestant2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._Contestant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Entry) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx context.Context, sel ast.SelectionSet, v *model.Error) graphql.Marshaler {
