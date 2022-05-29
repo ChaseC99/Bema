@@ -18,6 +18,11 @@ extend type Query {
     A list of all active judging groups
     """
     activeJudgingGroups: [JudgingGroup!]! @isAuthenticated(nullType: EMPTY_JUDGING_GROUP_ARRAY)
+
+    """
+    A single judging group
+    """
+    judgingGroup(id: ID!): JudgingGroup @isAuthenticated(nullType: NULL)
 }
 
 """
@@ -53,7 +58,7 @@ type JudgingCriteria {
 """
 A group of evaluators that can be assigned entries to judge
 """
-type JudgingGroup {
+type JudgingGroup @isAuthenticated(nullType: NULL) {
     """
     A uniqune integer ID
     """

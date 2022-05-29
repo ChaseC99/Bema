@@ -52,3 +52,11 @@ func (r *queryResolver) ActiveJudgingGroups(ctx context.Context) ([]*model.Judgi
 	}
 	return groups, err
 }
+
+func (r *queryResolver) JudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error) {
+	group, err := models.GetJudgingGroupById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
+}

@@ -88,3 +88,19 @@ models:
     fields:
       user:
         resolver: true
+  Entry:
+    fields:
+      skillLevel:
+        resolver: true
+      isFlagged:
+        resolver: true
+      isDisqualified:
+        resolver: true
+      isSkillLevelLocked:
+        resolver: true
+      contest:
+        resolver: true
+      author:
+        resolver: true
+      group:
+        resolver: true

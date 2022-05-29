@@ -1,0 +1,86 @@
+extend type Query {
+    """
+    A list of entries for a given contest
+    """
+    entries(contestId: ID!): [Entry!]!
+}
+
+"""
+A program submission for a contest
+"""
+type Entry {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The contest for which the entry was submitted
+    """
+    contest: Contest!
+
+    """
+    A URL to the entry program
+    """
+    url: String!
+
+    """
+    The KAID of the entry program
+    """
+    kaid: String!
+
+    """
+    The title of the entry
+    """
+    title: String!
+
+    """
+    The author of the entry
+    """
+    author: Contestant!
+
+    """
+    The skill level assigned to the entry
+    """
+    skillLevel: String @isAuthenticated(nullType: NULL)
+
+    """
+    The number of votes the entry received on KA
+    """
+    votes: Int!
+
+    """
+    The date the entry program was created
+    """
+    created: String!
+
+    """
+    The height of the entry program canvas
+    """
+    height: Int!
+
+    """
+    Indicates if the entry is a winner of the contest
+    """
+    isWinner: Boolean!
+
+    """
+    The judging group the entry is assigned to
+    """
+    group: JudgingGroup @isAuthenticated(nullType: NULL)
+
+    """
+    Indicates whether the entry has been flagged
+    """
+    isFlagged: Boolean @isAuthenticated(nullType: NULL)
+
+    """
+    Indicates whether the entry has been disqualified
+    """
+    isDisqualified: Boolean @isAuthenticated(nullType: NULL)
+
+    """
+    Indicates whether the skill level has been permanently set for the entry
+    """
+    isSkillLevelLocked: Boolean @hasPermission(permission: EDIT_ENTRIES, nullType: NULL)
+}

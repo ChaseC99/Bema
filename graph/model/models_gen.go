@@ -48,6 +48,48 @@ type Contest struct {
 	IsVotingEnabled *bool `json:"isVotingEnabled"`
 }
 
+// A Khan Academy user and contest participant
+type Contestant struct {
+	// The user's unique KAID
+	Kaid string `json:"kaid"`
+	// The user's most recent display name
+	Name string `json:"name"`
+}
+
+// A program submission for a contest
+type Entry struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The contest for which the entry was submitted
+	Contest *Contest `json:"contest"`
+	// A URL to the entry program
+	URL string `json:"url"`
+	// The KAID of the entry program
+	Kaid string `json:"kaid"`
+	// The title of the entry
+	Title string `json:"title"`
+	// The author of the entry
+	Author *Contestant `json:"author"`
+	// The skill level assigned to the entry
+	SkillLevel *string `json:"skillLevel"`
+	// The number of votes the entry received on KA
+	Votes int `json:"votes"`
+	// The date the entry program was created
+	Created string `json:"created"`
+	// The height of the entry program canvas
+	Height int `json:"height"`
+	// Indicates if the entry is a winner of the contest
+	IsWinner bool `json:"isWinner"`
+	// The judging group the entry is assigned to
+	Group *JudgingGroup `json:"group"`
+	// Indicates whether the entry has been flagged
+	IsFlagged *bool `json:"isFlagged"`
+	// Indicates whether the entry has been disqualified
+	IsDisqualified *bool `json:"isDisqualified"`
+	// Indicates whether the skill level has been permanently set for the entry
+	IsSkillLevelLocked *bool `json:"isSkillLevelLocked"`
+}
+
 // A logged application error
 type Error struct {
 	// A unique integer id
