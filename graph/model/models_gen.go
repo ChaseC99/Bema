@@ -58,6 +58,10 @@ type Contestant struct {
 	Name string `json:"name"`
 	// A list of entries submitted by the contestant
 	Entries []*Entry `json:"entries"`
+	// The total number of entries the contestant has submitted
+	EntryCount int `json:"entryCount"`
+	// The total number of contests the contestant has participated in
+	ContestCount int `json:"contestCount"`
 }
 
 // A program submission for a contest

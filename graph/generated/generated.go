@@ -75,9 +75,11 @@ type ComplexityRoot struct {
 	}
 
 	Contestant struct {
-		Entries func(childComplexity int) int
-		Kaid    func(childComplexity int) int
-		Name    func(childComplexity int) int
+		ContestCount func(childComplexity int) int
+		Entries      func(childComplexity int) int
+		EntryCount   func(childComplexity int) int
+		Kaid         func(childComplexity int) int
+		Name         func(childComplexity int) int
 	}
 
 	Entry struct {
@@ -213,6 +215,8 @@ type ContestResolver interface {
 }
 type ContestantResolver interface {
 	Entries(ctx context.Context, obj *model.Contestant) ([]*model.Entry, error)
+	EntryCount(ctx context.Context, obj *model.Contestant) (int, error)
+	ContestCount(ctx context.Context, obj *model.Contestant) (int, error)
 }
 type EntryResolver interface {
 	Contest(ctx context.Context, obj *model.Entry) (*model.Contest, error)
@@ -394,12 +398,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contest.Winners(childComplexity), true
 
+	case "Contestant.contestCount":
+		if e.complexity.Contestant.ContestCount == nil {
+			break
+		}
+
+		return e.complexity.Contestant.ContestCount(childComplexity), true
+
 	case "Contestant.entries":
 		if e.complexity.Contestant.Entries == nil {
 			break
 		}
 
 		return e.complexity.Contestant.Entries(childComplexity), true
+
+	case "Contestant.entryCount":
+		if e.complexity.Contestant.EntryCount == nil {
+			break
+		}
+
+		return e.complexity.Contestant.EntryCount(childComplexity), true
 
 	case "Contestant.kaid":
 		if e.complexity.Contestant.Kaid == nil {
@@ -1239,6 +1257,16 @@ type Contestant {
     A list of entries submitted by the contestant
     """
     entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
+
+    """
+    The total number of entries the contestant has submitted
+    """
+    entryCount: Int!
+
+    """
+    The total number of contests the contestant has participated in
+    """
+    contestCount: Int!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/contests.graphqls", Input: `extend type Query {
     """
@@ -3123,6 +3151,94 @@ func (ec *executionContext) fieldContext_Contestant_entries(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Contestant_entryCount(ctx context.Context, field graphql.CollectedField, obj *model.Contestant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contestant_entryCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contestant().EntryCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contestant_entryCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contestant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contestant_contestCount(ctx context.Context, field graphql.CollectedField, obj *model.Contestant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contestant_contestCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contestant().ContestCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contestant_contestCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contestant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Entry_id(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Entry_id(ctx, field)
 	if err != nil {
@@ -3412,6 +3528,10 @@ func (ec *executionContext) fieldContext_Entry_author(ctx context.Context, field
 				return ec.fieldContext_Contestant_name(ctx, field)
 			case "entries":
 				return ec.fieldContext_Contestant_entries(ctx, field)
+			case "entryCount":
+				return ec.fieldContext_Contestant_entryCount(ctx, field)
+			case "contestCount":
+				return ec.fieldContext_Contestant_contestCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contestant", field.Name)
 		},
@@ -6373,6 +6493,10 @@ func (ec *executionContext) fieldContext_Query_contestant(ctx context.Context, f
 				return ec.fieldContext_Contestant_name(ctx, field)
 			case "entries":
 				return ec.fieldContext_Contestant_entries(ctx, field)
+			case "entryCount":
+				return ec.fieldContext_Contestant_entryCount(ctx, field)
+			case "contestCount":
+				return ec.fieldContext_Contestant_contestCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contestant", field.Name)
 		},
@@ -10740,6 +10864,46 @@ func (ec *executionContext) _Contestant(ctx context.Context, sel ast.SelectionSe
 					}
 				}()
 				res = ec._Contestant_entries(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "entryCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contestant_entryCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "contestCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contestant_contestCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 

@@ -110,3 +110,7 @@ models:
     fields:
       entries:
         resolver: true
+      entryCount:
+        resolver: true
+      contestCount:
+        resolver: true

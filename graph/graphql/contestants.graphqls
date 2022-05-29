@@ -20,4 +20,14 @@ type Contestant {
     A list of entries submitted by the contestant
     """
     entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
+
+    """
+    The total number of entries the contestant has submitted
+    """
+    entryCount: Int!
+
+    """
+    The total number of contests the contestant has participated in
+    """
+    contestCount: Int!
 }

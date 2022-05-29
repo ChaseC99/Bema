@@ -19,6 +19,22 @@ func (r *contestantResolver) Entries(ctx context.Context, obj *model.Contestant)
 	return entries, nil
 }
 
+func (r *contestantResolver) EntryCount(ctx context.Context, obj *model.Contestant) (int, error) {
+	entryCount, err := models.GetContestantEntryCount(ctx, obj.Kaid)
+	if err != nil {
+		return 0, err
+	}
+	return entryCount, nil
+}
+
+func (r *contestantResolver) ContestCount(ctx context.Context, obj *model.Contestant) (int, error) {
+	contestCount, err := models.GetContestantContestCount(ctx, obj.Kaid)
+	if err != nil {
+		return 0, nil
+	}
+	return contestCount, nil
+}
+
 func (r *queryResolver) Contestant(ctx context.Context, kaid string) (*model.Contestant, error) {
 	contestant, err := models.GetContestantByKaid(ctx, kaid)
 	if err != nil {
