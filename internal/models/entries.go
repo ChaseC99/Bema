@@ -86,7 +86,7 @@ func GetEntryById(ctx context.Context, id int) (*model.Entry, error) {
 func GetEntriesByContestantKaid(ctx context.Context, contestantKaid string) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_author_kaid = $2 ORDER BY entry_id ASC;", util.DisplayFancyDateFormat, contestantKaid)
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_author_kaid = $2 ORDER BY entry_id DESC;", util.DisplayFancyDateFormat, contestantKaid)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of contestant entries.", err)
 	}
@@ -151,4 +151,18 @@ func GetWinningEntriesByContestId(ctx context.Context, contestId int) ([]*model.
 	}
 
 	return entries, nil
+}
+
+func GetEntryAverageScore(ctx context.Context, id int) (*float64, error) {
+	row := db.DB.QueryRow("SELECT AVG(creativity + complexity + interpretation + execution) as avg_score FROM evaluation WHERE entry_id = $1", id)
+
+	var avgScore float64
+	if err := row.Scan(&avgScore); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while determining an entry's average score", err)
+	}
+
+	return &avgScore, nil
 }

@@ -1,4 +1,7 @@
 extend type Query {
+    """
+    A single contestant
+    """
     contestant(kaid: String!): Contestant
 }
 

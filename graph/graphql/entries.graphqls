@@ -83,4 +83,9 @@ type Entry {
     Indicates whether the skill level has been permanently set for the entry
     """
     isSkillLevelLocked: Boolean @hasPermission(permission: EDIT_ENTRIES, nullType: NULL)
+
+    """
+    The average score of the entry
+    """
+    averageScore: Float @isAuthenticated(nullType: NULL)
 }

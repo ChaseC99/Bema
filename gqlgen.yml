@@ -106,6 +106,8 @@ models:
         resolver: true
       group:
         resolver: true
+      averageScore:
+        resolver: true
   Contestant:
     fields:
       entries:

@@ -58,6 +58,14 @@ func (r *entryResolver) IsSkillLevelLocked(ctx context.Context, obj *model.Entry
 	return obj.IsSkillLevelLocked, nil
 }
 
+func (r *entryResolver) AverageScore(ctx context.Context, obj *model.Entry) (*float64, error) {
+	avgScore, err := models.GetEntryAverageScore(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return avgScore, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {

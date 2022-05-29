@@ -96,6 +96,8 @@ type Entry struct {
 	IsDisqualified *bool `json:"isDisqualified"`
 	// Indicates whether the skill level has been permanently set for the entry
 	IsSkillLevelLocked *bool `json:"isSkillLevelLocked"`
+	// The average score of the entry
+	AverageScore *float64 `json:"averageScore"`
 }
 
 // A logged application error
