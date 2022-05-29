@@ -46,6 +46,8 @@ type Contest struct {
 	EndDate *string `json:"endDate"`
 	// Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
 	IsVotingEnabled *bool `json:"isVotingEnabled"`
+	// A list of winning entries
+	Winners []*Entry `json:"winners"`
 }
 
 // A Khan Academy user and contest participant

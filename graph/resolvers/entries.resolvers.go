@@ -20,6 +20,13 @@ func (r *entryResolver) Contest(ctx context.Context, obj *model.Entry) (*model.C
 }
 
 func (r *entryResolver) Author(ctx context.Context, obj *model.Entry) (*model.Contestant, error) {
+	if obj.Author == nil {
+		return &model.Contestant{
+			Kaid: "",
+			Name: "Unknown Author",
+		}, nil
+	}
+
 	author, err := r.Query().Contestant(ctx, obj.Author.Kaid)
 	if err != nil {
 		return nil, err

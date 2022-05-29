@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 		Name            func(childComplexity int) int
 		StartDate       func(childComplexity int) int
 		URL             func(childComplexity int) int
+		Winners         func(childComplexity int) int
 	}
 
 	Contestant struct {
@@ -208,6 +209,7 @@ type ContestResolver interface {
 	Author(ctx context.Context, obj *model.Contest) (*string, error)
 
 	IsVotingEnabled(ctx context.Context, obj *model.Contest) (*bool, error)
+	Winners(ctx context.Context, obj *model.Contest) ([]*model.Entry, error)
 }
 type ContestantResolver interface {
 	Entries(ctx context.Context, obj *model.Contestant) ([]*model.Entry, error)
@@ -384,6 +386,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contest.URL(childComplexity), true
+
+	case "Contest.winners":
+		if e.complexity.Contest.Winners == nil {
+			break
+		}
+
+		return e.complexity.Contest.Winners(childComplexity), true
 
 	case "Contestant.entries":
 		if e.complexity.Contestant.Entries == nil {
@@ -1301,6 +1310,11 @@ type Contest {
   Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
   """
   isVotingEnabled: Boolean @isAuthenticated(nullType: NULL)
+
+  """
+  A list of winning entries
+  """
+  winners: [Entry!]!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/directives.graphqls", Input: `"""
 Restricts access to a field if the user is not logged in.
@@ -2848,6 +2862,82 @@ func (ec *executionContext) fieldContext_Contest_isVotingEnabled(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Contest_winners(ctx context.Context, field graphql.CollectedField, obj *model.Contest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contest_winners(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contest().Winners(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Entry)
+	fc.Result = res
+	return ec.marshalNEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contest_winners(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contestant_kaid(ctx context.Context, field graphql.CollectedField, obj *model.Contestant) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contestant_kaid(ctx, field)
 	if err != nil {
@@ -3136,6 +3226,8 @@ func (ec *executionContext) fieldContext_Entry_contest(ctx context.Context, fiel
 				return ec.fieldContext_Contest_endDate(ctx, field)
 			case "isVotingEnabled":
 				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
 		},
@@ -6358,6 +6450,8 @@ func (ec *executionContext) fieldContext_Query_contests(ctx context.Context, fie
 				return ec.fieldContext_Contest_endDate(ctx, field)
 			case "isVotingEnabled":
 				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
 		},
@@ -6421,6 +6515,8 @@ func (ec *executionContext) fieldContext_Query_contest(ctx context.Context, fiel
 				return ec.fieldContext_Contest_endDate(ctx, field)
 			case "isVotingEnabled":
 				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
 		},
@@ -6495,6 +6591,8 @@ func (ec *executionContext) fieldContext_Query_currentContest(ctx context.Contex
 				return ec.fieldContext_Contest_endDate(ctx, field)
 			case "isVotingEnabled":
 				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
 		},
@@ -10570,6 +10668,26 @@ func (ec *executionContext) _Contest(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contest_isVotingEnabled(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "winners":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contest_winners(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 

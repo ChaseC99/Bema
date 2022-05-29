@@ -68,4 +68,9 @@ type Contest {
   Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
   """
   isVotingEnabled: Boolean @isAuthenticated(nullType: NULL)
+
+  """
+  A list of winning entries
+  """
+  winners: [Entry!]!
 }

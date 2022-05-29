@@ -19,6 +19,14 @@ func (r *contestResolver) IsVotingEnabled(ctx context.Context, obj *model.Contes
 	return obj.IsVotingEnabled, nil
 }
 
+func (r *contestResolver) Winners(ctx context.Context, obj *model.Contest) ([]*model.Entry, error) {
+	winners, err := models.GetWinningEntriesByContestId(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return winners, nil
+}
+
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
 	arr, err := models.GetAllContests(ctx)
 	if err != nil {

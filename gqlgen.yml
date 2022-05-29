@@ -62,6 +62,8 @@ models:
         resolver: true
       isVotingEnabled:
         resolver: true
+      winners:
+        resolver: true
   User:
     fields:
       name:

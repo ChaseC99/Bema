@@ -671,7 +671,6 @@ router.delete("/internal/judging/criteria", routeChecks.judging.deleteCriteria, 
 router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated, judging.submit);
 
 // Entries
-router.get("/internal/entries", entries.get);
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
 router.put("/internal/entries", routeChecks.entries.edit, wasValidated, entries.edit);
 router.delete("/internal/entries", routeChecks.entries.delete, wasValidated, entries.delete);
