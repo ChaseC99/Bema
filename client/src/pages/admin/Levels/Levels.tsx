@@ -1,3 +1,4 @@
+import { gql, useLazyQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import Badge from "../../../shared/Badge";
 import Button from "../../../shared/Button";
@@ -7,8 +8,9 @@ import { ConfirmModal } from "../../../shared/Modals";
 import ProgramEmbed from "../../../shared/ProgramEmbed";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchNextEntry, fetchUserEntries } from "./fetchEntryData";
+import { fetchNextEntry } from "./fetchEntryData";
 import "./Levels.css";
 
 type Entry = {
@@ -23,25 +25,55 @@ type Entry = {
   entry_votes: number
 }
 
-type PastEntry = {
-  avg_score: number
-  contest_id: number
-  contest_name: string
-  disqualified: boolean
-  entry_id: number
-  entry_level: string
-  entry_title: string
-  is_winner: boolean
+type ContestantEntry = {
+  id: string
+  title: string
+  contest: {
+    name: string
+  }
+  skillLevel: string
+  isWinner: boolean
+  isDisqualified: string
+  averageScore: number
+  url: string
 }
 
+type Contestant = {
+  entries: ContestantEntry[]
+}
+
+type GetContestantEntriesResponse = {
+  contestant: Contestant
+}
+
+const GET_CONTESTANT_ENTRIES = gql`
+  query GetContestantEntries($kaid: String!) {
+    contestant(kaid: $kaid) {
+      entries {
+        id
+        title
+        contest {
+          name
+        }
+        skillLevel
+        isWinner
+        isDisqualified
+        averageScore
+        url
+      }
+    }
+  }
+`;
+
 function Levels() {
+  const { handleGQLError } = useAppError();
   const [entry, setEntry] = useState<Entry | null>(null);
   const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
-  const [previousEntries, setPreviousEntries] = useState<PastEntry[]>([]);
-  const [previousEntriesIsLoading, setPreviousEntriesIsLoading] = useState<boolean>(true);
   const [showDisqualifyModal, setShowDisqualifyModal] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+
+  const [getContestantEntries, { loading: contestantEntriesIsLoading, data: contestantEntriesData }] = useLazyQuery<GetContestantEntriesResponse>(GET_CONTESTANT_ENTRIES, { onError: handleGQLError });
 
   useEffect(() => {
     fetchNextEntry()
@@ -53,14 +85,13 @@ function Levels() {
 
   useEffect(() => {
     if (entry && entry.entry_id > 0) {
-      setPreviousEntriesIsLoading(true);
-      fetchUserEntries(entry?.entry_author_kaid || "")
-        .then((data) => {
-          setPreviousEntries(data.entries);
-          setPreviousEntriesIsLoading(false);
-        });
+      getContestantEntries({
+        variables: {
+          kaid: entry.entry_author_kaid
+        }
+      });
     }
-  }, [entry]);
+  }, [entry, getContestantEntries]);
 
   const handleProgramLoad = () => {
     setProgramIsLoading(false);
@@ -155,7 +186,7 @@ function Levels() {
               </div>
             </div>
 
-            {!previousEntriesIsLoading &&
+            {!contestantEntriesIsLoading &&
               <Table cols={10} noCard label="Previous Submissions">
                 <TableHead>
                   <Row>
@@ -167,21 +198,21 @@ function Levels() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {previousEntries.map((e) => {
+                  {contestantEntriesData ? contestantEntriesData.contestant.entries.map((e) => {
                     return (
-                      <Row key={e.entry_id}>
-                        <Cell>{e.entry_id}</Cell>
+                      <Row key={e.id}>
+                        <Cell>{e.id}</Cell>
                         <Cell>
-                          {e.entry_title}
-                          {e.disqualified ? <Badge color="#d92916" text="Disqualified" type="secondary" /> : ""}
-                          {e.is_winner ? <Badge color="#ffb100" text="Winner" type="secondary" /> : ""}
+                          {e.title}
+                          {e.isDisqualified ? <Badge color="#d92916" text="Disqualified" type="secondary" /> : ""}
+                          {e.isWinner ? <Badge color="#ffb100" text="Winner" type="secondary" /> : ""}
                         </Cell>
-                        <Cell>{e.contest_name}</Cell>
-                        <Cell>{e.entry_level}</Cell>
-                        <Cell>{e.avg_score}</Cell>
+                        <Cell>{e.contest.name}</Cell>
+                        <Cell>{e.skillLevel}</Cell>
+                        <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>
                       </Row>
                     );
-                  })}
+                  }) : ""}
                 </TableBody>
               </Table>
             }

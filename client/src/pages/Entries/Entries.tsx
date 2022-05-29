@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import ExternalLink from "../../shared/ExternalLink";

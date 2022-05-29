@@ -156,7 +156,7 @@ func GetWinningEntriesByContestId(ctx context.Context, contestId int) ([]*model.
 func GetEntryAverageScore(ctx context.Context, id int) (*float64, error) {
 	row := db.DB.QueryRow("SELECT AVG(creativity + complexity + interpretation + execution) as avg_score FROM evaluation WHERE entry_id = $1", id)
 
-	var avgScore float64
+	var avgScore *float64
 	if err := row.Scan(&avgScore); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
@@ -164,5 +164,5 @@ func GetEntryAverageScore(ctx context.Context, id int) (*float64, error) {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while determining an entry's average score", err)
 	}
 
-	return &avgScore, nil
+	return avgScore, nil
 }

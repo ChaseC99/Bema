@@ -7,11 +7,3 @@ export async function fetchNextEntry() {
     entry: data.entry
   };
 }
-
-export async function fetchUserEntries(userKaid: string) {
-  const data = await request("GET", "/api/internal/contestants/entries?id=" + userKaid);
-
-  return {
-    entries: data.entries
-  };
-}
