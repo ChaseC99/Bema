@@ -6,34 +6,6 @@ const {
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 const Request = require("request");
-const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
-
-exports.getFlagged = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        is_admin
-      } = request.decodedToken;
-      if (request.decodedToken.permissions.view_judging_settings || is_admin) {
-        return db.query("SELECT *, to_char(entry_created, $1) as entry_created FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id", [displayFancyDateFormat], res => {
-          if (res.error) {
-            return handleNext(next, 500, "There was a problem getting the flagged entries.", res.error);
-          }
-          return response.json({
-            logged_in: true,
-            is_admin: request.decodedToken.is_admin,
-            flaggedEntries: res.rows
-          });
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to access the list of flagged entries.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to access the list of flagged entries.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the list of flagged entries.", error);
-  }
-};
 
 exports.add = (request, response, next) => {
   try {

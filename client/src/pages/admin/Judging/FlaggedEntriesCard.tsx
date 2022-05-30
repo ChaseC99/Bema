@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../../shared/Button";
 import ExternalLink from "../../../shared/ExternalLink";
@@ -6,43 +7,47 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchFlaggedEntries } from "./fetchData";
 
 type Entry = {
-  assigned_group_id: number
-  contest_id: number
-  disqualified: boolean
-  entry_author: string
-  entry_author_kaid: string
-  entry_created: string
-  entry_height: number
-  entry_id: number
-  entry_kaid: string
-  entry_level: string
-  entry_level_locked: boolean
-  entry_title: string
-  entry_url: string
-  entry_votes: number
-  flagged: boolean
-  is_winner: boolean
+  id: string
+  title: string
+  url: string
+  author: {
+    name: string
+    kaid: string
+  } | null
+  created: string
 }
+
+type GetFlaggedEntriesResponse = {
+  flaggedEntries: Entry[]
+}
+
+const GET_FLAGGED_ENTRIES = gql`
+  query GetFlaggedEntries {
+    flaggedEntries {
+      id
+      title
+      url
+      author {
+        name
+        kaid
+      }
+      created
+    }
+  }
+`;
 
 function FlaggedEntriesCard() {
   const { state } = useAppState();
-  const [flaggedEntries, setFlaggedEntries] = useState<Entry[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
   const [approveEntryId, setApproveEntryId] = useState<number | null>();
   const [disqualifyEntryId, setDisqualifyEntryId] = useState<number | null>();
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>();
 
-  useEffect(() => {
-    fetchFlaggedEntries()
-      .then((data) => {
-        setFlaggedEntries(data.flaggedEntries);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading, data, refetch } = useQuery<GetFlaggedEntriesResponse>(GET_FLAGGED_ENTRIES, { onError: handleGQLError });
 
   const openApproveModal = (id: number) => {
     setApproveEntryId(id);
@@ -57,9 +62,7 @@ function FlaggedEntriesCard() {
       entry_id: id
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeApproveModal();
   }
 
@@ -76,9 +79,7 @@ function FlaggedEntriesCard() {
       entry_id: id
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeDisqualifyModal();
   }
 
@@ -95,13 +96,11 @@ function FlaggedEntriesCard() {
       entry_id: id
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeDeleteModal();
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <article className="card col-12">
         <div className="card-header">
@@ -127,27 +126,27 @@ function FlaggedEntriesCard() {
           </Row>
         </TableHead>
         <TableBody>
-          {flaggedEntries.map((e) => {
+          {data ? data.flaggedEntries.map((e) => {
             return (
-              <Row key={e.entry_id}>
-                <Cell>{e.entry_id}</Cell>
-                <Cell><ExternalLink to={e.entry_url}>{e.entry_title}</ExternalLink></Cell>
-                <Cell><Link to={"/contestants/" + e.entry_author_kaid}>{e.entry_author}</Link></Cell>
-                <Cell>{e.entry_created}</Cell>
+              <Row key={e.id}>
+                <Cell>{e.id}</Cell>
+                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                <Cell><Link to={"/contestants/" + e.author?.kaid}>{e.author?.name}</Link></Cell>
+                <Cell>{e.created}</Cell>
                 <Cell>
                   {(state.is_admin || state.user?.permissions.edit_entries) ?
                     <React.Fragment>
-                      <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.entry_id} style={{ marginRight: "24px" }} />
-                      <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.entry_id} style={{ marginRight: "24px" }} />
+                      <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.id} style={{ marginRight: "24px" }} />
+                      <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.id} style={{ marginRight: "24px" }} />
                     </React.Fragment>
                     : ""}
                   {(state.is_admin || state.user?.permissions.delete_entries) ?
-                    <Button type="tertiary" role="button" action={openDeleteModal} text="Delete" destructive data={e.entry_id} />
+                    <Button type="tertiary" role="button" action={openDeleteModal} text="Delete" destructive data={e.id} />
                     : ""}
                 </Cell>
               </Row>
             );
-          })}
+          }) : ""}
         </TableBody>
       </Table>
 

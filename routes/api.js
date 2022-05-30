@@ -672,7 +672,6 @@ router.post("/internal/entries/import", routeChecks.entries.import, wasValidated
 router.put("/internal/entries/flag", routeChecks.entries.flag, wasValidated, entries.flag);
 router.put("/internal/entries/disqualify", routeChecks.entries.disqualify, wasValidated, entries.disqualify);
 router.put("/internal/entries/approve", routeChecks.entries.approve, wasValidated, entries.approve);
-router.get("/internal/entries/flagged", entries.getFlagged);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
 
