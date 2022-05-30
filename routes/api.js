@@ -7,7 +7,6 @@ const { nameChars, datePattern, kaidPattern, dateFormat, scoreChars, messageChar
 
 const admin = require(process.cwd() + "/handlers/api/admin");
 const contests = require(process.cwd() + "/handlers/api/contests");
-const contestants = require(process.cwd() + "/handlers/api/contestants");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const results = require(process.cwd() + "/handlers/api/results");
 const judging = require(process.cwd() + "/handlers/api/judging");
@@ -652,9 +651,6 @@ router.put("/internal/users/permissions", routeChecks.users.editPermissions, was
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
-
-// Contestants
-router.get("/internal/contestants/search", contestants.search);
 
 // Messages
 router.post("/internal/messages", routeChecks.messages.add, wasValidated, messages.add);
