@@ -4,52 +4,6 @@ const { handleNext, successMsg } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 const dateFormat = "FMMM-FMDD-YYYY";
 
-exports.getIncomplete = (request, response, next) => {
-  try {
-    if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
-      return db.query("SELECT t.task_id, t.task_title, t.task_status, t.assigned_member, evaluator.evaluator_name, to_char(t.due_date, $1) as due_date FROM task t LEFT JOIN evaluator ON t.assigned_member = evaluator.evaluator_id WHERE t.task_status = 'Not Started' OR t.task_status = 'Started';", [dateFormat], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting all the incomplete tasks.", res.error);
-        }
-        return response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          tasks: res.rows
-        });
-      });
-    }
-    response.json({
-      logged_in: false,
-      is_admin: false
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the list of incomplete tasks.", error);
-  }
-}
-
-exports.getComplete = (request, response, next) => {
-  try {
-    if (request.decodedToken && (request.decodedToken.permissions.view_all_tasks || request.decodedToken.is_admin)) {
-      return db.query("SELECT t.task_id, t.task_title, t.task_status, t.assigned_member, evaluator.evaluator_name, to_char(t.due_date, $1) as due_date FROM task t LEFT JOIN evaluator ON t.assigned_member = evaluator.evaluator_id WHERE t.task_status = 'Completed';", [dateFormat], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting all the completed tasks.", res.error);
-        }
-        return response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          tasks: res.rows
-        });
-      });
-    }
-    response.json({
-      logged_in: false,
-      is_admin: false
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the list of completed tasks.", error);
-  }
-}
-
 exports.getForUser = (request, response, next) => {
   try {
     if (request.decodedToken) {
