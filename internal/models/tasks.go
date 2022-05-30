@@ -70,3 +70,25 @@ func GetCompletedTasks(ctx context.Context) ([]*model.Task, error) {
 
 	return tasks, nil
 }
+
+func GetAvailableTasks(ctx context.Context) ([]*model.Task, error) {
+	tasks := []*model.Task{}
+
+	rows, err := db.DB.Query("SELECT task_id, task_title, task_status, to_char(due_date, $1) FROM task WHERE assigned_member IS NULL ORDER BY task_id ASC;", util.DateFormat)
+	if err != nil {
+		return []*model.Task{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of available tasks.", err)
+	}
+
+	for rows.Next() {
+		t := newTask()
+		t.AssignedUser = nil
+
+		if err := rows.Scan(&t.ID, &t.Title, &t.Status, &t.DueDate); err != nil {
+			return []*model.Task{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of available tasks.", err)
+		}
+
+		tasks = append(tasks, &t)
+	}
+
+	return tasks, nil
+}
