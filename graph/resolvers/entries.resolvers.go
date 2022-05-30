@@ -5,7 +5,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
@@ -69,11 +68,19 @@ func (r *entryResolver) AverageScore(ctx context.Context, obj *model.Entry) (*fl
 }
 
 func (r *entryResolver) EvaluationCount(ctx context.Context, obj *model.Entry) (*int, error) {
-	panic(fmt.Errorf("not implemented"))
+	count, err := models.GetEntryEvaluationCount(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &count, nil
 }
 
 func (r *entryResolver) VoteCount(ctx context.Context, obj *model.Entry) (*int, error) {
-	panic(fmt.Errorf("not implemented"))
+	count, err := models.GetEntryVoteCount(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &count, nil
 }
 
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {

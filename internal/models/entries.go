@@ -236,3 +236,31 @@ func GetFlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
 
 	return entries, nil
 }
+
+func GetEntryEvaluationCount(ctx context.Context, id int) (int, error) {
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM evaluation WHERE entry_id = $1 AND evaluation_complete = true;", id)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
+		}
+		return 0, errors.NewInternalError(ctx, "An unexpected error occurred while determining an entry's evaluation count", err)
+	}
+
+	return count, nil
+}
+
+func GetEntryVoteCount(ctx context.Context, id int) (int, error) {
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry_vote WHERE entry_id = $1;", id)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
+		}
+		return 0, errors.NewInternalError(ctx, "An unexpected error occurred while determining an entry's vote count", err)
+	}
+
+	return count, nil
+}
