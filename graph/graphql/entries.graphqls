@@ -8,6 +8,11 @@ extend type Query {
     A list of flagged entries
     """
     flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
+
+    """
+    A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
+    """
+    entriesByAverageScore(contestId: ID!): [Entry!]!
 }
 
 """
@@ -93,4 +98,14 @@ type Entry {
     The average score of the entry
     """
     averageScore: Float @isAuthenticated(nullType: NULL)
+
+    """
+    The number of evaluations submitted for the entry
+    """
+    evaluationCount: Int @isAuthenticated(nullType: NULL)
+
+    """
+    The number of judges that voted for this entry
+    """
+    voteCount: Int @isAuthenticated(nullType: NULL)
 }

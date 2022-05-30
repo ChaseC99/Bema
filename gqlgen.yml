@@ -108,6 +108,10 @@ models:
         resolver: true
       averageScore:
         resolver: true
+      evaluationCount:
+        resolver: true
+      voteCount:
+        resolver: true
   Contestant:
     fields:
       entries:

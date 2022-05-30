@@ -5,9 +5,11 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -66,6 +68,14 @@ func (r *entryResolver) AverageScore(ctx context.Context, obj *model.Entry) (*fl
 	return avgScore, nil
 }
 
+func (r *entryResolver) EvaluationCount(ctx context.Context, obj *model.Entry) (*int, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *entryResolver) VoteCount(ctx context.Context, obj *model.Entry) (*int, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
@@ -76,6 +86,23 @@ func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.En
 
 func (r *queryResolver) FlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
 	entries, err := models.GetFlaggedEntries(ctx)
+	if err != nil {
+		return []*model.Entry{}, err
+	}
+	return entries, nil
+}
+
+func (r *queryResolver) EntriesByAverageScore(ctx context.Context, contestID int) ([]*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		entries, err := models.GetEntriesByContestId(ctx, contestID)
+		if err != nil {
+			return []*model.Entry{}, err
+		}
+		return entries, nil
+	}
+
+	entries, err := models.GetEntriesByAverageScore(ctx, contestID)
 	if err != nil {
 		return []*model.Entry{}, err
 	}

@@ -98,6 +98,10 @@ type Entry struct {
 	IsSkillLevelLocked *bool `json:"isSkillLevelLocked"`
 	// The average score of the entry
 	AverageScore *float64 `json:"averageScore"`
+	// The number of evaluations submitted for the entry
+	EvaluationCount *int `json:"evaluationCount"`
+	// The number of judges that voted for this entry
+	VoteCount *int `json:"voteCount"`
 }
 
 // A logged application error

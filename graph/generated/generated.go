@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 		AverageScore       func(childComplexity int) int
 		Contest            func(childComplexity int) int
 		Created            func(childComplexity int) int
+		EvaluationCount    func(childComplexity int) int
 		Group              func(childComplexity int) int
 		Height             func(childComplexity int) int
 		ID                 func(childComplexity int) int
@@ -99,6 +100,7 @@ type ComplexityRoot struct {
 		SkillLevel         func(childComplexity int) int
 		Title              func(childComplexity int) int
 		URL                func(childComplexity int) int
+		VoteCount          func(childComplexity int) int
 		Votes              func(childComplexity int) int
 	}
 
@@ -169,29 +171,30 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		ActiveCriteria      func(childComplexity int) int
-		ActiveJudgingGroups func(childComplexity int) int
-		AllCriteria         func(childComplexity int) int
-		AllJudgingGroups    func(childComplexity int) int
-		Announcements       func(childComplexity int) int
-		AvailableTasks      func(childComplexity int) int
-		CompletedTasks      func(childComplexity int) int
-		Contest             func(childComplexity int, id int) int
-		Contestant          func(childComplexity int, kaid string) int
-		ContestantSearch    func(childComplexity int, query string) int
-		Contests            func(childComplexity int) int
-		CurrentContest      func(childComplexity int) int
-		CurrentUser         func(childComplexity int) int
-		CurrentUserTasks    func(childComplexity int) int
-		Entries             func(childComplexity int, contestID int) int
-		Error               func(childComplexity int, id int) int
-		Errors              func(childComplexity int) int
-		FlaggedEntries      func(childComplexity int) int
-		InactiveUsers       func(childComplexity int) int
-		JudgingGroup        func(childComplexity int, id int) int
-		Tasks               func(childComplexity int) int
-		User                func(childComplexity int, id int) int
-		Users               func(childComplexity int) int
+		ActiveCriteria        func(childComplexity int) int
+		ActiveJudgingGroups   func(childComplexity int) int
+		AllCriteria           func(childComplexity int) int
+		AllJudgingGroups      func(childComplexity int) int
+		Announcements         func(childComplexity int) int
+		AvailableTasks        func(childComplexity int) int
+		CompletedTasks        func(childComplexity int) int
+		Contest               func(childComplexity int, id int) int
+		Contestant            func(childComplexity int, kaid string) int
+		ContestantSearch      func(childComplexity int, query string) int
+		Contests              func(childComplexity int) int
+		CurrentContest        func(childComplexity int) int
+		CurrentUser           func(childComplexity int) int
+		CurrentUserTasks      func(childComplexity int) int
+		Entries               func(childComplexity int, contestID int) int
+		EntriesByAverageScore func(childComplexity int, contestID int) int
+		Error                 func(childComplexity int, id int) int
+		Errors                func(childComplexity int) int
+		FlaggedEntries        func(childComplexity int) int
+		InactiveUsers         func(childComplexity int) int
+		JudgingGroup          func(childComplexity int, id int) int
+		Tasks                 func(childComplexity int) int
+		User                  func(childComplexity int, id int) int
+		Users                 func(childComplexity int) int
 	}
 
 	Task struct {
@@ -245,6 +248,8 @@ type EntryResolver interface {
 	IsDisqualified(ctx context.Context, obj *model.Entry) (*bool, error)
 	IsSkillLevelLocked(ctx context.Context, obj *model.Entry) (*bool, error)
 	AverageScore(ctx context.Context, obj *model.Entry) (*float64, error)
+	EvaluationCount(ctx context.Context, obj *model.Entry) (*int, error)
+	VoteCount(ctx context.Context, obj *model.Entry) (*int, error)
 }
 type ErrorResolver interface {
 	User(ctx context.Context, obj *model.Error) (*model.User, error)
@@ -258,6 +263,7 @@ type QueryResolver interface {
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	Entries(ctx context.Context, contestID int) ([]*model.Entry, error)
 	FlaggedEntries(ctx context.Context) ([]*model.Entry, error)
+	EntriesByAverageScore(ctx context.Context, contestID int) ([]*model.Entry, error)
 	Errors(ctx context.Context) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -487,6 +493,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Entry.Created(childComplexity), true
 
+	case "Entry.evaluationCount":
+		if e.complexity.Entry.EvaluationCount == nil {
+			break
+		}
+
+		return e.complexity.Entry.EvaluationCount(childComplexity), true
+
 	case "Entry.group":
 		if e.complexity.Entry.Group == nil {
 			break
@@ -563,6 +576,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Entry.URL(childComplexity), true
+
+	case "Entry.voteCount":
+		if e.complexity.Entry.VoteCount == nil {
+			break
+		}
+
+		return e.complexity.Entry.VoteCount(childComplexity), true
 
 	case "Entry.votes":
 		if e.complexity.Entry.Votes == nil {
@@ -1053,6 +1073,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Entries(childComplexity, args["contestId"].(int)), true
 
+	case "Query.entriesByAverageScore":
+		if e.complexity.Query.EntriesByAverageScore == nil {
+			break
+		}
+
+		args, err := ec.field_Query_entriesByAverageScore_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EntriesByAverageScore(childComplexity, args["contestId"].(int)), true
+
 	case "Query.error":
 		if e.complexity.Query.Error == nil {
 			break
@@ -1540,6 +1572,11 @@ enum ObjectType {
     A list of flagged entries
     """
     flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
+
+    """
+    A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
+    """
+    entriesByAverageScore(contestId: ID!): [Entry!]!
 }
 
 """
@@ -1625,6 +1662,16 @@ type Entry {
     The average score of the entry
     """
     averageScore: Float @isAuthenticated(nullType: NULL)
+
+    """
+    The number of evaluations submitted for the entry
+    """
+    evaluationCount: Int @isAuthenticated(nullType: NULL)
+
+    """
+    The number of judges that voted for this entry
+    """
+    voteCount: Int @isAuthenticated(nullType: NULL)
 }`, BuiltIn: false},
 	{Name: "graph/graphql/errors.graphqls", Input: `extend type Query {
     """
@@ -2200,6 +2247,21 @@ func (ec *executionContext) field_Query_contestant_args(ctx context.Context, raw
 		}
 	}
 	args["kaid"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_entriesByAverageScore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contestId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contestId"] = arg0
 	return args, nil
 }
 
@@ -3158,6 +3220,10 @@ func (ec *executionContext) fieldContext_Contest_winners(ctx context.Context, fi
 				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
 			case "averageScore":
 				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -3345,6 +3411,10 @@ func (ec *executionContext) fieldContext_Contestant_entries(ctx context.Context,
 				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
 			case "averageScore":
 				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -4323,6 +4393,136 @@ func (ec *executionContext) fieldContext_Entry_averageScore(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Entry_evaluationCount(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entry_evaluationCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Entry().EvaluationCount(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entry_evaluationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Entry_voteCount(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entry_voteCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Entry().VoteCount(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entry_voteCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7152,6 +7352,10 @@ func (ec *executionContext) fieldContext_Query_entries(ctx context.Context, fiel
 				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
 			case "averageScore":
 				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -7269,9 +7473,106 @@ func (ec *executionContext) fieldContext_Query_flaggedEntries(ctx context.Contex
 				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
 			case "averageScore":
 				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_entriesByAverageScore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entriesByAverageScore(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntriesByAverageScore(rctx, fc.Args["contestId"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Entry)
+	fc.Result = res
+	return ec.marshalNEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entriesByAverageScore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entriesByAverageScore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -12266,6 +12567,40 @@ func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, ob
 				return innerFunc(ctx)
 
 			})
+		case "evaluationCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entry_evaluationCount(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "voteCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entry_voteCount(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12912,6 +13247,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_flaggedEntries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "entriesByAverageScore":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entriesByAverageScore(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -14804,6 +15162,22 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx context.Context, sel ast.SelectionSet, v *model.JudgingGroup) graphql.Marshaler {
