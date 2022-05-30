@@ -74,6 +74,14 @@ func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.En
 	return entries, nil
 }
 
+func (r *queryResolver) FlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
+	entries, err := models.GetFlaggedEntries(ctx)
+	if err != nil {
+		return []*model.Entry{}, err
+	}
+	return entries, nil
+}
+
 // Entry returns generated.EntryResolver implementation.
 func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 

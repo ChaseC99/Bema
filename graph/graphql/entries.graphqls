@@ -3,6 +3,11 @@ extend type Query {
     A list of entries for a given contest
     """
     entries(contestId: ID!): [Entry!]!
+
+    """
+    A list of flagged entries
+    """
+    flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
 }
 
 """

@@ -182,6 +182,7 @@ type ComplexityRoot struct {
 		Entries             func(childComplexity int, contestID int) int
 		Error               func(childComplexity int, id int) int
 		Errors              func(childComplexity int) int
+		FlaggedEntries      func(childComplexity int) int
 		InactiveUsers       func(childComplexity int) int
 		JudgingGroup        func(childComplexity int, id int) int
 		User                func(childComplexity int, id int) int
@@ -243,6 +244,7 @@ type QueryResolver interface {
 	Contest(ctx context.Context, id int) (*model.Contest, error)
 	CurrentContest(ctx context.Context) (*model.Contest, error)
 	Entries(ctx context.Context, contestID int) ([]*model.Entry, error)
+	FlaggedEntries(ctx context.Context) ([]*model.Entry, error)
 	Errors(ctx context.Context) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -1029,6 +1031,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Errors(childComplexity), true
 
+	case "Query.flaggedEntries":
+		if e.complexity.Query.FlaggedEntries == nil {
+			break
+		}
+
+		return e.complexity.Query.FlaggedEntries(childComplexity), true
+
 	case "Query.inactiveUsers":
 		if e.complexity.Query.InactiveUsers == nil {
 			break
@@ -1442,6 +1451,11 @@ enum ObjectType {
     A list of entries for a given contest
     """
     entries(contestId: ID!): [Entry!]!
+
+    """
+    A list of flagged entries
+    """
+    flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
 }
 
 """
@@ -7025,6 +7039,112 @@ func (ec *executionContext) fieldContext_Query_entries(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_flaggedEntries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_flaggedEntries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().FlaggedEntries(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ENTRY_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Entry); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Entry)
+	fc.Result = res
+	return ec.marshalNEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_flaggedEntries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_errors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_errors(ctx, field)
 	if err != nil {
@@ -11967,6 +12087,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_entries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "flaggedEntries":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_flaggedEntries(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

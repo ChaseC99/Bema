@@ -166,3 +166,38 @@ func GetEntryAverageScore(ctx context.Context, id int) (*float64, error) {
 
 	return avgScore, nil
 }
+
+func GetFlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
+	entries := []*model.Entry{}
+
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id ASC;", util.DisplayFancyDateFormat)
+	if err != nil {
+		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of flagged entries.", err)
+	}
+
+	for rows.Next() {
+		entry := newEntry()
+		var groupId *int
+		var authorKaid *string
+
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of flagged entries.", err)
+		}
+
+		if groupId == nil {
+			entry.Group = nil
+		} else {
+			entry.Group.ID = *groupId
+		}
+
+		if authorKaid == nil {
+			entry.Author = nil
+		} else {
+			entry.Author.Kaid = *authorKaid
+		}
+
+		entries = append(entries, &entry)
+	}
+
+	return entries, nil
+}
