@@ -175,6 +175,7 @@ type ComplexityRoot struct {
 		Announcements       func(childComplexity int) int
 		Contest             func(childComplexity int, id int) int
 		Contestant          func(childComplexity int, kaid string) int
+		ContestantSearch    func(childComplexity int, query string) int
 		Contests            func(childComplexity int) int
 		CurrentContest      func(childComplexity int) int
 		CurrentUser         func(childComplexity int) int
@@ -237,6 +238,7 @@ type ErrorResolver interface {
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
 	Contestant(ctx context.Context, kaid string) (*model.Contestant, error)
+	ContestantSearch(ctx context.Context, query string) ([]*model.Contestant, error)
 	Contests(ctx context.Context) ([]*model.Contest, error)
 	Contest(ctx context.Context, id int) (*model.Contest, error)
 	CurrentContest(ctx context.Context) (*model.Contest, error)
@@ -963,6 +965,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contestant(childComplexity, args["kaid"].(string)), true
 
+	case "Query.contestantSearch":
+		if e.complexity.Query.ContestantSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contestantSearch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContestantSearch(childComplexity, args["query"].(string)), true
+
 	case "Query.contests":
 		if e.complexity.Query.Contests == nil {
 			break
@@ -1249,6 +1263,11 @@ type Announcement {
     A single contestant
     """
     contestant(kaid: String!): Contestant
+
+    """
+    A list of contestants matching the search query. Can search by display name or KAID.
+    """
+    contestantSearch(query: String!): [Contestant!]! @isAuthenticated(nullType: EMPTY_CONTESTANT_ARRAY)
 }
 
 """
@@ -1410,6 +1429,7 @@ enum NullType {
     EMPTY_JUDGING_CRITERIA_ARRAY
     EMPTY_JUDGING_GROUP_ARRAY
     EMPTY_ENTRY_ARRAY
+    EMPTY_CONTESTANT_ARRAY
     NULL
 }
 
@@ -2001,6 +2021,21 @@ func (ec *executionContext) field_Query_contest_args(ctx context.Context, rawArg
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_contestantSearch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
 	return args, nil
 }
 
@@ -6595,6 +6630,97 @@ func (ec *executionContext) fieldContext_Query_contestant(ctx context.Context, f
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_contestant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_contestantSearch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contestantSearch(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ContestantSearch(rctx, fc.Args["query"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_CONTESTANT_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Contestant); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Contestant`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contestant)
+	fc.Result = res
+	return ec.marshalNContestant2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contestantSearch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "kaid":
+				return ec.fieldContext_Contestant_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_Contestant_name(ctx, field)
+			case "entries":
+				return ec.fieldContext_Contestant_entries(ctx, field)
+			case "entryCount":
+				return ec.fieldContext_Contestant_entryCount(ctx, field)
+			case "contestCount":
+				return ec.fieldContext_Contestant_contestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contestant", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contestantSearch_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -11745,6 +11871,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "contestantSearch":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contestantSearch(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "contests":
 			field := field
 
@@ -12732,6 +12881,50 @@ func (ec *executionContext) marshalNContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑC
 
 func (ec *executionContext) marshalNContestant2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestant(ctx context.Context, sel ast.SelectionSet, v model.Contestant) graphql.Marshaler {
 	return ec._Contestant(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNContestant2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contestant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContestant(ctx context.Context, sel ast.SelectionSet, v *model.Contestant) graphql.Marshaler {

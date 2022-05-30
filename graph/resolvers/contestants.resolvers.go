@@ -43,6 +43,14 @@ func (r *queryResolver) Contestant(ctx context.Context, kaid string) (*model.Con
 	return contestant, nil
 }
 
+func (r *queryResolver) ContestantSearch(ctx context.Context, query string) ([]*model.Contestant, error) {
+	contestants, err := models.GetContestantsBySearchQuery(ctx, query)
+	if err != nil {
+		return []*model.Contestant{}, err
+	}
+	return contestants, nil
+}
+
 // Contestant returns generated.ContestantResolver implementation.
 func (r *Resolver) Contestant() generated.ContestantResolver { return &contestantResolver{r} }
 

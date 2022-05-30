@@ -3,6 +3,11 @@ extend type Query {
     A single contestant
     """
     contestant(kaid: String!): Contestant
+
+    """
+    A list of contestants matching the search query. Can search by display name or KAID.
+    """
+    contestantSearch(query: String!): [Contestant!]! @isAuthenticated(nullType: EMPTY_CONTESTANT_ARRAY)
 }
 
 """

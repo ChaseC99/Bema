@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
@@ -22,6 +23,41 @@ func GetContestantByKaid(ctx context.Context, kaid string) (*model.Contestant, e
 	}
 
 	return contestant, nil
+}
+
+func GetContestantsBySearchQuery(ctx context.Context, searchQuery string) ([]*model.Contestant, error) {
+	contestants := []*model.Contestant{}
+
+	var query string
+	if strings.Contains(searchQuery, "kaid_") {
+		query = "SELECT entry_author, entry_author_kaid FROM entry WHERE entry_author_kaid LIKE $1 ORDER BY entry_id DESC LIMIT 1;"
+	} else {
+		query = "SELECT STRING_AGG(DISTINCT entry_author, ', ') as contestant_names, entry_author_kaid as contestant_kaid FROM entry WHERE entry_author LIKE $1 GROUP BY entry_author_kaid;"
+	}
+
+	rows, err := db.DB.Query(query, "%"+searchQuery+"%")
+	if err != nil {
+		return []*model.Contestant{}, errors.NewInternalError(ctx, "An unexpected error occurred while searching for contestants.", err)
+	}
+
+	for rows.Next() {
+		var c model.Contestant
+		var kaid *string
+
+		if err := rows.Scan(&c.Name, &kaid); err != nil {
+			return []*model.Contestant{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading contestants matching a search query.", err)
+		}
+
+		if kaid == nil {
+			c.Kaid = ""
+		} else {
+			c.Kaid = *kaid
+		}
+
+		contestants = append(contestants, &c)
+	}
+
+	return contestants, nil
 }
 
 func GetContestantEntryCount(ctx context.Context, kaid string) (int, error) {

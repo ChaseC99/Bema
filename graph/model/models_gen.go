@@ -262,6 +262,7 @@ const (
 	NullTypeEmptyJudgingCriteriaArray NullType = "EMPTY_JUDGING_CRITERIA_ARRAY"
 	NullTypeEmptyJudgingGroupArray    NullType = "EMPTY_JUDGING_GROUP_ARRAY"
 	NullTypeEmptyEntryArray           NullType = "EMPTY_ENTRY_ARRAY"
+	NullTypeEmptyContestantArray      NullType = "EMPTY_CONTESTANT_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -272,12 +273,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyJudgingCriteriaArray,
 	NullTypeEmptyJudgingGroupArray,
 	NullTypeEmptyEntryArray,
+	NullTypeEmptyContestantArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeNull:
 		return true
 	}
 	return false
