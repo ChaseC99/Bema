@@ -53,10 +53,11 @@ enum NullType {
     EMPTY_JUDGING_GROUP_ARRAY
     EMPTY_ENTRY_ARRAY
     EMPTY_CONTESTANT_ARRAY
+    EMPTY_TASK_ARRAY
     NULL
 }
 
 enum ObjectType {
-    CONTEST
     USER
+    TASK
 }

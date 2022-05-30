@@ -37,7 +37,7 @@ type Contest {
   """
   The author of the announcement program code. Only visible to contest editors
   """
-  author: String @hasPermission(permission: EDIT_CONTESTS, nullType: NULL, objType: CONTEST)
+  author: String @hasPermission(permission: EDIT_CONTESTS, nullType: NULL)
 
   """
   The url slug of the contest badge

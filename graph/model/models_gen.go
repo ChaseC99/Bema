@@ -221,6 +221,20 @@ type Permissions struct {
 	ViewJudgingSettings bool `json:"view_judging_settings"`
 }
 
+// A single task that can be assigned to and completed by a user
+type Task struct {
+	// A uniqune integer ID
+	ID int `json:"id"`
+	// A description of the task
+	Title string `json:"title"`
+	// The user the task is assigned to, or null if unassigned
+	AssignedUser *User `json:"assignedUser"`
+	// The completion status of the task
+	Status string `json:"status"`
+	// The date the task needs to be completed by
+	DueDate string `json:"dueDate"`
+}
+
 // An evaluator account
 type User struct {
 	// The unique integer id of the user
@@ -263,6 +277,7 @@ const (
 	NullTypeEmptyJudgingGroupArray    NullType = "EMPTY_JUDGING_GROUP_ARRAY"
 	NullTypeEmptyEntryArray           NullType = "EMPTY_ENTRY_ARRAY"
 	NullTypeEmptyContestantArray      NullType = "EMPTY_CONTESTANT_ARRAY"
+	NullTypeEmptyTaskArray            NullType = "EMPTY_TASK_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -274,12 +289,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyJudgingGroupArray,
 	NullTypeEmptyEntryArray,
 	NullTypeEmptyContestantArray,
+	NullTypeEmptyTaskArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeNull:
 		return true
 	}
 	return false
@@ -309,18 +325,18 @@ func (e NullType) MarshalGQL(w io.Writer) {
 type ObjectType string
 
 const (
-	ObjectTypeContest ObjectType = "CONTEST"
-	ObjectTypeUser    ObjectType = "USER"
+	ObjectTypeUser ObjectType = "USER"
+	ObjectTypeTask ObjectType = "TASK"
 )
 
 var AllObjectType = []ObjectType{
-	ObjectTypeContest,
 	ObjectTypeUser,
+	ObjectTypeTask,
 }
 
 func (e ObjectType) IsValid() bool {
 	switch e {
-	case ObjectTypeContest, ObjectTypeUser:
+	case ObjectTypeUser, ObjectTypeTask:
 		return true
 	}
 	return false

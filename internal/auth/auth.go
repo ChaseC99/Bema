@@ -289,6 +289,8 @@ func getEmptyArray(nullType model.NullType) interface{} {
 		return []*model.Entry{}
 	case model.NullTypeEmptyContestantArray:
 		return []*model.Contestant{}
+	case model.NullTypeEmptyTaskArray:
+		return []*model.Task{}
 	default:
 		return nil
 	}
@@ -299,6 +301,8 @@ func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 	switch objType {
 	case model.ObjectTypeUser:
 		return obj.(*model.User).ID == user.ID
+	case model.ObjectTypeTask:
+		return obj.(*model.Task).AssignedUser.ID == user.ID
 	default:
 		return false
 	}

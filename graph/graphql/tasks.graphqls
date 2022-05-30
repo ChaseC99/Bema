@@ -1,0 +1,36 @@
+extend type Query {
+    """
+    A list of all incomplete tasks
+    """
+    tasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+}
+
+"""
+A single task that can be assigned to and completed by a user
+"""
+type Task @hasPermission(permission: VIEW_ALL_TASKS, nullType: NULL, objType: TASK) {
+    """
+    A uniqune integer ID
+    """
+    id: ID!
+
+    """
+    A description of the task
+    """
+    title: String!
+
+    """
+    The user the task is assigned to, or null if unassigned
+    """
+    assignedUser: User
+
+    """
+    The completion status of the task
+    """
+    status: String!
+
+    """
+    The date the task needs to be completed by
+    """
+    dueDate: String!
+}
