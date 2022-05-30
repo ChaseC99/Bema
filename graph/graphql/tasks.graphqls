@@ -3,6 +3,11 @@ extend type Query {
     A list of all incomplete tasks
     """
     tasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+
+    """
+    A list of all completed tasks
+    """
+    completedTasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
 }
 
 """

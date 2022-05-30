@@ -19,6 +19,14 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 	return tasks, nil
 }
 
+func (r *queryResolver) CompletedTasks(ctx context.Context) ([]*model.Task, error) {
+	tasks, err := models.GetCompletedTasks(ctx)
+	if err != nil {
+		return []*model.Task{}, err
+	}
+	return tasks, nil
+}
+
 func (r *taskResolver) AssignedUser(ctx context.Context, obj *model.Task) (*model.User, error) {
 	if obj.AssignedUser == nil {
 		return nil, nil
