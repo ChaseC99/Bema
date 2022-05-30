@@ -92,3 +92,24 @@ func GetAvailableTasks(ctx context.Context) ([]*model.Task, error) {
 
 	return tasks, nil
 }
+
+func GetTasksForUser(ctx context.Context, userId int) ([]*model.Task, error) {
+	tasks := []*model.Task{}
+
+	rows, err := db.DB.Query("SELECT task_id, task_title, assigned_member, task_status, to_char(due_date, $1) FROM task WHERE assigned_member = $2 AND (task_status = 'Not Started' OR task_status = 'Started') ORDER BY task_id ASC;", util.DateFormat, userId)
+	if err != nil {
+		return []*model.Task{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of user tasks.", err)
+	}
+
+	for rows.Next() {
+		t := newTask()
+
+		if err := rows.Scan(&t.ID, &t.Title, &t.AssignedUser.ID, &t.Status, &t.DueDate); err != nil {
+			return []*model.Task{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of user tasks.", err)
+		}
+
+		tasks = append(tasks, &t)
+	}
+
+	return tasks, nil
+}

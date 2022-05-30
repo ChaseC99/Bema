@@ -182,6 +182,7 @@ type ComplexityRoot struct {
 		Contests            func(childComplexity int) int
 		CurrentContest      func(childComplexity int) int
 		CurrentUser         func(childComplexity int) int
+		CurrentUserTasks    func(childComplexity int) int
 		Entries             func(childComplexity int, contestID int) int
 		Error               func(childComplexity int, id int) int
 		Errors              func(childComplexity int) int
@@ -267,6 +268,7 @@ type QueryResolver interface {
 	Tasks(ctx context.Context) ([]*model.Task, error)
 	CompletedTasks(ctx context.Context) ([]*model.Task, error)
 	AvailableTasks(ctx context.Context) ([]*model.Task, error)
+	CurrentUserTasks(ctx context.Context) ([]*model.Task, error)
 	CurrentUser(ctx context.Context) (*model.FullUserProfile, error)
 	Users(ctx context.Context) ([]*model.User, error)
 	InactiveUsers(ctx context.Context) ([]*model.User, error)
@@ -1032,6 +1034,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.CurrentUser(childComplexity), true
 
+	case "Query.currentUserTasks":
+		if e.complexity.Query.CurrentUserTasks == nil {
+			break
+		}
+
+		return e.complexity.Query.CurrentUserTasks(childComplexity), true
+
 	case "Query.entries":
 		if e.complexity.Query.Entries == nil {
 			break
@@ -1764,6 +1773,11 @@ type JudgingGroup @isAuthenticated(nullType: NULL) {
     A list of all tasks available for sign up
     """
     availableTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+
+    """
+    A list of tasks assigned to the logged in user
+    """
+    currentUserTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
 }
 
 """
@@ -8190,6 +8204,104 @@ func (ec *executionContext) fieldContext_Query_availableTasks(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_currentUserTasks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_currentUserTasks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CurrentUserTasks(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "TASK")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_TASK_ARRAY")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Task); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Task`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Task)
+	fc.Result = res
+	return ec.marshalNTask2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐTaskᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_currentUserTasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Task_title(ctx, field)
+			case "assignedUser":
+				return ec.fieldContext_Task_assignedUser(ctx, field)
+			case "status":
+				return ec.fieldContext_Task_status(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Task_dueDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_currentUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_currentUser(ctx, field)
 	if err != nil {
@@ -13024,6 +13136,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_availableTasks(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "currentUserTasks":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currentUserTasks(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

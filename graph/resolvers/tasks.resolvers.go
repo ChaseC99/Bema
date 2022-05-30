@@ -8,6 +8,7 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -29,6 +30,20 @@ func (r *queryResolver) CompletedTasks(ctx context.Context) ([]*model.Task, erro
 
 func (r *queryResolver) AvailableTasks(ctx context.Context) ([]*model.Task, error) {
 	tasks, err := models.GetAvailableTasks(ctx)
+	if err != nil {
+		return []*model.Task{}, err
+	}
+	return tasks, nil
+}
+
+func (r *queryResolver) CurrentUserTasks(ctx context.Context) ([]*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil {
+		return []*model.Task{}, nil
+	}
+
+	tasks, err := models.GetTasksForUser(ctx, user.ID)
 	if err != nil {
 		return []*model.Task{}, err
 	}

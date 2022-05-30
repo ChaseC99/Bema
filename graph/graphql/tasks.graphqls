@@ -13,6 +13,11 @@ extend type Query {
     A list of all tasks available for sign up
     """
     availableTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+
+    """
+    A list of tasks assigned to the logged in user
+    """
+    currentUserTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
 }
 
 """
