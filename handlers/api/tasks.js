@@ -4,52 +4,6 @@ const { handleNext, successMsg } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 const dateFormat = "FMMM-FMDD-YYYY";
 
-exports.getForUser = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      return db.query("SELECT *, to_char(t.due_date, $1) as due_date FROM task t WHERE assigned_member = $2 AND task_status != 'Completed' ORDER BY t.due_date DESC", [dateFormat, request.decodedToken.evaluator_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting tasks for this user.", res.error);
-        }
-        return response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          tasks: res.rows
-        });
-      });
-    }
-    response.json({
-      logged_in: false,
-      is_admin: false
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while getting tasks for a user.", error);
-  }
-}
-
-exports.getAvailable = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      return db.query("SELECT *, to_char(t.due_date, $1) as due_date FROM task t WHERE assigned_member IS null AND task_status != 'Completed' ORDER BY t.due_date DESC", [dateFormat], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting the available tasks.", res.error);
-        }
-        return response.json({
-          logged_in: true,
-          is_admin: request.decodedToken.is_admin,
-          tasks: res.rows
-        });
-      });
-    }
-    response.json({
-      logged_in: false,
-      is_admin: false
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while getting the available tasks.", error);
-  }
-}
-
 exports.add = (request, response, next) => {
   try {
     if (request.decodedToken) {
