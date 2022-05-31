@@ -116,6 +116,14 @@ func (r *queryResolver) EntriesByAverageScore(ctx context.Context, contestID int
 	return entries, nil
 }
 
+func (r *queryResolver) EntriesPerLevel(ctx context.Context, contestID int) ([]*model.EntriesPerLevel, error) {
+	entriesPerLevel, err := models.GetEntriesPerLevel(ctx, contestID)
+	if err != nil {
+		return []*model.EntriesPerLevel{}, err
+	}
+	return entriesPerLevel, nil
+}
+
 // Entry returns generated.EntryResolver implementation.
 func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 

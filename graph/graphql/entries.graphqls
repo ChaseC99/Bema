@@ -13,6 +13,11 @@ extend type Query {
     A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
     """
     entriesByAverageScore(contestId: ID!): [Entry!]!
+
+    """
+    A breakdown of the number of entries per skill level
+    """
+    entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 }
 
 """
@@ -108,4 +113,16 @@ type Entry {
     The number of judges that voted for this entry
     """
     voteCount: Int @isAuthenticated(nullType: NULL)
+}
+
+type EntriesPerLevel {
+    """
+    The name of the skill bracket
+    """
+    level: String!
+
+    """
+    The number of entries in the skill bracket
+    """
+    count: Int!
 }

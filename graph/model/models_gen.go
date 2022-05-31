@@ -64,6 +64,13 @@ type Contestant struct {
 	ContestCount int `json:"contestCount"`
 }
 
+type EntriesPerLevel struct {
+	// The name of the skill bracket
+	Level string `json:"level"`
+	// The number of entries in the skill bracket
+	Count int `json:"count"`
+}
+
 // A program submission for a contest
 type Entry struct {
 	// A unique integer ID

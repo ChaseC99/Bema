@@ -264,3 +264,24 @@ func GetEntryVoteCount(ctx context.Context, id int) (int, error) {
 
 	return count, nil
 }
+
+func GetEntriesPerLevel(ctx context.Context, contestId int) ([]*model.EntriesPerLevel, error) {
+	entriesPerLevel := []*model.EntriesPerLevel{}
+
+	rows, err := db.DB.Query("SELECT COUNT(*), entry_level FROM entry WHERE contest_id = $1 AND disqualified = false GROUP BY entry_level;", contestId)
+	if err != nil {
+		return []*model.EntriesPerLevel{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the number of entries per level.", err)
+	}
+
+	for rows.Next() {
+		var count model.EntriesPerLevel
+
+		if err := rows.Scan(&count.Count, &count.Level); err != nil {
+			return []*model.EntriesPerLevel{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the number of entries per level.", err)
+		}
+
+		entriesPerLevel = append(entriesPerLevel, &count)
+	}
+
+	return entriesPerLevel, nil
+}

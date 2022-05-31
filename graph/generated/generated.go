@@ -83,6 +83,11 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 	}
 
+	EntriesPerLevel struct {
+		Count func(childComplexity int) int
+		Level func(childComplexity int) int
+	}
+
 	Entry struct {
 		Author             func(childComplexity int) int
 		AverageScore       func(childComplexity int) int
@@ -187,6 +192,7 @@ type ComplexityRoot struct {
 		CurrentUserTasks      func(childComplexity int) int
 		Entries               func(childComplexity int, contestID int) int
 		EntriesByAverageScore func(childComplexity int, contestID int) int
+		EntriesPerLevel       func(childComplexity int, contestID int) int
 		Error                 func(childComplexity int, id int) int
 		Errors                func(childComplexity int) int
 		FlaggedEntries        func(childComplexity int) int
@@ -264,6 +270,7 @@ type QueryResolver interface {
 	Entries(ctx context.Context, contestID int) ([]*model.Entry, error)
 	FlaggedEntries(ctx context.Context) ([]*model.Entry, error)
 	EntriesByAverageScore(ctx context.Context, contestID int) ([]*model.Entry, error)
+	EntriesPerLevel(ctx context.Context, contestID int) ([]*model.EntriesPerLevel, error)
 	Errors(ctx context.Context) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -464,6 +471,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contestant.Name(childComplexity), true
+
+	case "EntriesPerLevel.count":
+		if e.complexity.EntriesPerLevel.Count == nil {
+			break
+		}
+
+		return e.complexity.EntriesPerLevel.Count(childComplexity), true
+
+	case "EntriesPerLevel.level":
+		if e.complexity.EntriesPerLevel.Level == nil {
+			break
+		}
+
+		return e.complexity.EntriesPerLevel.Level(childComplexity), true
 
 	case "Entry.author":
 		if e.complexity.Entry.Author == nil {
@@ -1085,6 +1106,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.EntriesByAverageScore(childComplexity, args["contestId"].(int)), true
 
+	case "Query.entriesPerLevel":
+		if e.complexity.Query.EntriesPerLevel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_entriesPerLevel_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EntriesPerLevel(childComplexity, args["contestId"].(int)), true
+
 	case "Query.error":
 		if e.complexity.Query.Error == nil {
 			break
@@ -1577,6 +1610,11 @@ enum ObjectType {
     A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
     """
     entriesByAverageScore(contestId: ID!): [Entry!]!
+
+    """
+    A breakdown of the number of entries per skill level
+    """
+    entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 }
 
 """
@@ -1672,6 +1710,18 @@ type Entry {
     The number of judges that voted for this entry
     """
     voteCount: Int @isAuthenticated(nullType: NULL)
+}
+
+type EntriesPerLevel {
+    """
+    The name of the skill bracket
+    """
+    level: String!
+
+    """
+    The number of entries in the skill bracket
+    """
+    count: Int!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/errors.graphqls", Input: `extend type Query {
     """
@@ -2251,6 +2301,21 @@ func (ec *executionContext) field_Query_contestant_args(ctx context.Context, raw
 }
 
 func (ec *executionContext) field_Query_entriesByAverageScore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contestId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contestId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_entriesPerLevel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -3503,6 +3568,94 @@ func (ec *executionContext) fieldContext_Contestant_contestCount(ctx context.Con
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntriesPerLevel_level(ctx context.Context, field graphql.CollectedField, obj *model.EntriesPerLevel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntriesPerLevel_level(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Level, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntriesPerLevel_level(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntriesPerLevel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntriesPerLevel_count(ctx context.Context, field graphql.CollectedField, obj *model.EntriesPerLevel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntriesPerLevel_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntriesPerLevel_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntriesPerLevel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7571,6 +7724,67 @@ func (ec *executionContext) fieldContext_Query_entriesByAverageScore(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_entriesByAverageScore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_entriesPerLevel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entriesPerLevel(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntriesPerLevel(rctx, fc.Args["contestId"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EntriesPerLevel)
+	fc.Result = res
+	return ec.marshalNEntriesPerLevel2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntriesPerLevelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entriesPerLevel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "level":
+				return ec.fieldContext_EntriesPerLevel_level(ctx, field)
+			case "count":
+				return ec.fieldContext_EntriesPerLevel_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntriesPerLevel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entriesPerLevel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12359,6 +12573,41 @@ func (ec *executionContext) _Contestant(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var entriesPerLevelImplementors = []string{"EntriesPerLevel"}
+
+func (ec *executionContext) _EntriesPerLevel(ctx context.Context, sel ast.SelectionSet, obj *model.EntriesPerLevel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, entriesPerLevelImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EntriesPerLevel")
+		case "level":
+
+			out.Values[i] = ec._EntriesPerLevel_level(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "count":
+
+			out.Values[i] = ec._EntriesPerLevel_count(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var entryImplementors = []string{"Entry"}
 
 func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, obj *model.Entry) graphql.Marshaler {
@@ -13270,6 +13519,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_entriesByAverageScore(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "entriesPerLevel":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entriesPerLevel(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -14396,6 +14668,60 @@ func (ec *executionContext) marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._Contestant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNEntriesPerLevel2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntriesPerLevelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntriesPerLevel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEntriesPerLevel2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntriesPerLevel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEntriesPerLevel2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntriesPerLevel(ctx context.Context, sel ast.SelectionSet, v *model.EntriesPerLevel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EntriesPerLevel(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEntry2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Entry) graphql.Marshaler {
