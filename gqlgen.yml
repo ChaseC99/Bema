@@ -112,6 +112,8 @@ models:
         resolver: true
       voteCount:
         resolver: true
+      isVotedByUser:
+        resolver: true
   Contestant:
     fields:
       entries:

@@ -109,6 +109,8 @@ type Entry struct {
 	EvaluationCount *int `json:"evaluationCount"`
 	// The number of judges that voted for this entry
 	VoteCount *int `json:"voteCount"`
+	// Indicates whether the current user has voted for the entry
+	IsVotedByUser *bool `json:"isVotedByUser"`
 }
 
 // A logged application error

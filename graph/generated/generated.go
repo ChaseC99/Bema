@@ -100,6 +100,7 @@ type ComplexityRoot struct {
 		IsDisqualified     func(childComplexity int) int
 		IsFlagged          func(childComplexity int) int
 		IsSkillLevelLocked func(childComplexity int) int
+		IsVotedByUser      func(childComplexity int) int
 		IsWinner           func(childComplexity int) int
 		Kaid               func(childComplexity int) int
 		SkillLevel         func(childComplexity int) int
@@ -256,6 +257,7 @@ type EntryResolver interface {
 	AverageScore(ctx context.Context, obj *model.Entry) (*float64, error)
 	EvaluationCount(ctx context.Context, obj *model.Entry) (*int, error)
 	VoteCount(ctx context.Context, obj *model.Entry) (*int, error)
+	IsVotedByUser(ctx context.Context, obj *model.Entry) (*bool, error)
 }
 type ErrorResolver interface {
 	User(ctx context.Context, obj *model.Error) (*model.User, error)
@@ -562,6 +564,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Entry.IsSkillLevelLocked(childComplexity), true
+
+	case "Entry.isVotedByUser":
+		if e.complexity.Entry.IsVotedByUser == nil {
+			break
+		}
+
+		return e.complexity.Entry.IsVotedByUser(childComplexity), true
 
 	case "Entry.isWinner":
 		if e.complexity.Entry.IsWinner == nil {
@@ -1710,6 +1719,11 @@ type Entry {
     The number of judges that voted for this entry
     """
     voteCount: Int @isAuthenticated(nullType: NULL)
+
+    """
+    Indicates whether the current user has voted for the entry
+    """
+    isVotedByUser: Boolean @isAuthenticated(nullType: NULL)
 }
 
 type EntriesPerLevel {
@@ -3289,6 +3303,8 @@ func (ec *executionContext) fieldContext_Contest_winners(ctx context.Context, fi
 				return ec.fieldContext_Entry_evaluationCount(ctx, field)
 			case "voteCount":
 				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -3480,6 +3496,8 @@ func (ec *executionContext) fieldContext_Contestant_entries(ctx context.Context,
 				return ec.fieldContext_Entry_evaluationCount(ctx, field)
 			case "voteCount":
 				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -4676,6 +4694,71 @@ func (ec *executionContext) fieldContext_Entry_voteCount(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Entry_isVotedByUser(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entry_isVotedByUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Entry().IsVotedByUser(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entry_isVotedByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7509,6 +7592,8 @@ func (ec *executionContext) fieldContext_Query_entries(ctx context.Context, fiel
 				return ec.fieldContext_Entry_evaluationCount(ctx, field)
 			case "voteCount":
 				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -7630,6 +7715,8 @@ func (ec *executionContext) fieldContext_Query_flaggedEntries(ctx context.Contex
 				return ec.fieldContext_Entry_evaluationCount(ctx, field)
 			case "voteCount":
 				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -7712,6 +7799,8 @@ func (ec *executionContext) fieldContext_Query_entriesByAverageScore(ctx context
 				return ec.fieldContext_Entry_evaluationCount(ctx, field)
 			case "voteCount":
 				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
@@ -12843,6 +12932,23 @@ func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Entry_voteCount(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "isVotedByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entry_isVotedByUser(ctx, field, obj)
 				return res
 			}
 

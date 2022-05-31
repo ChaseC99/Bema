@@ -83,6 +83,14 @@ func (r *entryResolver) VoteCount(ctx context.Context, obj *model.Entry) (*int, 
 	return &count, nil
 }
 
+func (r *entryResolver) IsVotedByUser(ctx context.Context, obj *model.Entry) (*bool, error) {
+	wasVoted, err := models.IsEntryVotedByUser(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return wasVoted, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {

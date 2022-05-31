@@ -1,18 +1,19 @@
-import { EntryWithScores, EntryWithScoresPublic } from ".";
+import { Link } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import Button from "../../shared/Button";
 import ExternalLink from "../../shared/ExternalLink";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import { Permissions } from "../../state/appStateReducer";
 import useAppState from "../../state/useAppState";
+import { Entry } from "./Results";
 
 type EntriesByAvgScoreProps = {
-  entriesByAvgScore: EntryWithScores[] | EntryWithScoresPublic[]
+  entriesByAvgScore: Entry[]
   votingEnabled: boolean
-  handleShowEntryVotes: (id: number) => void
-  showVoteForm: (id: number) => void
-  handleRemoveVote: (id: number) => void
-  handleAddWinner: (id: number) => void
+  handleShowEntryVotes: (id: string) => void
+  showVoteForm: (id: string) => void
+  handleRemoveVote: (id: string) => void
+  handleAddWinner: (id: string) => void
   testId?: string
 }
 
@@ -42,38 +43,34 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
 
         {props.entriesByAvgScore.map((e) => {
           if (!state.logged_in) {
-            let entry = e as unknown as EntryWithScoresPublic;
-
             return (
-              <Row key={"entry-score-" + entry.entry_id}>
-                <Cell>{entry.entry_id}</Cell>
-                <Cell><ExternalLink to={entry.entry_url}>{entry.title}</ExternalLink></Cell>
-                <Cell>{entry.entry_author}</Cell>
+              <Row key={"entry-score-" + e.id}>
+                <Cell>{e.id}</Cell>
+                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                <Cell>{e.author ? e.author.name : "Unknown Author"}</Cell>
               </Row>
             );
           }
           else {
-            let entry = e as unknown as EntryWithScores;
-
             const entryActions: Action[] = [];
             
-            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && !entry.voted_by_user) {
+            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && !e.isVotedByUser) {
               entryActions.push({
                 role: "button",
                 action: props.showVoteForm,
                 text: "Vote for entry",
-                data: entry.entry_id,
-                testId: "entry-" + entry.entry_id + "-vote-action"
+                data: e.id,
+                testId: "entry-" + e.id + "-vote-action"
               });
             }
 
-            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && entry.voted_by_user) {
+            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && e.isVotedByUser) {
               entryActions.push({
                 role: "button",
                 action: props.handleRemoveVote,
                 text: "Remove Vote",
-                data: entry.entry_id,
-                testId: "entry-" + entry.entry_id + "-remove-vote-action"
+                data: e.id,
+                testId: "entry-" + e.id + "-remove-vote-action"
               });
             }
 
@@ -82,20 +79,20 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
                 role: "button",
                 action: props.handleAddWinner,
                 text: "Mark as winner",
-                data: entry.entry_id,
-                testId: "entry-" + entry.entry_id + "-mark-as-winner-action"
+                data: e.id,
+                testId: "entry-" + e.id + "-mark-as-winner-action"
               });
             }
 
             return (
-              <Row key={"entry-score-" + entry.entry_id}>
-                <Cell>{entry.entry_id}</Cell>
-                <Cell><ExternalLink to={entry.entry_url}>{entry.title}</ExternalLink></Cell>
-                <Cell>{entry.entry_author}</Cell>
-                <Cell>{entry.evaluations}</Cell>
-                <Cell>{entry.entry_level}</Cell>
-                <Cell>{entry.avg_score}</Cell>
-                <Cell>{entry.vote_count > 0 ? <Button type="tertiary" role="button" action={props.handleShowEntryVotes} data={entry.entry_id} text={"" + entry.vote_count} testId={"entry-" + entry.entry_id + "-vote-count-btn"} /> : entry.vote_count}</Cell>
+              <Row key={"entry-score-" + e.id}>
+                <Cell>{e.id}</Cell>
+                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                <Cell>{e.author ? <Link to={"/contestants/" + e.author.kaid}>{e.author.name}</Link> : "Unknown Author"}</Cell>
+                <Cell>{e.evaluationCount}</Cell>
+                <Cell>{e.skillLevel}</Cell>
+                <Cell>{e.averageScore}</Cell>
+                <Cell>{e.voteCount > 0 ? <Button type="tertiary" role="button" action={props.handleShowEntryVotes} data={e.id} text={"" + e.voteCount} testId={"entry-" + e.id + "-vote-count-btn"} /> : e.voteCount}</Cell>
                 <Cell>
                   <ActionMenu actions={entryActions} />
                 </Cell>

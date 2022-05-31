@@ -3,12 +3,11 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, datePattern, kaidPattern, dateFormat, scoreChars, messageChars, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
+const { nameChars, datePattern, kaidPattern, dateFormat, messageChars, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
 
 const admin = require(process.cwd() + "/handlers/api/admin");
 const contests = require(process.cwd() + "/handlers/api/contests");
 const entries = require(process.cwd() + "/handlers/api/entries");
-const results = require(process.cwd() + "/handlers/api/results");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const messages = require(process.cwd() + "/handlers/api/messages");
 const users = require(process.cwd() + "/handlers/api/users");
@@ -674,9 +673,6 @@ router.put("/internal/entries/disqualify", routeChecks.entries.disqualify, wasVa
 router.put("/internal/entries/approve", routeChecks.entries.approve, wasValidated, entries.approve);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
-
-// Results
-router.get("/internal/results", results.get);
 
 // Contests
 router.get("/internal/contests/getContestsEvaluatedByUser", contests.getContestsEvaluatedByUser);

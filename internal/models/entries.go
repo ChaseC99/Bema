@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/util"
@@ -284,4 +285,31 @@ func GetEntriesPerLevel(ctx context.Context, contestId int) ([]*model.EntriesPer
 	}
 
 	return entriesPerLevel, nil
+}
+
+func IsEntryVotedByUser(ctx context.Context, entryId int) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil {
+		return nil, nil
+	}
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry_vote WHERE entry_id = $1 AND evaluator_id = $2", entryId, user.ID)
+
+	var count int
+	var wasVoted bool
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while determining if the user voted for an entry", err)
+	}
+
+	if count == 0 {
+		wasVoted = false
+	} else {
+		wasVoted = true
+	}
+
+	return &wasVoted, nil
 }

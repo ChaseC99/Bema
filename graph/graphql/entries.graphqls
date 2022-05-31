@@ -113,6 +113,11 @@ type Entry {
     The number of judges that voted for this entry
     """
     voteCount: Int @isAuthenticated(nullType: NULL)
+
+    """
+    Indicates whether the current user has voted for the entry
+    """
+    isVotedByUser: Boolean @isAuthenticated(nullType: NULL)
 }
 
 type EntriesPerLevel {
