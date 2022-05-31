@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import Button from "../../shared/Button";
@@ -11,14 +11,14 @@ import useAppError from "../../util/errors";
 import request from "../../util/request";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
-import { fetchEntryVotes } from "./fetchResults";
 import WinnersCard from "./WinnersCard";
 
 type EntryVote = {
-  vote_id: number
-  entry_id: number
-  nickname: string
-  feedback: string
+  id: number
+  user: {
+    nickname: string
+  }
+  reason: string
 }
 
 export type Entry = {
@@ -34,6 +34,7 @@ export type Entry = {
   averageScore: number
   voteCount: number
   isVotedByUser: boolean
+  judgeVotes: EntryVote[]
 }
 
 type GetContestResponse = {
@@ -104,6 +105,25 @@ const GET_ENTRIES_BY_AVG_SCORE = gql`
   }
 `;
 
+type GetEntryVotesResponse = {
+  entry: Entry
+}
+
+const GET_ENTRY_VOTES = gql`
+  query GetEntryVotes($entryId: ID!) {
+    entry(id: $entryId) {
+      id
+      judgeVotes {
+        id
+        user {
+          nickname
+        }
+        reason
+      }
+    }
+  }
+`;
+
 
 function Results() {
   const { state } = useAppState();
@@ -114,7 +134,6 @@ function Results() {
   const [deleteVoteEntryId, setDeleteVoteEntryId] = useState<string | null>(null);
   const [voteForEntryId, setVoteForEntryId] = useState<string | null>(null);
   const [showVotesForEntryId, setShowVotesForEntryId] = useState<string | null>(null);
-  const [entryVotes, setEntryVotes] = useState<EntryVote[]>([]);
 
   const { loading: contestIsLoading, data: contestData, refetch: refetchContest } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -137,6 +156,8 @@ function Results() {
     onError: handleGQLError
   });
 
+  const [fetchEntryVotes, { loading: entryVotesIsLoading, data: entryVotesData }] = useLazyQuery<GetEntryVotesResponse>(GET_ENTRY_VOTES, { onError: handleGQLError });
+
   const showDeleteWinnerModal = (id: string) => {
     setDeleteWinnerId(id);
   }
@@ -155,11 +176,13 @@ function Results() {
   }
 
   const showVotesModal = (id: string) => {
-    fetchEntryVotes(parseInt(id))
-      .then((data) => {
-        setShowVotesForEntryId(id);
-        setEntryVotes(data);
-      })
+    fetchEntryVotes({
+      variables: {
+        entryId: id
+      }
+    });
+
+    setShowVotesForEntryId(id);
   }
 
   const hideVotesModal = () => {
@@ -199,6 +222,11 @@ function Results() {
     });
 
     refetchEntries();
+    fetchEntryVotes({
+      variables: {
+        entryId: entryId
+      }
+    })
     hideConfirmRemoveVoteModal();
   }
 
@@ -265,17 +293,20 @@ function Results() {
 
       {showVotesForEntryId &&
         <InfoModal title={"Votes for Entry #" + showVotesForEntryId} handleClose={hideVotesModal}>
-          {entryVotes.map((e) => {
+          {entryVotesData ? entryVotesData.entry.judgeVotes.map((e) => {
             return (
-              <div style={{ marginBottom: "30px" }} key={"vote-" + e.vote_id}>
+              <div style={{ marginBottom: "30px" }} key={"vote-" + e.id}>
                 <span>
-                  <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.nickname}</h4>
-                  {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(e.entry_id, e.vote_id)} text="Delete" destructive />}
+                  <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.user.nickname}</h4>
+                  {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(parseInt(showVotesForEntryId), e.id)} text="Delete" destructive />}
                 </span>
-                <p>{e.feedback}</p>
+                <p>{e.reason}</p>
               </div>
             );
-          })}
+          })
+          :
+            <LoadingSpinner size="MEDIUM" />
+          }
         </InfoModal>
       }
 
