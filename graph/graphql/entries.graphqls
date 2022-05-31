@@ -5,6 +5,11 @@ extend type Query {
     entries(contestId: ID!): [Entry!]!
 
     """
+    A single entry
+    """
+    entry(id: ID!): Entry
+
+    """
     A list of flagged entries
     """
     flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
@@ -57,7 +62,7 @@ type Entry {
     """
     The skill level assigned to the entry
     """
-    skillLevel: String @isAuthenticated(nullType: NULL)
+    skillLevel: String
 
     """
     The number of votes the entry received on KA
@@ -118,8 +123,36 @@ type Entry {
     Indicates whether the current user has voted for the entry
     """
     isVotedByUser: Boolean @isAuthenticated(nullType: NULL)
+
+    """
+    A list of judge votes for the entry
+    """
+    judgeVotes: [EntryVote!]! @isAuthenticated(nullType: EMPTY_ENTRY_VOTE_ARRAY)
 }
 
+"""
+A judge vote submitted for an entry
+"""
+type EntryVote {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The user that voted for the entry
+    """
+    user: User!
+
+    """
+    The reason the user likes the entry
+    """
+    reason: String!
+}
+
+"""
+A skill bracket and its respective entry count
+"""
 type EntriesPerLevel {
     """
     The name of the skill bracket

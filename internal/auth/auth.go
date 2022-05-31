@@ -291,6 +291,8 @@ func getEmptyArray(nullType model.NullType) interface{} {
 		return []*model.Contestant{}
 	case model.NullTypeEmptyTaskArray:
 		return []*model.Task{}
+	case model.NullTypeEmptyEntryVoteArray:
+		return []*model.EntryVote{}
 	default:
 		return nil
 	}

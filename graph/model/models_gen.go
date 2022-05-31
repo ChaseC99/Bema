@@ -64,6 +64,7 @@ type Contestant struct {
 	ContestCount int `json:"contestCount"`
 }
 
+// A skill bracket and its respective entry count
 type EntriesPerLevel struct {
 	// The name of the skill bracket
 	Level string `json:"level"`
@@ -111,6 +112,18 @@ type Entry struct {
 	VoteCount *int `json:"voteCount"`
 	// Indicates whether the current user has voted for the entry
 	IsVotedByUser *bool `json:"isVotedByUser"`
+	// A list of judge votes for the entry
+	JudgeVotes []*EntryVote `json:"judgeVotes"`
+}
+
+// A judge vote submitted for an entry
+type EntryVote struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The user that voted for the entry
+	User *User `json:"user"`
+	// The reason the user likes the entry
+	Reason string `json:"reason"`
 }
 
 // A logged application error
@@ -291,6 +304,7 @@ const (
 	NullTypeEmptyEntryArray           NullType = "EMPTY_ENTRY_ARRAY"
 	NullTypeEmptyContestantArray      NullType = "EMPTY_CONTESTANT_ARRAY"
 	NullTypeEmptyTaskArray            NullType = "EMPTY_TASK_ARRAY"
+	NullTypeEmptyEntryVoteArray       NullType = "EMPTY_ENTRY_VOTE_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -303,12 +317,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyEntryArray,
 	NullTypeEmptyContestantArray,
 	NullTypeEmptyTaskArray,
+	NullTypeEmptyEntryVoteArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeEmptyEntryVoteArray, NullTypeNull:
 		return true
 	}
 	return false

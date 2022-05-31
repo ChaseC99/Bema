@@ -36,6 +36,14 @@ func (r *entryResolver) Author(ctx context.Context, obj *model.Entry) (*model.Co
 }
 
 func (r *entryResolver) SkillLevel(ctx context.Context, obj *model.Entry) (*string, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		if obj.IsWinner == true {
+			return obj.SkillLevel, nil
+		}
+		return nil, nil
+	}
+
 	return obj.SkillLevel, nil
 }
 
@@ -91,12 +99,39 @@ func (r *entryResolver) IsVotedByUser(ctx context.Context, obj *model.Entry) (*b
 	return wasVoted, nil
 }
 
+func (r *entryResolver) JudgeVotes(ctx context.Context, obj *model.Entry) ([]*model.EntryVote, error) {
+	votes, err := models.GetEntryVotes(ctx, obj.ID)
+	if err != nil {
+		return []*model.EntryVote{}, err
+	}
+	return votes, nil
+}
+
+func (r *entryVoteResolver) User(ctx context.Context, obj *model.EntryVote) (*model.User, error) {
+	if obj.User != nil {
+		user, err := models.GetUserById(ctx, obj.User.ID)
+		if err != nil {
+			return nil, err
+		}
+		return user, nil
+	}
+	return nil, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
 		return []*model.Entry{}, err
 	}
 	return entries, nil
+}
+
+func (r *queryResolver) Entry(ctx context.Context, id int) (*model.Entry, error) {
+	entry, err := models.GetEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
 }
 
 func (r *queryResolver) FlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
@@ -135,4 +170,8 @@ func (r *queryResolver) EntriesPerLevel(ctx context.Context, contestID int) ([]*
 // Entry returns generated.EntryResolver implementation.
 func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 
+// EntryVote returns generated.EntryVoteResolver implementation.
+func (r *Resolver) EntryVote() generated.EntryVoteResolver { return &entryVoteResolver{r} }
+
 type entryResolver struct{ *Resolver }
+type entryVoteResolver struct{ *Resolver }
