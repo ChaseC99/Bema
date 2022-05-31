@@ -58,7 +58,7 @@ func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, 
 func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_level, e.entry_votes, to_char(e.entry_created, $1), e.entry_height, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, e.entry_author_kaid, e.entry_level_locked, AVG(ev.creativity + ev.complexity + ev.execution + ev.interpretation) as avg_score FROM entry e INNER JOIN evaluation ev ON e.entry_id = ev.entry_id WHERE e.contest_id = $2 AND ev.evaluation_complete = true GROUP BY e.entry_id ORDER BY e.entry_level, avg_score DESC, e.entry_id ASC;", util.DisplayFancyDateFormat, contestId)
+	rows, err := db.DB.Query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_level, e.entry_votes, to_char(e.entry_created, $1), e.entry_height, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, e.entry_author_kaid, e.entry_level_locked, AVG(ev.creativity + ev.complexity + ev.execution + ev.interpretation) as avg_score FROM entry e INNER JOIN evaluation ev ON e.entry_id = ev.entry_id WHERE e.contest_id = $2 AND ev.evaluation_complete = true AND e.disqualified = false GROUP BY e.entry_id ORDER BY e.entry_level, avg_score DESC, e.entry_id ASC;", util.DisplayFancyDateFormat, contestId)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of entries.", err)
 	}
