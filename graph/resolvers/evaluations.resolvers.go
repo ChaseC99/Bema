@@ -35,7 +35,7 @@ func (r *queryResolver) Evaluations(ctx context.Context, userID int, contestID i
 		return []*model.Evaluation{}, nil
 	}
 
-	if user.ID != userID && !user.Permissions.ViewAllEvaluations {
+	if user.ID != userID && !user.Permissions.ViewAllEvaluations && !user.IsAdmin {
 		return []*model.Evaluation{}, nil
 	}
 

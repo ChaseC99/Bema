@@ -2038,7 +2038,7 @@ type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
     """
     A list of evaluations for a given user and contest
     """
-    evaluations(userId: ID!, contestId: ID!): [Evaluation!]! @isAuthenticated(nullType: EMPTY_EVALUATION_ARRAY)
+    evaluations(userId: ID!, contestId: ID!): [Evaluation]! @isAuthenticated(nullType: EMPTY_EVALUATION_ARRAY)
 }
 
 """
@@ -9725,7 +9725,7 @@ func (ec *executionContext) _Query_evaluations(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Evaluation)
 	fc.Result = res
-	return ec.marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluationᚄ(ctx, field.Selections, res)
+	return ec.marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_evaluations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -16972,7 +16972,7 @@ func (ec *executionContext) marshalNError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCou
 	return ec._Error(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Evaluation) graphql.Marshaler {
+func (ec *executionContext) marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx context.Context, sel ast.SelectionSet, v []*model.Evaluation) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -16996,7 +16996,7 @@ func (ec *executionContext) marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallen
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, sel, v[i])
+			ret[i] = ec.marshalOEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -17007,23 +17007,7 @@ func (ec *executionContext) marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallen
 	}
 	wg.Wait()
 
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
 	return ret
-}
-
-func (ec *executionContext) marshalNEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx context.Context, sel ast.SelectionSet, v *model.Evaluation) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Evaluation(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -17692,6 +17676,13 @@ func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCou
 		return graphql.Null
 	}
 	return ec._Error(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx context.Context, sel ast.SelectionSet, v *model.Evaluation) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Evaluation(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {

@@ -183,7 +183,13 @@ func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, 
 		return next(ctx)
 	}
 
-	if objType != nil && isOwner(user, obj, *objType) {
+	// Run resolver if subfield has not been fetched
+	if objType != nil && obj == nil {
+		return next(ctx)
+	}
+
+	// Allow object owners through
+	if objType != nil && obj != nil && isOwner(user, obj, *objType) {
 		return next(ctx)
 	}
 
@@ -306,6 +312,10 @@ func getEmptyArray(nullType model.NullType) interface{} {
 
 // Checks if the provided user owns the given object
 func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
+	if obj == nil {
+		return false
+	}
+
 	switch objType {
 	case model.ObjectTypeUser:
 		return obj.(*model.User).ID == user.ID
