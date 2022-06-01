@@ -270,6 +270,8 @@ func getPermissionFromEnum(user *User, enumValue string) bool {
 		return user.Permissions.ViewErrors
 	case "VIEW_JUDGING_SETTINGS":
 		return user.Permissions.ViewJudgingSettings
+	case "IS_ADMIN":
+		return user.IsAdmin
 	default:
 		return false
 	}

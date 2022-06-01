@@ -183,6 +183,22 @@ func (r *queryResolver) NextEntryToJudge(ctx context.Context) (*model.Entry, err
 	return entry, nil
 }
 
+func (r *queryResolver) NextEntryToReviewSkillLevel(ctx context.Context) (*model.Entry, error) {
+	id, err := models.GetNextEntryToReviewSkillLevel(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if id == nil {
+		return nil, nil
+	}
+
+	entry, err := r.Query().Entry(ctx, *id)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
 // Entry returns generated.EntryResolver implementation.
 func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 

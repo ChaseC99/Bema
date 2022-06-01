@@ -359,3 +359,17 @@ func GetNextEntryToJudge(ctx context.Context) (*int, error) {
 
 	return ID, nil
 }
+
+func GetNextEntryToReviewSkillLevel(ctx context.Context) (*int, error) {
+	row := db.DB.QueryRow("SELECT entry_id FROM entry WHERE entry_level_locked = false AND disqualified = false ORDER BY entry_id DESC LIMIT 1;")
+
+	var ID *int
+	if err := row.Scan(&ID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the next entry to review its skill level", err)
+	}
+
+	return ID, nil
+}

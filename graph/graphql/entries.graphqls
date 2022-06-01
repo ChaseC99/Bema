@@ -28,6 +28,11 @@ extend type Query {
     The next entry to score in the judging queue for the current user
     """
     nextEntryToJudge: Entry @hasPermission(permission: JUDGE_ENTRIES, nullType: NULL)
+
+    """
+    The next entry to review its skill level
+    """
+    nextEntryToReviewSkillLevel: Entry @hasPermission(permission: IS_ADMIN, nullType: NULL)
 }
 
 """

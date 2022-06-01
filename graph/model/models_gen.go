@@ -424,6 +424,7 @@ const (
 	PermissionViewAllUsers          Permission = "VIEW_ALL_USERS"
 	PermissionViewErrors            Permission = "VIEW_ERRORS"
 	PermissionViewJudgingSettings   Permission = "VIEW_JUDGING_SETTINGS"
+	PermissionIsAdmin               Permission = "IS_ADMIN"
 )
 
 var AllPermission = []Permission{
@@ -457,11 +458,12 @@ var AllPermission = []Permission{
 	PermissionViewAllUsers,
 	PermissionViewErrors,
 	PermissionViewJudgingSettings,
+	PermissionIsAdmin,
 }
 
 func (e Permission) IsValid() bool {
 	switch e {
-	case PermissionAddEntries, PermissionAddUsers, PermissionAssignEntryGroups, PermissionAssignEvaluatorGroups, PermissionAssumeUserIDEntities, PermissionChangeUserPasswords, PermissionDeleteAllEvaluations, PermissionDeleteAllTasks, PermissionDeleteContests, PermissionDeleteEntries, PermissionDeleteErrors, PermissionDeleteKbContent, PermissionEditAllEvaluations, PermissionEditAllTasks, PermissionEditContests, PermissionEditEntries, PermissionEditKbContent, PermissionEditUserProfiles, PermissionJudgeEntries, PermissionManageAnnouncements, PermissionManageJudgingCriteria, PermissionManageJudgingGroups, PermissionManageWinners, PermissionPublishKbContent, PermissionViewAdminStats, PermissionViewAllEvaluations, PermissionViewAllTasks, PermissionViewAllUsers, PermissionViewErrors, PermissionViewJudgingSettings:
+	case PermissionAddEntries, PermissionAddUsers, PermissionAssignEntryGroups, PermissionAssignEvaluatorGroups, PermissionAssumeUserIDEntities, PermissionChangeUserPasswords, PermissionDeleteAllEvaluations, PermissionDeleteAllTasks, PermissionDeleteContests, PermissionDeleteEntries, PermissionDeleteErrors, PermissionDeleteKbContent, PermissionEditAllEvaluations, PermissionEditAllTasks, PermissionEditContests, PermissionEditEntries, PermissionEditKbContent, PermissionEditUserProfiles, PermissionJudgeEntries, PermissionManageAnnouncements, PermissionManageJudgingCriteria, PermissionManageJudgingGroups, PermissionManageWinners, PermissionPublishKbContent, PermissionViewAdminStats, PermissionViewAllEvaluations, PermissionViewAllTasks, PermissionViewAllUsers, PermissionViewErrors, PermissionViewJudgingSettings, PermissionIsAdmin:
 		return true
 	}
 	return false
