@@ -685,7 +685,6 @@ router.put("/internal/admin/editEvaluatorGroup", routeChecks.admin.editEvaluator
 router.delete("/internal/admin/deleteEvaluatorGroup", routeChecks.admin.deleteEvaluatorGroup, wasValidated, admin.deleteEvaluatorGroup);
 
 // Entry Skill Levels
-router.get("/internal/admin/skillLevels/getNextEntryToReview", admin.getNextEntryToReview);
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Tasks

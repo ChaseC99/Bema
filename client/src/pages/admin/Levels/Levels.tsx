@@ -1,5 +1,5 @@
-import { gql, useLazyQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import Badge from "../../../shared/Badge";
 import Button from "../../../shared/Button";
 import ExternalLink from "../../../shared/ExternalLink";
@@ -10,105 +10,89 @@ import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchNextEntry } from "./fetchEntryData";
 import "./Levels.css";
-
-type Entry = {
-  contest_id: number
-  entry_author: string
-  entry_author_kaid: string
-  entry_height: number
-  entry_id: number
-  entry_kaid: string
-  entry_title: string
-  entry_url: string
-  entry_votes: number
-}
 
 type ContestantEntry = {
   id: string
   title: string
+  url: string
   contest: {
     name: string
   }
   skillLevel: string
+  averageScore: number
   isWinner: boolean
   isDisqualified: string
-  averageScore: number
-  url: string
 }
 
-type Contestant = {
+type Author = {
+  kaid: string
+  name: string
   entries: ContestantEntry[]
 }
 
-type GetContestantEntriesResponse = {
-  contestant: Contestant
+type Entry = {
+  id: string
+  title: string
+  url: string
+  kaid: string
+  author: Author
+  votes: number
+  height: number
 }
 
-const GET_CONTESTANT_ENTRIES = gql`
-  query GetContestantEntries($kaid: String!) {
-    contestant(kaid: $kaid) {
-      entries {
-        id
-        title
-        contest {
-          name
+type GetNextEntryResponse = {
+  entry: Entry
+}
+
+const GET_NEXT_ENTRY = gql`
+  query GetNextEntryToReviewLevel {
+    entry: nextEntryToReviewSkillLevel {
+      id
+      title
+      url
+      kaid
+      author {
+        kaid
+        name
+        entries {
+          id
+          title
+          url
+          contest {
+            name
+          }
+          skillLevel
+          averageScore
+          isWinner
+          isDisqualified
         }
-        skillLevel
-        isWinner
-        isDisqualified
-        averageScore
-        url
       }
+      height
+      votes
     }
   }
 `;
 
 function Levels() {
   const { handleGQLError } = useAppError();
-  const [entry, setEntry] = useState<Entry | null>(null);
-  const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
   const [showDisqualifyModal, setShowDisqualifyModal] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
-  const [getContestantEntries, { loading: contestantEntriesIsLoading, data: contestantEntriesData }] = useLazyQuery<GetContestantEntriesResponse>(GET_CONTESTANT_ENTRIES, { onError: handleGQLError });
-
-  useEffect(() => {
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (entry && entry.entry_id > 0) {
-      getContestantEntries({
-        variables: {
-          kaid: entry.entry_author_kaid
-        }
-      });
-    }
-  }, [entry, getContestantEntries]);
+  const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
 
   const handleProgramLoad = () => {
     setProgramIsLoading(false);
   }
 
   const handleFetchNextEntry = () => {
-    setEntryIsLoading(true);
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
+    fetchNextEntry();
   }
 
   const handleSetSkillLevel = async (level: string) => {
     await request("PUT", "/api/internal/admin/skillLevels/setEntrySkillLevel", {
-      entry_id: entry?.entry_id,
+      entry_id: entryData?.entry?.id,
       entry_level: level
     });
 
@@ -125,7 +109,7 @@ function Levels() {
 
   const handleDisqualify = async () => {
     await request("PUT", "/api/internal/entries/disqualify", {
-      entry_id: entry?.entry_id
+      entry_id: entryData?.entry?.id
     });
 
     closeDisqualifyModal();
@@ -142,11 +126,25 @@ function Levels() {
 
   const handleDelete = async () => {
     await request("DELETE", "/api/internal/entries", {
-      entry_id: entry?.entry_id
+      entry_id: entryData?.entry?.id
     });
 
     closeDeleteModal();
     handleFetchNextEntry();
+  }
+
+  if (!entryIsLoading && entryData?.entry === null) {
+    return (
+      <React.Fragment>
+        <AdminSidebar />
+
+        <div className="container center col-12">
+          <div className="container center col-8" style={{ flexDirection: "column", alignItems: "center" }}>
+            <h2>Woohoo! All the entries have been reviewed!</h2>
+          </div>
+        </div >
+      </React.Fragment>
+    );
   }
 
   return (
@@ -161,14 +159,14 @@ function Levels() {
           <div className="section-body">
             {entryIsLoading && <LoadingSpinner size="MEDIUM" />}
 
-            {!entryIsLoading &&
+            {(!entryIsLoading && entryData) &&
               <React.Fragment>
-                <h2 style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}><ExternalLink to={entry?.entry_url || ""}>{entry?.entry_title || ""}</ExternalLink></h2>
-                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entry?.entry_author_kaid + "/projects"}>{entry?.entry_author || ""}</ExternalLink></p>
-                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entry?.entry_votes || 0}</p>
+                <h2 style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}><ExternalLink to={entryData.entry.url}>{entryData.entry.title}</ExternalLink></h2>
+                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entryData.entry.author.kaid + "/projects"}>{entryData.entry.author.name}</ExternalLink></p>
+                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entryData.entry.votes}</p>
 
                 {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-                <ProgramEmbed programKaid={entry?.entry_url.split("/")[5] || ""} height={entry?.entry_height || 400} onLoad={handleProgramLoad} />
+                <ProgramEmbed programKaid={entryData.entry.kaid} height={entryData.entry.height} onLoad={handleProgramLoad} />
               </React.Fragment>
             }
 
@@ -186,7 +184,7 @@ function Levels() {
               </div>
             </div>
 
-            {!contestantEntriesIsLoading &&
+            {(!entryIsLoading && entryData) &&
               <Table cols={10} noCard label="Previous Submissions">
                 <TableHead>
                   <Row>
@@ -198,7 +196,7 @@ function Levels() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {contestantEntriesData ? contestantEntriesData.contestant.entries.map((e) => {
+                  {entryData.entry.author.entries.map((e) => {
                     return (
                       <Row key={e.id}>
                         <Cell>{e.id}</Cell>
@@ -212,7 +210,7 @@ function Levels() {
                         <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>
                       </Row>
                     );
-                  }) : ""}
+                  })}
                 </TableBody>
               </Table>
             }
