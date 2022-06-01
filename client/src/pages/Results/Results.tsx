@@ -293,19 +293,20 @@ function Results() {
 
       {showVotesForEntryId &&
         <InfoModal title={"Votes for Entry #" + showVotesForEntryId} handleClose={hideVotesModal}>
-          {entryVotesData ? entryVotesData.entry.judgeVotes.map((e) => {
-            return (
-              <div style={{ marginBottom: "30px" }} key={"vote-" + e.id}>
-                <span>
-                  <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.user.nickname}</h4>
-                  {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(parseInt(showVotesForEntryId), e.id)} text="Delete" destructive />}
-                </span>
-                <p>{e.reason}</p>
-              </div>
-            );
-          })
-          :
+          {entryVotesIsLoading ? 
             <LoadingSpinner size="MEDIUM" />
+            :
+            entryVotesData?.entry.judgeVotes.map((e) => {
+              return (
+                <div style={{ marginBottom: "30px" }} key={"vote-" + e.id}>
+                  <span>
+                    <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.user.nickname}</h4>
+                    {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(parseInt(showVotesForEntryId), e.id)} text="Delete" destructive />}
+                  </span>
+                  <p>{e.reason}</p>
+                </div>
+              );
+            }) || ""
           }
         </InfoModal>
       }
