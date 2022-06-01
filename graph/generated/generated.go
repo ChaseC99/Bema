@@ -208,6 +208,7 @@ type ComplexityRoot struct {
 		FlaggedEntries        func(childComplexity int) int
 		InactiveUsers         func(childComplexity int) int
 		JudgingGroup          func(childComplexity int, id int) int
+		NextEntryToJudge      func(childComplexity int) int
 		Tasks                 func(childComplexity int) int
 		User                  func(childComplexity int, id int) int
 		Users                 func(childComplexity int) int
@@ -287,6 +288,7 @@ type QueryResolver interface {
 	FlaggedEntries(ctx context.Context) ([]*model.Entry, error)
 	EntriesByAverageScore(ctx context.Context, contestID int) ([]*model.Entry, error)
 	EntriesPerLevel(ctx context.Context, contestID int) ([]*model.EntriesPerLevel, error)
+	NextEntryToJudge(ctx context.Context) (*model.Entry, error)
 	Errors(ctx context.Context) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -1226,6 +1228,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.JudgingGroup(childComplexity, args["id"].(int)), true
 
+	case "Query.nextEntryToJudge":
+		if e.complexity.Query.NextEntryToJudge == nil {
+			break
+		}
+
+		return e.complexity.Query.NextEntryToJudge(childComplexity), true
+
 	case "Query.tasks":
 		if e.complexity.Query.Tasks == nil {
 			break
@@ -1684,6 +1693,11 @@ enum ObjectType {
     A breakdown of the number of entries per skill level
     """
     entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
+
+    """
+    The next entry to score in the judging queue for the current user
+    """
+    nextEntryToJudge: Entry @hasPermission(permission: JUDGE_ENTRIES, nullType: NULL)
 }
 
 """
@@ -8325,6 +8339,117 @@ func (ec *executionContext) fieldContext_Query_entriesPerLevel(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_nextEntryToJudge(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_nextEntryToJudge(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().NextEntryToJudge(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "JUDGE_ENTRIES")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Entry); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_nextEntryToJudge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
+			case "judgeVotes":
+				return ec.fieldContext_Entry_judgeVotes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_errors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_errors(ctx, field)
 	if err != nil {
@@ -14191,6 +14316,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "nextEntryToJudge":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_nextEntryToJudge(ctx, field)
 				return res
 			}
 

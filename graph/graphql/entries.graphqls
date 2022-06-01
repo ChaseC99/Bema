@@ -23,6 +23,11 @@ extend type Query {
     A breakdown of the number of entries per skill level
     """
     entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
+
+    """
+    The next entry to score in the judging queue for the current user
+    """
+    nextEntryToJudge: Entry @hasPermission(permission: JUDGE_ENTRIES, nullType: NULL)
 }
 
 """

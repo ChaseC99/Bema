@@ -167,6 +167,19 @@ func (r *queryResolver) EntriesPerLevel(ctx context.Context, contestID int) ([]*
 	return entriesPerLevel, nil
 }
 
+func (r *queryResolver) NextEntryToJudge(ctx context.Context) (*model.Entry, error) {
+	id, err := models.GetNextEntryToJudge(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	entry, err := r.Query().Entry(ctx, *id)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
 // Entry returns generated.EntryResolver implementation.
 func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 

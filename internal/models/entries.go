@@ -335,3 +335,23 @@ func IsEntryVotedByUser(ctx context.Context, entryId int) (*bool, error) {
 
 	return &wasVoted, nil
 }
+
+func GetNextEntryToJudge(ctx context.Context) (*int, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
+	row := db.DB.QueryRow("SELECT * FROM get_entry_and_create_placeholder($1)", user.ID)
+
+	var ID *int
+	var url, title, height string
+	if err := row.Scan(&ID, &url, &title, &height); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the next entry to judge", err)
+	}
+
+	return ID, nil
+}
