@@ -146,6 +146,30 @@ type Error struct {
 	User *User `json:"user"`
 }
 
+// An evaluation of an entry
+type Evaluation struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The entry the evaluation is for
+	Entry *Entry `json:"entry"`
+	// The user that submitted the evaluation
+	User *User `json:"user"`
+	// The creativity score
+	Creativity float64 `json:"creativity"`
+	// The complexity score
+	Complexity float64 `json:"complexity"`
+	// The execution score
+	Execution float64 `json:"execution"`
+	// The interpretation score
+	Interpretation float64 `json:"interpretation"`
+	// The total score
+	Total float64 `json:"total"`
+	// The suggested skill level of the entry
+	SkillLevel string `json:"skillLevel"`
+	// The timestamp of when the evaluation was submitted
+	Created string `json:"created"`
+}
+
 // The full profile of a logged in user
 type FullUserProfile struct {
 	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
@@ -306,6 +330,7 @@ const (
 	NullTypeEmptyTaskArray            NullType = "EMPTY_TASK_ARRAY"
 	NullTypeEmptyEntryVoteArray       NullType = "EMPTY_ENTRY_VOTE_ARRAY"
 	NullTypeEmptyContestArray         NullType = "EMPTY_CONTEST_ARRAY"
+	NullTypeEmptyEvaluationArray      NullType = "EMPTY_EVALUATION_ARRAY"
 	NullTypeNull                      NullType = "NULL"
 )
 
@@ -320,12 +345,13 @@ var AllNullType = []NullType{
 	NullTypeEmptyTaskArray,
 	NullTypeEmptyEntryVoteArray,
 	NullTypeEmptyContestArray,
+	NullTypeEmptyEvaluationArray,
 	NullTypeNull,
 }
 
 func (e NullType) IsValid() bool {
 	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeEmptyEntryVoteArray, NullTypeEmptyContestArray, NullTypeNull:
+	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeEmptyEntryVoteArray, NullTypeEmptyContestArray, NullTypeEmptyEvaluationArray, NullTypeNull:
 		return true
 	}
 	return false
@@ -355,18 +381,20 @@ func (e NullType) MarshalGQL(w io.Writer) {
 type ObjectType string
 
 const (
-	ObjectTypeUser ObjectType = "USER"
-	ObjectTypeTask ObjectType = "TASK"
+	ObjectTypeUser       ObjectType = "USER"
+	ObjectTypeTask       ObjectType = "TASK"
+	ObjectTypeEvaluation ObjectType = "EVALUATION"
 )
 
 var AllObjectType = []ObjectType{
 	ObjectTypeUser,
 	ObjectTypeTask,
+	ObjectTypeEvaluation,
 }
 
 func (e ObjectType) IsValid() bool {
 	switch e {
-	case ObjectTypeUser, ObjectTypeTask:
+	case ObjectTypeUser, ObjectTypeTask, ObjectTypeEvaluation:
 		return true
 	}
 	return false

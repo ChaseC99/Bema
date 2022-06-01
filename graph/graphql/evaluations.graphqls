@@ -1,0 +1,61 @@
+extend type Query {
+    """
+    A list of evaluations for a given user and contest
+    """
+    evaluations(userId: ID!, contestId: ID!): [Evaluation!]! @isAuthenticated(nullType: EMPTY_EVALUATION_ARRAY)
+}
+
+"""
+An evaluation of an entry
+"""
+type Evaluation @hasPermission(permission: VIEW_ALL_EVALUATIONS, nullType: NULL, objType: EVALUATION) {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The entry the evaluation is for
+    """
+    entry: Entry!
+
+    """
+    The user that submitted the evaluation
+    """
+    user: User!
+
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The total score
+    """
+    total: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
+
+    """
+    The timestamp of when the evaluation was submitted
+    """
+    created: String!
+}

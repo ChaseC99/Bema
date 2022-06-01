@@ -11,7 +11,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
-func newEntry() model.Entry {
+func NewEntryModel() model.Entry {
 	var entry model.Entry
 
 	entry.Author = &model.Contestant{}
@@ -30,7 +30,7 @@ func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, 
 	}
 
 	for rows.Next() {
-		entry := newEntry()
+		entry := NewEntryModel()
 		var groupId *int
 		var authorKaid *string
 
@@ -65,7 +65,7 @@ func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entr
 	}
 
 	for rows.Next() {
-		entry := newEntry()
+		entry := NewEntryModel()
 		var groupId *int
 		var authorKaid *string
 
@@ -94,7 +94,7 @@ func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entr
 func GetEntryById(ctx context.Context, id int) (*model.Entry, error) {
 	row := db.DB.QueryRow("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_id = $2;", util.DisplayFancyDateFormat, id)
 
-	entry := newEntry()
+	entry := NewEntryModel()
 	var groupId *int
 	var authorKaid *string
 	if err := row.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
@@ -128,7 +128,7 @@ func GetEntriesByContestantKaid(ctx context.Context, contestantKaid string) ([]*
 	}
 
 	for rows.Next() {
-		entry := newEntry()
+		entry := NewEntryModel()
 		var groupId *int
 		var authorKaid *string
 		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
@@ -162,7 +162,7 @@ func GetWinningEntriesByContestId(ctx context.Context, contestId int) ([]*model.
 	}
 
 	for rows.Next() {
-		entry := newEntry()
+		entry := NewEntryModel()
 
 		var groupId *int
 		var authorKaid *string
@@ -212,7 +212,7 @@ func GetFlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
 	}
 
 	for rows.Next() {
-		entry := newEntry()
+		entry := NewEntryModel()
 		var groupId *int
 		var authorKaid *string
 

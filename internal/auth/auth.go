@@ -297,6 +297,8 @@ func getEmptyArray(nullType model.NullType) interface{} {
 		return []*model.EntryVote{}
 	case model.NullTypeEmptyContestArray:
 		return []*model.Contest{}
+	case model.NullTypeEmptyEvaluationArray:
+		return []*model.Evaluation{}
 	default:
 		return nil
 	}
@@ -309,6 +311,8 @@ func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 		return obj.(*model.User).ID == user.ID
 	case model.ObjectTypeTask:
 		return obj.(*model.Task).AssignedUser.ID == user.ID
+	case model.ObjectTypeEvaluation:
+		return obj.(*model.Evaluation).User.ID == user.ID
 	default:
 		return false
 	}

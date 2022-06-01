@@ -132,3 +132,9 @@ models:
     fields:
       assignedUser:
         resolver: true
+  Evaluation:
+    fields:
+      user:
+        resolver: true
+      entry:
+        resolver: true

@@ -57,10 +57,12 @@ enum NullType {
     EMPTY_TASK_ARRAY
     EMPTY_ENTRY_VOTE_ARRAY
     EMPTY_CONTEST_ARRAY
+    EMPTY_EVALUATION_ARRAY
     NULL
 }
 
 enum ObjectType {
     USER
     TASK
+    EVALUATION
 }
