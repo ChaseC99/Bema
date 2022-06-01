@@ -131,6 +131,7 @@ type ComplexityRoot struct {
 	}
 
 	Evaluation struct {
+		CanEdit        func(childComplexity int) int
 		Complexity     func(childComplexity int) int
 		Created        func(childComplexity int) int
 		Creativity     func(childComplexity int) int
@@ -744,6 +745,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Error.User(childComplexity), true
+
+	case "Evaluation.canEdit":
+		if e.complexity.Evaluation.CanEdit == nil {
+			break
+		}
+
+		return e.complexity.Evaluation.CanEdit(childComplexity), true
 
 	case "Evaluation.complexity":
 		if e.complexity.Evaluation.Complexity == nil {
@@ -2094,6 +2102,11 @@ type Evaluation @hasPermission(permission: VIEW_ALL_EVALUATIONS, nullType: NULL,
     The timestamp of when the evaluation was submitted
     """
     created: String!
+
+    """
+    Indicates whether the current user can edit the evaluation
+    """
+    canEdit: Boolean!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/judging.graphqls", Input: `extend type Query {
     """
@@ -6289,6 +6302,50 @@ func (ec *executionContext) fieldContext_Evaluation_created(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Evaluation_canEdit(ctx context.Context, field graphql.CollectedField, obj *model.Evaluation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Evaluation_canEdit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanEdit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Evaluation_canEdit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evaluation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FullUserProfile_isAdmin(ctx context.Context, field graphql.CollectedField, obj *model.FullUserProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FullUserProfile_isAdmin(ctx, field)
 	if err != nil {
@@ -9756,6 +9813,8 @@ func (ec *executionContext) fieldContext_Query_evaluations(ctx context.Context, 
 				return ec.fieldContext_Evaluation_skillLevel(ctx, field)
 			case "created":
 				return ec.fieldContext_Evaluation_created(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_Evaluation_canEdit(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Evaluation", field.Name)
 		},
@@ -14897,6 +14956,13 @@ func (ec *executionContext) _Evaluation(ctx context.Context, sel ast.SelectionSe
 		case "created":
 
 			out.Values[i] = ec._Evaluation_created(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "canEdit":
+
+			out.Values[i] = ec._Evaluation_canEdit(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

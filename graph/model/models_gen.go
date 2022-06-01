@@ -168,6 +168,8 @@ type Evaluation struct {
 	SkillLevel string `json:"skillLevel"`
 	// The timestamp of when the evaluation was submitted
 	Created string `json:"created"`
+	// Indicates whether the current user can edit the evaluation
+	CanEdit bool `json:"canEdit"`
 }
 
 // The full profile of a logged in user

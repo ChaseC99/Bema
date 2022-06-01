@@ -58,4 +58,9 @@ type Evaluation @hasPermission(permission: VIEW_ALL_EVALUATIONS, nullType: NULL,
     The timestamp of when the evaluation was submitted
     """
     created: String!
+
+    """
+    Indicates whether the current user can edit the evaluation
+    """
+    canEdit: Boolean!
 }
