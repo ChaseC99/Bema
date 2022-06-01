@@ -172,6 +172,9 @@ func (r *queryResolver) NextEntryToJudge(ctx context.Context) (*model.Entry, err
 	if err != nil {
 		return nil, err
 	}
+	if id == nil {
+		return nil, nil
+	}
 
 	entry, err := r.Query().Entry(ctx, *id)
 	if err != nil {

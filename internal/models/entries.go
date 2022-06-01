@@ -345,12 +345,16 @@ func GetNextEntryToJudge(ctx context.Context) (*int, error) {
 	row := db.DB.QueryRow("SELECT * FROM get_entry_and_create_placeholder($1)", user.ID)
 
 	var ID *int
-	var url, title, height string
+	var url, title, height *string
 	if err := row.Scan(&ID, &url, &title, &height); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the next entry to judge", err)
+	}
+
+	if *ID == -1 {
+		return nil, nil
 	}
 
 	return ID, nil
