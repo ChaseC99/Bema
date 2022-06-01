@@ -38,7 +38,7 @@ func (r *entryResolver) Author(ctx context.Context, obj *model.Entry) (*model.Co
 func (r *entryResolver) SkillLevel(ctx context.Context, obj *model.Entry) (*string, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {
-		if obj.IsWinner == true {
+		if obj.IsWinner {
 			return obj.SkillLevel, nil
 		}
 		return nil, nil
