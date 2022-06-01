@@ -51,6 +51,14 @@ func (r *queryResolver) CurrentContest(ctx context.Context) (*model.Contest, err
 	return contest, nil
 }
 
+func (r *queryResolver) ContestsEvaluatedByUser(ctx context.Context, id int) ([]*model.Contest, error) {
+	contest, err := models.GetContestsEvaluatedByUser(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return contest, nil
+}
+
 // Contest returns generated.ContestResolver implementation.
 func (r *Resolver) Contest() generated.ContestResolver { return &contestResolver{r} }
 

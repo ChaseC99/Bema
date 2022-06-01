@@ -1,18 +1,23 @@
 extend type Query {
-    """
-    A list of all contests
-    """
-    contests: [Contest!]!
+  """
+  A list of all contests
+  """
+  contests: [Contest!]!
 
-    """
-    A single contest
-    """
-    contest(id: ID!): Contest
+  """
+  A single contest
+  """
+  contest(id: ID!): Contest
 
-    """
-    The most recent contest
-    """
-    currentContest: Contest
+  """
+  The most recent contest
+  """
+  currentContest: Contest
+
+  """
+  A list of contests for which the user has scored entries
+  """
+  contestsEvaluatedByUser(id: ID!): [Contest!]! @isAuthenticated(nullType: EMPTY_CONTEST_ARRAY)
 }
 
 """

@@ -56,3 +56,22 @@ func GetCurrentContest(ctx context.Context) (*model.Contest, error) {
 
 	return c, nil
 }
+
+func GetContestsEvaluatedByUser(ctx context.Context, userId int) ([]*model.Contest, error) {
+	contests := []*model.Contest{}
+
+	rows, err := db.DB.Query("SELECT c.contest_id, c.contest_name, c.contest_url, c.contest_author, to_char(c.date_start, $1) as date_start, to_char(c.date_end, $1) as date_end, c.current, c.voting_enabled, c.badge_name, c.badge_image_url FROM contest c INNER JOIN entry en ON en.contest_id = c.contest_id INNER JOIN evaluation ev ON ev.entry_id = en.entry_id WHERE ev.evaluator_id = $2 AND ev.evaluation_complete = true GROUP BY c.contest_id ORDER BY c.contest_id DESC;", util.DisplayDateFormat, userId)
+	if err != nil {
+		return []*model.Contest{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of contests evaluated by the user", err)
+	}
+
+	for rows.Next() {
+		var c model.Contest
+		if err := rows.Scan(&c.ID, &c.Name, &c.URL, &c.Author, &c.StartDate, &c.EndDate, &c.IsCurrent, &c.IsVotingEnabled, &c.BadgeSlug, &c.BadgeImageURL); err != nil {
+			return []*model.Contest{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of contests evaluated by the user", err)
+		}
+		contests = append(contests, &c)
+	}
+
+	return contests, nil
+}
