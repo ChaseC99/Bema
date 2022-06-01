@@ -673,7 +673,6 @@ router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroup
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
 
 // Contests
-router.get("/internal/contests/getContestsEvaluatedByUser", contests.getContestsEvaluatedByUser);
 router.post("/internal/contests", routeChecks.contests.add, wasValidated, contests.add);
 router.put("/internal/contests", routeChecks.contests.edit, wasValidated, contests.edit);
 router.delete("/internal/contests", routeChecks.contests.delete, wasValidated, contests.delete);

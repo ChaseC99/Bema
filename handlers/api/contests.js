@@ -6,33 +6,6 @@ const {
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 
-exports.getContestsEvaluatedByUser = (request, response, next) => {
-  try {
-    let userId = parseInt(request.query.userId);
-
-    if (userId) {
-      if (request.decodedToken) {
-        if (request.decodedToken.evaluator_id === userId || request.decodedToken.permissions.view_all_evaluations || request.decodedToken.is_admin) {
-          return db.query("SELECT c.contest_id, c.contest_name FROM contest c INNER JOIN entry en ON en.contest_id = c.contest_id INNER JOIN evaluation ev ON ev.entry_id = en.entry_id WHERE ev.evaluator_id = $1 AND ev.evaluation_complete = true GROUP BY c.contest_id ORDER BY c.contest_id DESC;", [userId], res => {
-            if (res.error) {
-              return handleNext(next, 400, "There was a problem getting the contests this user has evaluated.", res.error);
-            }
-            response.json({
-              is_admin: request.decodedToken.is_admin,
-              contests: res.rows
-            });
-          });
-        }
-        return handleNext(next, 403, "You're not authorized to access the contests evaluated by another user.");
-      }
-      return handleNext(next, 401, "You must log in to retrieving this information.");
-    }
-    return handleNext(next, 400, "Invalid Input: userId is required.", new Error("userId has not been specified."));
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving the contests evaluated by this user.", error);
-  }
-};
-
 exports.add = (request, response, next) => {
   try {
     if (request.decodedToken) {

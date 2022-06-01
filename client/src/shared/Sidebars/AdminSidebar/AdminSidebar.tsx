@@ -1,15 +1,13 @@
 import useAppState from "../../../state/useAppState";
 import SidebarItem from "../../SidebarItem/SidebarItem";
 import "../sidebars.css";
-import { useEffect, useState } from "react";
-import { fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import LoadingSpinner from "../../LoadingSpinner/LoadingSpinner";
 import { gql, useQuery } from "@apollo/client";
 import useAppError from "../../../util/errors";
 
 type GetCurrentContestResponse = {
   currentContest: {
-    id: number
+    id: string
   }
 }
 
@@ -21,29 +19,34 @@ const GET_CURRENT_CONTEST = gql`
   }
 `;
 
+type GetContestsEvaluatedByUserResponse = {
+  contests: {
+    id: string
+  }[]
+}
+
+const GET_CONTESTS_EVALUATED_BY_USER = gql`
+  query GetContestsEvaluatedByUser($userId: ID!) {
+    contests: contestsEvaluatedByUser(id: $userId) {
+      id
+    }
+  }
+`;
+
 function AdminSidebar() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const permissions = state.user?.permissions;
-  const [evaluationContestId, setEvaluationContestId] = useState<number>();
-  const [evaluationContestIdLoading, setEvaluationContestIdLoading] = useState<boolean>(false);
 
   const { loading: currentContestIsLoading, data: currentContestData } = useQuery<GetCurrentContestResponse>(GET_CURRENT_CONTEST, { onError: handleGQLError });
+  const { loading: contestsEvaluatedByUserIsLoading, data: contestsEvaluatedByUserData } = useQuery<GetContestsEvaluatedByUserResponse>(GET_CONTESTS_EVALUATED_BY_USER, { 
+    variables: {
+      userId: state.user?.id || 0
+    },
+    onError: handleGQLError 
+  });
 
-  useEffect(() => {
-    if (state.loggedIn && state.user) {
-      fetchLastContestEvaluatedByUser(state.user.id)
-        .then(id => {
-          setEvaluationContestId(id);
-          setEvaluationContestIdLoading(false);
-        });
-    }
-    else {
-      setEvaluationContestIdLoading(false);
-    }
-  }, [state.loggedIn, state.user]);
-
-  if (currentContestIsLoading || evaluationContestIdLoading) {
+  if (currentContestIsLoading || contestsEvaluatedByUserIsLoading) {
     return (
       <div className="sidebar">
         <LoadingSpinner size="SMALL" testId="sidebar-spinner" />
@@ -61,9 +64,9 @@ function AdminSidebar() {
 
         {state.loggedIn && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
 
-        {state.loggedIn && <SidebarItem text="Evaluations"
-          to={evaluationContestId ?
-            ("/admin/evaluations/" + state.user?.id + "/" + evaluationContestId) :
+        {state.loggedIn && contestsEvaluatedByUserData && <SidebarItem text="Evaluations"
+          to={contestsEvaluatedByUserData.contests.length > 0 ?
+            ("/admin/evaluations/" + state.user?.id + "/" + contestsEvaluatedByUserData.contests[0].id) :
             ("/admin/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)}
           testId="sidebar-evaluations" />}
 

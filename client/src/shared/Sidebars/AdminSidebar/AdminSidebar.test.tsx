@@ -1,7 +1,6 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import useAppState from "../../../state/useAppState";
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from "../../../util/testing-utils";
-import { fetchLastContestEvaluatedByUser } from "./fetchSidebarData";
 import AdminSidebar from "./AdminSidebar";
 
 jest.mock("../../state/useAppState", () => {
@@ -11,22 +10,6 @@ jest.mock("../../state/useAppState", () => {
   }
 });
 const useAppStateMock = useAppState as unknown as jest.Mock<Partial<ReturnType<typeof useAppState>>>;
-
-jest.mock("./fetchSidebarData.tsx", () => {
-  return {
-    __esModule: true,
-    fetchCurrentContest: jest.fn(),
-    fetchLastContestEvaluatedByUser: jest.fn()
-  }
-});
-const fetchLastContestEvaluatedByUserMock = fetchLastContestEvaluatedByUser as unknown as jest.Mock<Partial<ReturnType<typeof fetchLastContestEvaluatedByUser>>>;
-
-
-beforeEach(() => {
-  fetchLastContestEvaluatedByUserMock.mockReturnValue(new Promise(resolve => {
-    resolve(2);
-  }));
-});
 
 test("renders the info section correctly for public users", async () => {
   useAppStateMock.mockReturnValue({
