@@ -16,6 +16,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 
 	_ "github.com/lib/pq"
 )
@@ -43,6 +44,11 @@ func main() {
 
 	// Create router
 	router := chi.NewRouter()
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"https://www.kachallengecouncil.org", "https://bema-development.herokuapp.com/", "https://studio.apollographql.com", "http://localhost:6001"},
+		AllowCredentials: true,
+		Debug:            false,
+	}).Handler)
 	router.Use(auth.Middleware(nil))
 	router.Use(errors.Middleware(nil))
 
