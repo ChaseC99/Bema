@@ -145,31 +145,4 @@ exports.deleteJudgingCriteria = (request, response, next) => {
   }
 }
 
-exports.getNextEntry = (request, response, next) => {
-  try {
-    if (request.decodedToken && (request.decodedToken.permissions.judge_entries || request.decodedToken.is_admin)) {
-      return db.query("SELECT * FROM get_entry_and_create_placeholder($1)", [request.decodedToken.evaluator_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting an entry");
-        }
-        return response.json({
-          entry: res.rows[0]
-        });
-      });
-    }
-    // Instead, show the public version with dumby data.
-    return response.json({
-      entry: {
-        o_entry_id: 1316,
-        o_entry_url: 'https://www.khanacademy.org/computer-programming/example-entry/6586620957786112',
-        o_entry_title: 'Example entry',
-        o_entry_height: 400
-      }
-    });
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while getting the next entry to judge", error);
-  }
-}
-
-
 module.exports = exports;

@@ -656,7 +656,6 @@ router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messag
 router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
 
 // Judging
-router.get("/internal/judging/getNextEntry", judging.getNextEntry);
 router.post("/internal/judging/criteria", routeChecks.judging.addCriteria, wasValidated, judging.addJudgingCriteria);
 router.put("/internal/judging/criteria", routeChecks.judging.editCriteria, wasValidated, judging.editJudgingCriteria);
 router.delete("/internal/judging/criteria", routeChecks.judging.deleteCriteria, wasValidated, judging.deleteJudgingCriteria);

@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../shared/Button";
 import { Form } from "../../shared/Forms";
@@ -9,13 +9,12 @@ import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
 import request from "../../util/request";
-import { fetchNextEntry } from "./fetchData";
 
 type Entry = {
-  o_entry_height: number
-  o_entry_id: number
-  o_entry_title: string
-  o_entry_url: "https://www.khanacademy.org/computer-programming/spin-off-of-contest-animation/4554572617007104"
+  id: string
+  title: string
+  height: number
+  kaid: string
 }
 
 type CurrentContest = {
@@ -31,6 +30,10 @@ type JudgingCriteria = {
 
 type GetJudgingCriteriaResponse = {
   criteria: JudgingCriteria[]
+}
+
+type GetNextEntryResponse = {
+  entry: Entry | null
 }
 
 const GET_CURRENT_CONTEST = gql`
@@ -50,28 +53,37 @@ const GET_JUDGING_CRITERIA = gql`
   }
 `;
 
+const GET_NEXT_ENTRY = gql`
+  query GetNextEntry {
+    entry: nextEntryToJudge {
+      id
+      title
+      height
+      kaid
+    }
+  }
+`;
+
+const DEFAULT_ENTRY: Entry = {
+  id: "0",
+  title: "Sample Entry",
+  kaid: "6586620957786112",
+  height: 400,
+}
+
 function Judging() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
-  const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
-  const [entry, setEntry] = useState<Entry | null>(null);
   const [showFlagEntryModal, setShowFlagEntryModal] = useState<boolean>(false);
 
   const { loading: currentContestIsLoading, data: currentContestData } = useQuery<CurrentContest>(GET_CURRENT_CONTEST, { onError: handleGQLError });
   const { loading: criteriaIsLoading, data: criteriaData } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA, { onError: handleGQLError });
-
-  useEffect(() => {
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
-  }, []);
+  const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
 
   const handleSubmit = async (values: { [name: string]: any }) => {
     await request("POST", "/api/internal/judging/submit", {
-      entry_id: entry?.o_entry_id,
+      entry_id: entryData?.entry?.id,
       creativity: values.creativity,
       complexity: values.complexity,
       quality_code: values.quality,
@@ -100,19 +112,14 @@ function Judging() {
     });
 
     closeFlagEntryModal();
-    handleFetchNextEntry();
+    fetchNextEntry();
   }
 
   const handleFetchNextEntry = () => {
-    setEntryIsLoading(true);
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
+    fetchNextEntry();
   }
 
-  if (!entryIsLoading && entry?.o_entry_id === -1) {
+  if (!entryIsLoading && state.loggedIn && entryData?.entry === null) {
     return (
       <div className="container center col-12" style={{ height: "80vh", alignItems: "center" }}>
         <div className="container center col-8" style={{ flexDirection: "column", alignItems: "center" }}>
@@ -130,15 +137,15 @@ function Judging() {
           {entryIsLoading && <LoadingSpinner size="MEDIUM" />}
           {!entryIsLoading &&
             <React.Fragment>
-              <h2 style={{ width: "100%", textAlign: "center", margin: "0" }}>{entry?.o_entry_title}</h2>
-              <p style={{ width: "100%", textAlign: "center" }}>Entry #{entry?.o_entry_id}</p>
+              <h2 style={{ width: "100%", textAlign: "center", margin: "0" }}>{entryData?.entry?.title || DEFAULT_ENTRY.title}</h2>
+              <p style={{ width: "100%", textAlign: "center" }}>Entry #{entryData?.entry?.id || DEFAULT_ENTRY.id}</p>
               {state.logged_in &&
                 <div className="container col-12" style={{ justifyContent: "flex-end", marginBottom: "24px" }}>
                   <Button type="tertiary" destructive text="Flag Entry" role="button" action={openFlagEntryModal} />
                 </div>
               }
               {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-              <ProgramEmbed programKaid={entry?.o_entry_url.split("/")[5] || ""} height={entry?.o_entry_height || 400} onLoad={handleProgramLoad} />
+              <ProgramEmbed programKaid={entryData?.entry?.kaid || DEFAULT_ENTRY.kaid} height={entryData?.entry?.height || DEFAULT_ENTRY.height} onLoad={handleProgramLoad} />
             </React.Fragment>
           }
 
@@ -239,7 +246,7 @@ function Judging() {
           handleConfirm={handleFlagEntry}
           handleCancel={closeFlagEntryModal}
           destructive
-          data={entry?.o_entry_id}
+          data={entryData?.entry?.id}
         >
           <p>Are you sure you want to flag this entry? This will remove the entry from the judging queue for all users until it has been reviewed.</p>
         </ConfirmModal>
