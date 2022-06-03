@@ -633,10 +633,6 @@ const routeChecks = {
 
 router.use(hasBody);
 
-// Docs for validation:
-// https://github.com/chriso/validator.js#validators
-router.get("/ping", admin.ping);
-
 // Winners
 router.post("/internal/winners", routeChecks.winners.add, wasValidated, winners.add);
 router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, winners.delete);
@@ -693,7 +689,6 @@ router.put("/internal/tasks/signup", routeChecks.tasks.signup, wasValidated, tas
 router.delete("/internal/tasks", routeChecks.tasks.delete, wasValidated, tasks.delete);
 
 // Evaluations
-router.get("/internal/evaluations", evaluations.get);
 router.put("/internal/evaluations", routeChecks.evaluations.edit, wasValidated, evaluations.put);
 router.delete("/internal/evaluations", routeChecks.evaluations.delete, wasValidated, evaluations.delete);
 

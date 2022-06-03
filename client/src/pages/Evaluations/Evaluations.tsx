@@ -1,8 +1,9 @@
-import { gql, useLazyQuery } from "@apollo/client";
+import { gql, useLazyQuery, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
 import ErrorPage from "../../shared/ErrorPage";
+import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import EvaluationsSidebar from "../../shared/Sidebars/EvaluationsSidebar";
@@ -10,19 +11,6 @@ import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
 import request from "../../util/request";
-import { fetchEvaluations } from "./fetchEvaluations";
-
-type Evaluation = {
-  complexity: number
-  creativity: number
-  entry_id: number
-  entry_title: string
-  entry_url: string
-  evaluation_id: number
-  evaluation_level: string
-  execution: number
-  interpretation: number
-}
 
 type User = {
   id: string
@@ -42,27 +30,61 @@ const GET_USERS = gql`
   }
 `;
 
+type Evaluation = {
+  id: string
+  entry: {
+    id: string
+    title: string
+    url: string
+  }
+  creativity: number
+  complexity: number
+  interpretation: number
+  execution: number
+  total: number
+  skillLevel: string
+  canEdit: boolean
+}
+
+type GetEvaluationsResponse = {
+  evaluations: Evaluation[]
+}
+
+const GET_EVALUATIONS = gql`
+  query GetEvaluations($userId: ID!, $contestId: ID!) {
+    evaluations(userId: $userId, contestId: $contestId) {
+      id
+      entry {
+        id
+        title
+        url
+      }
+      creativity
+      complexity
+      interpretation
+      execution
+      total
+      skillLevel
+      canEdit
+    }
+  }
+`;
+
 function Evaluations() {
   const { evaluatorId, contestId } = useParams();
   const { handleGQLError } = useAppError();
   const { state } = useAppState();
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [canEdit, setCanEdit] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
   const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
-  let hasActions = (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations);
 
   const [fetchUsers, { loading: usersIsLoading, data: usersData }] = useLazyQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
-
-  useEffect(() => {
-    fetchEvaluations(parseInt(contestId || ""), parseInt(evaluatorId || ""))
-      .then((data) => {
-        setEvaluations(data.evaluations);
-        setCanEdit(data.canEdit);
-        setIsLoading(false);
-      });
-  }, [evaluatorId, contestId]);
+  const { loading: evaluationsIsLoading, data: evaluationsData, refetch: refetchEvaluations } = useQuery<GetEvaluationsResponse>(GET_EVALUATIONS, {
+    variables: {
+      userId: evaluatorId,
+      contestId: contestId
+    },
+    onError: handleGQLError
+  });
 
   useEffect(() => {
     if (state.is_admin || state.user?.permissions.view_all_evaluations) {
@@ -79,8 +101,8 @@ function Evaluations() {
     return null;
   }
 
-  const openEditEvaluationModal = (evalId: number) => {
-    const evaluation = evaluations.find((e) => e.evaluation_id === evalId) || null;
+  const openEditEvaluationModal = (evalId: string) => {
+    const evaluation = evaluationsData?.evaluations.find((e) => e.id === evalId) || null;
     setEditEvaluation(evaluation);
   }
 
@@ -90,8 +112,8 @@ function Evaluations() {
 
   const handleEditEvaluation = async (values: { [name: string]: any }) => {
     await request("PUT", "/api/internal/evaluations", {
-      edit_evaluation_id: editEvaluation?.evaluation_id,
-      edit_entry_id: editEvaluation?.entry_id,
+      edit_evaluation_id: editEvaluation?.id,
+      edit_entry_id: editEvaluation?.entry.id,
       edit_creativity: values.creativity,
       edit_complexity: values.complexity,
       edit_execution: values.quality,
@@ -99,18 +121,7 @@ function Evaluations() {
       edit_evaluation_level: values.skill_level
     });
 
-    const newEvaluations = [...evaluations];
-    for (let i = 0; i < newEvaluations.length; i++) {
-      if (newEvaluations[i].evaluation_id === editEvaluation?.evaluation_id) {
-        newEvaluations[i].creativity = parseInt(values.creativity);
-        newEvaluations[i].complexity = parseInt(values.complexity);
-        newEvaluations[i].execution = parseInt(values.quality);
-        newEvaluations[i].interpretation = parseInt(values.interpretation);
-        newEvaluations[i].evaluation_level = values.skill_level;
-        break;
-      }
-    }
-    setEvaluations(newEvaluations);
+    refetchEvaluations();
     closeEditEvaluatioinModal();
   }
 
@@ -127,18 +138,16 @@ function Evaluations() {
       evaluation_id: evalId
     });
 
-    const newEvaluations = evaluations.filter((e) => e.evaluation_id !== evalId);
-    setEvaluations(newEvaluations);
-
+    refetchEvaluations();
     closeDeleteEvaluatioinModal();
   }
 
-  if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id) && !state.user?.permissions.view_all_evaluations) {
+  if ((evaluatorId !== state.user?.evaluator_id) && !state.user?.permissions.view_all_evaluations) {
     return (
       <ErrorPage type="NO PERMISSION" />
     );
   }
-  else if ((parseInt(evaluatorId || "") !== state.user?.evaluator_id) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
+  else if ((evaluatorId !== state.user?.evaluator_id) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
@@ -167,9 +176,9 @@ function Evaluations() {
             </span>
           </div>
           <div className="section-body" data-testid="tasks-section-body">
-            {isLoading && <LoadingSpinner size="LARGE" />}
+            {evaluationsIsLoading && <LoadingSpinner size="LARGE" />}
 
-            {!isLoading &&
+            {!evaluationsIsLoading &&
               <Table>
                 <TableHead>
                   <Row>
@@ -182,18 +191,18 @@ function Evaluations() {
                     <Cell header>Interpretation</Cell>
                     <Cell header>Total</Cell>
                     <Cell header>Skill Level</Cell>
-                    {hasActions ? <Cell header></Cell> : ""}
+                    {(evaluationsData?.evaluations[0]?.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ? <Cell header></Cell> : ""}
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {evaluations.map((e) => {
+                  {evaluationsData ? evaluationsData.evaluations.map((e) => {
                     let evaluationActions: Action[] = [];
-                    if (canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations) {
+                    if (e.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations) {
                       evaluationActions.push({
                         role: "button",
                         action: openEditEvaluationModal,
                         text: "Edit",
-                        data: e.evaluation_id
+                        data: e.id
                       });
                     }
 
@@ -202,27 +211,27 @@ function Evaluations() {
                         role: "button",
                         action: openDeleteEvaluationModal,
                         text: "Delete",
-                        data: e.evaluation_id
+                        data: e.id
                       });
                     }
 
                     return (
-                      <Row key={e.evaluation_id}>
-                        <Cell>{e.evaluation_id}</Cell>
-                        <Cell>{e.entry_id}</Cell>
-                        <Cell>{e.entry_title}</Cell>
+                      <Row key={e.id}>
+                        <Cell>{e.id}</Cell>
+                        <Cell>{e.entry.id}</Cell>
+                        <Cell><ExternalLink to={e.entry.url}>{e.entry.title}</ExternalLink></Cell>
                         <Cell>{e.creativity}</Cell>
                         <Cell>{e.complexity}</Cell>
                         <Cell>{e.execution}</Cell>
                         <Cell>{e.interpretation}</Cell>
                         <Cell>{e.creativity + e.complexity + e.execution + e.interpretation}</Cell>
-                        <Cell>{e.evaluation_level}</Cell>
-                        {hasActions ?
+                        <Cell>{e.skillLevel}</Cell>
+                        {(evaluationsData?.evaluations[0]?.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ?
                           <Cell><ActionMenu actions={evaluationActions} /></Cell>
                           : ""}
                       </Row>
                     );
-                  })}
+                  }) : ""}
                 </TableBody>
               </Table>
             }
@@ -300,7 +309,7 @@ function Evaluations() {
               id: "skill-level",
               size: "MEDIUM",
               label: "Skill Level",
-              defaultValue: editEvaluation.evaluation_level,
+              defaultValue: editEvaluation.skillLevel,
               choices: [
                 {
                   text: "Beginner",

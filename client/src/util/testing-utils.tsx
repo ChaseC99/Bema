@@ -58,7 +58,7 @@ export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permis
   return {
     user: {
       evaluator_id: 10,
-      id: 10,
+      id: "10",
       name: "Test Evaluator 10",
       kaid: "kaid_1234567890",
       email: "evaluator10@kachallengecouncil.org",

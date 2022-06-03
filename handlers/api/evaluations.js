@@ -5,46 +5,6 @@ const {
   successMsg
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
-const Request = require("request");
-const Moment = require("moment");
-const { displayFancyDateFormat } = require(process.cwd() + "/util/variables");
-
-exports.get = (request, response, next) => {
-  try {
-    let userId = parseInt(request.query.userId);
-    let contestId = request.query.contestId;
-
-    if (request.decodedToken) {
-      if (userId && contestId) {
-        if (userId === request.decodedToken.evaluator_id || request.decodedToken.permissions.view_all_evaluations || request.decodedToken.is_admin) {
-          return db.query("SELECT evn.evaluation_id, evn.entry_id, evn.creativity, evn.complexity, evn.execution, evn.interpretation, evn.evaluation_level, en.entry_title, en.entry_url FROM evaluation evn INNER JOIN evaluator evl ON evn.evaluator_id = evl.evaluator_id INNER JOIN entry en ON en.entry_id = evn.entry_id WHERE evn.evaluation_complete = true AND en.contest_id = $1 AND evn.evaluator_id = $2;", [contestId, userId], res => {
-            if (res.error) {
-              return handleNext(next, 400, "There was a problem getting this user's evaluations for the given contest.", res.error);
-            }
-            let evaluations = res.rows;
-
-            return db.query("SELECT current FROM contest WHERE contest_id = $1", [contestId], res => {
-              if (res.error) {
-                return handleNext(next, 400, "There was a problem fetching the contest data.", res.error);
-              }
-              return response.json({
-                logged_in: true,
-                is_admin: request.decodedToken.is_admin,
-                evaluations: evaluations,
-                can_edit: res.rows[0] ? res.rows[0].current : false
-              });
-            });
-          });
-        }
-        return handleNext(next, 403, "You're not authorized to access another user's evaluations.");
-      }
-      return handleNext(next, 400, "Invalid Inputs: userId and contestId expected.", new Error("userId and contestId were not specified."));
-    }
-    return handleNext(next, 401, "You must log in to retrieving this user's evaluations.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving this user's evaluations.", error);
-  }
-};
 
 exports.put = (request, response, next) => {
   try {

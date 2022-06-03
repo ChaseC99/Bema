@@ -34,7 +34,7 @@ export type Permissions = {
 }
 
 export type User = {
-  id: number
+  id: string
   name: string
   kaid: string
   email: string

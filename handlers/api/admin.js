@@ -6,10 +6,6 @@ const {
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 
-exports.ping = (request, response, next) => {
-  response.send("Pong!");
-};
-
 exports.stats = (request, response, next) => {
   try {
     if (request.decodedToken) {
