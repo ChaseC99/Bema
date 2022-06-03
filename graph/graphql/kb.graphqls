@@ -1,0 +1,40 @@
+extend type Query {
+    """
+    A list of all knowledge base sections
+    """
+    sections: [KBSection!]!
+}
+
+"""
+A knowledge base section
+"""
+type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objType: KB_SECTION) {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The name of the section
+    """
+    name: String!
+
+    """
+    A description of the section
+    """
+    description: String!
+
+    """
+    The visibility of the section
+    """
+    visibility: KBVisibility @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL)
+}
+
+"""
+Visibility settings for KB sections and articles
+"""
+enum KBVisibility {
+    PUBLIC
+    EVALUATORS_ONLY
+    ADMINS_ONLY
+}

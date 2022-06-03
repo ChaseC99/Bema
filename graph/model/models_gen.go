@@ -210,6 +210,18 @@ type JudgingGroup struct {
 	IsActive bool `json:"isActive"`
 }
 
+// A knowledge base section
+type KBSection struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The name of the section
+	Name string `json:"name"`
+	// A description of the section
+	Description string `json:"description"`
+	// The visibility of the section
+	Visibility *KBVisibility `json:"visibility"`
+}
+
 // The permissions set, associated with the User type
 type Permissions struct {
 	// Allows the user to add individual and bulk import entries
@@ -319,6 +331,50 @@ type User struct {
 	AssignedGroup *JudgingGroup `json:"assignedGroup"`
 }
 
+// Visibility settings for KB sections and articles
+type KBVisibility string
+
+const (
+	KBVisibilityPublic         KBVisibility = "PUBLIC"
+	KBVisibilityEvaluatorsOnly KBVisibility = "EVALUATORS_ONLY"
+	KBVisibilityAdminsOnly     KBVisibility = "ADMINS_ONLY"
+)
+
+var AllKBVisibility = []KBVisibility{
+	KBVisibilityPublic,
+	KBVisibilityEvaluatorsOnly,
+	KBVisibilityAdminsOnly,
+}
+
+func (e KBVisibility) IsValid() bool {
+	switch e {
+	case KBVisibilityPublic, KBVisibilityEvaluatorsOnly, KBVisibilityAdminsOnly:
+		return true
+	}
+	return false
+}
+
+func (e KBVisibility) String() string {
+	return string(e)
+}
+
+func (e *KBVisibility) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = KBVisibility(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid KBVisibility", str)
+	}
+	return nil
+}
+
+func (e KBVisibility) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type NullType string
 
 const (
@@ -386,17 +442,19 @@ const (
 	ObjectTypeUser       ObjectType = "USER"
 	ObjectTypeTask       ObjectType = "TASK"
 	ObjectTypeEvaluation ObjectType = "EVALUATION"
+	ObjectTypeKbSection  ObjectType = "KB_SECTION"
 )
 
 var AllObjectType = []ObjectType{
 	ObjectTypeUser,
 	ObjectTypeTask,
 	ObjectTypeEvaluation,
+	ObjectTypeKbSection,
 }
 
 func (e ObjectType) IsValid() bool {
 	switch e {
-	case ObjectTypeUser, ObjectTypeTask, ObjectTypeEvaluation:
+	case ObjectTypeUser, ObjectTypeTask, ObjectTypeEvaluation, ObjectTypeKbSection:
 		return true
 	}
 	return false

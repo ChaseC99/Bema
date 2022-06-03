@@ -65,4 +65,5 @@ enum ObjectType {
     USER
     TASK
     EVALUATION
+    KB_SECTION
 }

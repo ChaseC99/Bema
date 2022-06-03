@@ -323,6 +323,15 @@ func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 		return obj.(*model.Task).AssignedUser.ID == user.ID
 	case model.ObjectTypeEvaluation:
 		return obj.(*model.Evaluation).User.ID == user.ID
+	case model.ObjectTypeKbSection:
+		if *obj.(*model.KBSection).Visibility == model.KBVisibilityPublic {
+			return true
+		} else if *obj.(*model.KBSection).Visibility == model.KBVisibilityEvaluatorsOnly && user != nil {
+			return true
+		} else if *obj.(*model.KBSection).Visibility == model.KBVisibilityAdminsOnly && user != nil && user.IsAdmin {
+			return true
+		}
+		return false
 	default:
 		return false
 	}
