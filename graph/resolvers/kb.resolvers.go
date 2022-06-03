@@ -6,10 +6,15 @@ package resolvers
 import (
 	"context"
 
+	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
+
+func (r *kBSectionResolver) Visibility(ctx context.Context, obj *model.KBSection) (*string, error) {
+	return obj.Visibility, nil
+}
 
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
 	user := auth.GetUserFromContext(ctx)
@@ -30,3 +35,16 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error
 	}
 	return sections, nil
 }
+
+func (r *queryResolver) Section(ctx context.Context, id int) (*model.KBSection, error) {
+	section, err := models.GetKBSectionById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return section, nil
+}
+
+// KBSection returns generated.KBSectionResolver implementation.
+func (r *Resolver) KBSection() generated.KBSectionResolver { return &kBSectionResolver{r} }
+
+type kBSectionResolver struct{ *Resolver }

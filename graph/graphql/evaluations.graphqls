@@ -8,7 +8,7 @@ extend type Query {
 """
 An evaluation of an entry
 """
-type Evaluation @hasPermission(permission: VIEW_ALL_EVALUATIONS, nullType: NULL, objType: EVALUATION) {
+type Evaluation {
     """
     A unique integer ID
     """

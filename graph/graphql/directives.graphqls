@@ -64,6 +64,5 @@ enum NullType {
 enum ObjectType {
     USER
     TASK
-    EVALUATION
     KB_SECTION
 }

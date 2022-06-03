@@ -43,6 +43,7 @@ type ResolverRoot interface {
 	EntryVote() EntryVoteResolver
 	Error() ErrorResolver
 	Evaluation() EvaluationResolver
+	KBSection() KBSectionResolver
 	Query() QueryResolver
 	Task() TaskResolver
 	User() UserResolver
@@ -234,6 +235,7 @@ type ComplexityRoot struct {
 		JudgingGroup                func(childComplexity int, id int) int
 		NextEntryToJudge            func(childComplexity int) int
 		NextEntryToReviewSkillLevel func(childComplexity int) int
+		Section                     func(childComplexity int, id int) int
 		Sections                    func(childComplexity int) int
 		Tasks                       func(childComplexity int) int
 		User                        func(childComplexity int, id int) int
@@ -306,6 +308,9 @@ type EvaluationResolver interface {
 	Entry(ctx context.Context, obj *model.Evaluation) (*model.Entry, error)
 	User(ctx context.Context, obj *model.Evaluation) (*model.User, error)
 }
+type KBSectionResolver interface {
+	Visibility(ctx context.Context, obj *model.KBSection) (*string, error)
+}
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
 	Contestant(ctx context.Context, kaid string) (*model.Contestant, error)
@@ -330,6 +335,7 @@ type QueryResolver interface {
 	ActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error)
 	JudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	Sections(ctx context.Context) ([]*model.KBSection, error)
+	Section(ctx context.Context, id int) (*model.KBSection, error)
 	Tasks(ctx context.Context) ([]*model.Task, error)
 	CompletedTasks(ctx context.Context) ([]*model.Task, error)
 	AvailableTasks(ctx context.Context) ([]*model.Task, error)
@@ -1405,6 +1411,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.NextEntryToReviewSkillLevel(childComplexity), true
 
+	case "Query.section":
+		if e.complexity.Query.Section == nil {
+			break
+		}
+
+		args, err := ec.field_Query_section_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Section(childComplexity, args["id"].(int)), true
+
 	case "Query.sections":
 		if e.complexity.Query.Sections == nil {
 			break
@@ -1852,7 +1870,6 @@ enum NullType {
 enum ObjectType {
     USER
     TASK
-    EVALUATION
     KB_SECTION
 }`, BuiltIn: false},
 	{Name: "graph/graphql/entries.graphqls", Input: `extend type Query {
@@ -2097,7 +2114,7 @@ type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
 """
 An evaluation of an entry
 """
-type Evaluation @hasPermission(permission: VIEW_ALL_EVALUATIONS, nullType: NULL, objType: EVALUATION) {
+type Evaluation {
     """
     A unique integer ID
     """
@@ -2234,6 +2251,11 @@ type JudgingGroup @isAuthenticated(nullType: NULL) {
     A list of all knowledge base sections
     """
     sections: [KBSection!]!
+
+    """
+    A single knowledge base section
+    """
+    section(id: ID!): KBSection
 }
 
 """
@@ -2258,16 +2280,7 @@ type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objTy
     """
     The visibility of the section
     """
-    visibility: KBVisibility @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL)
-}
-
-"""
-Visibility settings for KB sections and articles
-"""
-enum KBVisibility {
-    PUBLIC
-    EVALUATORS_ONLY
-    ADMINS_ONLY
+    visibility: String @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL)
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
@@ -2829,6 +2842,21 @@ func (ec *executionContext) field_Query_evaluations_args(ctx context.Context, ra
 }
 
 func (ec *executionContext) field_Query_judgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_section_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -7198,7 +7226,7 @@ func (ec *executionContext) _KBSection_visibility(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return obj.Visibility, nil
+			return ec.resolvers.KBSection().Visibility(rctx, obj)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_KB_CONTENT")
@@ -7222,10 +7250,10 @@ func (ec *executionContext) _KBSection_visibility(ctx context.Context, field gra
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.KBVisibility); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.KBVisibility`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7234,19 +7262,19 @@ func (ec *executionContext) _KBSection_visibility(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.KBVisibility)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOKBVisibility2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBVisibility(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_KBSection_visibility(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KBSection",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type KBVisibility does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10016,24 +10044,6 @@ func (ec *executionContext) _Query_evaluations(ctx context.Context, field graphq
 			return ec.resolvers.Query().Evaluations(rctx, fc.Args["userId"].(int), fc.Args["contestId"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_EVALUATIONS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "EVALUATION")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
 			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_EVALUATION_ARRAY")
 			if err != nil {
 				return nil, err
@@ -10041,10 +10051,10 @@ func (ec *executionContext) _Query_evaluations(ctx context.Context, field graphq
 			if ec.directives.IsAuthenticated == nil {
 				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
 		}
 
-		tmp, err := directive2(rctx)
+		tmp, err := directive1(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -10611,6 +10621,100 @@ func (ec *executionContext) fieldContext_Query_sections(ctx context.Context, fie
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_section(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_section(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Section(rctx, fc.Args["id"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_KB_CONTENT")
+			if err != nil {
+				return nil, err
+			}
+			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
+			if err != nil {
+				return nil, err
+			}
+			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "KB_SECTION")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPermission == nil {
+				return nil, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.KBSection); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.KBSection`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_section(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_section_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -15513,26 +15617,39 @@ func (ec *executionContext) _KBSection(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._KBSection_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._KBSection_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 
 			out.Values[i] = ec._KBSection_description(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "visibility":
+			field := field
 
-			out.Values[i] = ec._KBSection_visibility(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBSection_visibility(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16289,6 +16406,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "section":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_section(ctx, field)
 				return res
 			}
 
@@ -18285,20 +18422,11 @@ func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChalleng
 	return ec._JudgingGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOKBVisibility2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBVisibility(ctx context.Context, v interface{}) (*model.KBVisibility, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.KBVisibility)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOKBVisibility2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBVisibility(ctx context.Context, sel ast.SelectionSet, v *model.KBVisibility) graphql.Marshaler {
+func (ec *executionContext) marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx context.Context, sel ast.SelectionSet, v *model.KBSection) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return v
+	return ec._KBSection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (*model.ObjectType, error) {

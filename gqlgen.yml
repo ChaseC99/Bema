@@ -138,3 +138,7 @@ models:
         resolver: true
       entry:
         resolver: true
+  KBSection:
+    fields:
+      visibility:
+        resolver: true

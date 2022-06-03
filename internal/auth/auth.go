@@ -183,9 +183,9 @@ func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, 
 		return next(ctx)
 	}
 
-	// Run resolver if subfield has not been fetched
+	// For object types, we need to fetch the object first in order to determine ownership
 	if objType != nil && obj == nil {
-		return next(ctx)
+		obj, _ = next(ctx)
 	}
 
 	// Allow object owners through
@@ -321,14 +321,14 @@ func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 		return obj.(*model.User).ID == user.ID
 	case model.ObjectTypeTask:
 		return obj.(*model.Task).AssignedUser.ID == user.ID
-	case model.ObjectTypeEvaluation:
-		return obj.(*model.Evaluation).User.ID == user.ID
 	case model.ObjectTypeKbSection:
-		if *obj.(*model.KBSection).Visibility == model.KBVisibilityPublic {
+		visibility := *obj.(*model.KBSection).Visibility
+
+		if visibility == "Public" {
 			return true
-		} else if *obj.(*model.KBSection).Visibility == model.KBVisibilityEvaluatorsOnly && user != nil {
+		} else if visibility == "Evaluators Only" && user != nil {
 			return true
-		} else if *obj.(*model.KBSection).Visibility == model.KBVisibilityAdminsOnly && user != nil && user.IsAdmin {
+		} else if visibility == "Admins Only" && user != nil && user.IsAdmin {
 			return true
 		}
 		return false
