@@ -27,6 +27,7 @@ import Levels from "./pages/admin/Levels";
 import EvaluatorProfile from "./pages/EvaluatorProfile";
 import ErrorPage from "./shared/ErrorPage";
 import useAppError, { clearError } from "./util/errors";
+import Explorer from "./pages/admin/Explorer";
 
 function App() {
   const { error, dispatch } = useAppError();
@@ -72,6 +73,7 @@ function App() {
             <Route path="/admin/users/inactive" element={<ProtectedRoute permissions={["view_all_users"]}><Users inactive /></ProtectedRoute>} />
             <Route path="/admin/judging" element={<ProtectedRoute permissions={["view_judging_settings"]}><AdminJudging /></ProtectedRoute>} />
             <Route path="/admin/skill-levels" element={<ProtectedRoute permissions={[]} requireAdmin><Levels /></ProtectedRoute>} />
+            <Route path="/admin/graphql" element={<ProtectedRoute permissions={["view_errors"]}><Explorer /></ProtectedRoute>} />
 
             <Route path="/entries/:contestId" element={<Entries />} />
             <Route path="/results/:contestId" element={<Results />} />

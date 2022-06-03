@@ -81,6 +81,7 @@ function AdminSidebar() {
           {(state.isAdmin || permissions?.view_judging_settings) && <SidebarItem text="Judging" to="/admin/judging" testId="sidebar-judging" />}
           {(state.isAdmin || permissions?.view_all_users) && <SidebarItem text="Users" to="/admin/users" testId="sidebar-users" />}
           {(state.isAdmin || permissions?.view_errors) && <SidebarItem text="Errors" to="/admin/errors" testId="sidebar-errors" />}
+          {(state.isAdmin || permissions?.view_errors) && <SidebarItem text="API Explorer" to="/admin/graphql" testId="sidebar-api-explorer" />}
         </div>
       }
     </div>
