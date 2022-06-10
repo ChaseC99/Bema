@@ -10,9 +10,9 @@ extend type Query {
     entry(id: ID!): Entry
 
     """
-    A list of flagged entries
+    A list of flagged entries. Requires View Judging Settings permission.
     """
-    flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
+    flaggedEntries: [Entry!]!
 
     """
     A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
@@ -25,14 +25,14 @@ extend type Query {
     entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 
     """
-    The next entry to score in the judging queue for the current user
+    The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
     """
-    nextEntryToJudge: Entry @hasPermission(permission: JUDGE_ENTRIES, nullType: NULL)
+    nextEntryToJudge: Entry
 
     """
-    The next entry to review its skill level
+    The next entry to review its skill level. Requires Admin permission.
     """
-    nextEntryToReviewSkillLevel: Entry @hasPermission(permission: IS_ADMIN, nullType: NULL)
+    nextEntryToReviewSkillLevel: Entry
 }
 
 """
@@ -95,49 +95,49 @@ type Entry {
     isWinner: Boolean!
 
     """
-    The judging group the entry is assigned to
+    The judging group the entry is assigned to. Requires authentication.
     """
-    group: JudgingGroup @isAuthenticated(nullType: NULL)
+    group: JudgingGroup
 
     """
-    Indicates whether the entry has been flagged
+    Indicates whether the entry has been flagged. Requires authentication.
     """
-    isFlagged: Boolean @isAuthenticated(nullType: NULL)
+    isFlagged: Boolean
 
     """
-    Indicates whether the entry has been disqualified
+    Indicates whether the entry has been disqualified. Requires authentication.
     """
-    isDisqualified: Boolean @isAuthenticated(nullType: NULL)
+    isDisqualified: Boolean
 
     """
-    Indicates whether the skill level has been permanently set for the entry
+    Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
     """
-    isSkillLevelLocked: Boolean @hasPermission(permission: EDIT_ENTRIES, nullType: NULL)
+    isSkillLevelLocked: Boolean
 
     """
-    The average score of the entry
+    The average score of the entry. Requires authentication.
     """
-    averageScore: Float @isAuthenticated(nullType: NULL)
+    averageScore: Float
 
     """
-    The number of evaluations submitted for the entry
+    The number of evaluations submitted for the entry. Requires authentication.
     """
-    evaluationCount: Int @isAuthenticated(nullType: NULL)
+    evaluationCount: Int
 
     """
-    The number of judges that voted for this entry
+    The number of judges that voted for this entry. Requires authentication.
     """
-    voteCount: Int @isAuthenticated(nullType: NULL)
+    voteCount: Int
 
     """
-    Indicates whether the current user has voted for the entry
+    Indicates whether the current user has voted for the entry. Requires authentication.
     """
-    isVotedByUser: Boolean @isAuthenticated(nullType: NULL)
+    isVotedByUser: Boolean
 
     """
-    A list of judge votes for the entry
+    A list of judge votes for the entry. Requires authentication.
     """
-    judgeVotes: [EntryVote!]! @isAuthenticated(nullType: EMPTY_ENTRY_VOTE_ARRAY)
+    judgeVotes: [EntryVote!]!
 }
 
 """

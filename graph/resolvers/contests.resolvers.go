@@ -8,14 +8,24 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
 func (r *contestResolver) Author(ctx context.Context, obj *model.Contest) (*string, error) {
-	return obj.Author, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.EditContests) {
+		return obj.Author, nil
+	}
+	return nil, nil
 }
 
 func (r *contestResolver) IsVotingEnabled(ctx context.Context, obj *model.Contest) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	return obj.IsVotingEnabled, nil
 }
 
@@ -52,9 +62,14 @@ func (r *queryResolver) CurrentContest(ctx context.Context) (*model.Contest, err
 }
 
 func (r *queryResolver) ContestsEvaluatedByUser(ctx context.Context, id int) ([]*model.Contest, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.Contest{}, nil
+	}
+
 	contest, err := models.GetContestsEvaluatedByUser(ctx, id)
 	if err != nil {
-		return nil, err
+		return []*model.Contest{}, err
 	}
 	return contest, nil
 }

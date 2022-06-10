@@ -5,9 +5,9 @@ extend type Query {
     contestant(kaid: String!): Contestant
 
     """
-    A list of contestants matching the search query. Can search by display name or KAID.
+    A list of contestants matching the search query. Can search by display name or KAID. Requires authentication.
     """
-    contestantSearch(query: String!): [Contestant!]! @isAuthenticated(nullType: EMPTY_CONTESTANT_ARRAY)
+    contestantSearch(query: String!): [Contestant!]!
 }
 
 """
@@ -25,9 +25,9 @@ type Contestant {
     name: String!
 
     """
-    A list of entries submitted by the contestant
+    A list of entries submitted by the contestant. Requires authentication.
     """
-    entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
+    entries: [Entry!]
 
     """
     The total number of entries the contestant has submitted

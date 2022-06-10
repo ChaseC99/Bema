@@ -48,6 +48,11 @@ func (r *entryResolver) SkillLevel(ctx context.Context, obj *model.Entry) (*stri
 }
 
 func (r *entryResolver) Group(ctx context.Context, obj *model.Entry) (*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	group, err := r.Query().JudgingGroup(ctx, obj.Group.ID)
 	if err != nil {
 		return nil, err
@@ -56,18 +61,38 @@ func (r *entryResolver) Group(ctx context.Context, obj *model.Entry) (*model.Jud
 }
 
 func (r *entryResolver) IsFlagged(ctx context.Context, obj *model.Entry) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	return obj.IsFlagged, nil
 }
 
 func (r *entryResolver) IsDisqualified(ctx context.Context, obj *model.Entry) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	return obj.IsDisqualified, nil
 }
 
 func (r *entryResolver) IsSkillLevelLocked(ctx context.Context, obj *model.Entry) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.EditEntries) {
+		return nil, nil
+	}
+
 	return obj.IsSkillLevelLocked, nil
 }
 
 func (r *entryResolver) AverageScore(ctx context.Context, obj *model.Entry) (*float64, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	avgScore, err := models.GetEntryAverageScore(ctx, obj.ID)
 	if err != nil {
 		return nil, err
@@ -76,6 +101,11 @@ func (r *entryResolver) AverageScore(ctx context.Context, obj *model.Entry) (*fl
 }
 
 func (r *entryResolver) EvaluationCount(ctx context.Context, obj *model.Entry) (*int, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	count, err := models.GetEntryEvaluationCount(ctx, obj.ID)
 	if err != nil {
 		return nil, err
@@ -84,6 +114,11 @@ func (r *entryResolver) EvaluationCount(ctx context.Context, obj *model.Entry) (
 }
 
 func (r *entryResolver) VoteCount(ctx context.Context, obj *model.Entry) (*int, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	count, err := models.GetEntryVoteCount(ctx, obj.ID)
 	if err != nil {
 		return nil, err
@@ -92,6 +127,11 @@ func (r *entryResolver) VoteCount(ctx context.Context, obj *model.Entry) (*int, 
 }
 
 func (r *entryResolver) IsVotedByUser(ctx context.Context, obj *model.Entry) (*bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	wasVoted, err := models.IsEntryVotedByUser(ctx, obj.ID)
 	if err != nil {
 		return nil, err
@@ -100,6 +140,11 @@ func (r *entryResolver) IsVotedByUser(ctx context.Context, obj *model.Entry) (*b
 }
 
 func (r *entryResolver) JudgeVotes(ctx context.Context, obj *model.Entry) ([]*model.EntryVote, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.EntryVote{}, nil
+	}
+
 	votes, err := models.GetEntryVotes(ctx, obj.ID)
 	if err != nil {
 		return []*model.EntryVote{}, err
@@ -135,6 +180,11 @@ func (r *queryResolver) Entry(ctx context.Context, id int) (*model.Entry, error)
 }
 
 func (r *queryResolver) FlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewJudgingSettings) {
+		return []*model.Entry{}, nil
+	}
+
 	entries, err := models.GetFlaggedEntries(ctx)
 	if err != nil {
 		return []*model.Entry{}, err
@@ -168,6 +218,11 @@ func (r *queryResolver) EntriesPerLevel(ctx context.Context, contestID int) ([]*
 }
 
 func (r *queryResolver) NextEntryToJudge(ctx context.Context) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.JudgeEntries) {
+		return nil, nil
+	}
+
 	id, err := models.GetNextEntryToJudge(ctx)
 	if err != nil {
 		return nil, err
@@ -184,6 +239,11 @@ func (r *queryResolver) NextEntryToJudge(ctx context.Context) (*model.Entry, err
 }
 
 func (r *queryResolver) NextEntryToReviewSkillLevel(ctx context.Context) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil || !user.IsAdmin {
+		return nil, nil
+	}
+
 	id, err := models.GetNextEntryToReviewSkillLevel(ctx)
 	if err != nil {
 		return nil, err

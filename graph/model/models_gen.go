@@ -2,12 +2,6 @@
 
 package model
 
-import (
-	"fmt"
-	"io"
-	"strconv"
-)
-
 // An announcement message
 type Announcement struct {
 	// A unique integer ID
@@ -32,7 +26,7 @@ type Contest struct {
 	Name string `json:"name"`
 	// The url of the contest program page
 	URL *string `json:"url"`
-	// The author of the announcement program code. Only visible to contest editors
+	// The author of the announcement program code. Only visible to contest editors. Requires Edit Contests permission.
 	Author *string `json:"author"`
 	// The url slug of the contest badge
 	BadgeSlug *string `json:"badgeSlug"`
@@ -44,7 +38,7 @@ type Contest struct {
 	StartDate *string `json:"startDate"`
 	// The end date (deadline) of the contest
 	EndDate *string `json:"endDate"`
-	// Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+	// Indicates whether voting for winners is enabled for the contest. Requires authentication.
 	IsVotingEnabled *bool `json:"isVotingEnabled"`
 	// A list of winning entries
 	Winners []*Entry `json:"winners"`
@@ -56,7 +50,7 @@ type Contestant struct {
 	Kaid string `json:"kaid"`
 	// The user's most recent display name
 	Name string `json:"name"`
-	// A list of entries submitted by the contestant
+	// A list of entries submitted by the contestant. Requires authentication.
 	Entries []*Entry `json:"entries"`
 	// The total number of entries the contestant has submitted
 	EntryCount int `json:"entryCount"`
@@ -96,23 +90,23 @@ type Entry struct {
 	Height int `json:"height"`
 	// Indicates if the entry is a winner of the contest
 	IsWinner bool `json:"isWinner"`
-	// The judging group the entry is assigned to
+	// The judging group the entry is assigned to. Requires authentication.
 	Group *JudgingGroup `json:"group"`
-	// Indicates whether the entry has been flagged
+	// Indicates whether the entry has been flagged. Requires authentication.
 	IsFlagged *bool `json:"isFlagged"`
-	// Indicates whether the entry has been disqualified
+	// Indicates whether the entry has been disqualified. Requires authentication.
 	IsDisqualified *bool `json:"isDisqualified"`
-	// Indicates whether the skill level has been permanently set for the entry
+	// Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
 	IsSkillLevelLocked *bool `json:"isSkillLevelLocked"`
-	// The average score of the entry
+	// The average score of the entry. Requires authentication.
 	AverageScore *float64 `json:"averageScore"`
-	// The number of evaluations submitted for the entry
+	// The number of evaluations submitted for the entry. Requires authentication.
 	EvaluationCount *int `json:"evaluationCount"`
-	// The number of judges that voted for this entry
+	// The number of judges that voted for this entry. Requires authentication.
 	VoteCount *int `json:"voteCount"`
-	// Indicates whether the current user has voted for the entry
+	// Indicates whether the current user has voted for the entry. Requires authentication.
 	IsVotedByUser *bool `json:"isVotedByUser"`
-	// A list of judge votes for the entry
+	// A list of judge votes for the entry. Requires authentication.
 	JudgeVotes []*EntryVote `json:"judgeVotes"`
 }
 
@@ -305,231 +299,28 @@ type User struct {
 	ID int `json:"id"`
 	// The kaid associated with the user's KA account
 	Kaid string `json:"kaid"`
-	// The user's real name
+	// The user's real name. Requires View All Users permission.
 	Name *string `json:"name"`
 	// The user's display name
 	Nickname *string `json:"nickname"`
 	// The user's username that is used to log in
 	Username *string `json:"username"`
-	// The user's email address
+	// The user's email address. Requires View All Users permission.
 	Email *string `json:"email"`
-	// Indicates if the account has been deactivated
+	// Indicates if the account has been deactivated. Requires View All Users permission.
 	AccountLocked *bool `json:"accountLocked"`
-	// The permission set of the user
+	// The permission set of the user. Requires View All Users permission.
 	Permissions *Permissions `json:"permissions"`
-	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
+	// Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires View All Users permission.
 	IsAdmin *bool `json:"isAdmin"`
-	// The timestamp of the user's last login
+	// The timestamp of the user's last login. Requires View All Users permission.
 	LastLogin *string `json:"lastLogin"`
 	// The start date of the user's term
 	TermStart *string `json:"termStart"`
 	// The end date of the user's term
 	TermEnd *string `json:"termEnd"`
-	// Indicates whether the user has email notifications enabled for new announcements
+	// Indicates whether the user has email notifications enabled for new announcements. Requires View All Users permission.
 	NotificationsEnabled *bool `json:"notificationsEnabled"`
-	// The judging group the user is assigned to
+	// The judging group the user is assigned to. Requires View Judging Settings permission.
 	AssignedGroup *JudgingGroup `json:"assignedGroup"`
-}
-
-type NullType string
-
-const (
-	NullTypeEmptyUserArray            NullType = "EMPTY_USER_ARRAY"
-	NullTypeEmptyErrorsArray          NullType = "EMPTY_ERRORS_ARRAY"
-	NullTypeEmptyString               NullType = "EMPTY_STRING"
-	NullTypeEmptyJudgingCriteriaArray NullType = "EMPTY_JUDGING_CRITERIA_ARRAY"
-	NullTypeEmptyJudgingGroupArray    NullType = "EMPTY_JUDGING_GROUP_ARRAY"
-	NullTypeEmptyEntryArray           NullType = "EMPTY_ENTRY_ARRAY"
-	NullTypeEmptyContestantArray      NullType = "EMPTY_CONTESTANT_ARRAY"
-	NullTypeEmptyTaskArray            NullType = "EMPTY_TASK_ARRAY"
-	NullTypeEmptyEntryVoteArray       NullType = "EMPTY_ENTRY_VOTE_ARRAY"
-	NullTypeEmptyContestArray         NullType = "EMPTY_CONTEST_ARRAY"
-	NullTypeEmptyEvaluationArray      NullType = "EMPTY_EVALUATION_ARRAY"
-	NullTypeNull                      NullType = "NULL"
-)
-
-var AllNullType = []NullType{
-	NullTypeEmptyUserArray,
-	NullTypeEmptyErrorsArray,
-	NullTypeEmptyString,
-	NullTypeEmptyJudgingCriteriaArray,
-	NullTypeEmptyJudgingGroupArray,
-	NullTypeEmptyEntryArray,
-	NullTypeEmptyContestantArray,
-	NullTypeEmptyTaskArray,
-	NullTypeEmptyEntryVoteArray,
-	NullTypeEmptyContestArray,
-	NullTypeEmptyEvaluationArray,
-	NullTypeNull,
-}
-
-func (e NullType) IsValid() bool {
-	switch e {
-	case NullTypeEmptyUserArray, NullTypeEmptyErrorsArray, NullTypeEmptyString, NullTypeEmptyJudgingCriteriaArray, NullTypeEmptyJudgingGroupArray, NullTypeEmptyEntryArray, NullTypeEmptyContestantArray, NullTypeEmptyTaskArray, NullTypeEmptyEntryVoteArray, NullTypeEmptyContestArray, NullTypeEmptyEvaluationArray, NullTypeNull:
-		return true
-	}
-	return false
-}
-
-func (e NullType) String() string {
-	return string(e)
-}
-
-func (e *NullType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = NullType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid NullType", str)
-	}
-	return nil
-}
-
-func (e NullType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ObjectType string
-
-const (
-	ObjectTypeUser      ObjectType = "USER"
-	ObjectTypeTask      ObjectType = "TASK"
-	ObjectTypeKbSection ObjectType = "KB_SECTION"
-)
-
-var AllObjectType = []ObjectType{
-	ObjectTypeUser,
-	ObjectTypeTask,
-	ObjectTypeKbSection,
-}
-
-func (e ObjectType) IsValid() bool {
-	switch e {
-	case ObjectTypeUser, ObjectTypeTask, ObjectTypeKbSection:
-		return true
-	}
-	return false
-}
-
-func (e ObjectType) String() string {
-	return string(e)
-}
-
-func (e *ObjectType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ObjectType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ObjectType", str)
-	}
-	return nil
-}
-
-func (e ObjectType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Permission string
-
-const (
-	PermissionAddEntries            Permission = "ADD_ENTRIES"
-	PermissionAddUsers              Permission = "ADD_USERS"
-	PermissionAssignEntryGroups     Permission = "ASSIGN_ENTRY_GROUPS"
-	PermissionAssignEvaluatorGroups Permission = "ASSIGN_EVALUATOR_GROUPS"
-	PermissionAssumeUserIDEntities  Permission = "ASSUME_USER_IDENTITIES"
-	PermissionChangeUserPasswords   Permission = "CHANGE_USER_PASSWORDS"
-	PermissionDeleteAllEvaluations  Permission = "DELETE_ALL_EVALUATIONS"
-	PermissionDeleteAllTasks        Permission = "DELETE_ALL_TASKS"
-	PermissionDeleteContests        Permission = "DELETE_CONTESTS"
-	PermissionDeleteEntries         Permission = "DELETE_ENTRIES"
-	PermissionDeleteErrors          Permission = "DELETE_ERRORS"
-	PermissionDeleteKbContent       Permission = "DELETE_KB_CONTENT"
-	PermissionEditAllEvaluations    Permission = "EDIT_ALL_EVALUATIONS"
-	PermissionEditAllTasks          Permission = "EDIT_ALL_TASKS"
-	PermissionEditContests          Permission = "EDIT_CONTESTS"
-	PermissionEditEntries           Permission = "EDIT_ENTRIES"
-	PermissionEditKbContent         Permission = "EDIT_KB_CONTENT"
-	PermissionEditUserProfiles      Permission = "EDIT_USER_PROFILES"
-	PermissionJudgeEntries          Permission = "JUDGE_ENTRIES"
-	PermissionManageAnnouncements   Permission = "MANAGE_ANNOUNCEMENTS"
-	PermissionManageJudgingCriteria Permission = "MANAGE_JUDGING_CRITERIA"
-	PermissionManageJudgingGroups   Permission = "MANAGE_JUDGING_GROUPS"
-	PermissionManageWinners         Permission = "MANAGE_WINNERS"
-	PermissionPublishKbContent      Permission = "PUBLISH_KB_CONTENT"
-	PermissionViewAdminStats        Permission = "VIEW_ADMIN_STATS"
-	PermissionViewAllEvaluations    Permission = "VIEW_ALL_EVALUATIONS"
-	PermissionViewAllTasks          Permission = "VIEW_ALL_TASKS"
-	PermissionViewAllUsers          Permission = "VIEW_ALL_USERS"
-	PermissionViewErrors            Permission = "VIEW_ERRORS"
-	PermissionViewJudgingSettings   Permission = "VIEW_JUDGING_SETTINGS"
-	PermissionIsAdmin               Permission = "IS_ADMIN"
-)
-
-var AllPermission = []Permission{
-	PermissionAddEntries,
-	PermissionAddUsers,
-	PermissionAssignEntryGroups,
-	PermissionAssignEvaluatorGroups,
-	PermissionAssumeUserIDEntities,
-	PermissionChangeUserPasswords,
-	PermissionDeleteAllEvaluations,
-	PermissionDeleteAllTasks,
-	PermissionDeleteContests,
-	PermissionDeleteEntries,
-	PermissionDeleteErrors,
-	PermissionDeleteKbContent,
-	PermissionEditAllEvaluations,
-	PermissionEditAllTasks,
-	PermissionEditContests,
-	PermissionEditEntries,
-	PermissionEditKbContent,
-	PermissionEditUserProfiles,
-	PermissionJudgeEntries,
-	PermissionManageAnnouncements,
-	PermissionManageJudgingCriteria,
-	PermissionManageJudgingGroups,
-	PermissionManageWinners,
-	PermissionPublishKbContent,
-	PermissionViewAdminStats,
-	PermissionViewAllEvaluations,
-	PermissionViewAllTasks,
-	PermissionViewAllUsers,
-	PermissionViewErrors,
-	PermissionViewJudgingSettings,
-	PermissionIsAdmin,
-}
-
-func (e Permission) IsValid() bool {
-	switch e {
-	case PermissionAddEntries, PermissionAddUsers, PermissionAssignEntryGroups, PermissionAssignEvaluatorGroups, PermissionAssumeUserIDEntities, PermissionChangeUserPasswords, PermissionDeleteAllEvaluations, PermissionDeleteAllTasks, PermissionDeleteContests, PermissionDeleteEntries, PermissionDeleteErrors, PermissionDeleteKbContent, PermissionEditAllEvaluations, PermissionEditAllTasks, PermissionEditContests, PermissionEditEntries, PermissionEditKbContent, PermissionEditUserProfiles, PermissionJudgeEntries, PermissionManageAnnouncements, PermissionManageJudgingCriteria, PermissionManageJudgingGroups, PermissionManageWinners, PermissionPublishKbContent, PermissionViewAdminStats, PermissionViewAllEvaluations, PermissionViewAllTasks, PermissionViewAllUsers, PermissionViewErrors, PermissionViewJudgingSettings, PermissionIsAdmin:
-		return true
-	}
-	return false
-}
-
-func (e Permission) String() string {
-	return string(e)
-}
-
-func (e *Permission) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Permission(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Permission", str)
-	}
-	return nil
-}
-
-func (e Permission) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
 }

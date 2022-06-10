@@ -39,8 +39,6 @@ func main() {
 
 	// Create configuration and set directive handlers
 	config := generated.Config{Resolvers: &resolvers.Resolver{}}
-	config.Directives.HasPermission = auth.HasPermissionOld
-	config.Directives.IsAuthenticated = auth.IsAuthenticated
 
 	// Create router
 	router := chi.NewRouter()

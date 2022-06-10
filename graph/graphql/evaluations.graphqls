@@ -1,8 +1,8 @@
 extend type Query {
     """
-    A list of evaluations for a given user and contest
+    A list of evaluations for a given user and contest. Requires authentication.
     """
-    evaluations(userId: ID!, contestId: ID!): [Evaluation]! @isAuthenticated(nullType: EMPTY_EVALUATION_ARRAY)
+    evaluations(userId: ID!, contestId: ID!): [Evaluation]!
 }
 
 """

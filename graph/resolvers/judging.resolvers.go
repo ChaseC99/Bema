@@ -12,6 +12,11 @@ import (
 )
 
 func (r *queryResolver) AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewJudgingSettings) {
+		return []*model.JudgingCriteria{}, nil
+	}
+
 	criteria, err := models.GetAllCriteria(ctx)
 	if err != nil {
 		return []*model.JudgingCriteria{}, err
@@ -38,6 +43,11 @@ func (r *queryResolver) ActiveCriteria(ctx context.Context) ([]*model.JudgingCri
 }
 
 func (r *queryResolver) AllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewJudgingSettings) {
+		return []*model.JudgingGroup{}, nil
+	}
+
 	groups, err := models.GetAllJudgingGroups(ctx)
 	if err != nil {
 		return []*model.JudgingGroup{}, err
@@ -46,6 +56,11 @@ func (r *queryResolver) AllJudgingGroups(ctx context.Context) ([]*model.JudgingG
 }
 
 func (r *queryResolver) ActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.JudgingGroup{}, nil
+	}
+
 	groups, err := models.GetActiveJudgingGroups(ctx)
 	if err != nil {
 		return []*model.JudgingGroup{}, err
@@ -54,6 +69,11 @@ func (r *queryResolver) ActiveJudgingGroups(ctx context.Context) ([]*model.Judgi
 }
 
 func (r *queryResolver) JudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
 	group, err := models.GetJudgingGroupById(ctx, id)
 	if err != nil {
 		return nil, err

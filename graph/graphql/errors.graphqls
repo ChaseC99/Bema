@@ -1,19 +1,19 @@
 extend type Query {
     """
-    A list of all logged errors
+    A list of all logged errors. Requires View Errors permission.
     """
-    errors: [Error!]! @hasPermission(permission: VIEW_ERRORS, nullType: EMPTY_ERRORS_ARRAY)
+    errors: [Error!]!
 
     """
-    A single logged error
+    A single logged error. Requires View Errors permission.
     """
-    error(id: ID!): Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL)
+    error(id: ID!): Error
 }
 
 """
 A logged application error
 """
-type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
+type Error {
     """
     A unique integer id
     """

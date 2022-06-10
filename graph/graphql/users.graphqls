@@ -5,14 +5,14 @@ extend type Query {
   currentUser: FullUserProfile!
 
   """
-  A list of all active evaluator accounts
+  A list of all active evaluator accounts. Requires authentication.
   """
-  users: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+  users: [User!]!
 
   """
-  A list of all inactive evaluator accounts
+  A list of all inactive evaluator accounts. Requires View All Users permission.
   """
-  inactiveUsers: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+  inactiveUsers: [User!]!
 
   """
   A single user
@@ -53,7 +53,7 @@ type FullUserProfile {
 """
 An evaluator account
 """
-type User @isAuthenticated(nullType: NULL) {
+type User {
   """
   The unique integer id of the user
   """
@@ -65,9 +65,9 @@ type User @isAuthenticated(nullType: NULL) {
   kaid: String!
 
   """
-  The user's real name
+  The user's real name. Requires View All Users permission.
   """
-  name: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  name: String
 
   """
   The user's display name
@@ -80,29 +80,29 @@ type User @isAuthenticated(nullType: NULL) {
   username: String
 
   """
-  The user's email address
+  The user's email address. Requires View All Users permission.
   """
-  email: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  email: String
 
   """
-  Indicates if the account has been deactivated
+  Indicates if the account has been deactivated. Requires View All Users permission.
   """
-  accountLocked: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  accountLocked: Boolean
 
   """
-  The permission set of the user
+  The permission set of the user. Requires View All Users permission.
   """
-  permissions: Permissions @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  permissions: Permissions
 
   """
-  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires View All Users permission.
   """
-  isAdmin: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  isAdmin: Boolean
 
   """
-  The timestamp of the user's last login
+  The timestamp of the user's last login. Requires View All Users permission.
   """
-  lastLogin: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  lastLogin: String
 
   """
   The start date of the user's term
@@ -115,14 +115,14 @@ type User @isAuthenticated(nullType: NULL) {
   termEnd: String
 
   """
-  Indicates whether the user has email notifications enabled for new announcements
+  Indicates whether the user has email notifications enabled for new announcements. Requires View All Users permission.
   """
-  notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  notificationsEnabled: Boolean
 
   """
-  The judging group the user is assigned to
+  The judging group the user is assigned to. Requires View Judging Settings permission.
   """
-  assignedGroup: JudgingGroup @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: NULL, objType: USER)
+  assignedGroup: JudgingGroup
 }
 
 """

@@ -13,6 +13,11 @@ import (
 )
 
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewAllTasks) {
+		return []*model.Task{}, nil
+	}
+
 	tasks, err := models.GetIncompleteTasks(ctx)
 	if err != nil {
 		return []*model.Task{}, err
@@ -21,6 +26,11 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 }
 
 func (r *queryResolver) CompletedTasks(ctx context.Context) ([]*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewAllTasks) {
+		return []*model.Task{}, nil
+	}
+
 	tasks, err := models.GetCompletedTasks(ctx)
 	if err != nil {
 		return []*model.Task{}, err
@@ -29,6 +39,11 @@ func (r *queryResolver) CompletedTasks(ctx context.Context) ([]*model.Task, erro
 }
 
 func (r *queryResolver) AvailableTasks(ctx context.Context) ([]*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.Task{}, nil
+	}
+
 	tasks, err := models.GetAvailableTasks(ctx)
 	if err != nil {
 		return []*model.Task{}, err
@@ -38,7 +53,6 @@ func (r *queryResolver) AvailableTasks(ctx context.Context) ([]*model.Task, erro
 
 func (r *queryResolver) CurrentUserTasks(ctx context.Context) ([]*model.Task, error) {
 	user := auth.GetUserFromContext(ctx)
-
 	if user == nil {
 		return []*model.Task{}, nil
 	}

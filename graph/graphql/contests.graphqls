@@ -15,9 +15,9 @@ extend type Query {
   currentContest: Contest
 
   """
-  A list of contests for which the user has scored entries
+  A list of contests for which the user has scored entries. Requires authentication.
   """
-  contestsEvaluatedByUser(id: ID!): [Contest!]! @isAuthenticated(nullType: EMPTY_CONTEST_ARRAY)
+  contestsEvaluatedByUser(id: ID!): [Contest!]!
 }
 
 """
@@ -40,9 +40,9 @@ type Contest {
   url: String
 
   """
-  The author of the announcement program code. Only visible to contest editors
+  The author of the announcement program code. Only visible to contest editors. Requires Edit Contests permission.
   """
-  author: String @hasPermission(permission: EDIT_CONTESTS, nullType: NULL)
+  author: String
 
   """
   The url slug of the contest badge
@@ -70,9 +70,9 @@ type Contest {
   endDate: String
 
   """
-  Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+  Indicates whether voting for winners is enabled for the contest. Requires authentication.
   """
-  isVotingEnabled: Boolean @isAuthenticated(nullType: NULL)
+  isVotingEnabled: Boolean
 
   """
   A list of winning entries

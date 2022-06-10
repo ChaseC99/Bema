@@ -1,8 +1,8 @@
 extend type Query {
     """
-    A list of all judging criteria (both active and inactive)
+    A list of all judging criteria (both active and inactive). Requires View Judging Settings permission.
     """
-    allCriteria: [JudgingCriteria!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
+    allCriteria: [JudgingCriteria!]!
 
     """
     A list of active judging criteria. Sample data is returned for unauthenticated users.
@@ -10,19 +10,19 @@ extend type Query {
     activeCriteria: [JudgingCriteria!]!
 
     """
-    A list of all judging groups
+    A list of all judging groups. Requires View Judging Settings permission.
     """
-    allJudgingGroups: [JudgingGroup!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_GROUP_ARRAY)
+    allJudgingGroups: [JudgingGroup!]!
 
     """
-    A list of all active judging groups
+    A list of all active judging groups. Requires authentication.
     """
-    activeJudgingGroups: [JudgingGroup!]! @isAuthenticated(nullType: EMPTY_JUDGING_GROUP_ARRAY)
+    activeJudgingGroups: [JudgingGroup!]!
 
     """
-    A single judging group
+    A single judging group. Requires authentication.
     """
-    judgingGroup(id: ID!): JudgingGroup @isAuthenticated(nullType: NULL)
+    judgingGroup(id: ID!): JudgingGroup
 }
 
 """
@@ -58,7 +58,7 @@ type JudgingCriteria {
 """
 A group of evaluators that can be assigned entries to judge
 """
-type JudgingGroup @isAuthenticated(nullType: NULL) {
+type JudgingGroup {
     """
     A uniqune integer ID
     """

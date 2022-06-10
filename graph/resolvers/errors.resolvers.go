@@ -8,6 +8,7 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -21,6 +22,11 @@ func (r *errorResolver) User(ctx context.Context, obj *model.Error) (*model.User
 }
 
 func (r *queryResolver) Errors(ctx context.Context) ([]*model.Error, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewErrors) {
+		return []*model.Error{}, nil
+	}
+
 	errors, err := models.GetAllErrors(ctx)
 	if err != nil {
 		return []*model.Error{}, err
@@ -30,6 +36,11 @@ func (r *queryResolver) Errors(ctx context.Context) ([]*model.Error, error) {
 }
 
 func (r *queryResolver) Error(ctx context.Context, id int) (*model.Error, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewErrors) {
+		return nil, nil
+	}
+
 	e, err := models.GetErrorById(ctx, id)
 	if err != nil {
 		return nil, err

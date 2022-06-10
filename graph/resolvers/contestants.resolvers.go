@@ -8,10 +8,16 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
+	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
 func (r *contestantResolver) Entries(ctx context.Context, obj *model.Contestant) ([]*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.Entry{}, nil
+	}
+
 	entries, err := models.GetEntriesByContestantKaid(ctx, obj.Kaid)
 	if err != nil {
 		return nil, err
@@ -44,6 +50,11 @@ func (r *queryResolver) Contestant(ctx context.Context, kaid string) (*model.Con
 }
 
 func (r *queryResolver) ContestantSearch(ctx context.Context, query string) ([]*model.Contestant, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.Contestant{}, nil
+	}
+
 	contestants, err := models.GetContestantsBySearchQuery(ctx, query)
 	if err != nil {
 		return []*model.Contestant{}, err

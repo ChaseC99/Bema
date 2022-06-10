@@ -1,29 +1,29 @@
 extend type Query {
     """
-    A list of all incomplete tasks
+    A list of all incomplete tasks. Requires View All Tasks permission.
     """
-    tasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+    tasks: [Task!]!
 
     """
-    A list of all completed tasks
+    A list of all completed tasks. Requires View All Tasks permission.
     """
-    completedTasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+    completedTasks: [Task!]!
 
     """
-    A list of all tasks available for sign up
+    A list of all tasks available for sign up. Requires authentication.
     """
-    availableTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+    availableTasks: [Task!]!
 
     """
-    A list of tasks assigned to the logged in user
+    A list of tasks assigned to the logged in user. Requires authentication.
     """
-    currentUserTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+    currentUserTasks: [Task!]!
 }
 
 """
 A single task that can be assigned to and completed by a user
 """
-type Task @hasPermission(permission: VIEW_ALL_TASKS, nullType: NULL, objType: TASK) {
+type Task {
     """
     A uniqune integer ID
     """

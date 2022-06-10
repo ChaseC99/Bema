@@ -50,8 +50,6 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	HasPermission   func(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (res interface{}, err error)
-	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver, nullType model.NullType) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -1689,9 +1687,9 @@ type Announcement {
     contestant(kaid: String!): Contestant
 
     """
-    A list of contestants matching the search query. Can search by display name or KAID.
+    A list of contestants matching the search query. Can search by display name or KAID. Requires authentication.
     """
-    contestantSearch(query: String!): [Contestant!]! @isAuthenticated(nullType: EMPTY_CONTESTANT_ARRAY)
+    contestantSearch(query: String!): [Contestant!]!
 }
 
 """
@@ -1709,9 +1707,9 @@ type Contestant {
     name: String!
 
     """
-    A list of entries submitted by the contestant
+    A list of entries submitted by the contestant. Requires authentication.
     """
-    entries: [Entry!] @isAuthenticated(nullType: EMPTY_ENTRY_ARRAY)
+    entries: [Entry!]
 
     """
     The total number of entries the contestant has submitted
@@ -1740,9 +1738,9 @@ type Contestant {
   currentContest: Contest
 
   """
-  A list of contests for which the user has scored entries
+  A list of contests for which the user has scored entries. Requires authentication.
   """
-  contestsEvaluatedByUser(id: ID!): [Contest!]! @isAuthenticated(nullType: EMPTY_CONTEST_ARRAY)
+  contestsEvaluatedByUser(id: ID!): [Contest!]!
 }
 
 """
@@ -1765,9 +1763,9 @@ type Contest {
   url: String
 
   """
-  The author of the announcement program code. Only visible to contest editors
+  The author of the announcement program code. Only visible to contest editors. Requires Edit Contests permission.
   """
-  author: String @hasPermission(permission: EDIT_CONTESTS, nullType: NULL)
+  author: String
 
   """
   The url slug of the contest badge
@@ -1795,82 +1793,14 @@ type Contest {
   endDate: String
 
   """
-  Indicates whether voting for winners is enabled for the contest. Only shown to evaluators
+  Indicates whether voting for winners is enabled for the contest. Requires authentication.
   """
-  isVotingEnabled: Boolean @isAuthenticated(nullType: NULL)
+  isVotingEnabled: Boolean
 
   """
   A list of winning entries
   """
   winners: [Entry!]!
-}`, BuiltIn: false},
-	{Name: "graph/graphql/directives.graphqls", Input: `"""
-Restricts access to a field if the user is not logged in.
-nullType - The null value to be returned if the user is not logged in
-"""
-directive @isAuthenticated(nullType: NullType!) on FIELD_DEFINITION | OBJECT
-
-"""
-Restricts access to the field based on a user's permissions. Admins and object owners are allowed to access the field.
-permission - The permission to check
-nullType - The null value to be returned if the user does not pass the permission check
-objType - The type of object the directive is associated with (used to check object ownership)
-"""
-directive @hasPermission(permission: Permission!, nullType: NullType!, objType: ObjectType) on FIELD_DEFINITION | OBJECT
-
-enum Permission {
-    ADD_ENTRIES,
-    ADD_USERS,
-    ASSIGN_ENTRY_GROUPS,
-    ASSIGN_EVALUATOR_GROUPS,
-    ASSUME_USER_IDENTITIES,
-    CHANGE_USER_PASSWORDS,
-    DELETE_ALL_EVALUATIONS,
-    DELETE_ALL_TASKS,
-    DELETE_CONTESTS,
-    DELETE_ENTRIES,
-    DELETE_ERRORS,
-    DELETE_KB_CONTENT,
-    EDIT_ALL_EVALUATIONS,
-    EDIT_ALL_TASKS,
-    EDIT_CONTESTS,
-    EDIT_ENTRIES,
-    EDIT_KB_CONTENT,
-    EDIT_USER_PROFILES,
-    JUDGE_ENTRIES,
-    MANAGE_ANNOUNCEMENTS,
-    MANAGE_JUDGING_CRITERIA,
-    MANAGE_JUDGING_GROUPS,
-    MANAGE_WINNERS,
-    PUBLISH_KB_CONTENT,
-    VIEW_ADMIN_STATS,
-    VIEW_ALL_EVALUATIONS,
-    VIEW_ALL_TASKS,
-    VIEW_ALL_USERS,
-    VIEW_ERRORS,
-    VIEW_JUDGING_SETTINGS,
-    IS_ADMIN
-}
-
-enum NullType {
-    EMPTY_USER_ARRAY
-    EMPTY_ERRORS_ARRAY
-    EMPTY_STRING
-    EMPTY_JUDGING_CRITERIA_ARRAY
-    EMPTY_JUDGING_GROUP_ARRAY
-    EMPTY_ENTRY_ARRAY
-    EMPTY_CONTESTANT_ARRAY
-    EMPTY_TASK_ARRAY
-    EMPTY_ENTRY_VOTE_ARRAY
-    EMPTY_CONTEST_ARRAY
-    EMPTY_EVALUATION_ARRAY
-    NULL
-}
-
-enum ObjectType {
-    USER
-    TASK
-    KB_SECTION
 }`, BuiltIn: false},
 	{Name: "graph/graphql/entries.graphqls", Input: `extend type Query {
     """
@@ -1884,9 +1814,9 @@ enum ObjectType {
     entry(id: ID!): Entry
 
     """
-    A list of flagged entries
+    A list of flagged entries. Requires View Judging Settings permission.
     """
-    flaggedEntries: [Entry!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_ENTRY_ARRAY)
+    flaggedEntries: [Entry!]!
 
     """
     A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
@@ -1899,14 +1829,14 @@ enum ObjectType {
     entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 
     """
-    The next entry to score in the judging queue for the current user
+    The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
     """
-    nextEntryToJudge: Entry @hasPermission(permission: JUDGE_ENTRIES, nullType: NULL)
+    nextEntryToJudge: Entry
 
     """
-    The next entry to review its skill level
+    The next entry to review its skill level. Requires Admin permission.
     """
-    nextEntryToReviewSkillLevel: Entry @hasPermission(permission: IS_ADMIN, nullType: NULL)
+    nextEntryToReviewSkillLevel: Entry
 }
 
 """
@@ -1969,49 +1899,49 @@ type Entry {
     isWinner: Boolean!
 
     """
-    The judging group the entry is assigned to
+    The judging group the entry is assigned to. Requires authentication.
     """
-    group: JudgingGroup @isAuthenticated(nullType: NULL)
+    group: JudgingGroup
 
     """
-    Indicates whether the entry has been flagged
+    Indicates whether the entry has been flagged. Requires authentication.
     """
-    isFlagged: Boolean @isAuthenticated(nullType: NULL)
+    isFlagged: Boolean
 
     """
-    Indicates whether the entry has been disqualified
+    Indicates whether the entry has been disqualified. Requires authentication.
     """
-    isDisqualified: Boolean @isAuthenticated(nullType: NULL)
+    isDisqualified: Boolean
 
     """
-    Indicates whether the skill level has been permanently set for the entry
+    Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
     """
-    isSkillLevelLocked: Boolean @hasPermission(permission: EDIT_ENTRIES, nullType: NULL)
+    isSkillLevelLocked: Boolean
 
     """
-    The average score of the entry
+    The average score of the entry. Requires authentication.
     """
-    averageScore: Float @isAuthenticated(nullType: NULL)
+    averageScore: Float
 
     """
-    The number of evaluations submitted for the entry
+    The number of evaluations submitted for the entry. Requires authentication.
     """
-    evaluationCount: Int @isAuthenticated(nullType: NULL)
+    evaluationCount: Int
 
     """
-    The number of judges that voted for this entry
+    The number of judges that voted for this entry. Requires authentication.
     """
-    voteCount: Int @isAuthenticated(nullType: NULL)
+    voteCount: Int
 
     """
-    Indicates whether the current user has voted for the entry
+    Indicates whether the current user has voted for the entry. Requires authentication.
     """
-    isVotedByUser: Boolean @isAuthenticated(nullType: NULL)
+    isVotedByUser: Boolean
 
     """
-    A list of judge votes for the entry
+    A list of judge votes for the entry. Requires authentication.
     """
-    judgeVotes: [EntryVote!]! @isAuthenticated(nullType: EMPTY_ENTRY_VOTE_ARRAY)
+    judgeVotes: [EntryVote!]!
 }
 
 """
@@ -2050,20 +1980,20 @@ type EntriesPerLevel {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/errors.graphqls", Input: `extend type Query {
     """
-    A list of all logged errors
+    A list of all logged errors. Requires View Errors permission.
     """
-    errors: [Error!]! @hasPermission(permission: VIEW_ERRORS, nullType: EMPTY_ERRORS_ARRAY)
+    errors: [Error!]!
 
     """
-    A single logged error
+    A single logged error. Requires View Errors permission.
     """
-    error(id: ID!): Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL)
+    error(id: ID!): Error
 }
 
 """
 A logged application error
 """
-type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
+type Error {
     """
     A unique integer id
     """
@@ -2106,9 +2036,9 @@ type Error @hasPermission(permission: VIEW_ERRORS, nullType: NULL) {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/evaluations.graphqls", Input: `extend type Query {
     """
-    A list of evaluations for a given user and contest
+    A list of evaluations for a given user and contest. Requires authentication.
     """
-    evaluations(userId: ID!, contestId: ID!): [Evaluation]! @isAuthenticated(nullType: EMPTY_EVALUATION_ARRAY)
+    evaluations(userId: ID!, contestId: ID!): [Evaluation]!
 }
 
 """
@@ -2172,9 +2102,9 @@ type Evaluation {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/judging.graphqls", Input: `extend type Query {
     """
-    A list of all judging criteria (both active and inactive)
+    A list of all judging criteria (both active and inactive). Requires View Judging Settings permission.
     """
-    allCriteria: [JudgingCriteria!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_CRITERIA_ARRAY)
+    allCriteria: [JudgingCriteria!]!
 
     """
     A list of active judging criteria. Sample data is returned for unauthenticated users.
@@ -2182,19 +2112,19 @@ type Evaluation {
     activeCriteria: [JudgingCriteria!]!
 
     """
-    A list of all judging groups
+    A list of all judging groups. Requires View Judging Settings permission.
     """
-    allJudgingGroups: [JudgingGroup!]! @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: EMPTY_JUDGING_GROUP_ARRAY)
+    allJudgingGroups: [JudgingGroup!]!
 
     """
-    A list of all active judging groups
+    A list of all active judging groups. Requires authentication.
     """
-    activeJudgingGroups: [JudgingGroup!]! @isAuthenticated(nullType: EMPTY_JUDGING_GROUP_ARRAY)
+    activeJudgingGroups: [JudgingGroup!]!
 
     """
-    A single judging group
+    A single judging group. Requires authentication.
     """
-    judgingGroup(id: ID!): JudgingGroup @isAuthenticated(nullType: NULL)
+    judgingGroup(id: ID!): JudgingGroup
 }
 
 """
@@ -2230,7 +2160,7 @@ type JudgingCriteria {
 """
 A group of evaluators that can be assigned entries to judge
 """
-type JudgingGroup @isAuthenticated(nullType: NULL) {
+type JudgingGroup {
     """
     A uniqune integer ID
     """
@@ -2284,30 +2214,30 @@ type KBSection {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
-    A list of all incomplete tasks
+    A list of all incomplete tasks. Requires View All Tasks permission.
     """
-    tasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+    tasks: [Task!]!
 
     """
-    A list of all completed tasks
+    A list of all completed tasks. Requires View All Tasks permission.
     """
-    completedTasks: [Task!]! @hasPermission(permission: VIEW_ALL_TASKS, nullType: EMPTY_TASK_ARRAY)
+    completedTasks: [Task!]!
 
     """
-    A list of all tasks available for sign up
+    A list of all tasks available for sign up. Requires authentication.
     """
-    availableTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+    availableTasks: [Task!]!
 
     """
-    A list of tasks assigned to the logged in user
+    A list of tasks assigned to the logged in user. Requires authentication.
     """
-    currentUserTasks: [Task!]! @isAuthenticated(nullType: EMPTY_TASK_ARRAY)
+    currentUserTasks: [Task!]!
 }
 
 """
 A single task that can be assigned to and completed by a user
 """
-type Task @hasPermission(permission: VIEW_ALL_TASKS, nullType: NULL, objType: TASK) {
+type Task {
     """
     A uniqune integer ID
     """
@@ -2340,14 +2270,14 @@ type Task @hasPermission(permission: VIEW_ALL_TASKS, nullType: NULL, objType: TA
   currentUser: FullUserProfile!
 
   """
-  A list of all active evaluator accounts
+  A list of all active evaluator accounts. Requires authentication.
   """
-  users: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+  users: [User!]!
 
   """
-  A list of all inactive evaluator accounts
+  A list of all inactive evaluator accounts. Requires View All Users permission.
   """
-  inactiveUsers: [User!]! @isAuthenticated(nullType: EMPTY_USER_ARRAY)
+  inactiveUsers: [User!]!
 
   """
   A single user
@@ -2388,7 +2318,7 @@ type FullUserProfile {
 """
 An evaluator account
 """
-type User @isAuthenticated(nullType: NULL) {
+type User {
   """
   The unique integer id of the user
   """
@@ -2400,9 +2330,9 @@ type User @isAuthenticated(nullType: NULL) {
   kaid: String!
 
   """
-  The user's real name
+  The user's real name. Requires View All Users permission.
   """
-  name: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  name: String
 
   """
   The user's display name
@@ -2415,29 +2345,29 @@ type User @isAuthenticated(nullType: NULL) {
   username: String
 
   """
-  The user's email address
+  The user's email address. Requires View All Users permission.
   """
-  email: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  email: String
 
   """
-  Indicates if the account has been deactivated
+  Indicates if the account has been deactivated. Requires View All Users permission.
   """
-  accountLocked: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  accountLocked: Boolean
 
   """
-  The permission set of the user
+  The permission set of the user. Requires View All Users permission.
   """
-  permissions: Permissions @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  permissions: Permissions
 
   """
-  Indicates whether the user is an admin, which allows them to perform all actions and access all data
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires View All Users permission.
   """
-  isAdmin: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  isAdmin: Boolean
 
   """
-  The timestamp of the user's last login
+  The timestamp of the user's last login. Requires View All Users permission.
   """
-  lastLogin: String @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  lastLogin: String
 
   """
   The start date of the user's term
@@ -2450,14 +2380,14 @@ type User @isAuthenticated(nullType: NULL) {
   termEnd: String
 
   """
-  Indicates whether the user has email notifications enabled for new announcements
+  Indicates whether the user has email notifications enabled for new announcements. Requires View All Users permission.
   """
-  notificationsEnabled: Boolean @hasPermission(permission: VIEW_ALL_USERS, nullType: NULL, objType: USER)
+  notificationsEnabled: Boolean
 
   """
-  The judging group the user is assigned to
+  The judging group the user is assigned to. Requires View Judging Settings permission.
   """
-  assignedGroup: JudgingGroup @hasPermission(permission: VIEW_JUDGING_SETTINGS, nullType: NULL, objType: USER)
+  assignedGroup: JudgingGroup
 }
 
 """
@@ -2618,54 +2548,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.Permission
-	if tmp, ok := rawArgs["permission"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("permission"))
-		arg0, err = ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["permission"] = arg0
-	var arg1 model.NullType
-	if tmp, ok := rawArgs["nullType"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nullType"))
-		arg1, err = ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["nullType"] = arg1
-	var arg2 *model.ObjectType
-	if tmp, ok := rawArgs["objType"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("objType"))
-		arg2, err = ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["objType"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) dir_isAuthenticated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.NullType
-	if tmp, ok := rawArgs["nullType"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nullType"))
-		arg0, err = ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["nullType"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2981,32 +2863,8 @@ func (ec *executionContext) _Announcement_author(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Announcement().Author(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Announcement().Author(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3381,36 +3239,8 @@ func (ec *executionContext) _Contest_author(ctx context.Context, field graphql.C
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Contest().Author(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_CONTESTS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contest().Author(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3658,32 +3488,8 @@ func (ec *executionContext) _Contest_isVotingEnabled(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Contest().IsVotingEnabled(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contest().IsVotingEnabled(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3897,32 +3703,8 @@ func (ec *executionContext) _Contestant_entries(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Contestant().Entries(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ENTRY_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Entry); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contestant().Entries(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4697,42 +4479,8 @@ func (ec *executionContext) _Entry_group(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().Group(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.JudgingGroup); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().Group(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4780,32 +4528,8 @@ func (ec *executionContext) _Entry_isFlagged(ctx context.Context, field graphql.
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().IsFlagged(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().IsFlagged(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4845,32 +4569,8 @@ func (ec *executionContext) _Entry_isDisqualified(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().IsDisqualified(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().IsDisqualified(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4910,36 +4610,8 @@ func (ec *executionContext) _Entry_isSkillLevelLocked(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().IsSkillLevelLocked(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_ENTRIES")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().IsSkillLevelLocked(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4979,32 +4651,8 @@ func (ec *executionContext) _Entry_averageScore(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().AverageScore(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*float64); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *float64`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().AverageScore(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5044,32 +4692,8 @@ func (ec *executionContext) _Entry_evaluationCount(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().EvaluationCount(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*int); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().EvaluationCount(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5109,32 +4733,8 @@ func (ec *executionContext) _Entry_voteCount(ctx context.Context, field graphql.
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().VoteCount(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*int); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().VoteCount(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5174,32 +4774,8 @@ func (ec *executionContext) _Entry_isVotedByUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().IsVotedByUser(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().IsVotedByUser(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5239,32 +4815,8 @@ func (ec *executionContext) _Entry_judgeVotes(ctx context.Context, field graphql
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Entry().JudgeVotes(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ENTRY_VOTE_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.EntryVote); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.EntryVote`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().JudgeVotes(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5359,32 +4911,8 @@ func (ec *executionContext) _EntryVote_user(ctx context.Context, field graphql.C
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.EntryVote().User(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.EntryVote().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5797,32 +5325,8 @@ func (ec *executionContext) _Error_user(ctx context.Context, field graphql.Colle
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Error().User(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Error().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6022,32 +5526,8 @@ func (ec *executionContext) _Evaluation_user(ctx context.Context, field graphql.
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Evaluation().User(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Evaluation().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6645,32 +6125,8 @@ func (ec *executionContext) _FullUserProfile_user(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.User, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8707,32 +8163,8 @@ func (ec *executionContext) _Query_contestantSearch(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ContestantSearch(rctx, fc.Args["query"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_CONTESTANT_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Contestant); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Contestant`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ContestantSearch(rctx, fc.Args["query"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9007,32 +8439,8 @@ func (ec *executionContext) _Query_contestsEvaluatedByUser(ctx context.Context, 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ContestsEvaluatedByUser(rctx, fc.Args["id"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_CONTEST_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Contest); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Contest`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ContestsEvaluatedByUser(rctx, fc.Args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9301,36 +8709,8 @@ func (ec *executionContext) _Query_flaggedEntries(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().FlaggedEntries(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ENTRY_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Entry); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().FlaggedEntries(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9573,36 +8953,8 @@ func (ec *executionContext) _Query_nextEntryToJudge(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().NextEntryToJudge(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "JUDGE_ENTRIES")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Entry); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().NextEntryToJudge(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9684,36 +9036,8 @@ func (ec *executionContext) _Query_nextEntryToReviewSkillLevel(ctx context.Conte
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().NextEntryToReviewSkillLevel(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "IS_ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Entry); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Entry`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().NextEntryToReviewSkillLevel(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9795,50 +9119,8 @@ func (ec *executionContext) _Query_errors(ctx context.Context, field graphql.Col
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Errors(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_ERRORS_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Error); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Error`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Errors(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9899,50 +9181,8 @@ func (ec *executionContext) _Query_error(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Error(rctx, fc.Args["id"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ERRORS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Error); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Error`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Error(rctx, fc.Args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10011,32 +9251,8 @@ func (ec *executionContext) _Query_evaluations(ctx context.Context, field graphq
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Evaluations(rctx, fc.Args["userId"].(int), fc.Args["contestId"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_EVALUATION_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Evaluation); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Evaluation`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Evaluations(rctx, fc.Args["userId"].(int), fc.Args["contestId"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10114,36 +9330,8 @@ func (ec *executionContext) _Query_allCriteria(ctx context.Context, field graphq
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().AllCriteria(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_JUDGING_CRITERIA_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.JudgingCriteria); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.JudgingCriteria`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllCriteria(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10254,46 +9442,8 @@ func (ec *executionContext) _Query_allJudgingGroups(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().AllJudgingGroups(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_JUDGING_GROUP_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.JudgingGroup); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllJudgingGroups(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10344,42 +9494,8 @@ func (ec *executionContext) _Query_activeJudgingGroups(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ActiveJudgingGroups(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_JUDGING_GROUP_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.JudgingGroup); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ActiveJudgingGroups(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10430,42 +9546,8 @@ func (ec *executionContext) _Query_judgingGroup(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().JudgingGroup(rctx, fc.Args["id"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.JudgingGroup); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().JudgingGroup(rctx, fc.Args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10640,54 +9722,8 @@ func (ec *executionContext) _Query_tasks(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Tasks(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "TASK")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_TASK_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Task); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Task`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Tasks(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10742,54 +9778,8 @@ func (ec *executionContext) _Query_completedTasks(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CompletedTasks(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "TASK")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_TASK_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive1, permission, nullType, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Task); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Task`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CompletedTasks(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10844,50 +9834,8 @@ func (ec *executionContext) _Query_availableTasks(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().AvailableTasks(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "TASK")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_TASK_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Task); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Task`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AvailableTasks(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10942,50 +9890,8 @@ func (ec *executionContext) _Query_currentUserTasks(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CurrentUserTasks(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_TASKS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "TASK")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_TASK_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Task); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.Task`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CurrentUserTasks(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11096,42 +10002,8 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Users(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_USER_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Users(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11204,42 +10076,8 @@ func (ec *executionContext) _Query_inactiveUsers(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().InactiveUsers(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "EMPTY_USER_ARRAY")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive1, nullType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().InactiveUsers(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11312,32 +10150,8 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().User(rctx, fc.Args["id"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().User(rctx, fc.Args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11635,32 +10449,8 @@ func (ec *executionContext) _Task_assignedUser(ctx context.Context, field graphq
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Task().AssignedUser(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Task().AssignedUser(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11906,40 +10696,8 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().Name(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Name(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12061,40 +10819,8 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().Email(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Email(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12134,40 +10860,8 @@ func (ec *executionContext) _User_accountLocked(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().AccountLocked(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().AccountLocked(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12207,40 +10901,8 @@ func (ec *executionContext) _User_permissions(ctx context.Context, field graphql
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().Permissions(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Permissions); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.Permissions`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Permissions(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12342,40 +11004,8 @@ func (ec *executionContext) _User_isAdmin(ctx context.Context, field graphql.Col
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().IsAdmin(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().IsAdmin(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12415,40 +11045,8 @@ func (ec *executionContext) _User_lastLogin(ctx context.Context, field graphql.C
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().LastLogin(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().LastLogin(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12570,40 +11168,8 @@ func (ec *executionContext) _User_notificationsEnabled(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().NotificationsEnabled(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_ALL_USERS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().NotificationsEnabled(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12643,50 +11209,8 @@ func (ec *executionContext) _User_assignedGroup(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.User().AssignedGroup(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, obj, directive0, nullType)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "VIEW_JUDGING_SETTINGS")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "USER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive1, permission, nullType, objType)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.JudgingGroup); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.JudgingGroup`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().AssignedGroup(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17783,26 +16307,6 @@ func (ec *executionContext) marshalNKBSection2ᚖgithubᚗcomᚋKAᚑChallenge�
 	return ec._KBSection(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx context.Context, v interface{}) (model.NullType, error) {
-	var res model.NullType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx context.Context, sel ast.SelectionSet, v model.NullType) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, v interface{}) (model.Permission, error) {
-	var res model.Permission
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx context.Context, sel ast.SelectionSet, v model.Permission) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -18335,22 +16839,6 @@ func (ec *executionContext) marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBSection(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, v interface{}) (*model.ObjectType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.ObjectType)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx context.Context, sel ast.SelectionSet, v *model.ObjectType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOPermissions2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermissions(ctx context.Context, sel ast.SelectionSet, v *model.Permissions) graphql.Marshaler {

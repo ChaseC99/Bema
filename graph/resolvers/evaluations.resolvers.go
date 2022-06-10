@@ -30,7 +30,6 @@ func (r *evaluationResolver) User(ctx context.Context, obj *model.Evaluation) (*
 
 func (r *queryResolver) Evaluations(ctx context.Context, userID int, contestID int) ([]*model.Evaluation, error) {
 	user := auth.GetUserFromContext(ctx)
-
 	if user == nil {
 		return []*model.Evaluation{}, nil
 	}

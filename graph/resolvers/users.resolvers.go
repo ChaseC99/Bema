@@ -40,6 +40,11 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return []*model.User{}, nil
+	}
+
 	users, err := models.GetAllActiveUsers(ctx)
 	if err != nil {
 		return []*model.User{}, err
@@ -48,6 +53,11 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 }
 
 func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.ViewAllUsers) {
+		return []*model.User{}, nil
+	}
+
 	users, err := models.GetAllInactiveUsers(ctx)
 	if err != nil {
 		return []*model.User{}, err
@@ -56,58 +66,103 @@ func (r *queryResolver) InactiveUsers(ctx context.Context) ([]*model.User, error
 }
 
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {
-	user, err := models.GetUserById(ctx, id)
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
+	u, err := models.GetUserById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return u, nil
 }
 
 func (r *userResolver) Name(ctx context.Context, obj *model.User) (*string, error) {
-	return obj.Name, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.Name, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) Email(ctx context.Context, obj *model.User) (*string, error) {
-	return obj.Email, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.Email, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) AccountLocked(ctx context.Context, obj *model.User) (*bool, error) {
-	return obj.AccountLocked, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.AccountLocked, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) Permissions(ctx context.Context, obj *model.User) (*model.Permissions, error) {
-	permissions, err := models.GetUserPermissionsById(ctx, obj.ID)
-	return permissions, err
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		permissions, err := models.GetUserPermissionsById(ctx, obj.ID)
+		return permissions, err
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) IsAdmin(ctx context.Context, obj *model.User) (*bool, error) {
-	return obj.IsAdmin, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.IsAdmin, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) LastLogin(ctx context.Context, obj *model.User) (*string, error) {
-	return obj.LastLogin, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.LastLogin, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) NotificationsEnabled(ctx context.Context, obj *model.User) (*bool, error) {
-	return obj.NotificationsEnabled, nil
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewAllUsers) || obj.ID == user.ID {
+		return obj.NotificationsEnabled, nil
+	}
+
+	return nil, nil
 }
 
 func (r *userResolver) AssignedGroup(ctx context.Context, obj *model.User) (*model.JudgingGroup, error) {
-	groupId, err := models.GetUserGroupById(ctx, obj.ID)
-	if err != nil {
-		return nil, err
+	user := auth.GetUserFromContext(ctx)
+	if auth.HasPermission(user, auth.ViewJudgingSettings) || obj.ID == user.ID {
+		groupId, err := models.GetUserGroupById(ctx, obj.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		if groupId == nil {
+			return nil, err
+		}
+
+		group, err := models.GetJudgingGroupById(ctx, *groupId)
+		if err != nil {
+			return nil, err
+		}
+
+		return group, nil
 	}
 
-	if groupId == nil {
-		return nil, err
-	}
-
-	group, err := models.GetJudgingGroupById(ctx, *groupId)
-	if err != nil {
-		return nil, err
-	}
-
-	return group, nil
+	return nil, nil
 }
 
 // User returns generated.UserResolver implementation.
