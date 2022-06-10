@@ -14,10 +14,6 @@ type Article = {
   section: {
     id: string
     name: string
-    articles: {
-      id: string
-      title: string
-    }[] | null
   }
   title: string
   content: string
@@ -35,10 +31,6 @@ const GET_ARTICLE = gql`
       section {
         id
         name
-        articles {
-          id
-          title
-        }
       }
       title
       content
