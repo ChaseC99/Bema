@@ -142,7 +142,7 @@ func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, 
 		return nil, nil
 	}
 
-	if *article.Visibility == "Public" || (*article.Visibility == "Evaluators Only" && user != nil) || (*article.Visibility == "Admins Only" && user != nil && user.IsAdmin) {
+	if *article.Visibility == "Public" || (*article.Visibility == "Evaluators Only" && user != nil) || (*article.Visibility == "Admins Only" && auth.HasPermission(user, auth.EditKbContent)) {
 		return article, nil
 	}
 
