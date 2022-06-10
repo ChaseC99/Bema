@@ -131,3 +131,66 @@ func CheckKBArticleHasDraft(ctx context.Context, id int) (bool, error) {
 	}
 	return false, nil
 }
+
+func GetPublicKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
+	articles := []*model.KBArticle{}
+
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 AND article_visibility = 'Public' AND is_published = true ORDER BY article_id ASC", sectionId)
+	if err != nil {
+		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
+	}
+
+	for rows.Next() {
+		a := NewKBArticleModel()
+
+		if err := rows.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
+			return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading articles for a KB section", err)
+		}
+
+		articles = append(articles, &a)
+	}
+
+	return articles, nil
+}
+
+func GetEvaluatorKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
+	articles := []*model.KBArticle{}
+
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 AND (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND is_published = true ORDER BY article_id ASC", sectionId)
+	if err != nil {
+		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
+	}
+
+	for rows.Next() {
+		a := NewKBArticleModel()
+
+		if err := rows.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
+			return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading articles for a KB section", err)
+		}
+
+		articles = append(articles, &a)
+	}
+
+	return articles, nil
+}
+
+func GetAdminKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
+	articles := []*model.KBArticle{}
+
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 ORDER BY article_id ASC", sectionId)
+	if err != nil {
+		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
+	}
+
+	for rows.Next() {
+		a := NewKBArticleModel()
+
+		if err := rows.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
+			return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading articles for a KB section", err)
+		}
+
+		articles = append(articles, &a)
+	}
+
+	return articles, nil
+}

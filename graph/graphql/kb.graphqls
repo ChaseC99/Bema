@@ -38,6 +38,11 @@ type KBSection {
     The visibility of the section. Requires Edit KB Content permission.
     """
     visibility: String
+
+    """
+    A list of articles assigned to the section
+    """
+    articles: [KBArticle!]!
 }
 
 """

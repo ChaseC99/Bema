@@ -64,6 +64,25 @@ func (r *kBSectionResolver) Visibility(ctx context.Context, obj *model.KBSection
 	return nil, nil
 }
 
+func (r *kBSectionResolver) Articles(ctx context.Context, obj *model.KBSection) ([]*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	var articles []*model.KBArticle
+	var err error
+	if user == nil {
+		articles, err = models.GetPublicKBArticlesBySection(ctx, obj.ID)
+	} else if user.IsAdmin {
+		articles, err = models.GetAdminKBArticlesBySection(ctx, obj.ID)
+	} else {
+		articles, err = models.GetEvaluatorKBArticlesBySection(ctx, obj.ID)
+	}
+
+	if err != nil {
+		return []*model.KBArticle{}, err
+	}
+	return articles, nil
+}
+
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -85,11 +104,30 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error
 }
 
 func (r *queryResolver) Section(ctx context.Context, id int) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
 	section, err := models.GetKBSectionById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return section, nil
+
+	// Prevent null pointer derefence below
+	if section == nil {
+		return section, nil
+	}
+
+	// Allow KB editors to access all sections
+	if auth.HasPermission(user, auth.EditKbContent) {
+		return section, nil
+	}
+
+	if *section.Visibility == "Public" {
+		return section, nil
+	} else if *section.Visibility == "Evaluators Only" && user != nil {
+		return section, nil
+	}
+
+	return nil, nil
 }
 
 func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, error) {

@@ -179,6 +179,7 @@ type ComplexityRoot struct {
 	}
 
 	KBSection struct {
+		Articles    func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -331,6 +332,7 @@ type KBArticleResolver interface {
 }
 type KBSectionResolver interface {
 	Visibility(ctx context.Context, obj *model.KBSection) (*string, error)
+	Articles(ctx context.Context, obj *model.KBSection) ([]*model.KBArticle, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1013,6 +1015,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.KBArticle.Visibility(childComplexity), true
+
+	case "KBSection.articles":
+		if e.complexity.KBSection.Articles == nil {
+			break
+		}
+
+		return e.complexity.KBSection.Articles(childComplexity), true
 
 	case "KBSection.description":
 		if e.complexity.KBSection.Description == nil {
@@ -2315,6 +2324,11 @@ type KBSection {
     The visibility of the section. Requires Edit KB Content permission.
     """
     visibility: String
+
+    """
+    A list of articles assigned to the section
+    """
+    articles: [KBArticle!]!
 }
 
 """
@@ -6792,6 +6806,8 @@ func (ec *executionContext) fieldContext_KBArticle_section(ctx context.Context, 
 				return ec.fieldContext_KBSection_description(ctx, field)
 			case "visibility":
 				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
 		},
@@ -7293,6 +7309,70 @@ func (ec *executionContext) fieldContext_KBSection_visibility(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBSection_articles(ctx context.Context, field graphql.CollectedField, obj *model.KBSection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBSection_articles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBSection().Articles(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.KBArticle)
+	fc.Result = res
+	return ec.marshalNKBArticle2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBSection_articles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBSection",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
 	}
 	return fc, nil
@@ -10230,6 +10310,8 @@ func (ec *executionContext) fieldContext_Query_sections(ctx context.Context, fie
 				return ec.fieldContext_KBSection_description(ctx, field)
 			case "visibility":
 				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
 		},
@@ -10281,6 +10363,8 @@ func (ec *executionContext) fieldContext_Query_section(ctx context.Context, fiel
 				return ec.fieldContext_KBSection_description(ctx, field)
 			case "visibility":
 				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
 		},
@@ -14878,6 +14962,26 @@ func (ec *executionContext) _KBSection(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "articles":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBSection_articles(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17067,6 +17171,60 @@ func (ec *executionContext) marshalNJudgingGroup2ᚖgithubᚗcomᚋKAᚑChalleng
 		return graphql.Null
 	}
 	return ec._JudgingGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNKBArticle2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KBArticle) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx context.Context, sel ast.SelectionSet, v *model.KBArticle) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._KBArticle(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNKBSection2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KBSection) graphql.Marshaler {

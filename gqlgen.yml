@@ -142,6 +142,8 @@ models:
     fields:
       visibility:
         resolver: true
+      articles:
+        resolver: true
   KBArticle:
     fields:
       section:

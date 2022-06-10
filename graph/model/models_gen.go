@@ -236,6 +236,8 @@ type KBSection struct {
 	Description string `json:"description"`
 	// The visibility of the section. Requires Edit KB Content permission.
 	Visibility *string `json:"visibility"`
+	// A list of articles assigned to the section
+	Articles []*KBArticle `json:"articles"`
 }
 
 // The permissions set, associated with the User type
