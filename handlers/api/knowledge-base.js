@@ -7,35 +7,6 @@ const {
 const db = require(process.cwd() + "/util/db");
 const { displayDateFormat } = require(process.cwd() + "/util/variables");
 
-exports.getSection = (request, response, next) => {
-  try {
-    let section_id = parseInt(request.query.sectionId);
-    let is_admin = request.decodedToken ? request.decodedToken.is_admin : false;
-
-    if (section_id > 0) {
-      return db.query("SELECT * FROM kb_section WHERE section_id = $1", [section_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting the requested section.", res.error);
-        }
-
-        if ((res.rows[0].section_visibility === "Admin Only" && !is_admin) ||
-          (res.rows[0].section_visibility === "Evaluators Only") && !request.decodedToken) {
-          return handleNext(next, 403, "You're not authorized to access this section.");
-        }
-        response.json({
-          is_admin: is_admin,
-          logged_in: request.decodedToken ? true : false,
-          section: res.rows[0]
-        });
-      });
-    } else {
-      return handleNext(next, 400, "section_id must be specified.", new Error("section_id is invalid."));
-    }
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving this knowledge base section.", error);
-  }
-};
-
 exports.addSection = (request, response, next) => {
   try {
     let {

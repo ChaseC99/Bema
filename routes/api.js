@@ -693,7 +693,6 @@ router.put("/internal/evaluations", routeChecks.evaluations.edit, wasValidated, 
 router.delete("/internal/evaluations", routeChecks.evaluations.delete, wasValidated, evaluations.delete);
 
 // Knowledge Base
-router.get("/internal/kb/getSection", kb.getSection);
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);
 router.post("/internal/kb/sections", routeChecks.kb.addSection, wasValidated, kb.addSection);
 router.delete("/internal/kb/sections", routeChecks.kb.deleteSection, wasValidated, kb.deleteSection);
