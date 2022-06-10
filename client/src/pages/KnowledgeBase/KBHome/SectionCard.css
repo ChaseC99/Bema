@@ -13,6 +13,18 @@
   margin-right: 24px;
 }
 
+.kb-section-card .kb-section-description {
+  padding: 0 30px;
+  font-size: 14px;
+  font-style: italic;
+  color: rgba(33, 36, 44, 0.64);
+  margin-bottom: 12px;
+}
+
+.kb-section-card .kb-section-description p {
+  margin: 0px;
+}
+
 .kb-section-card .card-body {
   display: flex;
   flex-direction: row;

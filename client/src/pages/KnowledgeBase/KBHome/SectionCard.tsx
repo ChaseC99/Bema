@@ -5,8 +5,9 @@ import { fetchSectionArticles } from "./fetchData";
 import "./SectionCard.css";
 
 type SectionCardProps = {
-  sectionId: number
-  sectionName: string
+  id: string
+  name: string
+  description?: string
   testId?: string
 }
 
@@ -26,18 +27,23 @@ function SectionCard(props: SectionCardProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetchSectionArticles(props.sectionId)
+    fetchSectionArticles(parseInt(props.id))
       .then((data) => {
         setArticles(data.articles);
         setIsLoading(false);
       });
-  }, [props.sectionId]);
+  }, [props.id]);
 
   return (
     <article className="card kb-section-card col-12" data-testid={props.testId}>
       <div className="card-header">
-        <h3>{props.sectionName}</h3>
+        <h3>{props.name}</h3>
       </div>
+      {props.description &&
+        <div className="kb-section-description">
+          <p className="col-12">{props.description}</p>
+        </div>
+      }
       <div className="card-body">
         {isLoading && <LoadingSpinner size="MEDIUM" />}
 

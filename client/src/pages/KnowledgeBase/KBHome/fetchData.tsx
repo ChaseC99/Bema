@@ -7,11 +7,3 @@ export async function fetchSectionArticles(sectionId: number) {
     articles: data.articles
   };
 }
-
-export async function fetchSections() {
-  const data = await request("GET", "/api/internal/kb/sections");
-
-  return {
-    sections: data.sections
-  };
-}

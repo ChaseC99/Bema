@@ -1,29 +1,34 @@
-import { useEffect, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import useAppState from "../../../state/useAppState";
-import { fetchSections } from "./fetchData";
 import SectionCard from "./SectionCard";
 
 type Section = {
-  section_description: string
-  section_id: number
-  section_name: string
-  section_visibility: string
+  id: string
+  description: string
+  name: string
+  visibility: string | null
 }
+
+type GetSectionsResponse = {
+  sections: Section[]
+}
+
+const GET_SECTIONS = gql`
+  query GetSections {
+    sections {
+      id
+      description
+      name
+      visibility
+    }
+  }
+`;
 
 function KBHome() {
   const { state } = useAppState();
-  const [sections, setSections] = useState<Section[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    fetchSections()
-      .then((data) => {
-        setSections(data.sections);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading: sectionsIsLoading, data: sectionsData } = useQuery<GetSectionsResponse>(GET_SECTIONS);
 
   return (
     <section className="container center col-12">
@@ -38,12 +43,12 @@ function KBHome() {
           </span>
         </div>
         <div className="section-body" >
-          {isLoading && <LoadingSpinner size="LARGE" />}
+          {sectionsIsLoading && <LoadingSpinner size="LARGE" />}
 
-          {!isLoading &&
-            sections.map((s) => {
+          {!sectionsIsLoading &&
+            sectionsData?.sections.map((s) => {
               return (
-                <SectionCard sectionId={s.section_id} sectionName={s.section_name} key={s.section_id} />
+                <SectionCard id={s.id} name={s.name} description={s.description} key={s.id} />
               );
             })
           }
