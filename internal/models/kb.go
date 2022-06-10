@@ -59,7 +59,7 @@ func GetPublicKBSections(ctx context.Context) ([]*model.KBSection, error) {
 func GetEvaluatorKBSections(ctx context.Context) ([]*model.KBSection, error) {
 	sections := []*model.KBSection{}
 
-	rows, err := db.DB.Query("SELECT section_id, section_name, section_description, section_visibility FROM kb_section WHERE section_visibility = 'Evaluators Only' ORDER BY section_id ASC;")
+	rows, err := db.DB.Query("SELECT section_id, section_name, section_description, section_visibility FROM kb_section WHERE section_visibility = 'Evaluators Only' OR section_visibility = 'Public' ORDER BY section_id ASC;")
 	if err != nil {
 		return []*model.KBSection{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of KB sections", err)
 	}

@@ -13,7 +13,12 @@ import (
 )
 
 func (r *kBSectionResolver) Visibility(ctx context.Context, obj *model.KBSection) (*string, error) {
-	return obj.Visibility, nil
+	user := auth.GetUserFromContext(ctx)
+
+	if auth.HasPermission(user, auth.EditKbContent) {
+		return obj.Visibility, nil
+	}
+	return nil, nil
 }
 
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {

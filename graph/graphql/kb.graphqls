@@ -13,7 +13,7 @@ extend type Query {
 """
 A knowledge base section
 """
-type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objType: KB_SECTION) {
+type KBSection {
     """
     A unique integer ID
     """
@@ -32,5 +32,5 @@ type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objTy
     """
     The visibility of the section
     """
-    visibility: String @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL)
+    visibility: String
 }

@@ -65,6 +65,41 @@ type Permissions struct {
 	ViewJudgingSettings   bool
 }
 
+type Permission string
+
+const (
+	AddEntries            Permission = "ADD_ENTRIES"
+	AddUsers              Permission = "ADD_USERS"
+	AssignEntryGroups     Permission = "ASSIGN_ENTRY_GROUPS"
+	AssignEvaluatorGroups Permission = "ASSIGN_EVALUATOR_GROUPS"
+	AssumeUserIdentities  Permission = "ASSUME_USER_IDENTITIES"
+	ChangeUserPasswords   Permission = "CHANGE_USER_PASSWORDS"
+	DeleteAllEvaluations  Permission = "DELETE_ALL_EVALUATIONS"
+	DeleteAllTasks        Permission = "DELETE_ALL_TASKS"
+	DeleteContests        Permission = "DELETE_CONTESTS"
+	DeleteEntries         Permission = "DELETE_ENTRIES"
+	DeleteErrors          Permission = "DELETE_ERRORS"
+	DeleteKbContent       Permission = "DELETE_KB_CONTENT"
+	EditAllEvaluations    Permission = "EDIT_ALL_EVALUATIONS"
+	EditAllTasks          Permission = "EDIT_ALL_TASKS"
+	EditContests          Permission = "EDIT_CONTESTS"
+	EditEntries           Permission = "EDIT_ENTRIES"
+	EditKbContent         Permission = "EDIT_KB_CONTENT"
+	EditUserProfiles      Permission = "EDIT_USER_PROFILES"
+	JudgeEntries          Permission = "JUDGE_ENTRIES"
+	ManageAnnouncements   Permission = "MANAGE_ANNOUNCEMENTS"
+	ManageJudgingCriteria Permission = "MANAGE_JUDGING_CRITERIA"
+	ManageJudgingGroups   Permission = "MANAGE_JUDGING_GROUPS"
+	ManageWinners         Permission = "MANAGE_WINNERS"
+	PublishKbContent      Permission = "PUBLISH_KB_CONTENT"
+	ViewAdminStats        Permission = "VIEW_ADMIN_STATS"
+	ViewAllEvaluations    Permission = "VIEW_ALL_EVALUATIONS"
+	ViewAllTasks          Permission = "VIEW_ALL_TASKS"
+	ViewAllUsers          Permission = "VIEW_ALL_USERS"
+	ViewErrors            Permission = "VIEW_ERRORS"
+	ViewJudgingSettings   Permission = "VIEW_JUDGING_SETTINGS"
+)
+
 func Middleware(db *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +210,7 @@ func IsAuthenticated(ctx context.Context, obj interface{}, next graphql.Resolver
 }
 
 // Handler for the @hasPermission directive. Only calls the resolver if the user is an admin or if they are logged in and have the required permission.
-func HasPermission(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (interface{}, error) {
+func HasPermissionOld(ctx context.Context, obj interface{}, next graphql.Resolver, permission model.Permission, nullType model.NullType, objType *model.ObjectType) (interface{}, error) {
 	user := GetUserFromContext(ctx)
 
 	// Allow admin users through
@@ -316,22 +351,91 @@ func isOwner(user *User, obj interface{}, objType model.ObjectType) bool {
 		return false
 	}
 
-	switch objType {
-	case model.ObjectTypeUser:
-		return obj.(*model.User).ID == user.ID
-	case model.ObjectTypeTask:
-		return obj.(*model.Task).AssignedUser.ID == user.ID
-	case model.ObjectTypeKbSection:
-		visibility := *obj.(*model.KBSection).Visibility
-
-		if visibility == "Public" {
+	switch val := obj.(type) {
+	case model.User:
+		return val.ID == user.ID
+	case model.Task:
+		return val.AssignedUser.ID == user.ID
+	case model.KBSection:
+		if *val.Visibility == "Public" {
 			return true
-		} else if visibility == "Evaluators Only" && user != nil {
+		} else if *val.Visibility == "Evaluators Only" && user != nil {
 			return true
-		} else if visibility == "Admins Only" && user != nil && user.IsAdmin {
+		} else if *val.Visibility == "Admins Only" && user != nil && user.IsAdmin {
 			return true
 		}
 		return false
+	default:
+		return false
+	}
+}
+
+func HasPermission(user *User, permission Permission) bool {
+	if user == nil {
+		return false
+	}
+
+	switch permission {
+	case AddEntries:
+		return user.Permissions.AddEntries
+	case AddUsers:
+		return user.Permissions.AddUsers
+	case AssignEntryGroups:
+		return user.Permissions.AssignEntryGroups
+	case AssignEvaluatorGroups:
+		return user.Permissions.AssignEvaluatorGroups
+	case AssumeUserIdentities:
+		return user.Permissions.AssumeUserIdentities
+	case ChangeUserPasswords:
+		return user.Permissions.ChangeUserPasswords
+	case DeleteAllEvaluations:
+		return user.Permissions.DeleteAllEvaluations
+	case DeleteAllTasks:
+		return user.Permissions.DeleteAllTasks
+	case DeleteContests:
+		return user.Permissions.DeleteContests
+	case DeleteEntries:
+		return user.Permissions.DeleteEntries
+	case DeleteErrors:
+		return user.Permissions.DeleteErrors
+	case DeleteKbContent:
+		return user.Permissions.DeleteKbContent
+	case EditAllEvaluations:
+		return user.Permissions.EditAllEvaluations
+	case EditAllTasks:
+		return user.Permissions.EditAllTasks
+	case EditContests:
+		return user.Permissions.EditContests
+	case EditEntries:
+		return user.Permissions.EditEntries
+	case EditKbContent:
+		return user.Permissions.EditKbContent
+	case EditUserProfiles:
+		return user.Permissions.EditUserProfiles
+	case JudgeEntries:
+		return user.Permissions.JudgeEntries
+	case ManageAnnouncements:
+		return user.Permissions.ManageAnnouncements
+	case ManageJudgingCriteria:
+		return user.Permissions.ManageJudgingCriteria
+	case ManageJudgingGroups:
+		return user.Permissions.ManageJudgingGroups
+	case ManageWinners:
+		return user.Permissions.ManageWinners
+	case PublishKbContent:
+		return user.Permissions.PublishKbContent
+	case ViewAdminStats:
+		return user.Permissions.ViewAdminStats
+	case ViewAllEvaluations:
+		return user.Permissions.ViewAllEvaluations
+	case ViewAllTasks:
+		return user.Permissions.ViewAllTasks
+	case ViewAllUsers:
+		return user.Permissions.ViewAllUsers
+	case ViewErrors:
+		return user.Permissions.ViewErrors
+	case ViewJudgingSettings:
+		return user.Permissions.ViewJudgingSettings
 	default:
 		return false
 	}

@@ -2261,7 +2261,7 @@ type JudgingGroup @isAuthenticated(nullType: NULL) {
 """
 A knowledge base section
 """
-type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objType: KB_SECTION) {
+type KBSection {
     """
     A unique integer ID
     """
@@ -2280,7 +2280,7 @@ type KBSection @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL, objTy
     """
     The visibility of the section
     """
-    visibility: String @hasPermission(permission: EDIT_KB_CONTENT, nullType: NULL)
+    visibility: String
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
@@ -7224,36 +7224,8 @@ func (ec *executionContext) _KBSection_visibility(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.KBSection().Visibility(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_KB_CONTENT")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, obj, directive0, permission, nullType, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBSection().Visibility(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10552,40 +10524,8 @@ func (ec *executionContext) _Query_sections(ctx context.Context, field graphql.C
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Sections(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_KB_CONTENT")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "KB_SECTION")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.KBSection); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/KA-Challenge-Council/Bema/graph/model.KBSection`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sections(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10638,40 +10578,8 @@ func (ec *executionContext) _Query_section(ctx context.Context, field graphql.Co
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Section(rctx, fc.Args["id"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			permission, err := ec.unmarshalNPermission2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermission(ctx, "EDIT_KB_CONTENT")
-			if err != nil {
-				return nil, err
-			}
-			nullType, err := ec.unmarshalNNullType2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐNullType(ctx, "NULL")
-			if err != nil {
-				return nil, err
-			}
-			objType, err := ec.unmarshalOObjectType2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐObjectType(ctx, "KB_SECTION")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasPermission == nil {
-				return nil, errors.New("directive hasPermission is not implemented")
-			}
-			return ec.directives.HasPermission(ctx, nil, directive0, permission, nullType, objType)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.KBSection); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KA-Challenge-Council/Bema/graph/model.KBSection`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Section(rctx, fc.Args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
