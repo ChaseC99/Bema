@@ -696,7 +696,6 @@ router.delete("/internal/evaluations", routeChecks.evaluations.delete, wasValida
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);
 router.post("/internal/kb/sections", routeChecks.kb.addSection, wasValidated, kb.addSection);
 router.delete("/internal/kb/sections", routeChecks.kb.deleteSection, wasValidated, kb.deleteSection);
-router.get("/internal/kb/articles", kb.getArticles);
 router.post("/internal/kb/articles", routeChecks.kb.addArticle, wasValidated, kb.addArticle);
 router.put("/internal/kb/articles", routeChecks.kb.editArticle, wasValidated, kb.editArticle);
 router.put("/internal/kb/articles/properties", routeChecks.kb.editArticleProperties, wasValidated, kb.editArticleProperties);

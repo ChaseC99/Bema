@@ -85,64 +85,6 @@ exports.deleteSection = (request, response, next) => {
   }
 };
 
-exports.getArticles = (request, response, next) => {
-  try {
-    let article_id = parseInt(request.query.articleId);
-    let section_id = parseInt(request.query.sectionId);
-    let is_admin = request.decodedToken ? request.decodedToken.is_admin : false;
-
-    // Get all articles within a section
-    if (section_id > 0) {
-      let query = "SELECT * FROM kb_article WHERE section_id = $1 AND article_visibility = 'Public' AND is_published = true ORDER BY article_name";
-      if (is_admin) {
-        // If user is admin, return all articles in the section_name
-        query = "SELECT * FROM kb_article WHERE section_id = $1 ORDER BY article_name";
-      } else if (request.decodedToken && !is_admin && request.decodedToken.permissions.edit_kb_content) {
-        // If user is evaluator, but not an admin, return all articles that are public or restricted to evaluators
-        query = "SELECT * FROM kb_article WHERE (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND section_id = $1 ORDER BY article_name";
-      } else if (request.decodedToken && !is_admin) {
-        // If user is evaluator, but not an admin, return all articles that are public or restricted to evaluators
-        query = "SELECT * FROM kb_article WHERE (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND section_id = $1 AND is_published = true ORDER BY article_name";
-      }
-
-      return db.query(query, [section_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting the requested articles.", res.error);
-        }
-
-        response.json({
-          is_admin: is_admin,
-          logged_in: request.decodedToken ? true : false,
-          articles: res.rows
-        });
-      });
-      // Get a single article
-    } else if (article_id > 0) {
-      return db.query("SELECT *, to_char(a.article_last_updated, $1) as last_updated FROM kb_article a WHERE a.article_id = $2", [displayDateFormat, article_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem getting the requested article.", res.error);
-        }
-
-        // Check visibility permissions
-        if ((res.rows[0].article_visibility === "Admin Only" && !is_admin) ||
-          (res.rows[0].article_visibility === "Evaluators Only") && !request.decodedToken) {
-          return handleNext(next, 403, "You're not authorized to access that article.");
-        }
-
-        response.json({
-          is_admin: is_admin,
-          logged_in: request.decodedToken ? true : false,
-          article: res.rows[0]
-        });
-      });
-    } else {
-      return handleNext(next, 400, "You must specify an article or section to retrieve.", new Error("article_id and section_id are invalid."));
-    }
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving a knowledge base article.", error);
-  }
-};
-
 exports.addArticle = (request, response, next) => {
   try {
     let {
