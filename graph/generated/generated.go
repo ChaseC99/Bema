@@ -43,6 +43,7 @@ type ResolverRoot interface {
 	EntryVote() EntryVoteResolver
 	Error() ErrorResolver
 	Evaluation() EvaluationResolver
+	KBArticle() KBArticleResolver
 	KBSection() KBSectionResolver
 	Query() QueryResolver
 	Task() TaskResolver
@@ -165,6 +166,18 @@ type ComplexityRoot struct {
 		Name     func(childComplexity int) int
 	}
 
+	KBArticle struct {
+		Author      func(childComplexity int) int
+		Content     func(childComplexity int) int
+		HasDraft    func(childComplexity int) int
+		ID          func(childComplexity int) int
+		IsPublished func(childComplexity int) int
+		LastUpdated func(childComplexity int) int
+		Section     func(childComplexity int) int
+		Title       func(childComplexity int) int
+		Visibility  func(childComplexity int) int
+	}
+
 	KBSection struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -211,6 +224,7 @@ type ComplexityRoot struct {
 		AllCriteria                 func(childComplexity int) int
 		AllJudgingGroups            func(childComplexity int) int
 		Announcements               func(childComplexity int) int
+		Article                     func(childComplexity int, id int) int
 		AvailableTasks              func(childComplexity int) int
 		CompletedTasks              func(childComplexity int) int
 		Contest                     func(childComplexity int, id int) int
@@ -306,6 +320,15 @@ type EvaluationResolver interface {
 	Entry(ctx context.Context, obj *model.Evaluation) (*model.Entry, error)
 	User(ctx context.Context, obj *model.Evaluation) (*model.User, error)
 }
+type KBArticleResolver interface {
+	Section(ctx context.Context, obj *model.KBArticle) (*model.KBSection, error)
+
+	Author(ctx context.Context, obj *model.KBArticle) (*model.User, error)
+
+	Visibility(ctx context.Context, obj *model.KBArticle) (*string, error)
+	IsPublished(ctx context.Context, obj *model.KBArticle) (*bool, error)
+	HasDraft(ctx context.Context, obj *model.KBArticle) (*bool, error)
+}
 type KBSectionResolver interface {
 	Visibility(ctx context.Context, obj *model.KBSection) (*string, error)
 }
@@ -334,6 +357,7 @@ type QueryResolver interface {
 	JudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	Sections(ctx context.Context) ([]*model.KBSection, error)
 	Section(ctx context.Context, id int) (*model.KBSection, error)
+	Article(ctx context.Context, id int) (*model.KBArticle, error)
 	Tasks(ctx context.Context) ([]*model.Task, error)
 	CompletedTasks(ctx context.Context) ([]*model.Task, error)
 	AvailableTasks(ctx context.Context) ([]*model.Task, error)
@@ -927,6 +951,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JudgingGroup.Name(childComplexity), true
 
+	case "KBArticle.author":
+		if e.complexity.KBArticle.Author == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Author(childComplexity), true
+
+	case "KBArticle.content":
+		if e.complexity.KBArticle.Content == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Content(childComplexity), true
+
+	case "KBArticle.hasDraft":
+		if e.complexity.KBArticle.HasDraft == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.HasDraft(childComplexity), true
+
+	case "KBArticle.id":
+		if e.complexity.KBArticle.ID == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.ID(childComplexity), true
+
+	case "KBArticle.isPublished":
+		if e.complexity.KBArticle.IsPublished == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.IsPublished(childComplexity), true
+
+	case "KBArticle.lastUpdated":
+		if e.complexity.KBArticle.LastUpdated == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.LastUpdated(childComplexity), true
+
+	case "KBArticle.section":
+		if e.complexity.KBArticle.Section == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Section(childComplexity), true
+
+	case "KBArticle.title":
+		if e.complexity.KBArticle.Title == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Title(childComplexity), true
+
+	case "KBArticle.visibility":
+		if e.complexity.KBArticle.Visibility == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Visibility(childComplexity), true
+
 	case "KBSection.description":
 		if e.complexity.KBSection.Description == nil {
 			break
@@ -1199,6 +1286,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Announcements(childComplexity), true
+
+	case "Query.article":
+		if e.complexity.Query.Article == nil {
+			break
+		}
+
+		args, err := ec.field_Query_article_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Article(childComplexity, args["id"].(int)), true
 
 	case "Query.availableTasks":
 		if e.complexity.Query.AvailableTasks == nil {
@@ -2186,6 +2285,11 @@ type JudgingGroup {
     A single knowledge base section
     """
     section(id: ID!): KBSection
+
+    """
+    A single knowledge base article
+    """
+    article(id: ID!): KBArticle
 }
 
 """
@@ -2208,9 +2312,59 @@ type KBSection {
     description: String!
 
     """
-    The visibility of the section
+    The visibility of the section. Requires Edit KB Content permission.
     """
     visibility: String
+}
+
+"""
+A knowledge base article
+"""
+type KBArticle {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The section the article is assigned to
+    """
+    section: KBSection
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article
+    """
+    lastUpdated: String!
+
+    """
+    The visibility of the article. Requires Edit KB Content permission.
+    """
+    visibility: String
+
+    """
+    Indicates whether the initial version of the article has been published. Requires Edit KB Content permission.
+    """
+    isPublished: Boolean
+
+    """
+    Indicates whether the article has an existing draft. Requires Edit KB Content permission.
+    """
+    hasDraft: Boolean
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
@@ -2561,6 +2715,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_article_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -6535,6 +6704,427 @@ func (ec *executionContext) fieldContext_JudgingGroup_isActive(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _KBArticle_id(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_section(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_section(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().Section(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_section(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_title(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_content(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_author(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_author(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().Author(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_lastUpdated(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_lastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_visibility(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_visibility(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().Visibility(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_visibility(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_isPublished(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_isPublished(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().IsPublished(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_isPublished(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticle_hasDraft(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_hasDraft(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().HasDraft(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_hasDraft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _KBSection_id(ctx context.Context, field graphql.CollectedField, obj *model.KBSection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_KBSection_id(ctx, field)
 	if err != nil {
@@ -9703,6 +10293,78 @@ func (ec *executionContext) fieldContext_Query_section(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_section_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_article(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_article(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Article(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_article(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_article_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -14034,6 +14696,140 @@ func (ec *executionContext) _JudgingGroup(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var kBArticleImplementors = []string{"KBArticle"}
+
+func (ec *executionContext) _KBArticle(ctx context.Context, sel ast.SelectionSet, obj *model.KBArticle) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, kBArticleImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("KBArticle")
+		case "id":
+
+			out.Values[i] = ec._KBArticle_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "section":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_section(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "title":
+
+			out.Values[i] = ec._KBArticle_title(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "content":
+
+			out.Values[i] = ec._KBArticle_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "author":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_author(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "lastUpdated":
+
+			out.Values[i] = ec._KBArticle_lastUpdated(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "visibility":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_visibility(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "isPublished":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_isPublished(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "hasDraft":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_hasDraft(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var kBSectionImplementors = []string{"KBSection"}
 
 func (ec *executionContext) _KBSection(ctx context.Context, sel ast.SelectionSet, obj *model.KBSection) graphql.Marshaler {
@@ -14858,6 +15654,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_section(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "article":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_article(ctx, field)
 				return res
 			}
 
@@ -16832,6 +17648,13 @@ func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChalleng
 		return graphql.Null
 	}
 	return ec._JudgingGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx context.Context, sel ast.SelectionSet, v *model.KBArticle) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._KBArticle(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx context.Context, sel ast.SelectionSet, v *model.KBSection) graphql.Marshaler {

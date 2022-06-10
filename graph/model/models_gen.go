@@ -204,6 +204,28 @@ type JudgingGroup struct {
 	IsActive bool `json:"isActive"`
 }
 
+// A knowledge base article
+type KBArticle struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The section the article is assigned to
+	Section *KBSection `json:"section"`
+	// The title of the article
+	Title string `json:"title"`
+	// The content of the article
+	Content string `json:"content"`
+	// The author of the article. Requires authentication.
+	Author *User `json:"author"`
+	// The timestamp of the last update to the article
+	LastUpdated string `json:"lastUpdated"`
+	// The visibility of the article. Requires Edit KB Content permission.
+	Visibility *string `json:"visibility"`
+	// Indicates whether the initial version of the article has been published. Requires Edit KB Content permission.
+	IsPublished *bool `json:"isPublished"`
+	// Indicates whether the article has an existing draft. Requires Edit KB Content permission.
+	HasDraft *bool `json:"hasDraft"`
+}
+
 // A knowledge base section
 type KBSection struct {
 	// A unique integer ID
@@ -212,7 +234,7 @@ type KBSection struct {
 	Name string `json:"name"`
 	// A description of the section
 	Description string `json:"description"`
-	// The visibility of the section
+	// The visibility of the section. Requires Edit KB Content permission.
 	Visibility *string `json:"visibility"`
 }
 

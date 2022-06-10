@@ -14,6 +14,16 @@ func NewKBSectionModel() model.KBSection {
 	return section
 }
 
+func NewKBArticleModel() model.KBArticle {
+	article := model.KBArticle{}
+	section := NewKBSectionModel()
+
+	article.Author = &model.User{}
+	article.Section = &section
+
+	return article
+}
+
 func GetAllKBSections(ctx context.Context) ([]*model.KBSection, error) {
 	sections := []*model.KBSection{}
 
@@ -89,4 +99,35 @@ func GetKBSectionById(ctx context.Context, id int) (*model.KBSection, error) {
 	}
 
 	return &s, nil
+}
+
+func GetKBArticleById(ctx context.Context, id int) (*model.KBArticle, error) {
+	row := db.DB.QueryRow("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE article_id = $1", id)
+
+	a := NewKBArticleModel()
+	if err := row.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "This article does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a KB article.", err)
+	}
+
+	return &a, nil
+}
+
+func CheckKBArticleHasDraft(ctx context.Context, id int) (bool, error) {
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM kb_article_draft WHERE article_id = $1", id)
+
+	var count *int
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, errors.NewInternalError(ctx, "An unexpected error occurred while checking if a KB article has a draft.", err)
+	}
+
+	if *count > 0 {
+		return true, nil
+	}
+	return false, nil
 }

@@ -142,3 +142,15 @@ models:
     fields:
       visibility:
         resolver: true
+  KBArticle:
+    fields:
+      section:
+        resolver: true
+      author:
+        resolver: true
+      visibility:
+        resolver: true
+      isPublished:
+        resolver: true
+      hasDraft:
+        resolver: true

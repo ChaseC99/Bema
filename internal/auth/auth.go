@@ -193,6 +193,10 @@ func HasPermission(user *User, permission Permission) bool {
 		return false
 	}
 
+	if user.IsAdmin {
+		return true
+	}
+
 	switch permission {
 	case AddEntries:
 		return user.Permissions.AddEntries

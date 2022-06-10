@@ -8,6 +8,11 @@ extend type Query {
     A single knowledge base section
     """
     section(id: ID!): KBSection
+
+    """
+    A single knowledge base article
+    """
+    article(id: ID!): KBArticle
 }
 
 """
@@ -30,7 +35,57 @@ type KBSection {
     description: String!
 
     """
-    The visibility of the section
+    The visibility of the section. Requires Edit KB Content permission.
     """
     visibility: String
+}
+
+"""
+A knowledge base article
+"""
+type KBArticle {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The section the article is assigned to
+    """
+    section: KBSection
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article
+    """
+    lastUpdated: String!
+
+    """
+    The visibility of the article. Requires Edit KB Content permission.
+    """
+    visibility: String
+
+    """
+    Indicates whether the initial version of the article has been published. Requires Edit KB Content permission.
+    """
+    isPublished: Boolean
+
+    """
+    Indicates whether the article has an existing draft. Requires Edit KB Content permission.
+    """
+    hasDraft: Boolean
 }
