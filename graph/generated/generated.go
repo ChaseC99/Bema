@@ -287,6 +287,8 @@ type ComplexityRoot struct {
 		Permissions          func(childComplexity int) int
 		TermEnd              func(childComplexity int) int
 		TermStart            func(childComplexity int) int
+		TotalContestsJudged  func(childComplexity int) int
+		TotalEvaluations     func(childComplexity int) int
 		Username             func(childComplexity int) int
 	}
 }
@@ -397,6 +399,8 @@ type UserResolver interface {
 
 	NotificationsEnabled(ctx context.Context, obj *model.User) (*bool, error)
 	AssignedGroup(ctx context.Context, obj *model.User) (*model.JudgingGroup, error)
+	TotalEvaluations(ctx context.Context, obj *model.User) (*int, error)
+	TotalContestsJudged(ctx context.Context, obj *model.User) (*int, error)
 }
 
 type executableSchema struct {
@@ -1744,6 +1748,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.TermStart(childComplexity), true
 
+	case "User.totalContestsJudged":
+		if e.complexity.User.TotalContestsJudged == nil {
+			break
+		}
+
+		return e.complexity.User.TotalContestsJudged(childComplexity), true
+
+	case "User.totalEvaluations":
+		if e.complexity.User.TotalEvaluations == nil {
+			break
+		}
+
+		return e.complexity.User.TotalEvaluations(childComplexity), true
+
 	case "User.username":
 		if e.complexity.User.Username == nil {
 			break
@@ -2644,6 +2662,16 @@ type User {
   The judging group the user is assigned to. Requires View Judging Settings permission.
   """
   assignedGroup: JudgingGroup
+
+  """
+  The total number of entries the user has scored. Requires authentication.
+  """
+  totalEvaluations: Int
+
+  """
+  The total number of contests the user has scored. Requires authentication.
+  """
+  totalContestsJudged: Int
 }
 
 """
@@ -3185,6 +3213,10 @@ func (ec *executionContext) fieldContext_Announcement_author(ctx context.Context
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5236,6 +5268,10 @@ func (ec *executionContext) fieldContext_EntryVote_user(ctx context.Context, fie
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5647,6 +5683,10 @@ func (ec *executionContext) fieldContext_Error_user(ctx context.Context, field g
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5851,6 +5891,10 @@ func (ec *executionContext) fieldContext_Evaluation_user(ctx context.Context, fi
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -6447,6 +6491,10 @@ func (ec *executionContext) fieldContext_FullUserProfile_user(ctx context.Contex
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -7055,6 +7103,10 @@ func (ec *executionContext) fieldContext_KBArticle_author(ctx context.Context, f
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -7478,6 +7530,10 @@ func (ec *executionContext) fieldContext_KBArticleDraft_author(ctx context.Conte
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -11194,6 +11250,10 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -11268,6 +11328,10 @@ func (ec *executionContext) fieldContext_Query_inactiveUsers(ctx context.Context
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -11339,6 +11403,10 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -11638,6 +11706,10 @@ func (ec *executionContext) fieldContext_Task_assignedUser(ctx context.Context, 
 				return ec.fieldContext_User_notificationsEnabled(ctx, field)
 			case "assignedGroup":
 				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -12378,6 +12450,88 @@ func (ec *executionContext) fieldContext_User_assignedGroup(ctx context.Context,
 				return ec.fieldContext_JudgingGroup_isActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JudgingGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_totalEvaluations(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_totalEvaluations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().TotalEvaluations(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_totalEvaluations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_totalContestsJudged(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_totalContestsJudged(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().TotalContestsJudged(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_totalContestsJudged(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16702,6 +16856,40 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_assignedGroup(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "totalEvaluations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_totalEvaluations(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "totalContestsJudged":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_totalContestsJudged(ctx, field, obj)
 				return res
 			}
 

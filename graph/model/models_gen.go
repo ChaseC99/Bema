@@ -362,4 +362,8 @@ type User struct {
 	NotificationsEnabled *bool `json:"notificationsEnabled"`
 	// The judging group the user is assigned to. Requires View Judging Settings permission.
 	AssignedGroup *JudgingGroup `json:"assignedGroup"`
+	// The total number of entries the user has scored. Requires authentication.
+	TotalEvaluations *int `json:"totalEvaluations"`
+	// The total number of contests the user has scored. Requires authentication.
+	TotalContestsJudged *int `json:"totalContestsJudged"`
 }

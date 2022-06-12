@@ -165,6 +165,34 @@ func (r *userResolver) AssignedGroup(ctx context.Context, obj *model.User) (*mod
 	return nil, nil
 }
 
+func (r *userResolver) TotalEvaluations(ctx context.Context, obj *model.User) (*int, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil {
+		return nil, nil
+	}
+
+	count, err := models.GetUserTotalEvaluations(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return count, nil
+}
+
+func (r *userResolver) TotalContestsJudged(ctx context.Context, obj *model.User) (*int, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil {
+		return nil, nil
+	}
+
+	count, err := models.GetUserTotalContestsJudged(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return count, nil
+}
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 

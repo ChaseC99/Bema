@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
@@ -50,4 +51,32 @@ func GetEvaluationsForUserAndContest(ctx context.Context, userId int, contestId 
 	}
 
 	return evaluations, nil
+}
+
+func GetUserTotalEvaluations(ctx context.Context, userId int) (*int, error) {
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM evaluation WHERE evaluator_id = $1 AND evaluation_complete = true;", userId)
+
+	var count *int
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a user's total evaluations", err)
+	}
+
+	return count, nil
+}
+
+func GetUserTotalContestsJudged(ctx context.Context, userId int) (*int, error) {
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM contest c WHERE EXISTS (SELECT evaluation_id FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = c.contest_id AND ev.evaluator_id = $1 AND ev.evaluation_complete = true);", userId)
+
+	var count *int
+	if err := row.Scan(&count); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a user's total contests judged", err)
+	}
+
+	return count, nil
 }

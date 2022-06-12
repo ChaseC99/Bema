@@ -123,6 +123,16 @@ type User {
   The judging group the user is assigned to. Requires View Judging Settings permission.
   """
   assignedGroup: JudgingGroup
+
+  """
+  The total number of entries the user has scored. Requires authentication.
+  """
+  totalEvaluations: Int
+
+  """
+  The total number of contests the user has scored. Requires authentication.
+  """
+  totalContestsJudged: Int
 }
 
 """

@@ -82,6 +82,10 @@ models:
         resolver: true
       assignedGroup:
         resolver: true
+      totalEvaluations:
+        resolver: true
+      totalContestsJudged:
+        resolver: true
   Announcement:
     fields:
       author:
