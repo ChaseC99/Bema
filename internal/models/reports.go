@@ -59,7 +59,7 @@ func GetEntryProgressByContestId(ctx context.Context, contestId int) (*model.Pro
 
 	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry en WHERE en.contest_id = $1 AND en.flagged = false AND en.disqualified = false AND EXISTS (SELECT ev.evaluation_id FROM evaluation ev WHERE ev.entry_id = en.entry_id AND ev.evaluation_complete = true);", contestId)
 	if err := row.Scan(&p.Count); err != nil {
-		return nil, errors.NewInternalError(ctx, "", err)
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the number of entries that have been scored", err)
 	}
 
 	row = db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE contest_id = $1 AND flagged = false AND disqualified = false;", contestId)
@@ -185,4 +185,37 @@ func GetEvaluatorProgressByContestId(ctx context.Context, contestId int) ([]*mod
 	}
 
 	return progress, nil
+}
+
+func GetFlaggedEntryCountByContestId(ctx context.Context, contestId int) (int, error) {
+	var count int
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE contest_id = $1 AND flagged = true AND disqualified = false;", contestId)
+	if err := row.Scan(&count); err != nil {
+		return 0, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the number of flagged entries", err)
+	}
+
+	return count, nil
+}
+
+func GetDisqualifiedEntryCountByContestId(ctx context.Context, contestId int) (int, error) {
+	var count int
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = true;", contestId)
+	if err := row.Scan(&count); err != nil {
+		return 0, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the number of disqualified entries", err)
+	}
+
+	return count, nil
+}
+
+func GetTotalEntryCountByContestId(ctx context.Context, contestId int) (int, error) {
+	var count int
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE contest_id = $1 AND flagged = false AND disqualified = false;", contestId)
+	if err := row.Scan(&count); err != nil {
+		return 0, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the number of total entries for a contest", err)
+	}
+
+	return count, nil
 }

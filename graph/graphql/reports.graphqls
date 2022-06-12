@@ -3,6 +3,11 @@ extend type Query {
     Judging progress for the current contest
     """
     judgingProgress: JudgingProgress!
+
+    """
+    Entry counts for the current contest. Requires View Admin Stats permission.
+    """
+    entryCounts: EntryCounts
 }
 
 type JudgingProgress {
@@ -63,6 +68,26 @@ type Progress {
 
     """
     The expected progress
+    """
+    total: Int!
+}
+
+"""
+The number of entries for a contest
+"""
+type EntryCounts {
+    """
+    The number of flagged entries
+    """
+    flagged: Int!
+
+    """
+    The number of disqualified entries
+    """
+    disqualified: Int!
+
+    """
+    The total number of active entries
     """
     total: Int!
 }

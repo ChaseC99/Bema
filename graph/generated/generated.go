@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	Contest() ContestResolver
 	Contestant() ContestantResolver
 	Entry() EntryResolver
+	EntryCounts() EntryCountsResolver
 	EntryVote() EntryVoteResolver
 	Error() ErrorResolver
 	Evaluation() EvaluationResolver
@@ -114,6 +115,12 @@ type ComplexityRoot struct {
 		URL                func(childComplexity int) int
 		VoteCount          func(childComplexity int) int
 		Votes              func(childComplexity int) int
+	}
+
+	EntryCounts struct {
+		Disqualified func(childComplexity int) int
+		Flagged      func(childComplexity int) int
+		Total        func(childComplexity int) int
 	}
 
 	EntryVote struct {
@@ -271,6 +278,7 @@ type ComplexityRoot struct {
 		EntriesByAverageScore       func(childComplexity int, contestID int) int
 		EntriesPerLevel             func(childComplexity int, contestID int) int
 		Entry                       func(childComplexity int, id int) int
+		EntryCounts                 func(childComplexity int) int
 		Error                       func(childComplexity int, id int) int
 		Errors                      func(childComplexity int) int
 		Evaluations                 func(childComplexity int, userID int, contestID int) int
@@ -345,6 +353,11 @@ type EntryResolver interface {
 	IsVotedByUser(ctx context.Context, obj *model.Entry) (*bool, error)
 	JudgeVotes(ctx context.Context, obj *model.Entry) ([]*model.EntryVote, error)
 }
+type EntryCountsResolver interface {
+	Flagged(ctx context.Context, obj *model.EntryCounts) (int, error)
+	Disqualified(ctx context.Context, obj *model.EntryCounts) (int, error)
+	Total(ctx context.Context, obj *model.EntryCounts) (int, error)
+}
 type EntryVoteResolver interface {
 	User(ctx context.Context, obj *model.EntryVote) (*model.User, error)
 }
@@ -409,6 +422,7 @@ type QueryResolver interface {
 	Section(ctx context.Context, id int) (*model.KBSection, error)
 	Article(ctx context.Context, id int) (*model.KBArticle, error)
 	JudgingProgress(ctx context.Context) (*model.JudgingProgress, error)
+	EntryCounts(ctx context.Context) (*model.EntryCounts, error)
 	Tasks(ctx context.Context) ([]*model.Task, error)
 	CompletedTasks(ctx context.Context) ([]*model.Task, error)
 	AvailableTasks(ctx context.Context) ([]*model.Task, error)
@@ -758,6 +772,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Entry.Votes(childComplexity), true
+
+	case "EntryCounts.disqualified":
+		if e.complexity.EntryCounts.Disqualified == nil {
+			break
+		}
+
+		return e.complexity.EntryCounts.Disqualified(childComplexity), true
+
+	case "EntryCounts.flagged":
+		if e.complexity.EntryCounts.Flagged == nil {
+			break
+		}
+
+		return e.complexity.EntryCounts.Flagged(childComplexity), true
+
+	case "EntryCounts.total":
+		if e.complexity.EntryCounts.Total == nil {
+			break
+		}
+
+		return e.complexity.EntryCounts.Total(childComplexity), true
 
 	case "EntryVote.id":
 		if e.complexity.EntryVote.ID == nil {
@@ -1608,6 +1643,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Entry(childComplexity, args["id"].(int)), true
+
+	case "Query.entryCounts":
+		if e.complexity.Query.EntryCounts == nil {
+			break
+		}
+
+		return e.complexity.Query.EntryCounts(childComplexity), true
 
 	case "Query.error":
 		if e.complexity.Query.Error == nil {
@@ -2601,6 +2643,11 @@ type KBArticleDraft {
     Judging progress for the current contest
     """
     judgingProgress: JudgingProgress!
+
+    """
+    Entry counts for the current contest. Requires View Admin Stats permission.
+    """
+    entryCounts: EntryCounts
 }
 
 type JudgingProgress {
@@ -2661,6 +2708,26 @@ type Progress {
 
     """
     The expected progress
+    """
+    total: Int!
+}
+
+"""
+The number of entries for a contest
+"""
+type EntryCounts {
+    """
+    The number of flagged entries
+    """
+    flagged: Int!
+
+    """
+    The number of disqualified entries
+    """
+    disqualified: Int!
+
+    """
+    The total number of active entries
     """
     total: Int!
 }`, BuiltIn: false},
@@ -5330,6 +5397,138 @@ func (ec *executionContext) fieldContext_Entry_judgeVotes(ctx context.Context, f
 				return ec.fieldContext_EntryVote_reason(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntryVote", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntryCounts_flagged(ctx context.Context, field graphql.CollectedField, obj *model.EntryCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntryCounts_flagged(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.EntryCounts().Flagged(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntryCounts_flagged(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntryCounts",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntryCounts_disqualified(ctx context.Context, field graphql.CollectedField, obj *model.EntryCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntryCounts_disqualified(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.EntryCounts().Disqualified(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntryCounts_disqualified(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntryCounts",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntryCounts_total(ctx context.Context, field graphql.CollectedField, obj *model.EntryCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntryCounts_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.EntryCounts().Total(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntryCounts_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntryCounts",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11637,6 +11836,55 @@ func (ec *executionContext) fieldContext_Query_judgingProgress(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_entryCounts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entryCounts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntryCounts(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntryCounts)
+	fc.Result = res
+	return ec.marshalOEntryCounts2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryCounts(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entryCounts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "flagged":
+				return ec.fieldContext_EntryCounts_flagged(ctx, field)
+			case "disqualified":
+				return ec.fieldContext_EntryCounts_disqualified(ctx, field)
+			case "total":
+				return ec.fieldContext_EntryCounts_total(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntryCounts", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_tasks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_tasks(ctx, field)
 	if err != nil {
@@ -15658,6 +15906,87 @@ func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var entryCountsImplementors = []string{"EntryCounts"}
+
+func (ec *executionContext) _EntryCounts(ctx context.Context, sel ast.SelectionSet, obj *model.EntryCounts) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, entryCountsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EntryCounts")
+		case "flagged":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EntryCounts_flagged(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "disqualified":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EntryCounts_disqualified(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "total":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EntryCounts_total(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var entryVoteImplementors = []string{"EntryVote"}
 
 func (ec *executionContext) _EntryVote(ctx context.Context, sel ast.SelectionSet, obj *model.EntryVote) graphql.Marshaler {
@@ -17369,6 +17698,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "entryCounts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entryCounts(ctx, field)
 				return res
 			}
 
@@ -19460,6 +19809,13 @@ func (ec *executionContext) marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCou
 		return graphql.Null
 	}
 	return ec._Entry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEntryCounts2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryCounts(ctx context.Context, sel ast.SelectionSet, v *model.EntryCounts) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._EntryCounts(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx context.Context, sel ast.SelectionSet, v *model.Error) graphql.Marshaler {

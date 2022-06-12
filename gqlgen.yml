@@ -182,3 +182,11 @@ models:
     fields:
       user:
         resolver: true
+  EntryCounts:
+    fields:
+      flagged:
+        resolver: true
+      disqualified:
+        resolver: true
+      total:
+        resolver: true

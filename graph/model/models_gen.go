@@ -110,6 +110,16 @@ type Entry struct {
 	JudgeVotes []*EntryVote `json:"judgeVotes"`
 }
 
+// The number of entries for a contest
+type EntryCounts struct {
+	// The number of flagged entries
+	Flagged int `json:"flagged"`
+	// The number of disqualified entries
+	Disqualified int `json:"disqualified"`
+	// The total number of active entries
+	Total int `json:"total"`
+}
+
 // A judge vote submitted for an entry
 type EntryVote struct {
 	// A unique integer ID

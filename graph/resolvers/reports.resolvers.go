@@ -12,6 +12,66 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
+func (r *entryCountsResolver) Flagged(ctx context.Context, obj *model.EntryCounts) (int, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ViewAdminStats) {
+		return 0, nil
+	}
+
+	contest, err := models.GetCurrentContest(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := models.GetFlaggedEntryCountByContestId(ctx, contest.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *entryCountsResolver) Disqualified(ctx context.Context, obj *model.EntryCounts) (int, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ViewAdminStats) {
+		return 0, nil
+	}
+
+	contest, err := models.GetCurrentContest(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := models.GetDisqualifiedEntryCountByContestId(ctx, contest.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *entryCountsResolver) Total(ctx context.Context, obj *model.EntryCounts) (int, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ViewAdminStats) {
+		return 0, nil
+	}
+
+	contest, err := models.GetCurrentContest(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := models.GetTotalEntryCountByContestId(ctx, contest.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (r *evaluatorProgressResolver) User(ctx context.Context, obj *model.EvaluatorProgress) (*model.User, error) {
 	if obj.User == nil {
 		return nil, nil
@@ -140,6 +200,19 @@ func (r *queryResolver) JudgingProgress(ctx context.Context) (*model.JudgingProg
 	return &model.JudgingProgress{}, nil
 }
 
+func (r *queryResolver) EntryCounts(ctx context.Context) (*model.EntryCounts, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ViewAdminStats) {
+		return nil, nil
+	}
+
+	return &model.EntryCounts{}, nil
+}
+
+// EntryCounts returns generated.EntryCountsResolver implementation.
+func (r *Resolver) EntryCounts() generated.EntryCountsResolver { return &entryCountsResolver{r} }
+
 // EvaluatorProgress returns generated.EvaluatorProgressResolver implementation.
 func (r *Resolver) EvaluatorProgress() generated.EvaluatorProgressResolver {
 	return &evaluatorProgressResolver{r}
@@ -150,5 +223,6 @@ func (r *Resolver) JudgingProgress() generated.JudgingProgressResolver {
 	return &judgingProgressResolver{r}
 }
 
+type entryCountsResolver struct{ *Resolver }
 type evaluatorProgressResolver struct{ *Resolver }
 type judgingProgressResolver struct{ *Resolver }
