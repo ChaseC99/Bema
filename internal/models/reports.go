@@ -8,6 +8,11 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 )
 
+type Progress struct {
+	ID    int
+	Count int
+}
+
 func GetUserProgressByContestId(ctx context.Context, userId int, contestId int) (*model.Progress, error) {
 	p := &model.Progress{}
 
@@ -79,35 +84,27 @@ func GetEvaluationProgressByContestId(ctx context.Context, contestId int) (*mode
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the entry count per group", err)
 	}
 
-	var groupEntries []struct {
-		id    int
-		count int
-	}
+	groupEntries := []Progress{}
 	for rows.Next() {
-		var count struct {
-			id    int
-			count int
+		var count Progress
+		if err := rows.Scan(&count.ID, &count.Count); err != nil {
+			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the entry count per group", err)
 		}
-		rows.Scan(&count.id, &count.count)
 		groupEntries = append(groupEntries, count)
 	}
 
 	// Get the number of evaluators per group
-	rows, err = db.DB.Query("SELECT e.group_id, COUNT(*) FROM evaluator e INNER JOIN evaluator_permissions p ON p.evaluator_id = e.evaluator_id WHERE e.account_locked = false AND p.judge_entries = true GROUP BY group_id ORDER BY group_id ASC;")
+	rows, err = db.DB.Query("SELECT e.group_id, COUNT(*) FROM evaluator e INNER JOIN evaluator_permissions p ON p.evaluator_id = e.evaluator_id WHERE e.account_locked = false AND p.judge_entries = true AND e.group_id IS NOT NULL GROUP BY group_id ORDER BY group_id ASC;")
 	if err != nil {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the evaluator count per group", err)
 	}
 
-	var groupEvaluators []struct {
-		id    int
-		count int
-	}
+	groupEvaluators := []Progress{}
 	for rows.Next() {
-		var count struct {
-			id    int
-			count int
+		var count Progress
+		if err := rows.Scan(&count.ID, &count.Count); err != nil {
+			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the evaluator count per group", err)
 		}
-		rows.Scan(&count.id, &count.count)
 		groupEvaluators = append(groupEvaluators, count)
 	}
 
@@ -115,12 +112,77 @@ func GetEvaluationProgressByContestId(ctx context.Context, contestId int) (*mode
 	var total int
 	for _, en := range groupEntries {
 		for _, ev := range groupEvaluators {
-			if en.id == ev.id {
-				total += en.count * ev.count
+			if en.ID == ev.ID {
+				total += en.Count * ev.Count
 			}
 		}
 	}
 	p.Total = total
 
 	return p, nil
+}
+
+func GetEvaluatorProgressByContestId(ctx context.Context, contestId int) ([]*model.EvaluatorProgress, error) {
+	// Get evaluator evaluation counts
+	rows, err := db.DB.Query("SELECT e.evaluator_id, e.group_id, COUNT(*) FROM evaluator e INNER JOIN evaluation ev ON ev.evaluator_id = e.evaluator_id INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = $1 AND en.disqualified = false AND en.flagged = false AND ev.evaluation_complete = true GROUP BY e.evaluator_id, e.group_id;", contestId)
+	if err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the evaluation counts per evaluator", err)
+	}
+
+	var evaluatorCounts []struct {
+		UserId  int
+		GroupId int
+		Count   int
+	}
+	for rows.Next() {
+		var count struct {
+			UserId  int
+			GroupId int
+			Count   int
+		}
+		if err := rows.Scan(&count.UserId, &count.GroupId, &count.Count); err != nil {
+			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the evaluation counts per evaluator", err)
+		}
+		evaluatorCounts = append(evaluatorCounts, count)
+	}
+
+	// Get the number of entries per group
+	rows, err = db.DB.Query("SELECT assigned_group_id, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false AND flagged = false GROUP BY assigned_group_id ORDER BY assigned_group_id ASC;", contestId)
+	if err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the entry count per group", err)
+	}
+
+	var groupEntries []struct {
+		ID    int
+		Count int
+	}
+	for rows.Next() {
+		var count struct {
+			ID    int
+			Count int
+		}
+		if err := rows.Scan(&count.ID, &count.Count); err != nil {
+			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the entry count per group", err)
+		}
+		groupEntries = append(groupEntries, count)
+	}
+
+	// Format the data
+	progress := []*model.EvaluatorProgress{}
+	for _, v := range evaluatorCounts {
+		count := model.EvaluatorProgress{}
+		count.User = &model.User{}
+		count.User.ID = v.UserId
+		count.Count = v.Count
+
+		for _, g := range groupEntries {
+			if v.GroupId == g.ID {
+				count.Total = g.Count
+			}
+		}
+
+		progress = append(progress, &count)
+	}
+
+	return progress, nil
 }

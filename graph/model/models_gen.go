@@ -166,6 +166,16 @@ type Evaluation struct {
 	CanEdit bool `json:"canEdit"`
 }
 
+// The progress of a single evaluator
+type EvaluatorProgress struct {
+	// The evaluator
+	User *User `json:"user"`
+	// The number of entries scored by the evaluator
+	Count int `json:"count"`
+	// The number of entries in the evaluator's group
+	Total int `json:"total"`
+}
+
 // The full profile of a logged in user
 type FullUserProfile struct {
 	// Indicates whether the user is an admin, which allows them to perform all actions and access all data
@@ -213,6 +223,8 @@ type JudgingProgress struct {
 	Entries *Progress `json:"entries"`
 	// The total and expected number of evaluations
 	Evaluations *Progress `json:"evaluations"`
+	// The progress of each evaluator
+	Evaluators []*EvaluatorProgress `json:"evaluators"`
 }
 
 // A knowledge base article
@@ -329,6 +341,7 @@ type Permissions struct {
 	ViewJudgingSettings bool `json:"view_judging_settings"`
 }
 
+// The progress of a general entity
 type Progress struct {
 	// The current progress
 	Count int `json:"count"`

@@ -43,6 +43,7 @@ type ResolverRoot interface {
 	EntryVote() EntryVoteResolver
 	Error() ErrorResolver
 	Evaluation() EvaluationResolver
+	EvaluatorProgress() EvaluatorProgressResolver
 	JudgingProgress() JudgingProgressResolver
 	KBArticle() KBArticleResolver
 	KBArticleDraft() KBArticleDraftResolver
@@ -146,6 +147,12 @@ type ComplexityRoot struct {
 		User           func(childComplexity int) int
 	}
 
+	EvaluatorProgress struct {
+		Count func(childComplexity int) int
+		Total func(childComplexity int) int
+		User  func(childComplexity int) int
+	}
+
 	FullUserProfile struct {
 		IsAdmin        func(childComplexity int) int
 		IsImpersonated func(childComplexity int) int
@@ -171,6 +178,7 @@ type ComplexityRoot struct {
 	JudgingProgress struct {
 		Entries     func(childComplexity int) int
 		Evaluations func(childComplexity int) int
+		Evaluators  func(childComplexity int) int
 		Group       func(childComplexity int) int
 		User        func(childComplexity int) int
 	}
@@ -347,11 +355,15 @@ type EvaluationResolver interface {
 	Entry(ctx context.Context, obj *model.Evaluation) (*model.Entry, error)
 	User(ctx context.Context, obj *model.Evaluation) (*model.User, error)
 }
+type EvaluatorProgressResolver interface {
+	User(ctx context.Context, obj *model.EvaluatorProgress) (*model.User, error)
+}
 type JudgingProgressResolver interface {
 	User(ctx context.Context, obj *model.JudgingProgress) (*model.Progress, error)
 	Group(ctx context.Context, obj *model.JudgingProgress) (*model.Progress, error)
 	Entries(ctx context.Context, obj *model.JudgingProgress) (*model.Progress, error)
 	Evaluations(ctx context.Context, obj *model.JudgingProgress) (*model.Progress, error)
+	Evaluators(ctx context.Context, obj *model.JudgingProgress) ([]*model.EvaluatorProgress, error)
 }
 type KBArticleResolver interface {
 	Section(ctx context.Context, obj *model.KBArticle) (*model.KBSection, error)
@@ -901,6 +913,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Evaluation.User(childComplexity), true
 
+	case "EvaluatorProgress.count":
+		if e.complexity.EvaluatorProgress.Count == nil {
+			break
+		}
+
+		return e.complexity.EvaluatorProgress.Count(childComplexity), true
+
+	case "EvaluatorProgress.total":
+		if e.complexity.EvaluatorProgress.Total == nil {
+			break
+		}
+
+		return e.complexity.EvaluatorProgress.Total(childComplexity), true
+
+	case "EvaluatorProgress.user":
+		if e.complexity.EvaluatorProgress.User == nil {
+			break
+		}
+
+		return e.complexity.EvaluatorProgress.User(childComplexity), true
+
 	case "FullUserProfile.isAdmin":
 		if e.complexity.FullUserProfile.IsAdmin == nil {
 			break
@@ -1005,6 +1038,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JudgingProgress.Evaluations(childComplexity), true
+
+	case "JudgingProgress.evaluators":
+		if e.complexity.JudgingProgress.Evaluators == nil {
+			break
+		}
+
+		return e.complexity.JudgingProgress.Evaluators(childComplexity), true
 
 	case "JudgingProgress.group":
 		if e.complexity.JudgingProgress.Group == nil {
@@ -2557,6 +2597,9 @@ type KBArticleDraft {
     lastUpdated: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/reports.graphqls", Input: `extend type Query {
+    """
+    Judging progress for the current contest
+    """
     judgingProgress: JudgingProgress!
 }
 
@@ -2580,8 +2623,36 @@ type JudgingProgress {
     The total and expected number of evaluations
     """
     evaluations: Progress
+
+    """
+    The progress of each evaluator
+    """
+    evaluators: [EvaluatorProgress!]!
 }
 
+"""
+The progress of a single evaluator
+"""
+type EvaluatorProgress {
+    """
+    The evaluator
+    """
+    user: User!
+
+    """
+    The number of entries scored by the evaluator
+    """
+    count: Int!
+
+    """
+    The number of entries in the evaluator's group
+    """
+    total: Int!
+}
+
+"""
+The progress of a general entity
+"""
 type Progress {
     """
     The current progress
@@ -6361,6 +6432,172 @@ func (ec *executionContext) fieldContext_Evaluation_canEdit(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _EvaluatorProgress_user(ctx context.Context, field graphql.CollectedField, obj *model.EvaluatorProgress) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvaluatorProgress_user(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.EvaluatorProgress().User(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvaluatorProgress_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvaluatorProgress",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EvaluatorProgress_count(ctx context.Context, field graphql.CollectedField, obj *model.EvaluatorProgress) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvaluatorProgress_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvaluatorProgress_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvaluatorProgress",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EvaluatorProgress_total(ctx context.Context, field graphql.CollectedField, obj *model.EvaluatorProgress) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvaluatorProgress_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvaluatorProgress_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvaluatorProgress",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FullUserProfile_isAdmin(ctx context.Context, field graphql.CollectedField, obj *model.FullUserProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FullUserProfile_isAdmin(ctx, field)
 	if err != nil {
@@ -7150,6 +7387,58 @@ func (ec *executionContext) fieldContext_JudgingProgress_evaluations(ctx context
 				return ec.fieldContext_Progress_total(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Progress", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JudgingProgress_evaluators(ctx context.Context, field graphql.CollectedField, obj *model.JudgingProgress) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JudgingProgress_evaluators(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.JudgingProgress().Evaluators(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EvaluatorProgress)
+	fc.Result = res
+	return ec.marshalNEvaluatorProgress2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluatorProgressᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JudgingProgress_evaluators(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JudgingProgress",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "user":
+				return ec.fieldContext_EvaluatorProgress_user(ctx, field)
+			case "count":
+				return ec.fieldContext_EvaluatorProgress_count(ctx, field)
+			case "total":
+				return ec.fieldContext_EvaluatorProgress_total(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EvaluatorProgress", field.Name)
 		},
 	}
 	return fc, nil
@@ -11339,6 +11628,8 @@ func (ec *executionContext) fieldContext_Query_judgingProgress(ctx context.Conte
 				return ec.fieldContext_JudgingProgress_entries(ctx, field)
 			case "evaluations":
 				return ec.fieldContext_JudgingProgress_evaluations(ctx, field)
+			case "evaluators":
+				return ec.fieldContext_JudgingProgress_evaluators(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JudgingProgress", field.Name)
 		},
@@ -15621,6 +15912,61 @@ func (ec *executionContext) _Evaluation(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var evaluatorProgressImplementors = []string{"EvaluatorProgress"}
+
+func (ec *executionContext) _EvaluatorProgress(ctx context.Context, sel ast.SelectionSet, obj *model.EvaluatorProgress) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, evaluatorProgressImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EvaluatorProgress")
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EvaluatorProgress_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "count":
+
+			out.Values[i] = ec._EvaluatorProgress_count(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "total":
+
+			out.Values[i] = ec._EvaluatorProgress_total(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var fullUserProfileImplementors = []string{"FullUserProfile"}
 
 func (ec *executionContext) _FullUserProfile(ctx context.Context, sel ast.SelectionSet, obj *model.FullUserProfile) graphql.Marshaler {
@@ -15846,6 +16192,26 @@ func (ec *executionContext) _JudgingProgress(ctx context.Context, sel ast.Select
 					}
 				}()
 				res = ec._JudgingProgress_evaluations(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "evaluators":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._JudgingProgress_evaluators(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -18263,6 +18629,60 @@ func (ec *executionContext) marshalNEvaluation2ᚕᚖgithubᚗcomᚋKAᚑChallen
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNEvaluatorProgress2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluatorProgressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EvaluatorProgress) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEvaluatorProgress2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluatorProgress(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEvaluatorProgress2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluatorProgress(ctx context.Context, sel ast.SelectionSet, v *model.EvaluatorProgress) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EvaluatorProgress(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {

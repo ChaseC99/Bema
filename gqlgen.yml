@@ -176,3 +176,9 @@ models:
         resolver: true
       evaluations:
         resolver: true
+      evaluators:
+        resolver: true
+  EvaluatorProgress:
+    fields:
+      user:
+        resolver: true

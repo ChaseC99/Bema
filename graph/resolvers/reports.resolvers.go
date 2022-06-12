@@ -12,6 +12,14 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
+func (r *evaluatorProgressResolver) User(ctx context.Context, obj *model.EvaluatorProgress) (*model.User, error) {
+	if obj.User == nil {
+		return nil, nil
+	}
+
+	return r.Query().User(ctx, obj.User.ID)
+}
+
 func (r *judgingProgressResolver) User(ctx context.Context, obj *model.JudgingProgress) (*model.Progress, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -108,8 +116,33 @@ func (r *judgingProgressResolver) Evaluations(ctx context.Context, obj *model.Ju
 	return progress, nil
 }
 
+func (r *judgingProgressResolver) Evaluators(ctx context.Context, obj *model.JudgingProgress) ([]*model.EvaluatorProgress, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ViewAdminStats) {
+		return nil, nil
+	}
+
+	contest, err := models.GetCurrentContest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	progress, err := models.GetEvaluatorProgressByContestId(ctx, contest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return progress, nil
+}
+
 func (r *queryResolver) JudgingProgress(ctx context.Context) (*model.JudgingProgress, error) {
 	return &model.JudgingProgress{}, nil
+}
+
+// EvaluatorProgress returns generated.EvaluatorProgressResolver implementation.
+func (r *Resolver) EvaluatorProgress() generated.EvaluatorProgressResolver {
+	return &evaluatorProgressResolver{r}
 }
 
 // JudgingProgress returns generated.JudgingProgressResolver implementation.
@@ -117,4 +150,5 @@ func (r *Resolver) JudgingProgress() generated.JudgingProgressResolver {
 	return &judgingProgressResolver{r}
 }
 
+type evaluatorProgressResolver struct{ *Resolver }
 type judgingProgressResolver struct{ *Resolver }

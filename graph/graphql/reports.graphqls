@@ -1,4 +1,7 @@
 extend type Query {
+    """
+    Judging progress for the current contest
+    """
     judgingProgress: JudgingProgress!
 }
 
@@ -22,8 +25,36 @@ type JudgingProgress {
     The total and expected number of evaluations
     """
     evaluations: Progress
+
+    """
+    The progress of each evaluator
+    """
+    evaluators: [EvaluatorProgress!]!
 }
 
+"""
+The progress of a single evaluator
+"""
+type EvaluatorProgress {
+    """
+    The evaluator
+    """
+    user: User!
+
+    """
+    The number of entries scored by the evaluator
+    """
+    count: Int!
+
+    """
+    The number of entries in the evaluator's group
+    """
+    total: Int!
+}
+
+"""
+The progress of a general entity
+"""
 type Progress {
     """
     The current progress
