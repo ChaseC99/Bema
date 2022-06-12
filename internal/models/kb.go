@@ -24,6 +24,14 @@ func NewKBArticleModel() model.KBArticle {
 	return article
 }
 
+func NewKBArticleDraftModel() model.KBArticleDraft {
+	draft := model.KBArticleDraft{}
+
+	draft.Author = &model.User{}
+
+	return draft
+}
+
 func GetAllKBSections(ctx context.Context) ([]*model.KBSection, error) {
 	sections := []*model.KBSection{}
 
@@ -193,4 +201,18 @@ func GetAdminKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.K
 	}
 
 	return articles, nil
+}
+
+func GetKBArticleDraftByArticleId(ctx context.Context, articleId int) (*model.KBArticleDraft, error) {
+	row := db.DB.QueryRow("SELECT draft_id, draft_name, draft_content, draft_author, draft_last_updated FROM kb_article_draft WHERE article_id = $1", articleId)
+
+	d := NewKBArticleDraftModel()
+	if err := row.Scan(&d.ID, &d.Title, &d.Content, &d.Author.ID, &d.LastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving an article draft", err)
+	}
+
+	return &d, nil
 }

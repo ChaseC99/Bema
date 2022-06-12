@@ -44,6 +44,7 @@ type ResolverRoot interface {
 	Error() ErrorResolver
 	Evaluation() EvaluationResolver
 	KBArticle() KBArticleResolver
+	KBArticleDraft() KBArticleDraftResolver
 	KBSection() KBSectionResolver
 	Query() QueryResolver
 	Task() TaskResolver
@@ -169,6 +170,7 @@ type ComplexityRoot struct {
 	KBArticle struct {
 		Author      func(childComplexity int) int
 		Content     func(childComplexity int) int
+		Draft       func(childComplexity int) int
 		HasDraft    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		IsPublished func(childComplexity int) int
@@ -176,6 +178,14 @@ type ComplexityRoot struct {
 		Section     func(childComplexity int) int
 		Title       func(childComplexity int) int
 		Visibility  func(childComplexity int) int
+	}
+
+	KBArticleDraft struct {
+		Author      func(childComplexity int) int
+		Content     func(childComplexity int) int
+		ID          func(childComplexity int) int
+		LastUpdated func(childComplexity int) int
+		Title       func(childComplexity int) int
 	}
 
 	KBSection struct {
@@ -329,6 +339,10 @@ type KBArticleResolver interface {
 	Visibility(ctx context.Context, obj *model.KBArticle) (*string, error)
 	IsPublished(ctx context.Context, obj *model.KBArticle) (*bool, error)
 	HasDraft(ctx context.Context, obj *model.KBArticle) (*bool, error)
+	Draft(ctx context.Context, obj *model.KBArticle) (*model.KBArticleDraft, error)
+}
+type KBArticleDraftResolver interface {
+	Author(ctx context.Context, obj *model.KBArticleDraft) (*model.User, error)
 }
 type KBSectionResolver interface {
 	Visibility(ctx context.Context, obj *model.KBSection) (*string, error)
@@ -967,6 +981,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.KBArticle.Content(childComplexity), true
 
+	case "KBArticle.draft":
+		if e.complexity.KBArticle.Draft == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Draft(childComplexity), true
+
 	case "KBArticle.hasDraft":
 		if e.complexity.KBArticle.HasDraft == nil {
 			break
@@ -1015,6 +1036,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.KBArticle.Visibility(childComplexity), true
+
+	case "KBArticleDraft.author":
+		if e.complexity.KBArticleDraft.Author == nil {
+			break
+		}
+
+		return e.complexity.KBArticleDraft.Author(childComplexity), true
+
+	case "KBArticleDraft.content":
+		if e.complexity.KBArticleDraft.Content == nil {
+			break
+		}
+
+		return e.complexity.KBArticleDraft.Content(childComplexity), true
+
+	case "KBArticleDraft.id":
+		if e.complexity.KBArticleDraft.ID == nil {
+			break
+		}
+
+		return e.complexity.KBArticleDraft.ID(childComplexity), true
+
+	case "KBArticleDraft.lastUpdated":
+		if e.complexity.KBArticleDraft.LastUpdated == nil {
+			break
+		}
+
+		return e.complexity.KBArticleDraft.LastUpdated(childComplexity), true
+
+	case "KBArticleDraft.title":
+		if e.complexity.KBArticleDraft.Title == nil {
+			break
+		}
+
+		return e.complexity.KBArticleDraft.Title(childComplexity), true
 
 	case "KBSection.articles":
 		if e.complexity.KBSection.Articles == nil {
@@ -2379,6 +2435,38 @@ type KBArticle {
     Indicates whether the article has an existing draft. Requires Edit KB Content permission.
     """
     hasDraft: Boolean
+
+    """
+    The current draft revision to the article
+    """
+    draft: KBArticleDraft
+}
+
+type KBArticleDraft {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article draft. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article draft
+    """
+    lastUpdated: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
@@ -7141,6 +7229,306 @@ func (ec *executionContext) fieldContext_KBArticle_hasDraft(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _KBArticle_draft(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_draft(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().Draft(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticleDraft)
+	fc.Result = res
+	return ec.marshalOKBArticleDraft2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraft(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_draft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticleDraft_id(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticleDraft_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticleDraft_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticleDraft_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticleDraft_lastUpdated(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticleDraft", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticleDraft_id(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticleDraft_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticleDraft_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticleDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticleDraft_title(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticleDraft_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticleDraft_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticleDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticleDraft_content(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticleDraft_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticleDraft_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticleDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticleDraft_author(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticleDraft_author(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticleDraft().Author(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticleDraft_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticleDraft",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KBArticleDraft_lastUpdated(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticleDraft_lastUpdated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticleDraft_lastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticleDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _KBSection_id(ctx context.Context, field graphql.CollectedField, obj *model.KBSection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_KBSection_id(ctx, field)
 	if err != nil {
@@ -7371,6 +7759,8 @@ func (ec *executionContext) fieldContext_KBSection_articles(ctx context.Context,
 				return ec.fieldContext_KBArticle_isPublished(ctx, field)
 			case "hasDraft":
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -10437,6 +10827,8 @@ func (ec *executionContext) fieldContext_Query_article(ctx context.Context, fiel
 				return ec.fieldContext_KBArticle_isPublished(ctx, field)
 			case "hasDraft":
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14903,6 +15295,89 @@ func (ec *executionContext) _KBArticle(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "draft":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_draft(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var kBArticleDraftImplementors = []string{"KBArticleDraft"}
+
+func (ec *executionContext) _KBArticleDraft(ctx context.Context, sel ast.SelectionSet, obj *model.KBArticleDraft) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, kBArticleDraftImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("KBArticleDraft")
+		case "id":
+
+			out.Values[i] = ec._KBArticleDraft_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "title":
+
+			out.Values[i] = ec._KBArticleDraft_title(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "content":
+
+			out.Values[i] = ec._KBArticleDraft_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "author":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticleDraft_author(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "lastUpdated":
+
+			out.Values[i] = ec._KBArticleDraft_lastUpdated(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17813,6 +18288,13 @@ func (ec *executionContext) marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBArticle(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOKBArticleDraft2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraft(ctx context.Context, sel ast.SelectionSet, v *model.KBArticleDraft) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._KBArticleDraft(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx context.Context, sel ast.SelectionSet, v *model.KBSection) graphql.Marshaler {

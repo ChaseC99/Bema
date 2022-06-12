@@ -55,6 +55,29 @@ func (r *kBArticleResolver) HasDraft(ctx context.Context, obj *model.KBArticle) 
 	return nil, nil
 }
 
+func (r *kBArticleResolver) Draft(ctx context.Context, obj *model.KBArticle) (*model.KBArticleDraft, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, nil
+	}
+
+	draft, err := models.GetKBArticleDraftByArticleId(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return draft, nil
+}
+
+func (r *kBArticleDraftResolver) Author(ctx context.Context, obj *model.KBArticleDraft) (*model.User, error) {
+	user, err := r.Query().User(ctx, obj.Author.ID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (r *kBSectionResolver) Visibility(ctx context.Context, obj *model.KBSection) (*string, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -152,8 +175,14 @@ func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, 
 // KBArticle returns generated.KBArticleResolver implementation.
 func (r *Resolver) KBArticle() generated.KBArticleResolver { return &kBArticleResolver{r} }
 
+// KBArticleDraft returns generated.KBArticleDraftResolver implementation.
+func (r *Resolver) KBArticleDraft() generated.KBArticleDraftResolver {
+	return &kBArticleDraftResolver{r}
+}
+
 // KBSection returns generated.KBSectionResolver implementation.
 func (r *Resolver) KBSection() generated.KBSectionResolver { return &kBSectionResolver{r} }
 
 type kBArticleResolver struct{ *Resolver }
+type kBArticleDraftResolver struct{ *Resolver }
 type kBSectionResolver struct{ *Resolver }

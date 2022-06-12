@@ -205,34 +205,6 @@ exports.deleteArticle = (request, response, next) => {
   }
 };
 
-exports.getArticleDraft = (request, response, next) => {
-  try {
-    if (request.decodedToken && (request.decodedToken.permissions.edit_kb_content || request.decodedToken.permissions.publish_kb_content || request.decodedToken.is_admin)) {
-      let article_id = parseInt(request.query.articleId);
-
-      if (article_id > 0) {
-        return db.query("SELECT * FROM kb_article_draft WHERE article_id = $1 ORDER BY draft_last_updated DESC LIMIT 1;", [article_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem getting the requested article draft.", res.error);
-          }
-
-          response.json({
-            is_admin: request.decodedToken.is_admin,
-            logged_in: true,
-            draft: res.rows.length > 0 ? res.rows[0] : null
-          });
-        });
-      } else {
-        return handleNext(next, 400, "You must specify an articleId.", new Error("Invalid article_id"));
-      }
-    } else {
-      return handleNext(next, 403, "You're not authorized to retrieve article drafts.");
-    }
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while retrieving a knowledge base article.", error);
-  }
-};
-
 exports.addArticleDraft = (request, response, next) => {
   try {
     let {

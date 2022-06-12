@@ -224,6 +224,21 @@ type KBArticle struct {
 	IsPublished *bool `json:"isPublished"`
 	// Indicates whether the article has an existing draft. Requires Edit KB Content permission.
 	HasDraft *bool `json:"hasDraft"`
+	// The current draft revision to the article
+	Draft *KBArticleDraft `json:"draft"`
+}
+
+type KBArticleDraft struct {
+	// A unique integer ID
+	ID int `json:"id"`
+	// The title of the article
+	Title string `json:"title"`
+	// The content of the article
+	Content string `json:"content"`
+	// The author of the article draft. Requires authentication.
+	Author *User `json:"author"`
+	// The timestamp of the last update to the article draft
+	LastUpdated string `json:"lastUpdated"`
 }
 
 // A knowledge base section

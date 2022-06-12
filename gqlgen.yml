@@ -156,3 +156,9 @@ models:
         resolver: true
       hasDraft:
         resolver: true
+      draft:
+        resolver: true
+  KBArticleDraft:
+    fields:
+      author:
+        resolver: true

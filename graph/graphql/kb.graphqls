@@ -93,4 +93,36 @@ type KBArticle {
     Indicates whether the article has an existing draft. Requires Edit KB Content permission.
     """
     hasDraft: Boolean
+
+    """
+    The current draft revision to the article
+    """
+    draft: KBArticleDraft
+}
+
+type KBArticleDraft {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article draft. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article draft
+    """
+    lastUpdated: String!
 }

@@ -700,7 +700,6 @@ router.post("/internal/kb/articles", routeChecks.kb.addArticle, wasValidated, kb
 router.put("/internal/kb/articles", routeChecks.kb.editArticle, wasValidated, kb.editArticle);
 router.put("/internal/kb/articles/properties", routeChecks.kb.editArticleProperties, wasValidated, kb.editArticleProperties);
 router.delete("/internal/kb/articles", routeChecks.kb.deleteArticle, wasValidated, kb.deleteArticle);
-router.get("/internal/kb/articles/drafts", kb.getArticleDraft);
 router.post("/internal/kb/articles/drafts", routeChecks.kb.addArticleDraft, wasValidated, kb.addArticleDraft);
 router.put("/internal/kb/articles/drafts", routeChecks.kb.editArticleDraft, wasValidated, kb.editArticleDraft);
 
