@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import React from "react";
+import React, { useState } from "react";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
@@ -20,8 +20,8 @@ type GetAllErrorsResponse = {
 }
 
 const GET_ALL_ERRORS = gql`
-  query GetAllErrors {
-    errors {
+  query GetAllErrors($page: Int!) {
+    errors(page: $page) {
       id
       message
       timestamp
@@ -33,8 +33,32 @@ const GET_ALL_ERRORS = gql`
 `;
 
 function AllErrors() {
+  const [page, setPage] = useState<number>(0);
   const { handleGQLError } = useAppError();
-  const { loading, data } = useQuery<GetAllErrorsResponse>(GET_ALL_ERRORS, { onError: handleGQLError });
+  const { loading, data, fetchMore } = useQuery<GetAllErrorsResponse>(GET_ALL_ERRORS, {
+    variables: {
+      page: page
+    },
+    onError: handleGQLError
+  });
+
+  const handleNextPage = () => {
+    fetchMore({
+      variables: {
+        page: page + 1
+      }
+    });
+
+    setPage(page + 1);
+  }
+
+  const handlePreviousPage = () => {
+    if (page === 0) {
+      return;
+    }
+
+    setPage(page - 1);
+  }
 
   return (
     <React.Fragment>
@@ -44,6 +68,12 @@ function AllErrors() {
         <div className="col-12">
           <div className="section-header">
             <h2>Errors</h2>
+
+            <span className="section-actions" data-testid="contests-section-actions">
+              <Button type="tertiary" role="button" action={handlePreviousPage} text="Prev" disabled={page === 0} style={{ marginLeft: "16px", marginRight: "16px" }} />
+              |
+              <Button type="tertiary" role="button" action={handleNextPage} text="Next" disabled={!loading && data?.errors.length === 0} style={{ marginLeft: "16px", marginRight: "16px" }} />
+            </span>
           </div>
           <div className="section-body">
             {loading && <LoadingSpinner size="LARGE" />}

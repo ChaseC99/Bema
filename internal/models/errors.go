@@ -10,10 +10,12 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
-func GetAllErrors(ctx context.Context) ([]*model.Error, error) {
+const ERROR_PAGE_SIZE = 20
+
+func GetErrorsByPage(ctx context.Context, page int) ([]*model.Error, error) {
 	errs := []*model.Error{}
 
-	rows, err := db.DB.Query("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error ORDER BY error_id DESC;", util.DisplayFancyDateFormat)
+	rows, err := db.DB.Query("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error ORDER BY error_id DESC LIMIT $2 OFFSET $3;", util.DisplayFancyDateFormat, ERROR_PAGE_SIZE, ERROR_PAGE_SIZE*page)
 	if err != nil {
 		return []*model.Error{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of logged errors", err)
 	}

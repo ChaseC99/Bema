@@ -7,6 +7,7 @@ import App from './App';
 import { AppStateProvider } from './state/AppStateContext';
 import { AppErrorProvider } from './util/errors';
 import { BrowserRouter } from 'react-router-dom';
+import { ERROR_PAGE_SIZE } from './pages/admin/Errors';
 
 const httpLink = new HttpLink({
   uri: "/api/internal/graphql"
@@ -29,7 +30,24 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 const client = new ApolloClient({
   link: from([errorLink, httpLink]),
-  cache: new InMemoryCache()
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          errors: {
+            keyArgs: false,
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+            read(existing, { args }) {
+              const page = args?.page || 0;
+              return existing && existing.slice(page * ERROR_PAGE_SIZE, (page * ERROR_PAGE_SIZE) + ERROR_PAGE_SIZE);
+            }
+          }
+        }
+      }
+    }
+  })
 });
 
 ReactDOM.render(

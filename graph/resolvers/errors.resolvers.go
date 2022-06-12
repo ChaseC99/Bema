@@ -21,13 +21,13 @@ func (r *errorResolver) User(ctx context.Context, obj *model.Error) (*model.User
 	return user, nil
 }
 
-func (r *queryResolver) Errors(ctx context.Context) ([]*model.Error, error) {
+func (r *queryResolver) Errors(ctx context.Context, page int) ([]*model.Error, error) {
 	user := auth.GetUserFromContext(ctx)
 	if !auth.HasPermission(user, auth.ViewErrors) {
 		return []*model.Error{}, nil
 	}
 
-	errors, err := models.GetAllErrors(ctx)
+	errors, err := models.GetErrorsByPage(ctx, page)
 	if err != nil {
 		return []*model.Error{}, err
 	}

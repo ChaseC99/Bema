@@ -280,7 +280,7 @@ type ComplexityRoot struct {
 		Entry                       func(childComplexity int, id int) int
 		EntryCounts                 func(childComplexity int) int
 		Error                       func(childComplexity int, id int) int
-		Errors                      func(childComplexity int) int
+		Errors                      func(childComplexity int, page int) int
 		Evaluations                 func(childComplexity int, userID int, contestID int) int
 		FlaggedEntries              func(childComplexity int) int
 		InactiveUsers               func(childComplexity int) int
@@ -410,7 +410,7 @@ type QueryResolver interface {
 	EntriesPerLevel(ctx context.Context, contestID int) ([]*model.EntriesPerLevel, error)
 	NextEntryToJudge(ctx context.Context) (*model.Entry, error)
 	NextEntryToReviewSkillLevel(ctx context.Context) (*model.Entry, error)
-	Errors(ctx context.Context) ([]*model.Error, error)
+	Errors(ctx context.Context, page int) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	Evaluations(ctx context.Context, userID int, contestID int) ([]*model.Evaluation, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -1668,7 +1668,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Errors(childComplexity), true
+		args, err := ec.field_Query_errors_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Errors(childComplexity, args["page"].(int)), true
 
 	case "Query.evaluations":
 		if e.complexity.Query.Evaluations == nil {
@@ -2316,7 +2321,7 @@ type EntriesPerLevel {
     """
     A list of all logged errors. Requires View Errors permission.
     """
-    errors: [Error!]!
+    errors(page: Int!): [Error!]!
 
     """
     A single logged error. Requires View Errors permission.
@@ -3240,6 +3245,21 @@ func (ec *executionContext) field_Query_error_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_errors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
 	return args, nil
 }
 
@@ -11113,7 +11133,7 @@ func (ec *executionContext) _Query_errors(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Errors(rctx)
+		return ec.resolvers.Query().Errors(rctx, fc.Args["page"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11157,6 +11177,17 @@ func (ec *executionContext) fieldContext_Query_errors(ctx context.Context, field
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Error", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_errors_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }

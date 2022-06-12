@@ -2,7 +2,7 @@ extend type Query {
     """
     A list of all logged errors. Requires View Errors permission.
     """
-    errors: [Error!]!
+    errors(page: Int!): [Error!]!
 
     """
     A single logged error. Requires View Errors permission.
