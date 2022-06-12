@@ -204,6 +204,17 @@ type JudgingGroup struct {
 	IsActive bool `json:"isActive"`
 }
 
+type JudgingProgress struct {
+	// The current user's progress
+	User *Progress `json:"user"`
+	// The progress of the current user's group
+	Group *Progress `json:"group"`
+	// The number of entries that have received at least one evaluation
+	Entries *Progress `json:"entries"`
+	// The total and expected number of evaluations
+	Evaluations *Progress `json:"evaluations"`
+}
+
 // A knowledge base article
 type KBArticle struct {
 	// A unique integer ID
@@ -316,6 +327,13 @@ type Permissions struct {
 	ViewErrors bool `json:"view_errors"`
 	// Allows the user to view all judging settings
 	ViewJudgingSettings bool `json:"view_judging_settings"`
+}
+
+type Progress struct {
+	// The current progress
+	Count int `json:"count"`
+	// The expected progress
+	Total int `json:"total"`
 }
 
 // A single task that can be assigned to and completed by a user

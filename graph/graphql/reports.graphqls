@@ -1,0 +1,37 @@
+extend type Query {
+    judgingProgress: JudgingProgress!
+}
+
+type JudgingProgress {
+    """
+    The current user's progress
+    """
+    user: Progress!
+
+    """
+    The progress of the current user's group
+    """
+    group: Progress!
+
+    """
+    The number of entries that have received at least one evaluation
+    """
+    entries: Progress
+
+    """
+    The total and expected number of evaluations
+    """
+    evaluations: Progress
+}
+
+type Progress {
+    """
+    The current progress
+    """
+    count: Int!
+
+    """
+    The expected progress
+    """
+    total: Int!
+}

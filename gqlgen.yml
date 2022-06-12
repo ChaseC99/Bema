@@ -166,3 +166,13 @@ models:
     fields:
       author:
         resolver: true
+  JudgingProgress:
+    fields:
+      user:
+        resolver: true
+      group:
+        resolver: true
+      entries:
+        resolver: true
+      evaluations:
+        resolver: true
