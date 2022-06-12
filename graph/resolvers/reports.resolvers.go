@@ -39,8 +39,8 @@ func (r *judgingProgressResolver) Group(ctx context.Context, obj *model.JudgingP
 
 	if user == nil {
 		return &model.Progress{
-			Count: 0,
-			Total: 0,
+			Count: 80,
+			Total: 150,
 		}, nil
 	}
 
