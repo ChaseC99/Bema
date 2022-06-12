@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu from "../../shared/ActionMenu";
 import ExternalLink from "../../shared/ExternalLink";
@@ -8,12 +8,6 @@ import { FormModal } from "../../shared/Modals";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
 import request from "../../util/request";
-import { fetchEvaluatorStats } from "./fetchEvaluatorData";
-
-type UserStats = {
-  totalContestsJudged: number
-  totalEvaluations: number
-}
 
 type GetUserProfileResponse = {
   user: {
@@ -26,6 +20,12 @@ type GetUserProfileResponse = {
     notificationsEnabled: boolean | null
     username: string
     lastLogin: string | null
+    totalEvaluations: number
+    totalContestsJudged: number
+    assignedGroup: {
+      id: string
+      name: string
+    } | null
   }
 }
 
@@ -41,6 +41,12 @@ const GET_USER_PROFILE = gql`
       notificationsEnabled
       username
       lastLogin
+      totalEvaluations
+      totalContestsJudged
+      assignedGroup {
+        id
+        name
+      }
     }
   }
 `;
@@ -49,7 +55,6 @@ function EvaluatorProfile() {
   const { evaluatorId } = useParams();
   const { handleGQLError } = useAppError();
   const { state } = useAppState();
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [showEditProfileModal, setShowEditProfileModal] = useState<boolean>(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState<boolean>(false);
 
@@ -59,13 +64,6 @@ function EvaluatorProfile() {
     },
     onError: handleGQLError
   });
-
-  useEffect(() => {
-    fetchEvaluatorStats(parseInt(evaluatorId || ""))
-      .then((data) => {
-        setUserStats(data);
-      });
-  }, [evaluatorId]);
 
   const openEditProfileModal = () => {
     setShowEditProfileModal(true);
@@ -146,13 +144,13 @@ function EvaluatorProfile() {
                 <h3>Judging Information</h3>
               </div>
               <div className="card-body">
-                {(profileIsLoading || !userStats) && <LoadingSpinner size="MEDIUM" />}
+                {profileIsLoading && <LoadingSpinner size="MEDIUM" />}
 
-                {(!profileIsLoading && userStats) &&
+                {!profileIsLoading &&
                   <React.Fragment>
-                    <p><span className="label">Judging Group: </span>TODO</p>
-                    <p><span className="label">Contests Judged: </span>{userStats.totalContestsJudged}</p>
-                    <p><span className="label">Total Entries Scored: </span>{userStats.totalEvaluations}</p>
+                    <p><span className="label">Judging Group: </span>{profileData?.user.assignedGroup ? profileData.user.assignedGroup.name : "None"}</p>
+                    <p><span className="label">Contests Judged: </span>{profileData?.user.totalContestsJudged}</p>
+                    <p><span className="label">Total Entries Scored: </span>{profileData?.user.totalEvaluations}</p>
                   </React.Fragment>
                 }
               </div>

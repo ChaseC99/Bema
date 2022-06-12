@@ -640,7 +640,6 @@ router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated
 router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 
 // Users
-router.get("/internal/users/stats", users.stats);
 router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
