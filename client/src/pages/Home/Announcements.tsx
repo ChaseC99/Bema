@@ -6,14 +6,8 @@ import useAppState from "../../state/useAppState";
 import AnnouncementCard from "./AnnouncementCard";
 import request from "../../util/request";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
-
-type CreateAnnouncement = {
-  message_title: string
-  message_content: string
-  public: boolean
-}
 
 type EditAnnouncement = {
   message_title: string
@@ -53,6 +47,20 @@ const GET_ANNOUNCEMENTS = gql`
   }
 `;
 
+type CreateAnnouncementResponse = {
+  announcement: {
+    id: string
+  }
+}
+
+const CREATE_ANNOUNCEMENT = gql`
+  mutation CreateAnnouncement($input: AnnouncementInput) {
+    announcement: createAnnouncement(input: $input) {
+      id
+    }
+  }
+`;
+
 function Announcements() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -61,6 +69,7 @@ function Announcements() {
   const [announcementToEdit, setAnnouncementToEdit] = useState<Announcement | null>(null);
 
   const { loading: announcementsIsLoading, data: announcementsData, refetch: refetchAnnouncements } = useQuery<GetAnnouncementsResponse>(GET_ANNOUNCEMENTS, { onError: handleGQLError });
+  const [createAnnouncement, { loading: createAnnouncementIsLoading }] = useMutation<CreateAnnouncementResponse>(CREATE_ANNOUNCEMENT);
 
   const confirmDeleteAnnouncement = (id: number) => {
     setConfirmDeleteId(id);
@@ -80,13 +89,15 @@ function Announcements() {
     setConfirmDeleteId(undefined);
   }
 
-  const createAnnouncement = async (values: { [name: string]: any; }) => {
-    const data = values as CreateAnnouncement;
-
-    await request("POST", "/api/internal/messages", {
-      message_title: data.message_title,
-      message_content: data.message_content,
-      public: data.public
+  const handleCreateAnnouncement = async (values: { [name: string]: any; }) => {
+    await createAnnouncement({
+      variables: {
+        "input": {
+          "title": values.message_title,
+          "content": values.message_content,
+          "isPublic": values.public
+        }
+      }
     });
 
     refetchAnnouncements();
@@ -159,9 +170,10 @@ function Announcements() {
         <FormModal
           title="Create announcement"
           submitLabel="Create"
-          handleSubmit={createAnnouncement}
+          handleSubmit={handleCreateAnnouncement}
           handleCancel={hideCreateAnnouncementModal}
           cols={5}
+          loading={createAnnouncementIsLoading}
           fields={[
             {
               fieldType: "INPUT",

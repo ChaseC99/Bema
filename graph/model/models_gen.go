@@ -18,6 +18,16 @@ type Announcement struct {
 	IsPublic bool `json:"isPublic"`
 }
 
+// The input required to create or edit an announcement
+type AnnouncementInput struct {
+	// The title of the announcement
+	Title string `json:"title"`
+	// The message content
+	Content string `json:"content"`
+	// Indicates whether the announcement is shown to unauthenticated users
+	IsPublic bool `json:"isPublic"`
+}
+
 // A contest
 type Contest struct {
 	// A unique integer id of the contest

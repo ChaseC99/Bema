@@ -3,6 +3,18 @@ extend type Query {
     A list of all announcements
     """
     announcements: [Announcement!]!
+
+    """
+    A single announcement
+    """
+    announcement(id: ID!): Announcement
+}
+
+extend type Mutation {
+    """
+    Creates a new announcement message
+    """
+    createAnnouncement(input: AnnouncementInput): Announcement
 }
 
 """
@@ -31,6 +43,26 @@ type Announcement {
 
     """
     The announcement body
+    """
+    content: String!
+
+    """
+    Indicates whether the announcement is shown to unauthenticated users
+    """
+    isPublic: Boolean!
+}
+
+"""
+The input required to create or edit an announcement
+"""
+input AnnouncementInput {
+    """
+    The title of the announcement
+    """
+    title: String!
+
+    """
+    The message content
     """
     content: String!
 

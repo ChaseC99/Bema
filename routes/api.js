@@ -229,17 +229,6 @@ const routeChecks = {
     ]
   },
   messages: {
-    add: [
-      check("message_title")
-      .isLength(messageChars)
-      .withMessage("Message title cannot be empty or longer than 100 characters"),
-      check("message_content")
-      .isLength(contentChars)
-      .withMessage("Message content cannot be empty or longer than 5,000 characters"),
-      check("public")
-      .isBoolean()
-      .withMessage("Public must be a boolean"),
-    ],
     edit: [
       check("message_id")
       .isInt()
@@ -634,7 +623,6 @@ router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToE
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
 
 // Messages
-router.post("/internal/messages", routeChecks.messages.add, wasValidated, messages.add);
 router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messages.edit);
 router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
 

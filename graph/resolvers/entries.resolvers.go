@@ -304,9 +304,5 @@ func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 // EntryVote returns generated.EntryVoteResolver implementation.
 func (r *Resolver) EntryVote() generated.EntryVoteResolver { return &entryVoteResolver{r} }
 
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
-
 type entryResolver struct{ *Resolver }
 type entryVoteResolver struct{ *Resolver }
-type mutationResolver struct{ *Resolver }

@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	err "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -18,6 +19,21 @@ func (r *announcementResolver) Author(ctx context.Context, obj *model.Announceme
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *mutationResolver) CreateAnnouncement(ctx context.Context, input *model.AnnouncementInput) (*model.Announcement, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageAnnouncements) {
+		return nil, err.NewForbiddenError(ctx, "You do not have permission to create announcements.")
+	}
+
+	id, err := models.CreateAnnouncement(ctx, input, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Announcement(ctx, *id)
 }
 
 func (r *queryResolver) Announcements(ctx context.Context) ([]*model.Announcement, error) {
@@ -38,11 +54,30 @@ func (r *queryResolver) Announcements(ctx context.Context) ([]*model.Announcemen
 	}
 }
 
+func (r *queryResolver) Announcement(ctx context.Context, id int) (*model.Announcement, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	announcement, err := models.GetAnnouncementById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil && !announcement.IsPublic {
+		return nil, nil
+	}
+
+	return announcement, nil
+}
+
 // Announcement returns generated.AnnouncementResolver implementation.
 func (r *Resolver) Announcement() generated.AnnouncementResolver { return &announcementResolver{r} }
+
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type announcementResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
