@@ -16,9 +16,11 @@ func NewKBSectionModel() model.KBSection {
 
 func NewKBArticleModel() model.KBArticle {
 	article := model.KBArticle{}
-	section := NewKBSectionModel()
 
-	article.Author = &model.User{}
+	section := NewKBSectionModel()
+	user := NewUserModel()
+
+	article.Author = &user
 	article.Section = &section
 
 	return article
@@ -27,7 +29,9 @@ func NewKBArticleModel() model.KBArticle {
 func NewKBArticleDraftModel() model.KBArticleDraft {
 	draft := model.KBArticleDraft{}
 
-	draft.Author = &model.User{}
+	user := NewUserModel()
+
+	draft.Author = &user
 
 	return draft
 }

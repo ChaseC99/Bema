@@ -9,6 +9,16 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 )
 
+func NewJudgingGroupModel() model.JudgingGroup {
+	group := model.JudgingGroup{}
+	return group
+}
+
+func NewJudgingCriteriaModel() model.JudgingCriteria {
+	criteria := model.JudgingCriteria{}
+	return criteria
+}
+
 func GetAllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	criteria := []*model.JudgingCriteria{}
 
@@ -18,7 +28,7 @@ func GetAllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	}
 
 	for rows.Next() {
-		var c model.JudgingCriteria
+		c := NewJudgingCriteriaModel()
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.IsActive, &c.SortOrder); err != nil {
 			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of judging criteria", err)
 		}
@@ -70,7 +80,7 @@ func GetActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	}
 
 	for rows.Next() {
-		var c model.JudgingCriteria
+		c := NewJudgingCriteriaModel()
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.IsActive, &c.SortOrder); err != nil {
 			return nil, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of active judging criteria", err)
 		}
@@ -89,7 +99,7 @@ func GetAllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
 	}
 
 	for rows.Next() {
-		var g model.JudgingGroup
+		g := NewJudgingGroupModel()
 		if err := rows.Scan(&g.ID, &g.Name, &g.IsActive); err != nil {
 			return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of judging groups", err)
 		}
@@ -108,7 +118,7 @@ func GetActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) 
 	}
 
 	for rows.Next() {
-		var g model.JudgingGroup
+		g := NewJudgingGroupModel()
 		if err := rows.Scan(&g.ID, &g.Name, &g.IsActive); err != nil {
 			return []*model.JudgingGroup{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of active judging groups", err)
 		}
@@ -121,7 +131,7 @@ func GetActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) 
 func GetJudgingGroupById(ctx context.Context, id int) (*model.JudgingGroup, error) {
 	row := db.DB.QueryRow("SELECT group_id, group_name, is_active FROM evaluator_group WHERE group_id = $1", id)
 
-	var group model.JudgingGroup
+	group := NewJudgingGroupModel()
 	err := row.Scan(&group.ID, &group.Name, &group.IsActive)
 	if err != nil {
 		if err == sql.ErrNoRows {

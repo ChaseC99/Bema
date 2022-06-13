@@ -14,9 +14,13 @@ import (
 func NewEntryModel() model.Entry {
 	var entry model.Entry
 
-	entry.Author = &model.Contestant{}
-	entry.Contest = &model.Contest{}
-	entry.Group = &model.JudgingGroup{}
+	contestant := NewContestantModel()
+	contest := NewContestModel()
+	group := NewJudgingGroupModel()
+
+	entry.Author = &contestant
+	entry.Contest = &contest
+	entry.Group = &group
 
 	return entry
 }

@@ -9,9 +9,13 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
-func newTask() model.Task {
+func NewTaskModel() model.Task {
 	task := model.Task{}
-	task.AssignedUser = &model.User{}
+
+	user := NewUserModel()
+
+	task.AssignedUser = &user
+
 	return task
 }
 
@@ -24,7 +28,7 @@ func GetIncompleteTasks(ctx context.Context) ([]*model.Task, error) {
 	}
 
 	for rows.Next() {
-		t := newTask()
+		t := NewTaskModel()
 		var userId *int
 
 		if err := rows.Scan(&t.ID, &t.Title, &userId, &t.Status, &t.DueDate); err != nil {
@@ -52,7 +56,7 @@ func GetCompletedTasks(ctx context.Context) ([]*model.Task, error) {
 	}
 
 	for rows.Next() {
-		t := newTask()
+		t := NewTaskModel()
 		var userId *int
 
 		if err := rows.Scan(&t.ID, &t.Title, &userId, &t.Status, &t.DueDate); err != nil {
@@ -80,7 +84,7 @@ func GetAvailableTasks(ctx context.Context) ([]*model.Task, error) {
 	}
 
 	for rows.Next() {
-		t := newTask()
+		t := NewTaskModel()
 		t.AssignedUser = nil
 
 		if err := rows.Scan(&t.ID, &t.Title, &t.Status, &t.DueDate); err != nil {
@@ -102,7 +106,7 @@ func GetTasksForUser(ctx context.Context, userId int) ([]*model.Task, error) {
 	}
 
 	for rows.Next() {
-		t := newTask()
+		t := NewTaskModel()
 
 		if err := rows.Scan(&t.ID, &t.Title, &t.AssignedUser.ID, &t.Status, &t.DueDate); err != nil {
 			return []*model.Task{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of user tasks.", err)

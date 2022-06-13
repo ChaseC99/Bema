@@ -10,10 +10,17 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 )
 
+func NewContestantModel() model.Contestant {
+	contestant := model.Contestant{}
+	contestant.Entries = []*model.Entry{}
+
+	return contestant
+}
+
 func GetContestantByKaid(ctx context.Context, kaid string) (*model.Contestant, error) {
 	row := db.DB.QueryRow("SELECT entry_author FROM entry WHERE entry_author_kaid = $1 ORDER BY entry_id ASC LIMIT 1;", kaid)
 
-	contestant := &model.Contestant{}
+	contestant := NewContestantModel()
 	contestant.Kaid = kaid
 	if err := row.Scan(&contestant.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -22,7 +29,7 @@ func GetContestantByKaid(ctx context.Context, kaid string) (*model.Contestant, e
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up a contestant.", err)
 	}
 
-	return contestant, nil
+	return &contestant, nil
 }
 
 func GetContestantsBySearchQuery(ctx context.Context, searchQuery string) ([]*model.Contestant, error) {
@@ -41,7 +48,7 @@ func GetContestantsBySearchQuery(ctx context.Context, searchQuery string) ([]*mo
 	}
 
 	for rows.Next() {
-		var c model.Contestant
+		c := NewContestantModel()
 		var kaid *string
 
 		if err := rows.Scan(&c.Name, &kaid); err != nil {

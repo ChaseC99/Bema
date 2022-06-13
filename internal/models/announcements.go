@@ -13,7 +13,8 @@ import (
 
 func NewAnnouncementModel() model.Announcement {
 	announcement := model.Announcement{}
-	announcement.Author = &model.User{}
+	user := NewUserModel()
+	announcement.Author = &user
 
 	return announcement
 }
@@ -41,8 +42,7 @@ func GetAllAnnouncements(ctx context.Context) ([]*model.Announcement, error) {
 	}
 
 	for rows.Next() {
-		var a model.Announcement
-		a.Author = &model.User{}
+		a := NewAnnouncementModel()
 		if err := rows.Scan(&a.ID, &a.Created, &a.Title, &a.Content, &a.IsPublic, &a.Author.ID); err != nil {
 			return []*model.Announcement{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of announcements.", err)
 		}
@@ -61,8 +61,7 @@ func GetPublicAnnouncements(ctx context.Context) ([]*model.Announcement, error) 
 	}
 
 	for rows.Next() {
-		var a model.Announcement
-		a.Author = &model.User{}
+		a := NewAnnouncementModel()
 		if err := rows.Scan(&a.ID, &a.Created, &a.Title, &a.Content, &a.IsPublic, &a.Author.ID); err != nil {
 			return []*model.Announcement{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of announcements.", err)
 		}

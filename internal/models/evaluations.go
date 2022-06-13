@@ -13,10 +13,12 @@ import (
 
 func NewEvaluationModel() model.Evaluation {
 	evaluation := model.Evaluation{}
+
 	entry := NewEntryModel()
+	user := NewUserModel()
 
 	evaluation.Entry = &entry
-	evaluation.User = &model.User{}
+	evaluation.User = &user
 
 	return evaluation
 }

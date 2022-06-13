@@ -12,6 +12,14 @@ import (
 
 const ERROR_PAGE_SIZE = 20
 
+func NewErrorModel() model.Error {
+	error := model.Error{}
+	user := NewUserModel()
+	error.User = &user
+
+	return error
+}
+
 func GetErrorsByPage(ctx context.Context, page int) ([]*model.Error, error) {
 	errs := []*model.Error{}
 
@@ -21,8 +29,7 @@ func GetErrorsByPage(ctx context.Context, page int) ([]*model.Error, error) {
 	}
 
 	for rows.Next() {
-		var e model.Error
-		e.User = &model.User{}
+		e := NewErrorModel()
 
 		if err := rows.Scan(&e.ID, &e.Message, &e.Stack, &e.Timestamp, &e.RequestOrigin, &e.RequestReferrer, &e.RequestUserAgent, &e.User.ID); err != nil {
 			return []*model.Error{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of logged errors", err)
@@ -37,7 +44,7 @@ func GetErrorsByPage(ctx context.Context, page int) ([]*model.Error, error) {
 func GetErrorById(ctx context.Context, id int) (*model.Error, error) {
 	row := db.DB.QueryRow("SELECT error_id, error_message, error_stack, to_char(error_tstz, $1), request_origin, request_referer, user_agent, evaluator_id FROM error WHERE error_id = $2;", util.DisplayFancyDateFormat, id)
 
-	e := &model.Error{}
+	e := NewErrorModel()
 	e.User = &model.User{}
 	if err := row.Scan(&e.ID, &e.Message, &e.Stack, &e.Timestamp, &e.RequestOrigin, &e.RequestReferrer, &e.RequestUserAgent, &e.User.ID); err != nil {
 		if err == sql.ErrNoRows {
@@ -46,5 +53,5 @@ func GetErrorById(ctx context.Context, id int) (*model.Error, error) {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the requested error", err)
 	}
 
-	return e, nil
+	return &e, nil
 }
