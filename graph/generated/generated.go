@@ -221,7 +221,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddWinner func(childComplexity int, id int) int
+		AddWinner    func(childComplexity int, id int) int
+		RemoveWinner func(childComplexity int, id int) int
 	}
 
 	Permissions struct {
@@ -402,6 +403,7 @@ type KBSectionResolver interface {
 }
 type MutationResolver interface {
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
+	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1254,6 +1256,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddWinner(childComplexity, args["id"].(int)), true
+
+	case "Mutation.removeWinner":
+		if e.complexity.Mutation.RemoveWinner == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeWinner_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveWinner(childComplexity, args["id"].(int)), true
 
 	case "Permissions.add_entries":
 		if e.complexity.Permissions.AddEntries == nil {
@@ -2177,188 +2191,194 @@ type Contest {
   winners: [Entry!]!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/entries.graphqls", Input: `extend type Query {
-    """
-    A list of entries for a given contest
-    """
-    entries(contestId: ID!): [Entry!]!
+	"""
+	A list of entries for a given contest
+	"""
+	entries(contestId: ID!): [Entry!]!
 
-    """
-    A single entry
-    """
-    entry(id: ID!): Entry
+	"""
+	A single entry
+	"""
+	entry(id: ID!): Entry
 
-    """
-    A list of flagged entries. Requires View Judging Settings permission.
-    """
-    flaggedEntries: [Entry!]!
+	"""
+	A list of flagged entries. Requires View Judging Settings permission.
+	"""
+	flaggedEntries: [Entry!]!
 
-    """
-    A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
-    """
-    entriesByAverageScore(contestId: ID!): [Entry!]!
+	"""
+	A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
+	"""
+	entriesByAverageScore(contestId: ID!): [Entry!]!
 
-    """
-    A breakdown of the number of entries per skill level
-    """
-    entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
+	"""
+	A breakdown of the number of entries per skill level
+	"""
+	entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 
-    """
-    The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
-    """
-    nextEntryToJudge: Entry
+	"""
+	The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
+	"""
+	nextEntryToJudge: Entry
 
-    """
-    The next entry to review its skill level. Requires Admin permission.
-    """
-    nextEntryToReviewSkillLevel: Entry
+	"""
+	The next entry to review its skill level. Requires Admin permission.
+	"""
+	nextEntryToReviewSkillLevel: Entry
 }
 
 extend type Mutation {
+	"""
+	Marks an entry as a winner
+	"""
+	addWinner(id: ID!): Entry
+
   """
-  Marks an entry as a winner
+  Removes a winning entry
   """
-  addWinner(id: ID!): Entry
+	removeWinner(id: ID!): Entry
 }
 
 """
 A program submission for a contest
 """
 type Entry {
-    """
-    A unique integer ID
-    """
-    id: ID!
+	"""
+	A unique integer ID
+	"""
+	id: ID!
 
-    """
-    The contest for which the entry was submitted
-    """
-    contest: Contest!
+	"""
+	The contest for which the entry was submitted
+	"""
+	contest: Contest!
 
-    """
-    A URL to the entry program
-    """
-    url: String!
+	"""
+	A URL to the entry program
+	"""
+	url: String!
 
-    """
-    The KAID of the entry program
-    """
-    kaid: String!
+	"""
+	The KAID of the entry program
+	"""
+	kaid: String!
 
-    """
-    The title of the entry
-    """
-    title: String!
+	"""
+	The title of the entry
+	"""
+	title: String!
 
-    """
-    The author of the entry
-    """
-    author: Contestant!
+	"""
+	The author of the entry
+	"""
+	author: Contestant!
 
-    """
-    The skill level assigned to the entry
-    """
-    skillLevel: String
+	"""
+	The skill level assigned to the entry
+	"""
+	skillLevel: String
 
-    """
-    The number of votes the entry received on KA
-    """
-    votes: Int!
+	"""
+	The number of votes the entry received on KA
+	"""
+	votes: Int!
 
-    """
-    The date the entry program was created
-    """
-    created: String!
+	"""
+	The date the entry program was created
+	"""
+	created: String!
 
-    """
-    The height of the entry program canvas
-    """
-    height: Int!
+	"""
+	The height of the entry program canvas
+	"""
+	height: Int!
 
-    """
-    Indicates if the entry is a winner of the contest
-    """
-    isWinner: Boolean!
+	"""
+	Indicates if the entry is a winner of the contest
+	"""
+	isWinner: Boolean!
 
-    """
-    The judging group the entry is assigned to. Requires authentication.
-    """
-    group: JudgingGroup
+	"""
+	The judging group the entry is assigned to. Requires authentication.
+	"""
+	group: JudgingGroup
 
-    """
-    Indicates whether the entry has been flagged. Requires authentication.
-    """
-    isFlagged: Boolean
+	"""
+	Indicates whether the entry has been flagged. Requires authentication.
+	"""
+	isFlagged: Boolean
 
-    """
-    Indicates whether the entry has been disqualified. Requires authentication.
-    """
-    isDisqualified: Boolean
+	"""
+	Indicates whether the entry has been disqualified. Requires authentication.
+	"""
+	isDisqualified: Boolean
 
-    """
-    Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
-    """
-    isSkillLevelLocked: Boolean
+	"""
+	Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
+	"""
+	isSkillLevelLocked: Boolean
 
-    """
-    The average score of the entry. Requires authentication.
-    """
-    averageScore: Float
+	"""
+	The average score of the entry. Requires authentication.
+	"""
+	averageScore: Float
 
-    """
-    The number of evaluations submitted for the entry. Requires authentication.
-    """
-    evaluationCount: Int
+	"""
+	The number of evaluations submitted for the entry. Requires authentication.
+	"""
+	evaluationCount: Int
 
-    """
-    The number of judges that voted for this entry. Requires authentication.
-    """
-    voteCount: Int
+	"""
+	The number of judges that voted for this entry. Requires authentication.
+	"""
+	voteCount: Int
 
-    """
-    Indicates whether the current user has voted for the entry. Requires authentication.
-    """
-    isVotedByUser: Boolean
+	"""
+	Indicates whether the current user has voted for the entry. Requires authentication.
+	"""
+	isVotedByUser: Boolean
 
-    """
-    A list of judge votes for the entry. Requires authentication.
-    """
-    judgeVotes: [EntryVote!]!
+	"""
+	A list of judge votes for the entry. Requires authentication.
+	"""
+	judgeVotes: [EntryVote!]!
 }
 
 """
 A judge vote submitted for an entry
 """
 type EntryVote {
-    """
-    A unique integer ID
-    """
-    id: ID!
+	"""
+	A unique integer ID
+	"""
+	id: ID!
 
-    """
-    The user that voted for the entry
-    """
-    user: User!
+	"""
+	The user that voted for the entry
+	"""
+	user: User!
 
-    """
-    The reason the user likes the entry
-    """
-    reason: String!
+	"""
+	The reason the user likes the entry
+	"""
+	reason: String!
 }
 
 """
 A skill bracket and its respective entry count
 """
 type EntriesPerLevel {
-    """
-    The name of the skill bracket
-    """
-    level: String!
+	"""
+	The name of the skill bracket
+	"""
+	level: String!
 
-    """
-    The number of entries in the skill bracket
-    """
-    count: Int!
-}`, BuiltIn: false},
+	"""
+	The number of entries in the skill bracket
+	"""
+	count: Int!
+}
+`, BuiltIn: false},
 	{Name: "graph/graphql/errors.graphqls", Input: `extend type Query {
     """
     A list of all logged errors. Requires View Errors permission.
@@ -3126,6 +3146,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // region    ***************************** args.gotpl *****************************
 
 func (ec *executionContext) field_Mutation_addWinner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeWinner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -8778,6 +8813,100 @@ func (ec *executionContext) fieldContext_Mutation_addWinner(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addWinner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeWinner(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_removeWinner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveWinner(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_removeWinner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
+			case "judgeVotes":
+				return ec.fieldContext_Entry_judgeVotes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeWinner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17060,6 +17189,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addWinner(ctx, field)
+			})
+
+		case "removeWinner":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeWinner(ctx, field)
 			})
 
 		default:

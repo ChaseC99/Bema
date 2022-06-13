@@ -1,183 +1,188 @@
 extend type Query {
-    """
-    A list of entries for a given contest
-    """
-    entries(contestId: ID!): [Entry!]!
+	"""
+	A list of entries for a given contest
+	"""
+	entries(contestId: ID!): [Entry!]!
 
-    """
-    A single entry
-    """
-    entry(id: ID!): Entry
+	"""
+	A single entry
+	"""
+	entry(id: ID!): Entry
 
-    """
-    A list of flagged entries. Requires View Judging Settings permission.
-    """
-    flaggedEntries: [Entry!]!
+	"""
+	A list of flagged entries. Requires View Judging Settings permission.
+	"""
+	flaggedEntries: [Entry!]!
 
-    """
-    A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
-    """
-    entriesByAverageScore(contestId: ID!): [Entry!]!
+	"""
+	A list of entries sorted by average score and skill level. If the user is unauthenticated, the entries are sorted by ID instead.
+	"""
+	entriesByAverageScore(contestId: ID!): [Entry!]!
 
-    """
-    A breakdown of the number of entries per skill level
-    """
-    entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
+	"""
+	A breakdown of the number of entries per skill level
+	"""
+	entriesPerLevel(contestId: ID!): [EntriesPerLevel!]!
 
-    """
-    The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
-    """
-    nextEntryToJudge: Entry
+	"""
+	The next entry to score in the judging queue for the current user. Requires the Judge Entries permission.
+	"""
+	nextEntryToJudge: Entry
 
-    """
-    The next entry to review its skill level. Requires Admin permission.
-    """
-    nextEntryToReviewSkillLevel: Entry
+	"""
+	The next entry to review its skill level. Requires Admin permission.
+	"""
+	nextEntryToReviewSkillLevel: Entry
 }
 
 extend type Mutation {
+	"""
+	Marks an entry as a winner
+	"""
+	addWinner(id: ID!): Entry
+
   """
-  Marks an entry as a winner
+  Removes a winning entry
   """
-  addWinner(id: ID!): Entry
+	removeWinner(id: ID!): Entry
 }
 
 """
 A program submission for a contest
 """
 type Entry {
-    """
-    A unique integer ID
-    """
-    id: ID!
+	"""
+	A unique integer ID
+	"""
+	id: ID!
 
-    """
-    The contest for which the entry was submitted
-    """
-    contest: Contest!
+	"""
+	The contest for which the entry was submitted
+	"""
+	contest: Contest!
 
-    """
-    A URL to the entry program
-    """
-    url: String!
+	"""
+	A URL to the entry program
+	"""
+	url: String!
 
-    """
-    The KAID of the entry program
-    """
-    kaid: String!
+	"""
+	The KAID of the entry program
+	"""
+	kaid: String!
 
-    """
-    The title of the entry
-    """
-    title: String!
+	"""
+	The title of the entry
+	"""
+	title: String!
 
-    """
-    The author of the entry
-    """
-    author: Contestant!
+	"""
+	The author of the entry
+	"""
+	author: Contestant!
 
-    """
-    The skill level assigned to the entry
-    """
-    skillLevel: String
+	"""
+	The skill level assigned to the entry
+	"""
+	skillLevel: String
 
-    """
-    The number of votes the entry received on KA
-    """
-    votes: Int!
+	"""
+	The number of votes the entry received on KA
+	"""
+	votes: Int!
 
-    """
-    The date the entry program was created
-    """
-    created: String!
+	"""
+	The date the entry program was created
+	"""
+	created: String!
 
-    """
-    The height of the entry program canvas
-    """
-    height: Int!
+	"""
+	The height of the entry program canvas
+	"""
+	height: Int!
 
-    """
-    Indicates if the entry is a winner of the contest
-    """
-    isWinner: Boolean!
+	"""
+	Indicates if the entry is a winner of the contest
+	"""
+	isWinner: Boolean!
 
-    """
-    The judging group the entry is assigned to. Requires authentication.
-    """
-    group: JudgingGroup
+	"""
+	The judging group the entry is assigned to. Requires authentication.
+	"""
+	group: JudgingGroup
 
-    """
-    Indicates whether the entry has been flagged. Requires authentication.
-    """
-    isFlagged: Boolean
+	"""
+	Indicates whether the entry has been flagged. Requires authentication.
+	"""
+	isFlagged: Boolean
 
-    """
-    Indicates whether the entry has been disqualified. Requires authentication.
-    """
-    isDisqualified: Boolean
+	"""
+	Indicates whether the entry has been disqualified. Requires authentication.
+	"""
+	isDisqualified: Boolean
 
-    """
-    Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
-    """
-    isSkillLevelLocked: Boolean
+	"""
+	Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
+	"""
+	isSkillLevelLocked: Boolean
 
-    """
-    The average score of the entry. Requires authentication.
-    """
-    averageScore: Float
+	"""
+	The average score of the entry. Requires authentication.
+	"""
+	averageScore: Float
 
-    """
-    The number of evaluations submitted for the entry. Requires authentication.
-    """
-    evaluationCount: Int
+	"""
+	The number of evaluations submitted for the entry. Requires authentication.
+	"""
+	evaluationCount: Int
 
-    """
-    The number of judges that voted for this entry. Requires authentication.
-    """
-    voteCount: Int
+	"""
+	The number of judges that voted for this entry. Requires authentication.
+	"""
+	voteCount: Int
 
-    """
-    Indicates whether the current user has voted for the entry. Requires authentication.
-    """
-    isVotedByUser: Boolean
+	"""
+	Indicates whether the current user has voted for the entry. Requires authentication.
+	"""
+	isVotedByUser: Boolean
 
-    """
-    A list of judge votes for the entry. Requires authentication.
-    """
-    judgeVotes: [EntryVote!]!
+	"""
+	A list of judge votes for the entry. Requires authentication.
+	"""
+	judgeVotes: [EntryVote!]!
 }
 
 """
 A judge vote submitted for an entry
 """
 type EntryVote {
-    """
-    A unique integer ID
-    """
-    id: ID!
+	"""
+	A unique integer ID
+	"""
+	id: ID!
 
-    """
-    The user that voted for the entry
-    """
-    user: User!
+	"""
+	The user that voted for the entry
+	"""
+	user: User!
 
-    """
-    The reason the user likes the entry
-    """
-    reason: String!
+	"""
+	The reason the user likes the entry
+	"""
+	reason: String!
 }
 
 """
 A skill bracket and its respective entry count
 """
 type EntriesPerLevel {
-    """
-    The name of the skill bracket
-    """
-    level: String!
+	"""
+	The name of the skill bracket
+	"""
+	level: String!
 
-    """
-    The number of entries in the skill bracket
-    """
-    count: Int!
+	"""
+	The number of entries in the skill bracket
+	"""
+	count: Int!
 }

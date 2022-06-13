@@ -128,7 +128,6 @@ const ADD_WINNER = gql`
   mutation AddWinner($entryId: ID!) {
     entry: addWinner(id: $entryId) {
       id
-      title
       isWinner
     }
   }
@@ -138,6 +137,18 @@ type AddWinnerResponse = {
   entry: Entry
 }
 
+const REMOVE_WINNER = gql`
+  mutation RemoveWinner($entryId: ID!) {
+    entry: removeWinner(id: $entryId) {
+      id
+      isWinner
+    }
+  }
+`;
+
+type RemoveWinnerResponse = {
+  entry: Entry
+}
 
 function Results() {
   const { state } = useAppState();
@@ -155,24 +166,22 @@ function Results() {
     },
     onError: handleGQLError
   });
-
   const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesByAverageScoreResponse>(GET_ENTRIES_BY_AVG_SCORE, { 
     variables: {
       contestId: contestId
     },
     onError: handleGQLError 
   });
-
   const { loading: levelsIsLoading, data: levelsData } = useQuery<GetEntriesPerLevelResponse>(GET_ENTRIES_PER_LEVEL, {
     variables: {
       contestId: contestId
     },
     onError: handleGQLError
   });
+  const [fetchEntryVotes, { loading: entryVotesIsLoading, data: entryVotesData }] = useLazyQuery<GetEntryVotesResponse>(GET_ENTRY_VOTES, { onError: handleGQLError });
 
   const [addWinner, { loading: addWinnerIsLoading }] = useMutation<AddWinnerResponse>(ADD_WINNER);
-
-  const [fetchEntryVotes, { loading: entryVotesIsLoading, data: entryVotesData }] = useLazyQuery<GetEntryVotesResponse>(GET_ENTRY_VOTES, { onError: handleGQLError });
+  const [removeWinner, { loading: removeWinnerIsLoading }] = useMutation<RemoveWinnerResponse>(REMOVE_WINNER);
 
   const showDeleteWinnerModal = (id: string) => {
     setDeleteWinnerId(id);
@@ -183,8 +192,10 @@ function Results() {
   }
 
   const handleRemoveWinner = async (id: string) => {
-    await request("DELETE", "/api/internal/winners", {
-      entry_id: parseInt(id)
+    removeWinner({
+      variables: {
+        entryId: id
+      }
     });
 
     refetchContest();
@@ -304,7 +315,7 @@ function Results() {
       }
 
       {deleteWinnerId &&
-        <ConfirmModal title="Remove winner?" confirmLabel="Remove" handleConfirm={handleRemoveWinner} handleCancel={hideDeleteWinnerModal} destructive data={deleteWinnerId}>
+        <ConfirmModal title="Remove winner?" confirmLabel="Remove" handleConfirm={handleRemoveWinner} handleCancel={hideDeleteWinnerModal} destructive data={deleteWinnerId} loading={removeWinnerIsLoading}>
           <p>Are you sure you want to remove this winner? This is a public action that will be viewable by external users.</p>
         </ConfirmModal>
       }

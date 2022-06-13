@@ -420,16 +420,6 @@ const routeChecks = {
     ]
   },
   winners: {
-    add: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
-    ],
-    delete: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
-    ],
     addVote: [
       check("entry_id")
       .isInt()
@@ -634,7 +624,6 @@ const routeChecks = {
 router.use(hasBody);
 
 // Winners
-router.delete("/internal/winners", routeChecks.winners.delete, wasValidated, winners.delete);
 router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated, winners.addVote);
 router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 

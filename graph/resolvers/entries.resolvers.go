@@ -9,7 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
-	"github.com/KA-Challenge-Council/Bema/internal/errors"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -168,10 +168,29 @@ func (r *mutationResolver) AddWinner(ctx context.Context, id int) (*model.Entry,
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.ManageWinners) {
-		return nil, errors.NewForbiddenError(ctx, "You do not have permission to add winners.")
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to add winners.")
 	}
 
 	err := models.AddWinnerByEntryId(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	entry, err := r.Query().Entry(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
+func (r *mutationResolver) RemoveWinner(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageWinners) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to remove winners.")
+	}
+
+	err := models.RemoveWinnerByEntryId(ctx, id)
 	if err != nil {
 		return nil, err
 	}

@@ -381,3 +381,11 @@ func AddWinnerByEntryId(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func RemoveWinnerByEntryId(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("UPDATE entry SET is_winner = false WHERE entry_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while removing a winning entry", err)
+	}
+	return nil
+}
