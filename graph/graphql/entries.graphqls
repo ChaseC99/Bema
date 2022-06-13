@@ -35,6 +35,13 @@ extend type Query {
     nextEntryToReviewSkillLevel: Entry
 }
 
+extend type Mutation {
+  """
+  Marks an entry as a winner
+  """
+  addWinner(id: ID!): Entry
+}
+
 """
 A program submission for a contest
 """

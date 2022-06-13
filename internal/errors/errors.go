@@ -53,6 +53,17 @@ func NewNotFoundError(ctx context.Context, message string) *gqlerror.Error {
 	}
 }
 
+// Create a new forbidden error
+func NewForbiddenError(ctx context.Context, message string) *gqlerror.Error {
+	return &gqlerror.Error{
+		Path:    graphql.GetPath(ctx),
+		Message: message,
+		Extensions: map[string]interface{}{
+			"status": 403,
+		},
+	}
+}
+
 func logError(publicMessage string, callStack string, userId *int, origin string, referer string, userAgent string) {
 	db.DB.Query("SELECT log_error($1, $2, $3, $4, $5, $6);", publicMessage, callStack, userId, origin, referer, userAgent)
 }

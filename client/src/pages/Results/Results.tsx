@@ -1,4 +1,4 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import Button from "../../shared/Button";
@@ -124,6 +124,20 @@ const GET_ENTRY_VOTES = gql`
   }
 `;
 
+const ADD_WINNER = gql`
+  mutation AddWinner($entryId: ID!) {
+    entry: addWinner(id: $entryId) {
+      id
+      title
+      isWinner
+    }
+  }
+`;
+
+type AddWinnerResponse = {
+  entry: Entry
+}
+
 
 function Results() {
   const { state } = useAppState();
@@ -155,6 +169,8 @@ function Results() {
     },
     onError: handleGQLError
   });
+
+  const [addWinner, { loading: addWinnerIsLoading }] = useMutation<AddWinnerResponse>(ADD_WINNER);
 
   const [fetchEntryVotes, { loading: entryVotesIsLoading, data: entryVotesData }] = useLazyQuery<GetEntryVotesResponse>(GET_ENTRY_VOTES, { onError: handleGQLError });
 
@@ -239,8 +255,10 @@ function Results() {
   }
 
   const handleAddWinner = async (id: string) => {
-    await request("POST", "/api/internal/winners", {
-      entry_id: parseInt(id)
+    addWinner({
+      variables: {
+        entryId: id
+      }
     });
 
     refetchContest();
@@ -279,7 +297,7 @@ function Results() {
       </section>
 
       {addWinnerId &&
-        <ConfirmModal title="Mark as winner?" confirmLabel="Mark As Winner" handleConfirm={handleAddWinner} handleCancel={hideConfirmAddWinnerModal} data={addWinnerId}>
+        <ConfirmModal title="Mark as winner?" confirmLabel="Mark As Winner" handleConfirm={handleAddWinner} handleCancel={hideConfirmAddWinnerModal} data={addWinnerId} loading={addWinnerIsLoading}>
           <p>Are you sure you want to mark this entry as a winner? This is a public action that will be viewable by external users.</p>
           <p>Before marking as a winner, make sure the entry is in the correct bracket and that the author's account has been checked for any potential disqualifications.</p>
         </ConfirmModal>

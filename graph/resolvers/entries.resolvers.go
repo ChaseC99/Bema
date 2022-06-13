@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -163,6 +164,25 @@ func (r *entryVoteResolver) User(ctx context.Context, obj *model.EntryVote) (*mo
 	return nil, nil
 }
 
+func (r *mutationResolver) AddWinner(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageWinners) {
+		return nil, errors.NewForbiddenError(ctx, "You do not have permission to add winners.")
+	}
+
+	err := models.AddWinnerByEntryId(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	entry, err := r.Query().Entry(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
@@ -265,5 +285,9 @@ func (r *Resolver) Entry() generated.EntryResolver { return &entryResolver{r} }
 // EntryVote returns generated.EntryVoteResolver implementation.
 func (r *Resolver) EntryVote() generated.EntryVoteResolver { return &entryVoteResolver{r} }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 type entryResolver struct{ *Resolver }
 type entryVoteResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
