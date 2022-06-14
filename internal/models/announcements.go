@@ -80,3 +80,12 @@ func CreateAnnouncement(ctx context.Context, input *model.AnnouncementInput, aut
 
 	return &id, nil
 }
+
+func EditAnnouncementById(ctx context.Context, id int, input *model.AnnouncementInput) error {
+	_, err := db.DB.Exec("UPDATE messages SET message_title = $1, message_content = $2, public = $3 WHERE message_id = $4", input.Title, input.Content, input.IsPublic, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while editing an announcement", err)
+	}
+
+	return nil
+}
