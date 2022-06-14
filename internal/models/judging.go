@@ -124,6 +124,15 @@ func EditJudgingCriteriaById(ctx context.Context, id int, input *model.JudgingCr
 	return nil
 }
 
+func DeleteJudgingCriteriaById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM judging_criteria WHERE criteria_id = $1", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a judging criteria", err)
+	}
+
+	return nil
+}
+
 func GetAllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
 	groups := []*model.JudgingGroup{}
 

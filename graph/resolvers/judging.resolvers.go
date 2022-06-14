@@ -39,12 +39,55 @@ func (r *mutationResolver) EditCriteria(ctx context.Context, id int, input *mode
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit judging criteria.")
 	}
 
-	err := models.EditJudgingCriteriaById(ctx, id, input)
+	criteria, err := models.GetJudgingCriteriaById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	activeCriteria, err := models.GetActiveCriteria(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(activeCriteria) == 4 && criteria.IsActive && !input.IsActive {
+		return nil, errs.NewForbiddenError(ctx, "This criteria cannot be updated. There must be at least four active criteria.")
+	}
+
+	err = models.EditJudgingCriteriaById(ctx, id, input)
 	if err != nil {
 		return nil, err
 	}
 
 	return r.Query().Criteria(ctx, id)
+}
+
+func (r *mutationResolver) DeleteCriteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageJudgingCriteria) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete judging criteria.")
+	}
+
+	criteria, err := models.GetJudgingCriteriaById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	activeCriteria, err := models.GetActiveCriteria(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(activeCriteria) == 4 && criteria.IsActive {
+		return nil, errs.NewForbiddenError(ctx, "This criteria cannot be deleted. There must be at least four active criteria.")
+	}
+
+	err = models.DeleteJudgingCriteriaById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return criteria, nil
 }
 
 func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {

@@ -40,6 +40,11 @@ extend type Mutation {
     Edits an existing judging criteria
     """
     editCriteria(id: ID!, input: JudgingCriteriaInput): JudgingCriteria
+
+    """
+    Delete an existing judging criteria
+    """
+    deleteCriteria(id: ID!): JudgingCriteria
 }
 
 """
