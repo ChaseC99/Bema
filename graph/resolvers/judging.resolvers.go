@@ -32,6 +32,21 @@ func (r *mutationResolver) CreateCriteria(ctx context.Context, input *model.Judg
 	return criteria, nil
 }
 
+func (r *mutationResolver) EditCriteria(ctx context.Context, id int, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageJudgingCriteria) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit judging criteria.")
+	}
+
+	err := models.EditJudgingCriteriaById(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Criteria(ctx, id)
+}
+
 func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {

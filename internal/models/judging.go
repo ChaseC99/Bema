@@ -115,6 +115,15 @@ func CreateJudgingCriteria(ctx context.Context, input *model.JudgingCriteriaInpu
 	return id, nil
 }
 
+func EditJudgingCriteriaById(ctx context.Context, id int, input *model.JudgingCriteriaInput) error {
+	_, err := db.DB.Exec("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5", input.Name, input.Description, input.IsActive, input.SortOrder, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while editing a judging criteria", err)
+	}
+
+	return nil
+}
+
 func GetAllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
 	groups := []*model.JudgingGroup{}
 

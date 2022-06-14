@@ -35,6 +35,11 @@ extend type Mutation {
     Creates a new judging criteria
     """
     createCriteria(input: JudgingCriteriaInput): JudgingCriteria
+
+    """
+    Edits an existing judging criteria
+    """
+    editCriteria(id: ID!, input: JudgingCriteriaInput): JudgingCriteria
 }
 
 """

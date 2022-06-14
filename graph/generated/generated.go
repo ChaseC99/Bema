@@ -226,6 +226,7 @@ type ComplexityRoot struct {
 		CreateCriteria     func(childComplexity int, input *model.JudgingCriteriaInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		EditAnnouncement   func(childComplexity int, id int, input *model.AnnouncementInput) int
+		EditCriteria       func(childComplexity int, id int, input *model.JudgingCriteriaInput) int
 		RemoveWinner       func(childComplexity int, id int) int
 	}
 
@@ -414,6 +415,7 @@ type MutationResolver interface {
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
 	CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
+	EditCriteria(ctx context.Context, id int, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1316,6 +1318,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(*model.AnnouncementInput)), true
+
+	case "Mutation.editCriteria":
+		if e.complexity.Mutation.EditCriteria == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editCriteria_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditCriteria(childComplexity, args["id"].(int), args["input"].(*model.JudgingCriteriaInput)), true
 
 	case "Mutation.removeWinner":
 		if e.complexity.Mutation.RemoveWinner == nil {
@@ -2667,6 +2681,11 @@ extend type Mutation {
     Creates a new judging criteria
     """
     createCriteria(input: JudgingCriteriaInput): JudgingCriteria
+
+    """
+    Edits an existing judging criteria
+    """
+    editCriteria(id: ID!, input: JudgingCriteriaInput): JudgingCriteria
 }
 
 """
@@ -3387,6 +3406,30 @@ func (ec *executionContext) field_Mutation_editAnnouncement_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalOAnnouncementInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editCriteria_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *model.JudgingCriteriaInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9434,6 +9477,70 @@ func (ec *executionContext) fieldContext_Mutation_createCriteria(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createCriteria_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editCriteria(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editCriteria(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditCriteria(rctx, fc.Args["id"].(int), fc.Args["input"].(*model.JudgingCriteriaInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.JudgingCriteria)
+	fc.Result = res
+	return ec.marshalOJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteria(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editCriteria(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingCriteria_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingCriteria_name(ctx, field)
+			case "description":
+				return ec.fieldContext_JudgingCriteria_description(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingCriteria_isActive(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_JudgingCriteria_sortOrder(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingCriteria", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editCriteria_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17962,6 +18069,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createCriteria(ctx, field)
+			})
+
+		case "editCriteria":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editCriteria(ctx, field)
 			})
 
 		default:
