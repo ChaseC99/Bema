@@ -9,12 +9,6 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 
-type EditAnnouncement = {
-  message_title: string
-  message_content: string
-  public: boolean
-}
-
 type Announcement = {
   id: string
   author: {
@@ -61,6 +55,46 @@ const CREATE_ANNOUNCEMENT = gql`
   }
 `;
 
+type EditAnnouncementResponse = {
+  announcement: Announcement
+}
+
+const EDIT_ANNOUNCEMENT = gql`
+  mutation EditAnnouncement($id: ID!, $input: AnnouncementInput) {
+    announcement: editAnnouncement(id: $id, input: $input) {
+      id
+      author {
+        id
+        nickname
+      }
+      created
+      title
+      content
+      isPublic
+    }
+  }
+`;
+
+type DeleteAnnouncementResponse = {
+  announcement: Announcement
+}
+
+const DELETE_ANNOUNCEMENT = gql`
+  mutation DeleteAnnouncement($id: ID!) {
+    deleteAnnouncement(id: $id) {
+      id
+      author {
+        id
+        nickname
+      }
+      created
+      title
+      content
+      isPublic
+    }
+  }
+`;
+
 function Announcements() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -69,20 +103,23 @@ function Announcements() {
   const [announcementToEdit, setAnnouncementToEdit] = useState<Announcement | null>(null);
 
   const { loading: announcementsIsLoading, data: announcementsData, refetch: refetchAnnouncements } = useQuery<GetAnnouncementsResponse>(GET_ANNOUNCEMENTS, { onError: handleGQLError });
-  const [createAnnouncement, { loading: createAnnouncementIsLoading }] = useMutation<CreateAnnouncementResponse>(CREATE_ANNOUNCEMENT);
+  const [createAnnouncement, { loading: createAnnouncementIsLoading }] = useMutation<CreateAnnouncementResponse>(CREATE_ANNOUNCEMENT, { onError: handleGQLError });
+  const [editAnnouncement, { loading: editAnnouncementIsLoading }] = useMutation<EditAnnouncementResponse>(EDIT_ANNOUNCEMENT, { onError: handleGQLError });
+  const [deleteAnnouncement, { loading: deleteAnnouncementIsLoading }] = useMutation<DeleteAnnouncementResponse>(DELETE_ANNOUNCEMENT, { onError: handleGQLError });
 
   const confirmDeleteAnnouncement = (id: number) => {
     setConfirmDeleteId(id);
   }
 
-  const deleteAnnouncement = async (id: number) => {
-    setConfirmDeleteId(undefined);
-
-    await request("DELETE", "/api/internal/messages", {
-      message_id: id
+  const handleDeleteAnnouncement = async (id: number) => {
+    await deleteAnnouncement({
+      variables: {
+        id: id
+      }
     });
 
     refetchAnnouncements();
+    setConfirmDeleteId(undefined);
   }
 
   const hideDeleteModal = () => {
@@ -92,10 +129,10 @@ function Announcements() {
   const handleCreateAnnouncement = async (values: { [name: string]: any; }) => {
     await createAnnouncement({
       variables: {
-        "input": {
-          "title": values.message_title,
-          "content": values.message_content,
-          "isPublic": values.public
+        input: {
+          title: values.title,
+          content: values.content,
+          isPublic: values.isPublic
         }
       }
     });
@@ -112,14 +149,20 @@ function Announcements() {
     setShouldShowCreateModal(false);
   }
 
-  const editAnnouncement = async (values: { [name: string]: any; }) => {
-    const data = values as EditAnnouncement;
+  const handleEditAnnouncement = async (values: { [name: string]: any; }) => {
+    if (!announcementToEdit) {
+      return;
+    }
 
-    await request("PUT", "/api/internal/messages", {
-      message_id: announcementToEdit?.id,
-      message_title: data.message_title,
-      message_content: data.message_content,
-      public: data.public
+    await editAnnouncement({
+      variables: {
+        id: announcementToEdit.id,
+        input: {
+          title: values.title,
+          content: values.content,
+          isPublic: values.isPublic
+        }
+      }
     });
 
     refetchAnnouncements();
@@ -161,7 +204,7 @@ function Announcements() {
       </section>
 
       {confirmDeleteId &&
-        <ConfirmModal title="Delete announcement?" confirmLabel="Delete" handleConfirm={deleteAnnouncement} handleCancel={hideDeleteModal} data={confirmDeleteId} destructive>
+        <ConfirmModal title="Delete announcement?" confirmLabel="Delete" handleConfirm={handleDeleteAnnouncement} handleCancel={hideDeleteModal} data={confirmDeleteId} destructive loading={deleteAnnouncementIsLoading}>
           <p>Are you sure you want to delete this announcement? This action cannot be undone.</p>
         </ConfirmModal>
       }
@@ -178,7 +221,7 @@ function Announcements() {
             {
               fieldType: "INPUT",
               type: "text",
-              name: "message_title",
+              name: "title",
               id: "announcement-title",
               size: "LARGE",
               label: "Title",
@@ -187,14 +230,14 @@ function Announcements() {
             },
             {
               fieldType: "TEXTEDITOR",
-              name: "message_content",
+              name: "content",
               id: "announcement-content",
               label: "Message",
               defaultValue: "",
             },
             {
               fieldType: "CHECKBOX",
-              name: "public",
+              name: "isPublic",
               id: "announcement-is-public",
               size: "LARGE",
               label: "Public Announcement",
@@ -209,14 +252,15 @@ function Announcements() {
         <FormModal
           title="Edit announcement"
           submitLabel="Save"
-          handleSubmit={editAnnouncement}
+          handleSubmit={handleEditAnnouncement}
           handleCancel={hideEditAnnouncementModal}
           cols={5}
+          loading={editAnnouncementIsLoading}
           fields={[
             {
               fieldType: "INPUT",
               type: "text",
-              name: "message_title",
+              name: "title",
               id: "announcement-title",
               size: "LARGE",
               label: "Title",
@@ -225,14 +269,14 @@ function Announcements() {
             },
             {
               fieldType: "TEXTEDITOR",
-              name: "message_content",
+              name: "content",
               id: "announcement-content",
               label: "Message",
               defaultValue: announcementToEdit.content,
             },
             {
               fieldType: "CHECKBOX",
-              name: "public",
+              name: "isPublic",
               id: "announcement-is-public",
               size: "LARGE",
               label: "Public Announcement",

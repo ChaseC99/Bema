@@ -9,7 +9,6 @@ const admin = require(process.cwd() + "/handlers/api/admin");
 const contests = require(process.cwd() + "/handlers/api/contests");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
-const messages = require(process.cwd() + "/handlers/api/messages");
 const users = require(process.cwd() + "/handlers/api/users");
 const winners = require(process.cwd() + "/handlers/api/winners");
 const tasks = require(process.cwd() + "/handlers/api/tasks");
@@ -226,27 +225,6 @@ const routeChecks = {
       check("criteria_id")
       .isInt()
       .withMessage("criteria_id must be an integer")
-    ]
-  },
-  messages: {
-    edit: [
-      check("message_id")
-      .isInt()
-      .withMessage("Message ID must be an integer"),
-      check("message_title")
-      .isLength(messageChars)
-      .withMessage("Message title cannot be empty or longer than 100 characters"),
-      check("message_content")
-      .isLength(contentChars)
-      .withMessage("Message content cannot be empty or longer than 5,000 characters"),
-      check("public")
-      .isBoolean()
-      .withMessage("Public must be a boolean"),
-    ],
-    delete: [
-      check("message_id")
-      .isInt()
-      .withMessage("Message ID must be an integer")
     ]
   },
   users: {
@@ -621,10 +599,6 @@ router.put("/internal/users/permissions", routeChecks.users.editPermissions, was
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
-
-// Messages
-router.put("/internal/messages", routeChecks.messages.edit, wasValidated, messages.edit);
-router.delete("/internal/messages", routeChecks.messages.delete, wasValidated, messages.delete);
 
 // Judging
 router.post("/internal/judging/criteria", routeChecks.judging.addCriteria, wasValidated, judging.addJudgingCriteria);

@@ -36,13 +36,15 @@
   box-shadow: none !important;
 }
 
-.btn-primary .loading-spinner {
+.btn-primary .loading-spinner,
+.btn-destructive-primary .loading-spinner {
   width: 24px;
   height: 24px;
   position: absolute;
 }
 
-.btn-primary .loading-spinner path {
+.btn-primary .loading-spinner path,
+.btn-destructive-primary .loading-spinner path {
   fill: #ffffff;
 }
 
