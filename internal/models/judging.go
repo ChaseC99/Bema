@@ -90,6 +90,31 @@ func GetActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	return criteria, nil
 }
 
+func GetJudgingCriteriaById(ctx context.Context, id int) (*model.JudgingCriteria, error) {
+	row := db.DB.QueryRow("SELECT criteria_id, criteria_name, criteria_description, is_active, sort_order FROM judging_criteria WHERE criteria_id = $1", id)
+
+	criteria := NewJudgingCriteriaModel()
+	if err := row.Scan(&criteria.ID, &criteria.Name, &criteria.Description, &criteria.IsActive, &criteria.SortOrder); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "This criteria does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occrrued while retrieving a judging criteria", err)
+	}
+
+	return &criteria, nil
+}
+
+func CreateJudgingCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO judging_criteria (criteria_name, criteria_description, is_active, sort_order) VALUES ($1, $2, $3, $4) RETURNING criteria_id;", input.Name, input.Description, input.IsActive, input.SortOrder)
+
+	var id *int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a judging criteria", err)
+	}
+
+	return id, nil
+}
+
 func GetAllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) {
 	groups := []*model.JudgingGroup{}
 

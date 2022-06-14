@@ -1,5 +1,10 @@
 extend type Query {
     """
+    A single judging criteria
+    """
+    criteria(id: ID!): JudgingCriteria
+
+    """
     A list of all judging criteria (both active and inactive). Requires View Judging Settings permission.
     """
     allCriteria: [JudgingCriteria!]!
@@ -23,6 +28,13 @@ extend type Query {
     A single judging group. Requires authentication.
     """
     judgingGroup(id: ID!): JudgingGroup
+}
+
+extend type Mutation {
+    """
+    Creates a new judging criteria
+    """
+    createCriteria(input: JudgingCriteriaInput): JudgingCriteria
 }
 
 """
@@ -73,4 +85,29 @@ type JudgingGroup {
     Indicates whether new entries and users can be assigned to this group
     """
     isActive: Boolean!
+}
+
+"""
+Input used for creating or editing judging criteria
+"""
+input JudgingCriteriaInput {
+    """
+    The name of the criteria
+    """
+    name: String!
+
+    """
+    An explanation of how to use the criteria
+    """
+    description: String!
+
+    """
+    Indicates if the criteria should be displayed on the judging page
+    """
+    isActive: Boolean!
+
+    """
+    The order in which the criteria appears
+    """
+    sortOrder: Int!
 }

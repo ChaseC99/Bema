@@ -8,8 +8,47 @@ import (
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
+
+func (r *mutationResolver) CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageJudgingCriteria) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create judging criteria.")
+	}
+
+	id, err := models.CreateJudgingCriteria(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	criteria, err := models.GetJudgingCriteriaById(ctx, *id)
+	if err != nil {
+		return nil, err
+	}
+
+	return criteria, nil
+}
+
+func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
+	criteria, err := models.GetJudgingCriteriaById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !criteria.IsActive && !auth.HasPermission(user, auth.ManageJudgingCriteria) {
+		return nil, nil
+	}
+
+	return criteria, nil
+}
 
 func (r *queryResolver) AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)

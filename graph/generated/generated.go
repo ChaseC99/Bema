@@ -223,6 +223,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddWinner          func(childComplexity int, id int) int
 		CreateAnnouncement func(childComplexity int, input *model.AnnouncementInput) int
+		CreateCriteria     func(childComplexity int, input *model.JudgingCriteriaInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		EditAnnouncement   func(childComplexity int, id int, input *model.AnnouncementInput) int
 		RemoveWinner       func(childComplexity int, id int) int
@@ -281,6 +282,7 @@ type ComplexityRoot struct {
 		ContestantSearch            func(childComplexity int, query string) int
 		Contests                    func(childComplexity int) int
 		ContestsEvaluatedByUser     func(childComplexity int, id int) int
+		Criteria                    func(childComplexity int, id int) int
 		CurrentContest              func(childComplexity int) int
 		CurrentUser                 func(childComplexity int) int
 		CurrentUserTasks            func(childComplexity int) int
@@ -411,6 +413,7 @@ type MutationResolver interface {
 	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
+	CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -431,6 +434,7 @@ type QueryResolver interface {
 	Errors(ctx context.Context, page int) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	Evaluations(ctx context.Context, userID int, contestID int) ([]*model.Evaluation, error)
+	Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
 	ActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
 	AllJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error)
@@ -1277,6 +1281,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(*model.AnnouncementInput)), true
 
+	case "Mutation.createCriteria":
+		if e.complexity.Mutation.CreateCriteria == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createCriteria_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateCriteria(childComplexity, args["input"].(*model.JudgingCriteriaInput)), true
+
 	case "Mutation.deleteAnnouncement":
 		if e.complexity.Mutation.DeleteAnnouncement == nil {
 			break
@@ -1665,6 +1681,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ContestsEvaluatedByUser(childComplexity, args["id"].(int)), true
 
+	case "Query.criteria":
+		if e.complexity.Query.Criteria == nil {
+			break
+		}
+
+		args, err := ec.field_Query_criteria_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Criteria(childComplexity, args["id"].(int)), true
+
 	case "Query.currentContest":
 		if e.complexity.Query.CurrentContest == nil {
 			break
@@ -2025,6 +2053,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnnouncementInput,
+		ec.unmarshalInputJudgingCriteriaInput,
 	)
 	first := true
 
@@ -2603,6 +2632,11 @@ type Evaluation {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/judging.graphqls", Input: `extend type Query {
     """
+    A single judging criteria
+    """
+    criteria(id: ID!): JudgingCriteria
+
+    """
     A list of all judging criteria (both active and inactive). Requires View Judging Settings permission.
     """
     allCriteria: [JudgingCriteria!]!
@@ -2626,6 +2660,13 @@ type Evaluation {
     A single judging group. Requires authentication.
     """
     judgingGroup(id: ID!): JudgingGroup
+}
+
+extend type Mutation {
+    """
+    Creates a new judging criteria
+    """
+    createCriteria(input: JudgingCriteriaInput): JudgingCriteria
 }
 
 """
@@ -2676,6 +2717,31 @@ type JudgingGroup {
     Indicates whether new entries and users can be assigned to this group
     """
     isActive: Boolean!
+}
+
+"""
+Input used for creating or editing judging criteria
+"""
+input JudgingCriteriaInput {
+    """
+    The name of the criteria
+    """
+    name: String!
+
+    """
+    An explanation of how to use the criteria
+    """
+    description: String!
+
+    """
+    Indicates if the criteria should be displayed on the judging page
+    """
+    isActive: Boolean!
+
+    """
+    The order in which the criteria appears
+    """
+    sortOrder: Int!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/kb.graphqls", Input: `extend type Query {
     """
@@ -3275,6 +3341,21 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createCriteria_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.JudgingCriteriaInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3420,6 +3501,21 @@ func (ec *executionContext) field_Query_contestant_args(ctx context.Context, raw
 }
 
 func (ec *executionContext) field_Query_contestsEvaluatedByUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_criteria_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -9280,6 +9376,70 @@ func (ec *executionContext) fieldContext_Mutation_removeWinner(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createCriteria(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createCriteria(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateCriteria(rctx, fc.Args["input"].(*model.JudgingCriteriaInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.JudgingCriteria)
+	fc.Result = res
+	return ec.marshalOJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteria(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createCriteria(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingCriteria_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingCriteria_name(ctx, field)
+			case "description":
+				return ec.fieldContext_JudgingCriteria_description(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingCriteria_isActive(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_JudgingCriteria_sortOrder(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingCriteria", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createCriteria_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -12048,6 +12208,70 @@ func (ec *executionContext) fieldContext_Query_evaluations(ctx context.Context, 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_evaluations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_criteria(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_criteria(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Criteria(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.JudgingCriteria)
+	fc.Result = res
+	return ec.marshalOJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteria(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_criteria(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingCriteria_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingCriteria_name(ctx, field)
+			case "description":
+				return ec.fieldContext_JudgingCriteria_description(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingCriteria_isActive(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_JudgingCriteria_sortOrder(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingCriteria", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_criteria_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -16075,6 +16299,53 @@ func (ec *executionContext) unmarshalInputAnnouncementInput(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Context, obj interface{}) (model.JudgingCriteriaInput, error) {
+	var it model.JudgingCriteriaInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isActive":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			it.IsActive, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sortOrder":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
+			it.SortOrder, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -17687,6 +17958,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_removeWinner(ctx, field)
 			})
 
+		case "createCriteria":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createCriteria(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -18363,6 +18640,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "criteria":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_criteria(ctx, field)
 				return res
 			}
 
@@ -20740,6 +21037,21 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteria(ctx context.Context, sel ast.SelectionSet, v *model.JudgingCriteria) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._JudgingCriteria(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx context.Context, v interface{}) (*model.JudgingCriteriaInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputJudgingCriteriaInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx context.Context, sel ast.SelectionSet, v *model.JudgingGroup) graphql.Marshaler {

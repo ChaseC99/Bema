@@ -224,6 +224,18 @@ type JudgingCriteria struct {
 	SortOrder int `json:"sortOrder"`
 }
 
+// Input used for creating or editing judging criteria
+type JudgingCriteriaInput struct {
+	// The name of the criteria
+	Name string `json:"name"`
+	// An explanation of how to use the criteria
+	Description string `json:"description"`
+	// Indicates if the criteria should be displayed on the judging page
+	IsActive bool `json:"isActive"`
+	// The order in which the criteria appears
+	SortOrder int `json:"sortOrder"`
+}
+
 // A group of evaluators that can be assigned entries to judge
 type JudgingGroup struct {
 	// A uniqune integer ID
