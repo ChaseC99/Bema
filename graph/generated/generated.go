@@ -223,6 +223,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddWinner          func(childComplexity int, id int) int
 		CreateAnnouncement func(childComplexity int, input *model.AnnouncementInput) int
+		DeleteAnnouncement func(childComplexity int, id int) int
 		EditAnnouncement   func(childComplexity int, id int, input *model.AnnouncementInput) int
 		RemoveWinner       func(childComplexity int, id int) int
 	}
@@ -407,6 +408,7 @@ type KBSectionResolver interface {
 type MutationResolver interface {
 	CreateAnnouncement(ctx context.Context, input *model.AnnouncementInput) (*model.Announcement, error)
 	EditAnnouncement(ctx context.Context, id int, input *model.AnnouncementInput) (*model.Announcement, error)
+	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
 }
@@ -1275,6 +1277,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(*model.AnnouncementInput)), true
 
+	case "Mutation.deleteAnnouncement":
+		if e.complexity.Mutation.DeleteAnnouncement == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteAnnouncement_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAnnouncement(childComplexity, args["id"].(int)), true
+
 	case "Mutation.editAnnouncement":
 		if e.complexity.Mutation.EditAnnouncement == nil {
 			break
@@ -2093,6 +2107,11 @@ extend type Mutation {
     Edits an existing announcement
     """
     editAnnouncement(id: ID!, input: AnnouncementInput): Announcement
+
+    """
+    Deletes an existing announcement
+    """
+    deleteAnnouncement(id: ID!): Announcement
 }
 
 """
@@ -3253,6 +3272,21 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -8986,6 +9020,72 @@ func (ec *executionContext) fieldContext_Mutation_editAnnouncement(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_editAnnouncement_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteAnnouncement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteAnnouncement(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAnnouncement(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Announcement)
+	fc.Result = res
+	return ec.marshalOAnnouncement2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncement(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteAnnouncement(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Announcement_id(ctx, field)
+			case "author":
+				return ec.fieldContext_Announcement_author(ctx, field)
+			case "created":
+				return ec.fieldContext_Announcement_created(ctx, field)
+			case "title":
+				return ec.fieldContext_Announcement_title(ctx, field)
+			case "content":
+				return ec.fieldContext_Announcement_content(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Announcement_isPublic(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Announcement", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteAnnouncement_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17567,6 +17667,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_editAnnouncement(ctx, field)
+			})
+
+		case "deleteAnnouncement":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteAnnouncement(ctx, field)
 			})
 
 		case "addWinner":

@@ -89,3 +89,12 @@ func EditAnnouncementById(ctx context.Context, id int, input *model.Announcement
 
 	return nil
 }
+
+func DeleteAnnouncementById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM messages WHERE message_id = $1", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while delete an announcement", err)
+	}
+
+	return nil
+}

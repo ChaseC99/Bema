@@ -20,6 +20,11 @@ extend type Mutation {
     Edits an existing announcement
     """
     editAnnouncement(id: ID!, input: AnnouncementInput): Announcement
+
+    """
+    Deletes an existing announcement
+    """
+    deleteAnnouncement(id: ID!): Announcement
 }
 
 """

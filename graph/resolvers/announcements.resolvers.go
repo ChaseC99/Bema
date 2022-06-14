@@ -51,6 +51,26 @@ func (r *mutationResolver) EditAnnouncement(ctx context.Context, id int, input *
 	return r.Query().Announcement(ctx, id)
 }
 
+func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageAnnouncements) {
+		return nil, err.NewForbiddenError(ctx, "You do not have permission to delete announcements.")
+	}
+
+	announcement, err := r.Query().Announcement(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteAnnouncementById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return announcement, nil
+}
+
 func (r *queryResolver) Announcements(ctx context.Context) ([]*model.Announcement, error) {
 	// If the user is logged in, return all messages. Otherwise, return only public messages
 	user := auth.GetUserFromContext(ctx)
