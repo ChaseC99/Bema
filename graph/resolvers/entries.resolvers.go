@@ -247,6 +247,26 @@ func (r *mutationResolver) DisqualifyEntry(ctx context.Context, id int) (*model.
 	return r.Query().Entry(ctx, id)
 }
 
+func (r *mutationResolver) DeleteEntry(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete entries.")
+	}
+
+	entry, err := r.Query().Entry(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return entry, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {

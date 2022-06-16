@@ -60,6 +60,11 @@ extend type Mutation {
 	Disqualifies an entry and removes it from the judging queue and results page
 	"""
 	disqualifyEntry(id: ID!): Entry
+
+	"""
+	Permanently deletes an entry and all data associated with it
+	"""
+	deleteEntry(id: ID!): Entry
 }
 
 """

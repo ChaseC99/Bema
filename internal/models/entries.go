@@ -417,3 +417,11 @@ func DisqualifyEntryById(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func DeleteEntryById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM entry WHERE entry_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting an entry", err)
+	}
+	return nil
+}
