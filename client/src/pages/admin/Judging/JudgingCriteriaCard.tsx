@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
@@ -7,7 +7,6 @@ import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
 import useAppError from "../../../util/errors";
-import request from "../../../util/request";
 
 type Criteria = {
   id: string
@@ -33,14 +32,57 @@ const GET_ALL_CRITERIA = gql`
   }
 `;
 
+type MutateCriteriaResponse = {
+  criteria: Criteria
+}
+
+const CREATE_CRITERIA = gql`
+  mutation CreateCriteria($input: JudgingCriteriaInput) {
+    criteria: createCriteria(input: $input) {
+      id
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
+
+const EDIT_CRITERIA = gql`
+  mutation EditCriteria($id: ID!, $input: JudgingCriteriaInput) {
+    editCriteria(id: $id, input: $input) {
+      id
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
+
+const DELETE_CRITERIA = gql`
+  mutation DeleteCriteria($id: ID!) {
+    deleteCriteria(id: $id) {
+      id
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
+
 function JudgingCriteriaCard() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const [showCreateCriteriaModal, setShowCreateCriteriaModal] = useState<boolean>(false);
-  const [editCriteria, setEditCriteria] = useState<Criteria | null>(null);
+  const [criteriaToEdit, setCriteriaToEdit] = useState<Criteria | null>(null);
   const [deleteCriteriaId, setDeleteCriteriaId] = useState<number | null>(null);
 
   const { loading, data, refetch } = useQuery<GetAllCriteriaResponse>(GET_ALL_CRITERIA, { onError: handleGQLError });
+  const [createCriteria, { loading: createCriteriaIsLoading }] = useMutation<MutateCriteriaResponse>(CREATE_CRITERIA, { onError: handleGQLError });
+  const [editCriteria, { loading: editCriteriaIsLoading }] = useMutation<MutateCriteriaResponse>(EDIT_CRITERIA, { onError: handleGQLError });
+  const [deleteCriteria, { loading: deleteCriteriaIsLoading }] = useMutation<MutateCriteriaResponse>(DELETE_CRITERIA, { onError: handleGQLError });
 
   const openCreateCriteriaModal = () => {
     setShowCreateCriteriaModal(true);
@@ -51,33 +93,41 @@ function JudgingCriteriaCard() {
   }
 
   const handleCreateCriteria = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/judging/criteria", {
-      criteria_name: values.name,
-      criteria_description: values.description,
-      is_active: values.is_active,
-      sort_order: values.sort_order
+    await createCriteria({
+      variables: {
+        input: {
+          name: values.name,
+          description: values.description,
+          isActive: values.is_active,
+          sortOrder: values.sort_order,
+        }
+      }
     });
 
     refetch();
     closeCreateCriteriaModal();
   }
 
-  const openEditCriteriaModal = (id: number) => {
-    const c = data?.criteria.find((c) => parseInt(c.id) === id) || null;
-    setEditCriteria(c);
+  const openEditCriteriaModal = (id: string) => {
+    const c = data?.criteria.find((c) => c.id === id) || null;
+    setCriteriaToEdit(c);
   }
 
   const closeEditCriteriaModal = () => {
-    setEditCriteria(null);
+    setCriteriaToEdit(null);
   }
 
   const handleEditCriteria = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/judging/criteria", {
-      criteria_id: editCriteria?.id,
-      criteria_name: values.name,
-      criteria_description: values.description,
-      is_active: values.is_active,
-      sort_order: values.sort_order
+    await editCriteria({
+      variables: {
+        id: criteriaToEdit?.id,
+        input: {
+          name: values.name,
+          description: values.description,
+          isActive: values.is_active,
+          sortOrder: values.sort_order
+        }
+      }
     });
 
     refetch();
@@ -93,8 +143,10 @@ function JudgingCriteriaCard() {
   }
 
   const handleDeleteCriteria = async (id: number) => {
-    await request("DELETE", "/api/internal/judging/criteria", {
-      criteria_id: id
+    await deleteCriteria({
+      variables: {
+        id: id
+      }
     });
 
     refetch();
@@ -168,6 +220,7 @@ function JudgingCriteriaCard() {
           handleSubmit={handleCreateCriteria}
           handleCancel={closeCreateCriteriaModal}
           cols={4}
+          loading={createCriteriaIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -212,13 +265,14 @@ function JudgingCriteriaCard() {
         />
       }
 
-      {editCriteria &&
+      {criteriaToEdit &&
         <FormModal
         title="Edit Judging Criteria"
         submitLabel="Save"
         handleSubmit={handleEditCriteria}
         handleCancel={closeEditCriteriaModal}
         cols={4}
+        loading={editCriteriaIsLoading}
         fields={[
           {
             fieldType: "INPUT",
@@ -227,7 +281,7 @@ function JudgingCriteriaCard() {
             id: "name",
             label: "Criteria Name",
             size: "LARGE",
-            defaultValue: editCriteria.name,
+            defaultValue: criteriaToEdit.name,
             required: true
           },
           {
@@ -236,7 +290,7 @@ function JudgingCriteriaCard() {
             id: "description",
             label: "Description",
             size: "LARGE",
-            defaultValue: editCriteria.description,
+            defaultValue: criteriaToEdit.description,
             required: true
           },
           {
@@ -248,7 +302,7 @@ function JudgingCriteriaCard() {
             id: "sort-order",
             label: "Sort Order",
             size: "LARGE",
-            defaultValue: editCriteria.sortOrder.toString(),
+            defaultValue: criteriaToEdit.sortOrder.toString(),
             required: true
           },
           {
@@ -257,7 +311,7 @@ function JudgingCriteriaCard() {
             id: "is-active",
             label: "Active",
             size: "LARGE",
-            defaultValue: editCriteria.isActive
+            defaultValue: criteriaToEdit.isActive
           }
         ]}
         />
@@ -270,6 +324,7 @@ function JudgingCriteriaCard() {
           handleConfirm={handleDeleteCriteria}
           handleCancel={closeDeleteCriteriaModal}
           destructive
+          loading={deleteCriteriaIsLoading}
           data={deleteCriteriaId}
         >
           <p>Are you sure you want to delete this criteria? This action cannot be undone.</p>
