@@ -393,3 +393,11 @@ func RemoveWinnerByEntryId(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func FlagEntryById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("UPDATE entry SET flagged = true WHERE entry_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while flagging an entry", err)
+	}
+	return nil
+}

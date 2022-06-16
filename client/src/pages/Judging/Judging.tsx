@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../shared/Button";
@@ -64,6 +64,21 @@ const GET_NEXT_ENTRY = gql`
   }
 `;
 
+type FlagEntryResponse = {
+  entry: Entry
+}
+
+const FLAG_ENTRY = gql`
+  mutation FlagEntry($id: ID!) {
+    flagEntry(id: $id) {
+      id
+      title
+      height
+      kaid
+    }
+  }
+`;
+
 const DEFAULT_ENTRY: Entry = {
   id: "0",
   title: "Sample Entry",
@@ -80,6 +95,7 @@ function Judging() {
   const { loading: currentContestIsLoading, data: currentContestData } = useQuery<CurrentContest>(GET_CURRENT_CONTEST, { onError: handleGQLError });
   const { loading: criteriaIsLoading, data: criteriaData } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA, { onError: handleGQLError });
   const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
+  const [flagEntry, { loading: flagEntryIsLoading }] = useMutation<FlagEntryResponse>(FLAG_ENTRY, { onError: handleGQLError });
 
   const handleSubmit = async (values: { [name: string]: any }) => {
     await request("POST", "/api/internal/judging/submit", {
@@ -107,12 +123,14 @@ function Judging() {
   }
 
   const handleFlagEntry = async (id: number) => {
-    await request("PUT", "/api/internal/entries/flag", {
-      entry_id: id
+    await flagEntry({
+      variables: {
+        id: id
+      }
     });
 
-    closeFlagEntryModal();
     fetchNextEntry();
+    closeFlagEntryModal();
   }
 
   const handleFetchNextEntry = () => {
@@ -246,6 +264,7 @@ function Judging() {
           handleConfirm={handleFlagEntry}
           handleCancel={closeFlagEntryModal}
           destructive
+          loading={flagEntryIsLoading}
           data={entryData?.entry?.id}
         >
           <p>Are you sure you want to flag this entry? This will remove the entry from the judging queue for all users until it has been reviewed.</p>

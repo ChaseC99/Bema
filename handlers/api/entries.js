@@ -194,26 +194,6 @@ exports.import = (request, response, next) => {
   }
 }
 
-exports.flag = (request, response, next) => {
-  try {
-    if (request.decodedToken && request.decodedToken.permissions.judge_entries) {
-      let {
-        entry_id
-      } = request.body;
-
-      return db.query("UPDATE entry SET flagged = true WHERE entry_id = $1", [entry_id], res => {
-        if (res.error) {
-          return handleNext(next, 400, "There was a problem flagging this entry.", res.error);
-        }
-        successMsg(response);
-      });
-    }
-    return handleNext(next, 401, "You must log in to flag an entry.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while flagging an entry.", error);
-  }
-}
-
 exports.disqualify = (request, response, next) => {
   try {
     if (request.decodedToken) {

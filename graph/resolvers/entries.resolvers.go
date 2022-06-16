@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
@@ -200,6 +201,21 @@ func (r *mutationResolver) RemoveWinner(ctx context.Context, id int) (*model.Ent
 		return nil, err
 	}
 	return entry, nil
+}
+
+func (r *mutationResolver) FlagEntry(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.JudgeEntries) {
+		return nil, errors.NewForbiddenError(ctx, "You do not have permission to flag entries.")
+	}
+
+	err := models.FlagEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, id)
 }
 
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {

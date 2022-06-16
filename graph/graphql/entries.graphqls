@@ -41,10 +41,15 @@ extend type Mutation {
 	"""
 	addWinner(id: ID!): Entry
 
-  """
-  Removes a winning entry
-  """
+	"""
+	Removes a winning entry
+	"""
 	removeWinner(id: ID!): Entry
+
+	"""
+	Flags an entry for admin reviewal and removes it from the judging queue
+	"""
+	flagEntry(id: ID!): Entry
 }
 
 """
