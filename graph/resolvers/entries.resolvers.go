@@ -9,7 +9,6 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
-	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
@@ -207,10 +206,25 @@ func (r *mutationResolver) FlagEntry(ctx context.Context, id int) (*model.Entry,
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.JudgeEntries) {
-		return nil, errors.NewForbiddenError(ctx, "You do not have permission to flag entries.")
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to flag entries.")
 	}
 
 	err := models.FlagEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, id)
+}
+
+func (r *mutationResolver) ApproveEntry(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to approve entries.")
+	}
+
+	err := models.ApproveEntryById(ctx, id)
 	if err != nil {
 		return nil, err
 	}

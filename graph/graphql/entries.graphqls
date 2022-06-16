@@ -50,6 +50,11 @@ extend type Mutation {
 	Flags an entry for admin reviewal and removes it from the judging queue
 	"""
 	flagEntry(id: ID!): Entry
+
+	"""
+	Removes a flag from an entry and places it back in the judging queue
+	"""
+	approveEntry(id: ID!): Entry
 }
 
 """
