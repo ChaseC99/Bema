@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../../shared/Button";
@@ -40,6 +40,44 @@ const GET_FLAGGED_ENTRIES = gql`
   }
 `;
 
+type EntryMutationResponse = {
+  entry: {
+    id: string
+    isFlagged: boolean
+    isDisqualified: boolean
+  } | null
+}
+
+const APPROVE_ENTRY = gql`
+  mutation ApproveEntry($id: ID!) {
+    entry: approveEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DISQUALIFY_ENTRY = gql`
+  mutation DisqualifyEntry($id: ID!) {
+    entry: disqualifyEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
 function FlaggedEntriesCard() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -48,6 +86,9 @@ function FlaggedEntriesCard() {
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>();
 
   const { loading, data, refetch } = useQuery<GetFlaggedEntriesResponse>(GET_FLAGGED_ENTRIES, { onError: handleGQLError });
+  const [approveEntry, { loading: approveEntryIsLoading }] = useMutation<EntryMutationResponse>(APPROVE_ENTRY, { onError: handleGQLError });
+  const [disqualifyEntry, { loading: disqualifyEntryIsLoading }] = useMutation<EntryMutationResponse>(DISQUALIFY_ENTRY, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<EntryMutationResponse>(DELETE_ENTRY, { onError: handleGQLError });
 
   const openApproveModal = (id: number) => {
     setApproveEntryId(id);
@@ -58,8 +99,10 @@ function FlaggedEntriesCard() {
   }
 
   const handleApprove = async (id: number) => {
-    await request("PUT", "/api/internal/entries/approve", {
-      entry_id: id
+    await approveEntry({
+      variables: {
+        id: id
+      }
     });
 
     refetch();
@@ -75,8 +118,10 @@ function FlaggedEntriesCard() {
   }
 
   const handleDisqualify = async (id: number) => {
-    await request("PUT", "/api/internal/entries/disqualify", {
-      entry_id: id
+    await disqualifyEntry({
+      variables: {
+        id: id
+      }
     });
 
     refetch();
@@ -92,8 +137,10 @@ function FlaggedEntriesCard() {
   }
 
   const handleDelete = async (id: number) => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: id
+    await deleteEntry({
+      variables: {
+        id: id
+      }
     });
 
     refetch();
@@ -157,6 +204,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleApprove}
           handleCancel={closeApproveModal}
           data={approveEntryId}
+          loading={approveEntryIsLoading}
         >
           <p>Are you sure you want to approve this entry? This will place the entry back into the judging queue.</p>
         </ConfirmModal>
@@ -169,6 +217,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleDisqualify}
           handleCancel={closeDisqualifyModal}
           data={disqualifyEntryId}
+          loading={disqualifyEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
@@ -182,6 +231,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleDelete}
           handleCancel={closeDeleteModal}
           data={deleteEntryId}
+          loading={deleteEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to delete this entry? This action cannot be undone.</p>

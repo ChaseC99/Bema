@@ -8,7 +8,7 @@ import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 
 type GetEntriesResponse = {
@@ -59,6 +59,22 @@ const GET_ENTRIES = gql`
   }
 `;
 
+type DeleteEntryResponse = {
+  entry: {
+    id: string
+  } | null
+}
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
 type GetContestResponse = {
   contest: {
     name: string
@@ -104,6 +120,7 @@ function Entries() {
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
   const { loading: groupsIsLoading, data: groupsData } = useQuery<GetActiveGroupsResponse>(GET_ACTIVE_GROUPS, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
 
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -148,8 +165,10 @@ function Entries() {
   }
 
   const handleDeleteEntry = async (id: number) => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: id
+    await deleteEntry({
+      variables: {
+        id: id
+      }
     });
 
     refetchEntries();
@@ -469,6 +488,7 @@ function Entries() {
           handleConfirm={handleDeleteEntry}
           handleCancel={closeConfirmDeleteEntryModal}
           destructive
+          loading={deleteEntryIsLoading}
           data={deleteEntryId}
         >
           <p>Are you sure you want to delete this entry? All data associated with this entry will be permanently deleted.</p>

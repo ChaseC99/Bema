@@ -76,33 +76,6 @@ exports.edit = (request, response, next) => {
   }
 }
 
-exports.delete = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        entry_id
-      } = request.body;
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.delete_entries || is_admin) {
-        return db.query("DELETE FROM entry WHERE entry_id = $1", [entry_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem deleting this entry.", res.error);
-          }
-          successMsg(response);
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to delete entries.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to delete an entry.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while deleting an entry.", error);
-  }
-}
-
 exports.import = (request, response, next) => {
   try {
     if (request.decodedToken) {
@@ -191,62 +164,6 @@ exports.import = (request, response, next) => {
     return handleNext(next, 401, "You must log in to import entries.");
   } catch (error) {
     return handleNext(next, 500, "Unexpected error while importing entries.", error);
-  }
-}
-
-exports.disqualify = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        entry_id
-      } = request.body;
-
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.edit_entries || is_admin) {
-        return db.query("UPDATE entry SET disqualified = true WHERE entry_id = $1", [entry_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem disqualifying this entry.", res.error);
-          }
-          successMsg(response);
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to disqualify entries.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to disqualify an entry.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while disqualifying an entry.", error);
-  }
-}
-
-exports.approve = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        entry_id
-      } = request.body;
-
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.edit_entries || is_admin) {
-        return db.query("UPDATE entry SET disqualified = false, flagged = false WHERE entry_id = $1", [entry_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem approving this entry.", res.error);
-          }
-          successMsg(response);
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to approve flagged entries.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to approve a flagged entry.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while approving a flagged entry.", error);
   }
 }
 

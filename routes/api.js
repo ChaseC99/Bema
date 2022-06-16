@@ -145,25 +145,10 @@ const routeChecks = {
       .isBoolean()
       .withMessage("Disqualified must be a boolean"),
     ],
-    delete: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
-    ],
     import: [
       check("contest_id")
       .isInt()
       .withMessage("Contest ID must be an integer")
-    ],
-    disqualify: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
-    ],
-    approve: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
     ],
     assignToGroups: [
       check("contest_id")
@@ -583,10 +568,7 @@ router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated
 // Entries
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
 router.put("/internal/entries", routeChecks.entries.edit, wasValidated, entries.edit);
-router.delete("/internal/entries", routeChecks.entries.delete, wasValidated, entries.delete);
 router.post("/internal/entries/import", routeChecks.entries.import, wasValidated, entries.import);
-router.put("/internal/entries/disqualify", routeChecks.entries.disqualify, wasValidated, entries.disqualify);
-router.put("/internal/entries/approve", routeChecks.entries.approve, wasValidated, entries.approve);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
 

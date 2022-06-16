@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import Badge from "../../../shared/Badge";
 import Button from "../../../shared/Button";
@@ -74,6 +74,34 @@ const GET_NEXT_ENTRY = gql`
   }
 `;
 
+type EntryMutationResponse = {
+  entry: {
+    id: string
+    isFlagged: boolean
+    isDisqualified: boolean
+  } | null
+}
+
+const DISQUALIFY_ENTRY = gql`
+  mutation DisqualifyEntry($id: ID!) {
+    entry: disqualifyEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
 function Levels() {
   const { handleGQLError } = useAppError();
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
@@ -81,6 +109,8 @@ function Levels() {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
   const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
+  const [disqualifyEntry, { loading: disqualifyEntryIsLoading }] = useMutation<EntryMutationResponse>(DISQUALIFY_ENTRY, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<EntryMutationResponse>(DELETE_ENTRY, { onError: handleGQLError });
 
   const handleProgramLoad = () => {
     setProgramIsLoading(false);
@@ -108,8 +138,10 @@ function Levels() {
   }
 
   const handleDisqualify = async () => {
-    await request("PUT", "/api/internal/entries/disqualify", {
-      entry_id: entryData?.entry?.id
+    await disqualifyEntry({
+      variables: {
+        id: entryData?.entry.id
+      }
     });
 
     closeDisqualifyModal();
@@ -125,8 +157,10 @@ function Levels() {
   }
 
   const handleDelete = async () => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: entryData?.entry?.id
+    await deleteEntry({
+      variables: {
+        id: entryData?.entry.id
+      }
     });
 
     closeDeleteModal();
@@ -224,6 +258,7 @@ function Levels() {
           confirmLabel="Disqualify"
           handleConfirm={handleDisqualify}
           handleCancel={closeDisqualifyModal}
+          loading={disqualifyEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
@@ -236,6 +271,7 @@ function Levels() {
           confirmLabel="Delete"
           handleConfirm={handleDelete}
           handleCancel={closeDeleteModal}
+          loading={deleteEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
