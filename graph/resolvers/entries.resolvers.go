@@ -232,6 +232,21 @@ func (r *mutationResolver) ApproveEntry(ctx context.Context, id int) (*model.Ent
 	return r.Query().Entry(ctx, id)
 }
 
+func (r *mutationResolver) DisqualifyEntry(ctx context.Context, id int) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to disqualify entries.")
+	}
+
+	err := models.DisqualifyEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, id)
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
