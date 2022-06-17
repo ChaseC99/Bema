@@ -14,12 +14,12 @@ extend type Mutation {
     """
     Creates a new announcement message
     """
-    createAnnouncement(input: AnnouncementInput): Announcement
+    createAnnouncement(input: AnnouncementInput!): Announcement
 
     """
     Edits an existing announcement
     """
-    editAnnouncement(id: ID!, input: AnnouncementInput): Announcement
+    editAnnouncement(id: ID!, input: AnnouncementInput!): Announcement
 
     """
     Deletes an existing announcement

@@ -34,12 +34,12 @@ extend type Mutation {
     """
     Creates a new judging criteria
     """
-    createCriteria(input: JudgingCriteriaInput): JudgingCriteria
+    createCriteria(input: JudgingCriteriaInput!): JudgingCriteria
 
     """
     Edits an existing judging criteria
     """
-    editCriteria(id: ID!, input: JudgingCriteriaInput): JudgingCriteria
+    editCriteria(id: ID!, input: JudgingCriteriaInput!): JudgingCriteria
 
     """
     Delete an existing judging criteria

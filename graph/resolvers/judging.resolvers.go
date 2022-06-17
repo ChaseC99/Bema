@@ -12,14 +12,14 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
-func (r *mutationResolver) CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
+func (r *mutationResolver) CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.ManageJudgingCriteria) {
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create judging criteria.")
 	}
 
-	id, err := models.CreateJudgingCriteria(ctx, input)
+	id, err := models.CreateJudgingCriteria(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (r *mutationResolver) CreateCriteria(ctx context.Context, input *model.Judg
 	return criteria, nil
 }
 
-func (r *mutationResolver) EditCriteria(ctx context.Context, id int, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
+func (r *mutationResolver) EditCriteria(ctx context.Context, id int, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.ManageJudgingCriteria) {
@@ -53,7 +53,7 @@ func (r *mutationResolver) EditCriteria(ctx context.Context, id int, input *mode
 		return nil, errs.NewForbiddenError(ctx, "This criteria cannot be updated. There must be at least four active criteria.")
 	}
 
-	err = models.EditJudgingCriteriaById(ctx, id, input)
+	err = models.EditJudgingCriteriaById(ctx, id, &input)
 	if err != nil {
 		return nil, err
 	}

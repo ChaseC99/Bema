@@ -223,14 +223,14 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddWinner          func(childComplexity int, id int) int
 		ApproveEntry       func(childComplexity int, id int) int
-		CreateAnnouncement func(childComplexity int, input *model.AnnouncementInput) int
-		CreateCriteria     func(childComplexity int, input *model.JudgingCriteriaInput) int
+		CreateAnnouncement func(childComplexity int, input model.AnnouncementInput) int
+		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		DeleteCriteria     func(childComplexity int, id int) int
 		DeleteEntry        func(childComplexity int, id int) int
 		DisqualifyEntry    func(childComplexity int, id int) int
-		EditAnnouncement   func(childComplexity int, id int, input *model.AnnouncementInput) int
-		EditCriteria       func(childComplexity int, id int, input *model.JudgingCriteriaInput) int
+		EditAnnouncement   func(childComplexity int, id int, input model.AnnouncementInput) int
+		EditCriteria       func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry          func(childComplexity int, id int, input model.EditEntryInput) int
 		FlagEntry          func(childComplexity int, id int) int
 		RemoveWinner       func(childComplexity int, id int) int
@@ -415,8 +415,8 @@ type KBSectionResolver interface {
 	Articles(ctx context.Context, obj *model.KBSection) ([]*model.KBArticle, error)
 }
 type MutationResolver interface {
-	CreateAnnouncement(ctx context.Context, input *model.AnnouncementInput) (*model.Announcement, error)
-	EditAnnouncement(ctx context.Context, id int, input *model.AnnouncementInput) (*model.Announcement, error)
+	CreateAnnouncement(ctx context.Context, input model.AnnouncementInput) (*model.Announcement, error)
+	EditAnnouncement(ctx context.Context, id int, input model.AnnouncementInput) (*model.Announcement, error)
 	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
@@ -425,8 +425,8 @@ type MutationResolver interface {
 	DisqualifyEntry(ctx context.Context, id int) (*model.Entry, error)
 	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
 	DeleteEntry(ctx context.Context, id int) (*model.Entry, error)
-	CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
-	EditCriteria(ctx context.Context, id int, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
+	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
+	EditCriteria(ctx context.Context, id int, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	DeleteCriteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
 }
 type QueryResolver interface {
@@ -1305,7 +1305,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(*model.AnnouncementInput)), true
+		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(model.AnnouncementInput)), true
 
 	case "Mutation.createCriteria":
 		if e.complexity.Mutation.CreateCriteria == nil {
@@ -1317,7 +1317,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCriteria(childComplexity, args["input"].(*model.JudgingCriteriaInput)), true
+		return e.complexity.Mutation.CreateCriteria(childComplexity, args["input"].(model.JudgingCriteriaInput)), true
 
 	case "Mutation.deleteAnnouncement":
 		if e.complexity.Mutation.DeleteAnnouncement == nil {
@@ -1377,7 +1377,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(*model.AnnouncementInput)), true
+		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(model.AnnouncementInput)), true
 
 	case "Mutation.editCriteria":
 		if e.complexity.Mutation.EditCriteria == nil {
@@ -1389,7 +1389,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.EditCriteria(childComplexity, args["id"].(int), args["input"].(*model.JudgingCriteriaInput)), true
+		return e.complexity.Mutation.EditCriteria(childComplexity, args["id"].(int), args["input"].(model.JudgingCriteriaInput)), true
 
 	case "Mutation.editEntry":
 		if e.complexity.Mutation.EditEntry == nil {
@@ -2229,12 +2229,12 @@ extend type Mutation {
     """
     Creates a new announcement message
     """
-    createAnnouncement(input: AnnouncementInput): Announcement
+    createAnnouncement(input: AnnouncementInput!): Announcement
 
     """
     Edits an existing announcement
     """
-    editAnnouncement(id: ID!, input: AnnouncementInput): Announcement
+    editAnnouncement(id: ID!, input: AnnouncementInput!): Announcement
 
     """
     Deletes an existing announcement
@@ -2829,12 +2829,12 @@ extend type Mutation {
     """
     Creates a new judging criteria
     """
-    createCriteria(input: JudgingCriteriaInput): JudgingCriteria
+    createCriteria(input: JudgingCriteriaInput!): JudgingCriteria
 
     """
     Edits an existing judging criteria
     """
-    editCriteria(id: ID!, input: JudgingCriteriaInput): JudgingCriteria
+    editCriteria(id: ID!, input: JudgingCriteriaInput!): JudgingCriteria
 
     """
     Delete an existing judging criteria
@@ -3517,10 +3517,10 @@ func (ec *executionContext) field_Mutation_approveEntry_args(ctx context.Context
 func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.AnnouncementInput
+	var arg0 model.AnnouncementInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAnnouncementInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		arg0, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3532,10 +3532,10 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 func (ec *executionContext) field_Mutation_createCriteria_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.JudgingCriteriaInput
+	var arg0 model.JudgingCriteriaInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
+		arg0, err = ec.unmarshalNJudgingCriteriaInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3616,10 +3616,10 @@ func (ec *executionContext) field_Mutation_editAnnouncement_args(ctx context.Con
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.AnnouncementInput
+	var arg1 model.AnnouncementInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOAnnouncementInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		arg1, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3640,10 +3640,10 @@ func (ec *executionContext) field_Mutation_editCriteria_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.JudgingCriteriaInput
+	var arg1 model.JudgingCriteriaInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
+		arg1, err = ec.unmarshalNJudgingCriteriaInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9300,7 +9300,7 @@ func (ec *executionContext) _Mutation_createAnnouncement(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAnnouncement(rctx, fc.Args["input"].(*model.AnnouncementInput))
+		return ec.resolvers.Mutation().CreateAnnouncement(rctx, fc.Args["input"].(model.AnnouncementInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9366,7 +9366,7 @@ func (ec *executionContext) _Mutation_editAnnouncement(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditAnnouncement(rctx, fc.Args["id"].(int), fc.Args["input"].(*model.AnnouncementInput))
+		return ec.resolvers.Mutation().EditAnnouncement(rctx, fc.Args["id"].(int), fc.Args["input"].(model.AnnouncementInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10156,7 +10156,7 @@ func (ec *executionContext) _Mutation_createCriteria(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCriteria(rctx, fc.Args["input"].(*model.JudgingCriteriaInput))
+		return ec.resolvers.Mutation().CreateCriteria(rctx, fc.Args["input"].(model.JudgingCriteriaInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10220,7 +10220,7 @@ func (ec *executionContext) _Mutation_editCriteria(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditCriteria(rctx, fc.Args["id"].(int), fc.Args["input"].(*model.JudgingCriteriaInput))
+		return ec.resolvers.Mutation().EditCriteria(rctx, fc.Args["id"].(int), fc.Args["input"].(model.JudgingCriteriaInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20758,6 +20758,11 @@ func (ec *executionContext) marshalNAnnouncement2ᚖgithubᚗcomᚋKAᚑChalleng
 	return ec._Announcement(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx context.Context, v interface{}) (model.AnnouncementInput, error) {
+	res, err := ec.unmarshalInputAnnouncementInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -21317,6 +21322,11 @@ func (ec *executionContext) marshalNJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChall
 		return graphql.Null
 	}
 	return ec._JudgingCriteria(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNJudgingCriteriaInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx context.Context, v interface{}) (model.JudgingCriteriaInput, error) {
+	res, err := ec.unmarshalInputJudgingCriteriaInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNJudgingGroup2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.JudgingGroup) graphql.Marshaler {
@@ -21896,14 +21906,6 @@ func (ec *executionContext) marshalOAnnouncement2ᚖgithubᚗcomᚋKAᚑChalleng
 	return ec._Announcement(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAnnouncementInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx context.Context, v interface{}) (*model.AnnouncementInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputAnnouncementInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -22056,14 +22058,6 @@ func (ec *executionContext) marshalOJudgingCriteria2ᚖgithubᚗcomᚋKAᚑChall
 		return graphql.Null
 	}
 	return ec._JudgingCriteria(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx context.Context, v interface{}) (*model.JudgingCriteriaInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputJudgingCriteriaInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx context.Context, sel ast.SelectionSet, v *model.JudgingGroup) graphql.Marshaler {

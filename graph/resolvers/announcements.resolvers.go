@@ -21,14 +21,14 @@ func (r *announcementResolver) Author(ctx context.Context, obj *model.Announceme
 	return user, nil
 }
 
-func (r *mutationResolver) CreateAnnouncement(ctx context.Context, input *model.AnnouncementInput) (*model.Announcement, error) {
+func (r *mutationResolver) CreateAnnouncement(ctx context.Context, input model.AnnouncementInput) (*model.Announcement, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.ManageAnnouncements) {
 		return nil, err.NewForbiddenError(ctx, "You do not have permission to create announcements.")
 	}
 
-	id, err := models.CreateAnnouncement(ctx, input, user.ID)
+	id, err := models.CreateAnnouncement(ctx, &input, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -36,14 +36,14 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, input *model.
 	return r.Query().Announcement(ctx, *id)
 }
 
-func (r *mutationResolver) EditAnnouncement(ctx context.Context, id int, input *model.AnnouncementInput) (*model.Announcement, error) {
+func (r *mutationResolver) EditAnnouncement(ctx context.Context, id int, input model.AnnouncementInput) (*model.Announcement, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.ManageAnnouncements) {
 		return nil, err.NewForbiddenError(ctx, "You do not have permission to edit announcements.")
 	}
 
-	err := models.EditAnnouncementById(ctx, id, input)
+	err := models.EditAnnouncementById(ctx, id, &input)
 	if err != nil {
 		return nil, err
 	}
