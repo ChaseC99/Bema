@@ -125,26 +125,6 @@ const routeChecks = {
       .isInt()
       .withMessage("Entry height must be an integer")
     ],
-    edit: [
-      check("edit_entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer"),
-      check("edit_entry_title")
-      .isLength(nameChars)
-      .withMessage("Entry title cannot be empty or longer than 200 characters"),
-      check("edit_entry_author")
-      .isLength(nameChars)
-      .withMessage("Entry author cannot be empty or longer than 200 characters"),
-      check("edit_entry_level")
-      .isIn(skillLevels)
-      .withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'TBD'"),
-      check("edit_flagged")
-      .isBoolean()
-      .withMessage("Flagged must be a boolean"),
-      check("edit_disqualified")
-      .isBoolean()
-      .withMessage("Disqualified must be a boolean"),
-    ],
     import: [
       check("contest_id")
       .isInt()
@@ -567,7 +547,6 @@ router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated
 
 // Entries
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
-router.put("/internal/entries", routeChecks.entries.edit, wasValidated, entries.edit);
 router.post("/internal/entries/import", routeChecks.entries.import, wasValidated, entries.import);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);

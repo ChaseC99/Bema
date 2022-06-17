@@ -30,6 +30,7 @@ type Entry = {
     id: string
     name: string
   } | null
+  height: number
   isFlagged: boolean | null
   isDisqualified: boolean | null
   isSkillLevelLocked: boolean | null
@@ -52,6 +53,36 @@ const GET_ENTRIES = gql`
         id
         name
       }
+      height
+      isFlagged
+      isDisqualified
+      isSkillLevelLocked
+    }
+  }
+`;
+
+type EditEntryResponse = {
+  entry: Entry
+}
+
+const EDIT_ENTRY = gql`
+  mutation EditEntry($id: ID!, $input: EditEntryInput!) {
+    entry: editEntry(id: $id, input: $input) {
+      id
+      url
+      kaid
+      title
+      author {
+        name
+        kaid
+      }
+      skillLevel
+      created
+      group {
+        id
+        name
+      }
+      height
       isFlagged
       isDisqualified
       isSkillLevelLocked
@@ -111,7 +142,7 @@ function Entries() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const { contestId } = useParams();
-  const [editEntry, setEditEntry] = useState<Entry | null>(null);
+  const [entryToEdit, setEntryToEdit] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
   const [showImportSingleEntryForm, setShowImportSingleEntryForm] = useState<boolean>(false);
@@ -120,6 +151,7 @@ function Entries() {
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
   const { loading: groupsIsLoading, data: groupsData } = useQuery<GetActiveGroupsResponse>(GET_ACTIVE_GROUPS, { onError: handleGQLError });
+  const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
 
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
@@ -133,23 +165,31 @@ function Entries() {
 
   const showEditEntryForm = (id: string) => {
     const entry = entriesData?.entries.find((e) => e.id === id) as Entry;
-    setEditEntry(entry);
+    setEntryToEdit(entry);
   }
 
   const hideEditEntryForm = () => {
-    setEditEntry(null);
+    setEntryToEdit(null);
   }
 
   const handleEditEntry = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/entries", {
-      edit_entry_id: editEntry?.id,
-      edit_entry_title: values.title,
-      edit_entry_author: values.author,
-      edit_entry_level: values.skill_level,
-      edit_entry_level_locked: values.skill_level_locked,
-      edit_entry_group: values.group,
-      edit_flagged: values.flagged,
-      edit_disqualified: values.disqualified,
+    if (!entryToEdit) {
+      return;
+    }
+
+    await editEntry({
+      variables: {
+        id: entryToEdit.id,
+        input: {
+          title: values.title,
+          skillLevel: values.skill_level,
+          height: values.height,
+          group: values.group,
+          isFlagged: values.flagged,
+          isDisqualified: values.disqualified,
+          isSkillLevelLocked: values.skill_level_locked
+        }
+      }
     });
 
     refetchEntries();
@@ -380,13 +420,14 @@ function Entries() {
         </div>
       </section>
 
-      {editEntry &&
+      {entryToEdit &&
         <FormModal
           title="Edit Entry"
           submitLabel="Save"
           handleSubmit={handleEditEntry}
           handleCancel={hideEditEntryForm}
           cols={4}
+          loading={editEntryIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -395,17 +436,17 @@ function Entries() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editEntry.title,
+              defaultValue: entryToEdit.title,
               required: true
             },
             {
               fieldType: "INPUT",
               type: "text",
-              name: "author",
-              id: "author",
+              name: "height",
+              id: "height",
               size: "LARGE",
-              label: "Author",
-              defaultValue: editEntry.author.name,
+              label: "Height",
+              defaultValue: entryToEdit.height.toString(),
               required: true
             },
             {
@@ -414,7 +455,7 @@ function Entries() {
               id: "skill-level",
               size: "MEDIUM",
               label: "Skill Level",
-              defaultValue: editEntry.skillLevel,
+              defaultValue: entryToEdit.skillLevel,
               choices: [
                 {
                   text: "TBD",
@@ -441,7 +482,7 @@ function Entries() {
               id: "group",
               size: "MEDIUM",
               label: "Assigned Group",
-              defaultValue: editEntry.group?.id,
+              defaultValue: entryToEdit.group?.id,
               choices: groupsData ? groupsData.groups.map((g) => {
                 return {
                   text: g.id + " - " + g.name,
@@ -457,7 +498,7 @@ function Entries() {
               size: "LARGE",
               label: "Level Locked",
               description: "Prevents the skill level from automatically being updated upon new evaluations.",
-              defaultValue: editEntry.isSkillLevelLocked || false
+              defaultValue: entryToEdit.isSkillLevelLocked || false
             },
             {
               fieldType: "CHECKBOX",
@@ -466,7 +507,7 @@ function Entries() {
               size: "LARGE",
               label: "Flagged",
               description: "Flagged entries are not shown in the judging queue for evaluators.",
-              defaultValue: editEntry.isFlagged || false
+              defaultValue: entryToEdit.isFlagged || false
             },
             {
               fieldType: "CHECKBOX",
@@ -475,7 +516,7 @@ function Entries() {
               size: "LARGE",
               label: "Disqualified",
               description: "Disqualified entries are marked as removed from the contest.",
-              defaultValue: editEntry.isDisqualified || false
+              defaultValue: entryToEdit.isDisqualified || false
             }
           ]}
         />

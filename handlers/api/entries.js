@@ -42,40 +42,6 @@ exports.add = (request, response, next) => {
   }
 }
 
-exports.edit = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        edit_entry_id,
-        edit_entry_title,
-        edit_entry_author,
-        edit_entry_level,
-        edit_entry_level_locked,
-        edit_entry_group,
-        edit_flagged,
-        edit_disqualified
-      } = request.body;
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.edit_entries || is_admin) {
-        return db.query("UPDATE entry SET entry_title = $1, entry_author = $2, entry_level = $3, entry_level_locked = $4, assigned_group_id = $5, flagged = $6, disqualified = $7 WHERE entry_id = $8", [edit_entry_title, edit_entry_author, edit_entry_level, edit_entry_level_locked, edit_entry_group, edit_flagged, edit_disqualified, edit_entry_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem editing this entry.", res.error);
-          }
-          successMsg(response);
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to edit entries.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to edit entries.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while editing an entry.", error);
-  }
-}
-
 exports.import = (request, response, next) => {
   try {
     if (request.decodedToken) {
