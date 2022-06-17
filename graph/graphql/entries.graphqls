@@ -62,6 +62,11 @@ extend type Mutation {
 	disqualifyEntry(id: ID!): Entry
 
 	"""
+	Edits an existing entry
+	"""
+	editEntry(id: ID!, input: EditEntryInput!): Entry
+
+	"""
 	Permanently deletes an entry and all data associated with it
 	"""
 	deleteEntry(id: ID!): Entry
@@ -205,4 +210,44 @@ type EntriesPerLevel {
 	The number of entries in the skill bracket
 	"""
 	count: Int!
+}
+
+"""
+The input required for editing an entry
+"""
+input EditEntryInput {
+	"""
+	The title of the entry
+	"""
+	title: String!
+
+	"""
+	The skill level assigned to the entry
+	"""
+	skillLevel: String!
+
+	"""
+	The height of the entry program canvas
+	"""
+	height: Int!
+
+	"""
+	The ID of the judging group the entry is assigned to. Requires Assign Entry Groups permission.
+	"""
+	group: ID!
+
+	"""
+	Indicates whether the entry has been flagged
+	"""
+	isFlagged: Boolean!
+
+	"""
+	Indicates whether the entry has been disqualified
+	"""
+	isDisqualified: Boolean!
+
+	"""
+	Indicates whether the skill level has been permanently set for the entry. Requires admin permission.
+	"""
+	isSkillLevelLocked: Boolean!
 }

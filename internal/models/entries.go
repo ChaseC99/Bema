@@ -425,3 +425,11 @@ func DeleteEntryById(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func EditEntryById(ctx context.Context, id int, input *model.EditEntryInput) error {
+	_, err := db.DB.Exec("UPDATE entry SET entry_title = $1, entry_level = $2, entry_height = $3, assigned_group_id = $4, flagged = $5, disqualified = $6, entry_level_locked = $7 WHERE entry_id = $8", input.Title, input.SkillLevel, input.Height, input.Group, input.IsFlagged, input.IsDisqualified, input.IsSkillLevelLocked, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while editing an entry", err)
+	}
+	return nil
+}

@@ -247,6 +247,33 @@ func (r *mutationResolver) DisqualifyEntry(ctx context.Context, id int) (*model.
 	return r.Query().Entry(ctx, id)
 }
 
+func (r *mutationResolver) EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit entries.")
+	}
+
+	entry, err := models.GetEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !auth.HasPermission(user, auth.AssignEntryGroups) {
+		input.Group = entry.Group.ID
+	}
+	if !user.IsAdmin {
+		input.IsSkillLevelLocked = *entry.IsSkillLevelLocked
+	}
+
+	err = models.EditEntryById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, id)
+}
+
 func (r *mutationResolver) DeleteEntry(ctx context.Context, id int) (*model.Entry, error) {
 	user := auth.GetUserFromContext(ctx)
 

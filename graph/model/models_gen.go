@@ -68,6 +68,24 @@ type Contestant struct {
 	ContestCount int `json:"contestCount"`
 }
 
+// The input required for editing an entry
+type EditEntryInput struct {
+	// The title of the entry
+	Title string `json:"title"`
+	// The skill level assigned to the entry
+	SkillLevel string `json:"skillLevel"`
+	// The height of the entry program canvas
+	Height int `json:"height"`
+	// The ID of the judging group the entry is assigned to. Requires Assign Entry Groups permission.
+	Group int `json:"group"`
+	// Indicates whether the entry has been flagged
+	IsFlagged bool `json:"isFlagged"`
+	// Indicates whether the entry has been disqualified
+	IsDisqualified bool `json:"isDisqualified"`
+	// Indicates whether the skill level has been permanently set for the entry. Requires admin permission.
+	IsSkillLevelLocked bool `json:"isSkillLevelLocked"`
+}
+
 // A skill bracket and its respective entry count
 type EntriesPerLevel struct {
 	// The name of the skill bracket

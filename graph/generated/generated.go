@@ -231,6 +231,7 @@ type ComplexityRoot struct {
 		DisqualifyEntry    func(childComplexity int, id int) int
 		EditAnnouncement   func(childComplexity int, id int, input *model.AnnouncementInput) int
 		EditCriteria       func(childComplexity int, id int, input *model.JudgingCriteriaInput) int
+		EditEntry          func(childComplexity int, id int, input model.EditEntryInput) int
 		FlagEntry          func(childComplexity int, id int) int
 		RemoveWinner       func(childComplexity int, id int) int
 	}
@@ -422,6 +423,7 @@ type MutationResolver interface {
 	FlagEntry(ctx context.Context, id int) (*model.Entry, error)
 	ApproveEntry(ctx context.Context, id int) (*model.Entry, error)
 	DisqualifyEntry(ctx context.Context, id int) (*model.Entry, error)
+	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
 	DeleteEntry(ctx context.Context, id int) (*model.Entry, error)
 	CreateCriteria(ctx context.Context, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	EditCriteria(ctx context.Context, id int, input *model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
@@ -1389,6 +1391,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditCriteria(childComplexity, args["id"].(int), args["input"].(*model.JudgingCriteriaInput)), true
 
+	case "Mutation.editEntry":
+		if e.complexity.Mutation.EditEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditEntry(childComplexity, args["id"].(int), args["input"].(model.EditEntryInput)), true
+
 	case "Mutation.flagEntry":
 		if e.complexity.Mutation.FlagEntry == nil {
 			break
@@ -2137,6 +2151,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnnouncementInput,
+		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputJudgingCriteriaInput,
 	)
 	first := true
@@ -2467,6 +2482,11 @@ extend type Mutation {
 	disqualifyEntry(id: ID!): Entry
 
 	"""
+	Edits an existing entry
+	"""
+	editEntry(id: ID!, input: EditEntryInput!): Entry
+
+	"""
 	Permanently deletes an entry and all data associated with it
 	"""
 	deleteEntry(id: ID!): Entry
@@ -2611,7 +2631,46 @@ type EntriesPerLevel {
 	"""
 	count: Int!
 }
-`, BuiltIn: false},
+
+"""
+The input required for editing an entry
+"""
+input EditEntryInput {
+	"""
+	The title of the entry
+	"""
+	title: String!
+
+	"""
+	The skill level assigned to the entry
+	"""
+	skillLevel: String!
+
+	"""
+	The height of the entry program canvas
+	"""
+	height: Int!
+
+	"""
+	The ID of the judging group the entry is assigned to. Requires Assign Entry Groups permission.
+	"""
+	group: ID!
+
+	"""
+	Indicates whether the entry has been flagged
+	"""
+	isFlagged: Boolean!
+
+	"""
+	Indicates whether the entry has been disqualified
+	"""
+	isDisqualified: Boolean!
+
+	"""
+	Indicates whether the skill level has been permanently set for the entry. Requires admin permission.
+	"""
+	isSkillLevelLocked: Boolean!
+}`, BuiltIn: false},
 	{Name: "graph/graphql/errors.graphqls", Input: `extend type Query {
     """
     A list of all logged errors. Requires View Errors permission.
@@ -3585,6 +3644,30 @@ func (ec *executionContext) field_Mutation_editCriteria_args(ctx context.Context
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalOJudgingCriteriaInput2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditEntryInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditEntryInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditEntryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9865,6 +9948,100 @@ func (ec *executionContext) fieldContext_Mutation_disqualifyEntry(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_disqualifyEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditEntry(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditEntryInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
+			case "judgeVotes":
+				return ec.fieldContext_Entry_judgeVotes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17016,6 +17193,77 @@ func (ec *executionContext) unmarshalInputAnnouncementInput(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditEntryInput(ctx context.Context, obj interface{}) (model.EditEntryInput, error) {
+	var it model.EditEntryInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			it.Title, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "skillLevel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skillLevel"))
+			it.SkillLevel, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "height":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("height"))
+			it.Height, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "group":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
+			it.Group, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isFlagged":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isFlagged"))
+			it.IsFlagged, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isDisqualified":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isDisqualified"))
+			it.IsDisqualified, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isSkillLevelLocked":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isSkillLevelLocked"))
+			it.IsSkillLevelLocked, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Context, obj interface{}) (model.JudgingCriteriaInput, error) {
 	var it model.JudgingCriteriaInput
 	asMap := map[string]interface{}{}
@@ -18691,6 +18939,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_disqualifyEntry(ctx, field)
+			})
+
+		case "editEntry":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editEntry(ctx, field)
 			})
 
 		case "deleteEntry":
@@ -20633,6 +20887,11 @@ func (ec *executionContext) marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._Contestant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNEditEntryInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditEntryInput(ctx context.Context, v interface{}) (model.EditEntryInput, error) {
+	res, err := ec.unmarshalInputEditEntryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNEntriesPerLevel2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntriesPerLevelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntriesPerLevel) graphql.Marshaler {
