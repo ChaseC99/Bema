@@ -105,6 +105,21 @@ func (r *mutationResolver) CreateJudgingGroup(ctx context.Context, input model.C
 	return r.Query().JudgingGroup(ctx, *id)
 }
 
+func (r *mutationResolver) EditJudgingGroup(ctx context.Context, id int, input model.EditJudgingGroupInput) (*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageJudgingGroups) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit judging groups.")
+	}
+
+	err := models.EditJudgingGroupById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().JudgingGroup(ctx, id)
+}
+
 func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {

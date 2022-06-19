@@ -196,3 +196,12 @@ func CreateJudgingGroup(ctx context.Context, input *model.CreateJudgingGroupInpu
 
 	return id, nil
 }
+
+func EditJudgingGroupById(ctx context.Context, id int, input *model.EditJudgingGroupInput) error {
+	_, err := db.DB.Exec("UPDATE evaluator_group SET group_name = $1, is_active = $2 WHERE group_id = $3", input.Name, input.IsActive, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while editing a judging group", err)
+	}
+
+	return nil
+}

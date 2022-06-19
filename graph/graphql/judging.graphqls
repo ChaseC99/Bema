@@ -50,6 +50,11 @@ extend type Mutation {
     Creates a new judging group. Requires Manage Judging Groups permission.
     """
     createJudgingGroup(input: CreateJudgingGroupInput!): JudgingGroup
+
+    """
+    Edits an existing judging group. Requires Manage Judging Groups permission.
+    """
+    editJudgingGroup(id: ID!, input: EditJudgingGroupInput!): JudgingGroup
 }
 
 """
@@ -132,4 +137,16 @@ input CreateJudgingGroupInput {
     The name of the group
     """
     name: String!
+}
+
+input EditJudgingGroupInput {
+    """
+    The name of the group
+    """
+    name: String!
+
+    """
+    Indicates whether new entries and users can be assigned to this group
+    """
+    isActive: Boolean!
 }

@@ -129,6 +129,13 @@ type EditEntryInput struct {
 	IsSkillLevelLocked bool `json:"isSkillLevelLocked"`
 }
 
+type EditJudgingGroupInput struct {
+	// The name of the group
+	Name string `json:"name"`
+	// Indicates whether new entries and users can be assigned to this group
+	IsActive bool `json:"isActive"`
+}
+
 // A skill bracket and its respective entry count
 type EntriesPerLevel struct {
 	// The name of the skill bracket
