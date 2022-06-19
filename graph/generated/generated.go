@@ -221,10 +221,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddContest         func(childComplexity int, input model.CreateContestInput) int
 		AddWinner          func(childComplexity int, id int) int
 		ApproveEntry       func(childComplexity int, id int) int
 		CreateAnnouncement func(childComplexity int, input model.AnnouncementInput) int
+		CreateContest      func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		DeleteContest      func(childComplexity int, id int) int
@@ -421,7 +421,7 @@ type MutationResolver interface {
 	CreateAnnouncement(ctx context.Context, input model.AnnouncementInput) (*model.Announcement, error)
 	EditAnnouncement(ctx context.Context, id int, input model.AnnouncementInput) (*model.Announcement, error)
 	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
-	AddContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error)
+	CreateContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error)
 	EditContest(ctx context.Context, id int, input model.EditContestInput) (*model.Contest, error)
 	DeleteContest(ctx context.Context, id int) (*model.Contest, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
@@ -1277,18 +1277,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.KBSection.Visibility(childComplexity), true
 
-	case "Mutation.addContest":
-		if e.complexity.Mutation.AddContest == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_addContest_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.AddContest(childComplexity, args["input"].(model.CreateContestInput)), true
-
 	case "Mutation.addWinner":
 		if e.complexity.Mutation.AddWinner == nil {
 			break
@@ -1324,6 +1312,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(model.AnnouncementInput)), true
+
+	case "Mutation.createContest":
+		if e.complexity.Mutation.CreateContest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createContest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateContest(childComplexity, args["input"].(model.CreateContestInput)), true
 
 	case "Mutation.createCriteria":
 		if e.complexity.Mutation.CreateCriteria == nil {
@@ -2407,7 +2407,7 @@ extend type Mutation {
   """
   Creates a new contest. Requires Edit Contests permission.
   """
-  addContest(input: CreateContestInput!): Contest
+  createContest(input: CreateContestInput!): Contest
 
   """
   Edits an existing contest. Requires Edit Contests permission.
@@ -3630,21 +3630,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_addContest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.CreateContestInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateContestInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_addWinner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3682,6 +3667,21 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createContest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateContestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateContestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9684,8 +9684,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteAnnouncement(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_addContest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_addContest(ctx, field)
+func (ec *executionContext) _Mutation_createContest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createContest(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9698,7 +9698,7 @@ func (ec *executionContext) _Mutation_addContest(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddContest(rctx, fc.Args["input"].(model.CreateContestInput))
+		return ec.resolvers.Mutation().CreateContest(rctx, fc.Args["input"].(model.CreateContestInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9712,7 +9712,7 @@ func (ec *executionContext) _Mutation_addContest(ctx context.Context, field grap
 	return ec.marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_addContest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createContest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -9753,7 +9753,7 @@ func (ec *executionContext) fieldContext_Mutation_addContest(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_addContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -19489,10 +19489,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteAnnouncement(ctx, field)
 			})
 
-		case "addContest":
+		case "createContest":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_addContest(ctx, field)
+				return ec._Mutation_createContest(ctx, field)
 			})
 
 		case "editContest":

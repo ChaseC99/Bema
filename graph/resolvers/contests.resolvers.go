@@ -38,7 +38,7 @@ func (r *contestResolver) Winners(ctx context.Context, obj *model.Contest) ([]*m
 	return winners, nil
 }
 
-func (r *mutationResolver) AddContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error) {
+func (r *mutationResolver) CreateContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.EditContests) {

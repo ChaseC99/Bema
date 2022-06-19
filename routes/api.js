@@ -3,10 +3,9 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, datePattern, kaidPattern, dateFormat, messageChars, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
+const { nameChars, datePattern, kaidPattern, dateFormat, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
 
 const admin = require(process.cwd() + "/handlers/api/admin");
-const contests = require(process.cwd() + "/handlers/api/contests");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
@@ -46,56 +45,6 @@ const routeChecks = {
       check("entry_id")
       .isInt()
       .withMessage("Entry ID must be an integer")
-    ]
-  },
-  contests: {
-    add: [
-      check("contest_name")
-      .isLength(nameChars)
-      .withMessage("Contest name cannot be empty or longer than 200 characters"),
-      check("contest_author")
-      .isLength(nameChars)
-      .withMessage("Contest author cannot be empty or longer than 200 characters"),
-      check("contest_current")
-      .isBoolean()
-      .withMessage("Current contest must be a boolean"),
-      check("contest_url")
-      .isURL()
-      .withMessage("Must provide a valid contest URL"),
-      check("contest_start_date")
-      .matches(datePattern)
-      .withMessage(`Must be a valid date ${dateFormat}`),
-      check("contest_end_date")
-      .matches(datePattern)
-      .withMessage(`Must be a valid date ${dateFormat}`),
-    ],
-    edit: [
-      check("edit_contest_id")
-      .isInt()
-      .withMessage("Contest ID must be an integer"),
-      check("edit_contest_name")
-      .isLength(nameChars)
-      .withMessage("Contest name cannot be empty or longer than 200 characters"),
-      check("edit_contest_author")
-      .isLength(nameChars)
-      .withMessage("Contest author cannot be empty or longer than 200 characters"),
-      check("edit_contest_url")
-      .isURL()
-      .withMessage("Must provide a valid contest URL"),
-      check("edit_contest_start_date")
-      .matches(datePattern)
-      .withMessage(`Start date must be a valid date ${dateFormat}`),
-      check("edit_contest_end_date")
-      .matches(datePattern)
-      .withMessage(`End date must be a valid date ${dateFormat}`),
-      check("edit_contest_current")
-      .isBoolean()
-      .withMessage("Current contest must be true or false")
-    ],
-    delete: [
-      check("contest_id")
-      .isInt()
-      .withMessage("Contest ID must be an integer")
     ]
   },
   entries: {
@@ -550,11 +499,6 @@ router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.
 router.post("/internal/entries/import", routeChecks.entries.import, wasValidated, entries.import);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
-
-// Contests
-router.post("/internal/contests", routeChecks.contests.add, wasValidated, contests.add);
-router.put("/internal/contests", routeChecks.contests.edit, wasValidated, contests.edit);
-router.delete("/internal/contests", routeChecks.contests.delete, wasValidated, contests.delete);
 
 // Admin
 router.post("/internal/admin/addEvaluatorGroup", routeChecks.admin.addEvaluatorGroup, wasValidated, admin.addEvaluatorGroup);

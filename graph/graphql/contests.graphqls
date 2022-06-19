@@ -24,7 +24,7 @@ extend type Mutation {
   """
   Creates a new contest. Requires Edit Contests permission.
   """
-  addContest(input: CreateContestInput!): Contest
+  createContest(input: CreateContestInput!): Contest
 
   """
   Edits an existing contest. Requires Edit Contests permission.
