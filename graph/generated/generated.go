@@ -231,6 +231,7 @@ type ComplexityRoot struct {
 		DeleteEntry        func(childComplexity int, id int) int
 		DisqualifyEntry    func(childComplexity int, id int) int
 		EditAnnouncement   func(childComplexity int, id int, input model.AnnouncementInput) int
+		EditContest        func(childComplexity int, id int, input model.EditContestInput) int
 		EditCriteria       func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry          func(childComplexity int, id int, input model.EditEntryInput) int
 		FlagEntry          func(childComplexity int, id int) int
@@ -420,6 +421,7 @@ type MutationResolver interface {
 	EditAnnouncement(ctx context.Context, id int, input model.AnnouncementInput) (*model.Announcement, error)
 	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
 	AddContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error)
+	EditContest(ctx context.Context, id int, input model.EditContestInput) (*model.Contest, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
 	FlagEntry(ctx context.Context, id int) (*model.Entry, error)
@@ -1393,6 +1395,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(model.AnnouncementInput)), true
 
+	case "Mutation.editContest":
+		if e.complexity.Mutation.EditContest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editContest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditContest(childComplexity, args["id"].(int), args["input"].(model.EditContestInput)), true
+
 	case "Mutation.editCriteria":
 		if e.complexity.Mutation.EditCriteria == nil {
 			break
@@ -2166,6 +2180,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnnouncementInput,
 		ec.unmarshalInputCreateContestInput,
+		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputJudgingCriteriaInput,
 	)
@@ -2379,6 +2394,11 @@ extend type Mutation {
   Creates a new contest. Requires Edit Contests permission.
   """
   addContest(input: CreateContestInput!): Contest
+
+  """
+  Edits an existing contest. Requires Edit Contests permission.
+  """
+  editContest(id: ID!, input: EditContestInput!): Contest
 }
 
 """
@@ -2474,6 +2494,56 @@ input CreateContestInput {
   The end date (deadline) of the contest
   """
   endDate: String!
+}
+
+"""
+The input required for editing a contest
+"""
+input EditContestInput {
+  """
+  The name of the contest
+  """
+  name: String!
+
+  """
+  The url of the contest program page
+  """
+  url: String!
+
+  """
+  The author of the announcement program code.
+  """
+  author: String!
+
+  """
+  Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  """
+  isCurrent: Boolean!
+
+  """
+  The start date of the contest
+  """
+  startDate: String!
+
+  """
+  The end date (deadline) of the contest
+  """
+  endDate: String!
+
+  """
+  The url slug of the contest badge
+  """
+  badgeSlug: String
+
+  """
+  A url to the badge image
+  """
+  badgeImageUrl: String
+
+  """
+  Indicates whether voting for winners is enabled for the contest
+  """
+  isVotingEnabled: Boolean!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/entries.graphqls", Input: `extend type Query {
 	"""
@@ -3692,6 +3762,30 @@ func (ec *executionContext) field_Mutation_editAnnouncement_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editContest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditContestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditContestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9626,6 +9720,82 @@ func (ec *executionContext) fieldContext_Mutation_addContest(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editContest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editContest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditContest(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditContestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contest)
+	fc.Result = res
+	return ec.marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editContest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contest_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Contest_name(ctx, field)
+			case "url":
+				return ec.fieldContext_Contest_url(ctx, field)
+			case "author":
+				return ec.fieldContext_Contest_author(ctx, field)
+			case "badgeSlug":
+				return ec.fieldContext_Contest_badgeSlug(ctx, field)
+			case "badgeImageUrl":
+				return ec.fieldContext_Contest_badgeImageUrl(ctx, field)
+			case "isCurrent":
+				return ec.fieldContext_Contest_isCurrent(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Contest_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Contest_endDate(ctx, field)
+			case "isVotingEnabled":
+				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17404,6 +17574,93 @@ func (ec *executionContext) unmarshalInputCreateContestInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditContestInput(ctx context.Context, obj interface{}) (model.EditContestInput, error) {
+	var it model.EditContestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "url":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			it.URL, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "author":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("author"))
+			it.Author, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isCurrent":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCurrent"))
+			it.IsCurrent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "startDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			it.StartDate, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			it.EndDate, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "badgeSlug":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("badgeSlug"))
+			it.BadgeSlug, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "badgeImageUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("badgeImageUrl"))
+			it.BadgeImageURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isVotingEnabled":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isVotingEnabled"))
+			it.IsVotingEnabled, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditEntryInput(ctx context.Context, obj interface{}) (model.EditEntryInput, error) {
 	var it model.EditEntryInput
 	asMap := map[string]interface{}{}
@@ -19126,6 +19383,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addContest(ctx, field)
+			})
+
+		case "editContest":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editContest(ctx, field)
 			})
 
 		case "addWinner":
@@ -21113,6 +21376,11 @@ func (ec *executionContext) marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallenge�
 
 func (ec *executionContext) unmarshalNCreateContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateContestInput(ctx context.Context, v interface{}) (model.CreateContestInput, error) {
 	res, err := ec.unmarshalInputCreateContestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditContestInput(ctx context.Context, v interface{}) (model.EditContestInput, error) {
+	res, err := ec.unmarshalInputEditContestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

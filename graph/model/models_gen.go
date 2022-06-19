@@ -84,6 +84,28 @@ type CreateContestInput struct {
 	EndDate string `json:"endDate"`
 }
 
+// The input required for editing a contest
+type EditContestInput struct {
+	// The name of the contest
+	Name string `json:"name"`
+	// The url of the contest program page
+	URL string `json:"url"`
+	// The author of the announcement program code.
+	Author string `json:"author"`
+	// Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+	IsCurrent bool `json:"isCurrent"`
+	// The start date of the contest
+	StartDate string `json:"startDate"`
+	// The end date (deadline) of the contest
+	EndDate string `json:"endDate"`
+	// The url slug of the contest badge
+	BadgeSlug *string `json:"badgeSlug"`
+	// A url to the badge image
+	BadgeImageURL *string `json:"badgeImageUrl"`
+	// Indicates whether voting for winners is enabled for the contest
+	IsVotingEnabled bool `json:"isVotingEnabled"`
+}
+
 // The input required for editing an entry
 type EditEntryInput struct {
 	// The title of the entry

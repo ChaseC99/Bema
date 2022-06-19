@@ -92,3 +92,11 @@ func CreateContest(ctx context.Context, input *model.CreateContestInput) (*int, 
 
 	return &id, nil
 }
+
+func EditContestById(ctx context.Context, id int, input *model.EditContestInput) error {
+	_, err := db.DB.Exec("UPDATE contest SET contest_name = $1, contest_url = $2, contest_author = $3, date_start = $4, date_end = $5, current = $6, voting_enabled = $7, badge_name = $8, badge_image_url = $9 WHERE contest_id = $10", input.Name, input.URL, input.Author, input.StartDate, input.EndDate, input.IsCurrent, input.IsVotingEnabled, input.BadgeSlug, input.BadgeImageURL, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while editing a contest", err)
+	}
+	return nil
+}

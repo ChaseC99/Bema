@@ -25,6 +25,11 @@ extend type Mutation {
   Creates a new contest. Requires Edit Contests permission.
   """
   addContest(input: CreateContestInput!): Contest
+
+  """
+  Edits an existing contest. Requires Edit Contests permission.
+  """
+  editContest(id: ID!, input: EditContestInput!): Contest
 }
 
 """
@@ -120,4 +125,54 @@ input CreateContestInput {
   The end date (deadline) of the contest
   """
   endDate: String!
+}
+
+"""
+The input required for editing a contest
+"""
+input EditContestInput {
+  """
+  The name of the contest
+  """
+  name: String!
+
+  """
+  The url of the contest program page
+  """
+  url: String!
+
+  """
+  The author of the announcement program code.
+  """
+  author: String!
+
+  """
+  Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  """
+  isCurrent: Boolean!
+
+  """
+  The start date of the contest
+  """
+  startDate: String!
+
+  """
+  The end date (deadline) of the contest
+  """
+  endDate: String!
+
+  """
+  The url slug of the contest badge
+  """
+  badgeSlug: String
+
+  """
+  A url to the badge image
+  """
+  badgeImageUrl: String
+
+  """
+  Indicates whether voting for winners is enabled for the contest
+  """
+  isVotingEnabled: Boolean!
 }

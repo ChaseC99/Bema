@@ -53,6 +53,21 @@ func (r *mutationResolver) AddContest(ctx context.Context, input model.CreateCon
 	return r.Query().Contest(ctx, *id)
 }
 
+func (r *mutationResolver) EditContest(ctx context.Context, id int, input model.EditContestInput) (*model.Contest, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditContests) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit contests.")
+	}
+
+	err := models.EditContestById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Contest(ctx, id)
+}
+
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
 	arr, err := models.GetAllContests(ctx)
 	if err != nil {
