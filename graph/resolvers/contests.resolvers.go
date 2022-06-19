@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -35,6 +36,21 @@ func (r *contestResolver) Winners(ctx context.Context, obj *model.Contest) ([]*m
 		return nil, err
 	}
 	return winners, nil
+}
+
+func (r *mutationResolver) AddContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditContests) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create contests.")
+	}
+
+	id, err := models.CreateContest(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Contest(ctx, *id)
 }
 
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {

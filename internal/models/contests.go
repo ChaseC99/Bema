@@ -82,3 +82,13 @@ func GetContestsEvaluatedByUser(ctx context.Context, userId int) ([]*model.Conte
 
 	return contests, nil
 }
+
+func CreateContest(ctx context.Context, input *model.CreateContestInput) (*int, error) {
+	var id int
+	row := db.DB.QueryRow("INSERT INTO contest (contest_name, contest_url, contest_author, date_start, date_end, current) VALUES ($1, $2, $3, $4, $5, $6) RETURNING contest_id;", input.Name, input.URL, input.Author, input.StartDate, input.EndDate, input.IsCurrent)
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a contest", err)
+	}
+
+	return &id, nil
+}

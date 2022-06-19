@@ -68,6 +68,22 @@ type Contestant struct {
 	ContestCount int `json:"contestCount"`
 }
 
+// The input required for creating a new contest
+type CreateContestInput struct {
+	// The name of the contest
+	Name string `json:"name"`
+	// The url of the contest program page
+	URL string `json:"url"`
+	// The author of the announcement program code.
+	Author string `json:"author"`
+	// Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+	IsCurrent bool `json:"isCurrent"`
+	// The start date of the contest
+	StartDate string `json:"startDate"`
+	// The end date (deadline) of the contest
+	EndDate string `json:"endDate"`
+}
+
 // The input required for editing an entry
 type EditEntryInput struct {
 	// The title of the entry

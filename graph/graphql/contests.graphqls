@@ -20,6 +20,13 @@ extend type Query {
   contestsEvaluatedByUser(id: ID!): [Contest!]!
 }
 
+extend type Mutation {
+  """
+  Creates a new contest. Requires Edit Contests permission.
+  """
+  addContest(input: CreateContestInput!): Contest
+}
+
 """
 A contest
 """
@@ -78,4 +85,39 @@ type Contest {
   A list of winning entries
   """
   winners: [Entry!]!
+}
+
+"""
+The input required for creating a new contest
+"""
+input CreateContestInput {
+  """
+  The name of the contest
+  """
+  name: String!
+
+  """
+  The url of the contest program page
+  """
+  url: String!
+
+  """
+  The author of the announcement program code.
+  """
+  author: String!
+
+  """
+  Indicates whether the contest is active (accepting entries or being judged). This must be enabled for users to score entries
+  """
+  isCurrent: Boolean!
+
+  """
+  The start date of the contest
+  """
+  startDate: String!
+
+  """
+  The end date (deadline) of the contest
+  """
+  endDate: String!
 }
