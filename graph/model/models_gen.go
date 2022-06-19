@@ -84,6 +84,11 @@ type CreateContestInput struct {
 	EndDate string `json:"endDate"`
 }
 
+type CreateJudgingGroupInput struct {
+	// The name of the group
+	Name string `json:"name"`
+}
+
 // The input required for editing a contest
 type EditContestInput struct {
 	// The name of the contest

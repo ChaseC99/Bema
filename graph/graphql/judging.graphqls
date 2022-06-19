@@ -45,6 +45,11 @@ extend type Mutation {
     Delete an existing judging criteria
     """
     deleteCriteria(id: ID!): JudgingCriteria
+
+    """
+    Creates a new judging group. Requires Manage Judging Groups permission.
+    """
+    createJudgingGroup(input: CreateJudgingGroupInput!): JudgingGroup
 }
 
 """
@@ -120,4 +125,11 @@ input JudgingCriteriaInput {
     The order in which the criteria appears
     """
     sortOrder: Int!
+}
+
+input CreateJudgingGroupInput {
+    """
+    The name of the group
+    """
+    name: String!
 }

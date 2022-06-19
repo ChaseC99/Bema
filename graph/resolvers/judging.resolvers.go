@@ -90,6 +90,21 @@ func (r *mutationResolver) DeleteCriteria(ctx context.Context, id int) (*model.J
 	return criteria, nil
 }
 
+func (r *mutationResolver) CreateJudgingGroup(ctx context.Context, input model.CreateJudgingGroupInput) (*model.JudgingGroup, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.ManageJudgingGroups) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create judging groups.")
+	}
+
+	id, err := models.CreateJudgingGroup(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().JudgingGroup(ctx, *id)
+}
+
 func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {

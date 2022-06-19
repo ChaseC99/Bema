@@ -185,3 +185,14 @@ func GetJudgingGroupById(ctx context.Context, id int) (*model.JudgingGroup, erro
 
 	return &group, nil
 }
+
+func CreateJudgingGroup(ctx context.Context, input *model.CreateJudgingGroupInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO evaluator_group (group_name) VALUES ($1) RETURNING group_id;", input.Name)
+
+	var id *int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a judging group", err)
+	}
+
+	return id, nil
+}

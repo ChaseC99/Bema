@@ -226,6 +226,7 @@ type ComplexityRoot struct {
 		CreateAnnouncement func(childComplexity int, input model.AnnouncementInput) int
 		CreateContest      func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
+		CreateJudgingGroup func(childComplexity int, input model.CreateJudgingGroupInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		DeleteContest      func(childComplexity int, id int) int
 		DeleteCriteria     func(childComplexity int, id int) int
@@ -434,6 +435,7 @@ type MutationResolver interface {
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	EditCriteria(ctx context.Context, id int, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	DeleteCriteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
+	CreateJudgingGroup(ctx context.Context, input model.CreateJudgingGroupInput) (*model.JudgingGroup, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1337,6 +1339,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateCriteria(childComplexity, args["input"].(model.JudgingCriteriaInput)), true
 
+	case "Mutation.createJudgingGroup":
+		if e.complexity.Mutation.CreateJudgingGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createJudgingGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateJudgingGroup(childComplexity, args["input"].(model.CreateJudgingGroupInput)), true
+
 	case "Mutation.deleteAnnouncement":
 		if e.complexity.Mutation.DeleteAnnouncement == nil {
 			break
@@ -2194,6 +2208,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnnouncementInput,
 		ec.unmarshalInputCreateContestInput,
+		ec.unmarshalInputCreateJudgingGroupInput,
 		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputJudgingCriteriaInput,
@@ -2986,6 +3001,11 @@ extend type Mutation {
     Delete an existing judging criteria
     """
     deleteCriteria(id: ID!): JudgingCriteria
+
+    """
+    Creates a new judging group. Requires Manage Judging Groups permission.
+    """
+    createJudgingGroup(input: CreateJudgingGroupInput!): JudgingGroup
 }
 
 """
@@ -3061,6 +3081,13 @@ input JudgingCriteriaInput {
     The order in which the criteria appears
     """
     sortOrder: Int!
+}
+
+input CreateJudgingGroupInput {
+    """
+    The name of the group
+    """
+    name: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/kb.graphqls", Input: `extend type Query {
     """
@@ -3697,6 +3724,21 @@ func (ec *executionContext) field_Mutation_createCriteria_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNJudgingCriteriaInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingCriteriaInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateJudgingGroupInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateJudgingGroupInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -10762,6 +10804,66 @@ func (ec *executionContext) fieldContext_Mutation_deleteCriteria(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createJudgingGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createJudgingGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateJudgingGroup(rctx, fc.Args["input"].(model.CreateJudgingGroupInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.JudgingGroup)
+	fc.Result = res
+	return ec.marshalOJudgingGroup2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐJudgingGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createJudgingGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JudgingGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_JudgingGroup_name(ctx, field)
+			case "isActive":
+				return ec.fieldContext_JudgingGroup_isActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JudgingGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createJudgingGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -17684,6 +17786,29 @@ func (ec *executionContext) unmarshalInputCreateContestInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateJudgingGroupInput(ctx context.Context, obj interface{}) (model.CreateJudgingGroupInput, error) {
+	var it model.CreateJudgingGroupInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditContestInput(ctx context.Context, obj interface{}) (model.EditContestInput, error) {
 	var it model.EditContestInput
 	asMap := map[string]interface{}{}
@@ -19565,6 +19690,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteCriteria(ctx, field)
+			})
+
+		case "createJudgingGroup":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createJudgingGroup(ctx, field)
 			})
 
 		default:
@@ -21492,6 +21623,11 @@ func (ec *executionContext) marshalNContestant2ᚖgithubᚗcomᚋKAᚑChallenge�
 
 func (ec *executionContext) unmarshalNCreateContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateContestInput(ctx context.Context, v interface{}) (model.CreateContestInput, error) {
 	res, err := ec.unmarshalInputCreateContestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateJudgingGroupInput(ctx context.Context, v interface{}) (model.CreateJudgingGroupInput, error) {
+	res, err := ec.unmarshalInputCreateJudgingGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
