@@ -68,12 +68,12 @@ func (r *mutationResolver) DeleteCriteria(ctx context.Context, id int) (*model.J
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete judging criteria.")
 	}
 
-	criteria, err := models.GetJudgingCriteriaById(ctx, id)
+	criteria, err := r.Query().Criteria(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	activeCriteria, err := models.GetActiveCriteria(ctx)
+	activeCriteria, err := r.Query().ActiveCriteria(ctx)
 	if err != nil {
 		return nil, err
 	}
