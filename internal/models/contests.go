@@ -100,3 +100,11 @@ func EditContestById(ctx context.Context, id int, input *model.EditContestInput)
 	}
 	return nil
 }
+
+func DeleteContestById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM contest WHERE contest_id = $1", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a contest", err)
+	}
+	return nil
+}

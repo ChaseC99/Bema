@@ -30,6 +30,11 @@ extend type Mutation {
   Edits an existing contest. Requires Edit Contests permission.
   """
   editContest(id: ID!, input: EditContestInput!): Contest
+
+  """
+  Deletes an existing contest
+  """
+  deleteContest(id: ID!): Contest
 }
 
 """

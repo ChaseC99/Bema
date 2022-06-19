@@ -68,6 +68,26 @@ func (r *mutationResolver) EditContest(ctx context.Context, id int, input model.
 	return r.Query().Contest(ctx, id)
 }
 
+func (r *mutationResolver) DeleteContest(ctx context.Context, id int) (*model.Contest, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteContests) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete contests.")
+	}
+
+	contest, err := r.Query().Contest(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteContestById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return contest, nil
+}
+
 func (r *queryResolver) Contests(ctx context.Context) ([]*model.Contest, error) {
 	arr, err := models.GetAllContests(ctx)
 	if err != nil {

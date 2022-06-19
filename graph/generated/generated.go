@@ -227,6 +227,7 @@ type ComplexityRoot struct {
 		CreateAnnouncement func(childComplexity int, input model.AnnouncementInput) int
 		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
+		DeleteContest      func(childComplexity int, id int) int
 		DeleteCriteria     func(childComplexity int, id int) int
 		DeleteEntry        func(childComplexity int, id int) int
 		DisqualifyEntry    func(childComplexity int, id int) int
@@ -422,6 +423,7 @@ type MutationResolver interface {
 	DeleteAnnouncement(ctx context.Context, id int) (*model.Announcement, error)
 	AddContest(ctx context.Context, input model.CreateContestInput) (*model.Contest, error)
 	EditContest(ctx context.Context, id int, input model.EditContestInput) (*model.Contest, error)
+	DeleteContest(ctx context.Context, id int) (*model.Contest, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
 	FlagEntry(ctx context.Context, id int) (*model.Entry, error)
@@ -1346,6 +1348,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteAnnouncement(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteContest":
+		if e.complexity.Mutation.DeleteContest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteContest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteContest(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteCriteria":
 		if e.complexity.Mutation.DeleteCriteria == nil {
@@ -2399,6 +2413,11 @@ extend type Mutation {
   Edits an existing contest. Requires Edit Contests permission.
   """
   editContest(id: ID!, input: EditContestInput!): Contest
+
+  """
+  Deletes an existing contest
+  """
+  deleteContest(id: ID!): Contest
 }
 
 """
@@ -3687,6 +3706,21 @@ func (ec *executionContext) field_Mutation_createCriteria_args(ctx context.Conte
 }
 
 func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteContest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -9796,6 +9830,82 @@ func (ec *executionContext) fieldContext_Mutation_editContest(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_editContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteContest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteContest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteContest(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contest)
+	fc.Result = res
+	return ec.marshalOContest2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐContest(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteContest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contest_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Contest_name(ctx, field)
+			case "url":
+				return ec.fieldContext_Contest_url(ctx, field)
+			case "author":
+				return ec.fieldContext_Contest_author(ctx, field)
+			case "badgeSlug":
+				return ec.fieldContext_Contest_badgeSlug(ctx, field)
+			case "badgeImageUrl":
+				return ec.fieldContext_Contest_badgeImageUrl(ctx, field)
+			case "isCurrent":
+				return ec.fieldContext_Contest_isCurrent(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Contest_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Contest_endDate(ctx, field)
+			case "isVotingEnabled":
+				return ec.fieldContext_Contest_isVotingEnabled(ctx, field)
+			case "winners":
+				return ec.fieldContext_Contest_winners(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contest", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteContest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -19389,6 +19499,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_editContest(ctx, field)
+			})
+
+		case "deleteContest":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteContest(ctx, field)
 			})
 
 		case "addWinner":
