@@ -55,6 +55,11 @@ extend type Mutation {
     Edits an existing judging group. Requires Manage Judging Groups permission.
     """
     editJudgingGroup(id: ID!, input: EditJudgingGroupInput!): JudgingGroup
+
+    """
+    Deletes an existing judging group
+    """
+    deleteJudgingGroup(id: ID!): JudgingGroup
 }
 
 """

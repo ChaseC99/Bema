@@ -91,7 +91,7 @@ func GetActiveCriteria(ctx context.Context) ([]*model.JudgingCriteria, error) {
 }
 
 func GetJudgingCriteriaById(ctx context.Context, id int) (*model.JudgingCriteria, error) {
-	row := db.DB.QueryRow("SELECT criteria_id, criteria_name, criteria_description, is_active, sort_order FROM judging_criteria WHERE criteria_id = $1", id)
+	row := db.DB.QueryRow("SELECT criteria_id, criteria_name, criteria_description, is_active, sort_order FROM judging_criteria WHERE criteria_id = $1;", id)
 
 	criteria := NewJudgingCriteriaModel()
 	if err := row.Scan(&criteria.ID, &criteria.Name, &criteria.Description, &criteria.IsActive, &criteria.SortOrder); err != nil {
@@ -116,7 +116,7 @@ func CreateJudgingCriteria(ctx context.Context, input *model.JudgingCriteriaInpu
 }
 
 func EditJudgingCriteriaById(ctx context.Context, id int, input *model.JudgingCriteriaInput) error {
-	_, err := db.DB.Exec("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5", input.Name, input.Description, input.IsActive, input.SortOrder, id)
+	_, err := db.DB.Exec("UPDATE judging_criteria SET criteria_name = $1, criteria_description = $2, is_active = $3, sort_order = $4 WHERE criteria_id = $5;", input.Name, input.Description, input.IsActive, input.SortOrder, id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while editing a judging criteria", err)
 	}
@@ -125,7 +125,7 @@ func EditJudgingCriteriaById(ctx context.Context, id int, input *model.JudgingCr
 }
 
 func DeleteJudgingCriteriaById(ctx context.Context, id int) error {
-	_, err := db.DB.Exec("DELETE FROM judging_criteria WHERE criteria_id = $1", id)
+	_, err := db.DB.Exec("DELETE FROM judging_criteria WHERE criteria_id = $1;", id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a judging criteria", err)
 	}
@@ -172,7 +172,7 @@ func GetActiveJudgingGroups(ctx context.Context) ([]*model.JudgingGroup, error) 
 }
 
 func GetJudgingGroupById(ctx context.Context, id int) (*model.JudgingGroup, error) {
-	row := db.DB.QueryRow("SELECT group_id, group_name, is_active FROM evaluator_group WHERE group_id = $1", id)
+	row := db.DB.QueryRow("SELECT group_id, group_name, is_active FROM evaluator_group WHERE group_id = $1;", id)
 
 	group := NewJudgingGroupModel()
 	err := row.Scan(&group.ID, &group.Name, &group.IsActive)
@@ -198,10 +198,18 @@ func CreateJudgingGroup(ctx context.Context, input *model.CreateJudgingGroupInpu
 }
 
 func EditJudgingGroupById(ctx context.Context, id int, input *model.EditJudgingGroupInput) error {
-	_, err := db.DB.Exec("UPDATE evaluator_group SET group_name = $1, is_active = $2 WHERE group_id = $3", input.Name, input.IsActive, id)
+	_, err := db.DB.Exec("UPDATE evaluator_group SET group_name = $1, is_active = $2 WHERE group_id = $3;", input.Name, input.IsActive, id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while editing a judging group", err)
 	}
 
+	return nil
+}
+
+func DeleteJudgingGroupById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM evaluator_group WHERE group_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a judging group", err)
+	}
 	return nil
 }
