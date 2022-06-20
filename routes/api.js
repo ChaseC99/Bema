@@ -3,14 +3,13 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, datePattern, kaidPattern, dateFormat, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
+const { nameChars, kaidPattern, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
 
 const admin = require(process.cwd() + "/handlers/api/admin");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
 const winners = require(process.cwd() + "/handlers/api/winners");
-const tasks = require(process.cwd() + "/handlers/api/tasks");
 const evaluations = require(process.cwd() + "/handlers/api/evaluations");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 const errors = require(process.cwd() + "/handlers/api/errors");
@@ -278,13 +277,6 @@ const routeChecks = {
       ]
     ])
   },
-  tasks: {
-    signup: [
-      check("task_id")
-      .isInt()
-      .withMessage("Task id must be an integer")
-    ]
-  },
   evaluations: {
     edit: [
       check("edit_evaluation_id")
@@ -438,9 +430,6 @@ router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transfer
 
 // Entry Skill Levels
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
-
-// Tasks
-router.put("/internal/tasks/signup", routeChecks.tasks.signup, wasValidated, tasks.signUpForTask);
 
 // Evaluations
 router.put("/internal/evaluations", routeChecks.evaluations.edit, wasValidated, evaluations.put);

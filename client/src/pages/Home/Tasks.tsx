@@ -1,6 +1,7 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import React from "react";
 import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
+import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
 import request from "../../util/request";
 import TaskCard from "./TaskCard";
@@ -70,6 +71,7 @@ const EDIT_TASK = gql`
 `;
 
 function Tasks() {
+  const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const { loading: availableTasksIsLoading, data: availableTasksData, refetch: refetchAvailableTasks } = useQuery<GetTasksResponse>(GET_AVAILABLE_TASKS, { onError: handleGQLError });
   const { loading: myTasksIsLoading, data: myTasksData, refetch: refetchMyTasks } = useQuery<GetTasksResponse>(GET_MY_TASKS, { onError: handleGQLError });
@@ -102,9 +104,23 @@ function Tasks() {
     refetchMyTasks();
   }
   
-  function signupForTask(id: number) {
-    request("PUT", "/api/internal/tasks/signup", {
-      task_id: id
+  async function signupForTask(id: string) {
+    const task = availableTasksData?.tasks.find(t => t.id === id) || null;
+
+    if (task === null || !state.user) {
+      return;
+    }
+
+    await editTask({
+      variables: {
+        id: id,
+        input: {
+          title: task.title,
+          assignedUser: state.user.id,
+          status: task.status,
+          dueDate: task.dueDate
+        }
+      }
     });
 
     refetchAvailableTasks();

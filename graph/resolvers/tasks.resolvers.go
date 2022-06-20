@@ -44,6 +44,9 @@ func (r *mutationResolver) EditTask(ctx context.Context, id int, input model.Edi
 		input.AssignedUser = &task.AssignedUser.ID
 		input.DueDate = task.DueDate
 		input.Title = task.Title
+	} else if !auth.HasPermission(user, auth.EditAllTasks) {
+		input.DueDate = task.DueDate
+		input.Title = task.Title
 	}
 
 	err = models.EditTaskById(ctx, id, &input)
