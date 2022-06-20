@@ -31,11 +31,22 @@ func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTas
 func (r *mutationResolver) EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error) {
 	user := auth.GetUserFromContext(ctx)
 
-	if !auth.HasPermission(user, auth.EditAllTasks) {
+	task, err := r.Query().Task(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !auth.HasPermission(user, auth.EditAllTasks) && task.AssignedUser != nil && task.AssignedUser.ID != user.ID {
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit tasks.")
 	}
 
-	err := models.EditTaskById(ctx, id, &input)
+	if task.AssignedUser != nil && task.AssignedUser.ID == user.ID && !auth.HasPermission(user, auth.EditAllTasks) {
+		input.AssignedUser = &task.AssignedUser.ID
+		input.DueDate = task.DueDate
+		input.Title = task.Title
+	}
+
+	err = models.EditTaskById(ctx, id, &input)
 	if err != nil {
 		return nil, err
 	}

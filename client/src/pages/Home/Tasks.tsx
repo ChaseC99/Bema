@@ -1,6 +1,7 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React from "react";
 import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
 import TaskCard from "./TaskCard";
 
@@ -49,13 +50,53 @@ const GET_MY_TASKS = gql`
   }
 `;
 
-function Tasks() {
-  const { loading: availableTasksIsLoading, data: availableTasksData, refetch: refetchAvailableTasks } = useQuery<GetTasksResponse>(GET_AVAILABLE_TASKS);
-  const { loading: myTasksIsLoading, data: myTasksData, refetch: refetchMyTasks } = useQuery<GetTasksResponse>(GET_MY_TASKS);
+type EditTaskResponse = {
+  task: Task
+}
 
-  function updateTaskStatus(id: number) {
-    request("PUT", "/api/internal/tasks", {
-      edit_task_id: id
+const EDIT_TASK = gql`
+  mutation EditTask($id: ID!, $input: EditTaskInput!) {
+    task: editTask(id: $id, input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+function Tasks() {
+  const { handleGQLError } = useAppError();
+  const { loading: availableTasksIsLoading, data: availableTasksData, refetch: refetchAvailableTasks } = useQuery<GetTasksResponse>(GET_AVAILABLE_TASKS, { onError: handleGQLError });
+  const { loading: myTasksIsLoading, data: myTasksData, refetch: refetchMyTasks } = useQuery<GetTasksResponse>(GET_MY_TASKS, { onError: handleGQLError });
+  const [editTask] = useMutation<EditTaskResponse>(EDIT_TASK, { onError: handleGQLError });
+
+  async function updateTaskStatus(id: string) {
+    const task = myTasksData?.tasks.find(t => t.id === id) || null;
+    
+    if (task === null) {
+      return;
+    }
+
+    let newStatus = "Completed";
+    if (task.status === "Not Started") {
+      newStatus = "Started";
+    }
+
+    await editTask({
+      variables: {
+        id: id,
+        input: {
+          title: task.title,
+          assignedUser: task.assignedUser?.id,
+          status: newStatus,
+          dueDate: task.dueDate
+        }
+      }
     });
 
     refetchMyTasks();

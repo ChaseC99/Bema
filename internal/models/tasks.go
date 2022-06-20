@@ -24,11 +24,18 @@ func GetTaskById(ctx context.Context, id int) (*model.Task, error) {
 	row := db.DB.QueryRow("SELECT task_id, task_title, assigned_member, task_status, to_char(due_date, $1) FROM task WHERE task_id = $2 ORDER BY task_id ASC;", util.DateFormat, id)
 
 	task := NewTaskModel()
-	if err := row.Scan(&task.ID, &task.Title, &task.AssignedUser.ID, &task.Status, &task.DueDate); err != nil {
+	var userId *int
+	if err := row.Scan(&task.ID, &task.Title, &userId, &task.Status, &task.DueDate); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NewNotFoundError(ctx, "This task does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a task", err)
+	}
+
+	if userId != nil {
+		task.AssignedUser.ID = *userId
+	} else {
+		task.AssignedUser = nil
 	}
 
 	return &task, nil

@@ -6,8 +6,7 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
-import request from "../../../util/request";
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../../util/errors";
 
 type Task = {
@@ -19,12 +18,6 @@ type Task = {
   } | null
   status: "Not Started" | "Started" | "Completed"
   dueDate: string
-}
-
-type CreateTaskData = {
-  assigned_member: number | null
-  due_date: string
-  title: string
 }
 
 type EditTaskData = {
@@ -84,16 +77,68 @@ const GET_USERS = gql`
   }
 `;
 
+type TaskMutationResponse = {
+  task: Task
+}
+
+const CREATE_TASK = gql`
+  mutation CreateTask($input: CreateTaskInput!) {
+    task: createTask(input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+const EDIT_TASK = gql`
+  mutation EditTask($id: ID!, $input: EditTaskInput!) {
+    task: editTask(id: $id, input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+const DELETE_TASK = gql`
+  mutation DeleteTask($id: ID!) {
+    task: deleteTask(id: $id) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
 function Tasks() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
   const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);
-  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
   const { data: usersData } = useQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
   const { loading: incompleteTasksIsLoading, data: incompleteTasksData, refetch: refetchIncompleteTasks } = useQuery<GetTasksResponse>(GET_INCOMPLETE_TASKS);
   const [fetchCompletedTasks, { loading: completedTasksIsLoading, data: completedTasksData, refetch: refetchCompletedTasks }] = useLazyQuery<GetTasksResponse>(GET_COMPLETED_TASKS);
+  const [createTask, { loading: createTaskIsLoading }] = useMutation<TaskMutationResponse>(CREATE_TASK, { onError: handleGQLError });
+  const [editTask, { loading: editTaskIsLoading }] = useMutation<TaskMutationResponse>(EDIT_TASK, { onError: handleGQLError });
+  const [deleteTask, { loading: deleteTaskIsLoading }] = useMutation<TaskMutationResponse>(DELETE_TASK, { onError: handleGQLError });
 
   const openNewTaskModal = () => {
     setShowNewTaskModal(true);
@@ -103,14 +148,15 @@ function Tasks() {
     setShowNewTaskModal(false);
   }
 
-  const handleCreateTask = (values: { [name: string]: any }) => {
-    const data = values as CreateTaskData;
-
-    request("POST", "/api/internal/tasks", {
-      task_title: data.title,
-      due_date: data.due_date,
-      assigned_member: data.assigned_member,
-      task_status: "Not Started"
+  const handleCreateTask = async (values: { [name: string]: any }) => {
+    await createTask({
+      variables: {
+        input: {
+          title: values.title,
+          assignedUser: values.assigned_member,
+          dueDate: values.due_date
+        }
+      }
     });
 
     refetchIncompleteTasks();
@@ -124,30 +170,34 @@ function Tasks() {
       task = completedTasksData?.tasks.find((t) => t.id === id);
     }
 
-    setEditTask(task || null);
+    setTaskToEdit(task || null);
   }
 
   const closeEditTaskModal = () => {
-    setEditTask(null);
+    setTaskToEdit(null);
   }
 
-  const handleEditTask = (values: { [name: string]: any }) => {
-    if (!editTask) return;
+  const handleEditTask = async (values: { [name: string]: any }) => {
+    if (!taskToEdit) return;
 
     const data = values as EditTaskData;
 
-    request("PUT", "/api/internal/tasks", {
-      edit_task_id: editTask?.id,
-      edit_task_title: data.title,
-      edit_due_date: data.due_date,
-      edit_assigned_member: data.assigned_member,
-      edit_task_status: data.status,
+    await editTask({
+      variables: {
+        id: taskToEdit.id,
+        input: {
+          title: data.title,
+          dueDate: data.due_date,
+          assignedUser: data.assigned_member,
+          status: data.status
+        }
+      }
     });
 
-    if (editTask?.status !== "Completed" && data.status !== "Completed") {
+    if (taskToEdit.status !== "Completed" && data.status !== "Completed") {
       refetchIncompleteTasks();
     }
-    else if (editTask?.status === "Completed" && data.status === "Completed") {
+    else if (taskToEdit.status === "Completed" && data.status === "Completed") {
       if (completedTasksData) {
         refetchCompletedTasks();
       }
@@ -159,7 +209,7 @@ function Tasks() {
       }
     }
 
-    setEditTask(null);
+    setTaskToEdit(null);
   }
 
   const openDeleteTaskModal = (id: string) => {
@@ -171,8 +221,10 @@ function Tasks() {
   }
 
   const handleDeleteTask = async (id: number) => {
-    await request("DELETE", "/api/internal/tasks", {
-      task_id: id
+    await deleteTask({
+      variables: {
+        id: id
+      }
     });
 
     refetchIncompleteTasks();
@@ -325,6 +377,7 @@ function Tasks() {
           submitLabel="Create"
           handleSubmit={handleCreateTask}
           handleCancel={closeNewTaskModal}
+          loading={createTaskIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -371,12 +424,13 @@ function Tasks() {
         />
       }
 
-      {editTask &&
+      {taskToEdit &&
         <FormModal
           title="Edit Task"
           submitLabel="Save"
           handleSubmit={handleEditTask}
           handleCancel={closeEditTaskModal}
+          loading={editTaskIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -385,7 +439,7 @@ function Tasks() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editTask.title,
+              defaultValue: taskToEdit.title,
               required: true
             },
             {
@@ -394,7 +448,7 @@ function Tasks() {
               id: "due-date",
               size: "MEDIUM",
               label: "Due date",
-              defaultValue: editTask.dueDate,
+              defaultValue: taskToEdit.dueDate,
               required: true
             },
             {
@@ -404,7 +458,7 @@ function Tasks() {
               size: "MEDIUM",
               label: "Status",
               placeholder: "Select a status",
-              defaultValue: editTask.status,
+              defaultValue: taskToEdit.status,
               choices: [
                 {
                   text: "Not Started",
@@ -428,7 +482,7 @@ function Tasks() {
               size: "LARGE",
               label: "Assign to",
               placeholder: "Select a user",
-              defaultValue: editTask.assignedUser ? editTask.assignedUser.id : null,
+              defaultValue: taskToEdit.assignedUser ? taskToEdit.assignedUser.id : null,
               choices: [
                 {
                   text: "Available for Sign Up",
@@ -454,6 +508,7 @@ function Tasks() {
           handleConfirm={handleDeleteTask}
           handleCancel={closeDeleteTaskModal}
           destructive
+          loading={deleteTaskIsLoading}
           data={deleteTaskId}
         >
           <p>Are you sure you want to delete this task? This action cannot be undone.</p>

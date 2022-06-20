@@ -279,49 +279,6 @@ const routeChecks = {
     ])
   },
   tasks: {
-    add: [
-      check("task_title")
-      .isLength(contentChars)
-      .withMessage("Task title cannot be empty or longer than 200 characters"),
-      check("due_date")
-      .matches(datePattern)
-      .withMessage(`Due date must be a valid date ${dateFormat}`),
-      check("task_status")
-      .isIn(taskStatuses)
-      .withMessage("Task status must be 'Not Started', 'Started', 'Completed'"),
-      check("assigned_member")
-      .custom((assigned_member, { req }) => assigned_member === parseInt(assigned_member, 10) || assigned_member === null)
-      .withMessage("Assigned member must be an integer")
-    ],
-    edit: oneOf([
-      [
-        check("edit_task_id")
-        .isInt()
-        .withMessage("Task id must be an integer")
-      ],
-      [
-        check("edit_task_id")
-        .isInt()
-        .withMessage("Task id must be an integer"),
-        check("edit_task_title")
-        .isLength(contentChars)
-        .withMessage("Task title cannot be empty or longer than 200 characters"),
-        check("edit_due_date")
-        .matches(datePattern)
-        .withMessage(`Due date must be a valid date ${dateFormat}`),
-        check("edit_task_status")
-        .isIn(taskStatuses)
-        .withMessage("Task status must be 'Not Started', 'Started', 'Completed'"),
-        check("edit_assigned_member")
-        .custom((assigned_member, { req }) => Number.isInteger(assigned_member) || assigned_member === null)
-        .withMessage("Assigned member must be an integer")
-      ]
-    ]),
-    delete: [
-      check("task_id")
-      .isInt()
-      .withMessage("Task id must be an integer")
-    ],
     signup: [
       check("task_id")
       .isInt()
@@ -483,10 +440,7 @@ router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transfer
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Tasks
-router.post("/internal/tasks", routeChecks.tasks.add, wasValidated, tasks.add);
-router.put("/internal/tasks", routeChecks.tasks.edit, wasValidated, tasks.edit);
 router.put("/internal/tasks/signup", routeChecks.tasks.signup, wasValidated, tasks.signUpForTask);
-router.delete("/internal/tasks", routeChecks.tasks.delete, wasValidated, tasks.delete);
 
 // Evaluations
 router.put("/internal/evaluations", routeChecks.evaluations.edit, wasValidated, evaluations.put);
