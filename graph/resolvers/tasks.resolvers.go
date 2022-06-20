@@ -43,6 +43,26 @@ func (r *mutationResolver) EditTask(ctx context.Context, id int, input model.Edi
 	return r.Query().Task(ctx, id)
 }
 
+func (r *mutationResolver) DeleteTask(ctx context.Context, id int) (*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteAllTasks) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete tasks.")
+	}
+
+	task, err := r.Query().Task(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteTaskById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
 func (r *queryResolver) Task(ctx context.Context, id int) (*model.Task, error) {
 	user := auth.GetUserFromContext(ctx)
 

@@ -150,3 +150,11 @@ func EditTaskById(ctx context.Context, id int, input *model.EditTaskInput) error
 	}
 	return nil
 }
+
+func DeleteTaskById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM task WHERE task_id = $1", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a task", err)
+	}
+	return nil
+}

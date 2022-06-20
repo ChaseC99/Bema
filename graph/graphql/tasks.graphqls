@@ -32,8 +32,14 @@ extend type Mutation {
     createTask(input: CreateTaskInput!): Task
 
     """
+    Edits an existing task. Requires Edit All Tasks permission.
     """
     editTask(id: ID!, input: EditTaskInput!): Task
+
+    """
+    Delets an existing task. Requires Delete All Tasks permission.
+    """
+    deleteTask(id: ID!): Task
 }
 
 """
