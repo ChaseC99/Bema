@@ -9,8 +9,39 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
+
+func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditAllTasks) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create tasks.")
+	}
+
+	id, err := models.CreateTask(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Task(ctx, *id)
+}
+
+func (r *queryResolver) Task(ctx context.Context, id int) (*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	task, err := models.GetTaskById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !auth.HasPermission(user, auth.ViewAllTasks) && task.AssignedUser != nil && task.AssignedUser.ID != user.ID {
+		return nil, err
+	}
+
+	return task, nil
+}
 
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 	user := auth.GetUserFromContext(ctx)

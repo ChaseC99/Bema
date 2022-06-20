@@ -89,6 +89,15 @@ type CreateJudgingGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateTaskInput struct {
+	// A description of the task
+	Title string `json:"title"`
+	// The ID of the user the task is assigned to, or null if unassigned
+	AssignedUser *int `json:"assignedUser"`
+	// The date the task needs to be completed by
+	DueDate string `json:"dueDate"`
+}
+
 // The input required for editing a contest
 type EditContestInput struct {
 	// The name of the contest

@@ -227,6 +227,7 @@ type ComplexityRoot struct {
 		CreateContest      func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
 		CreateJudgingGroup func(childComplexity int, input model.CreateJudgingGroupInput) int
+		CreateTask         func(childComplexity int, input model.CreateTaskInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
 		DeleteContest      func(childComplexity int, id int) int
 		DeleteCriteria     func(childComplexity int, id int) int
@@ -315,6 +316,7 @@ type ComplexityRoot struct {
 		NextEntryToReviewSkillLevel func(childComplexity int) int
 		Section                     func(childComplexity int, id int) int
 		Sections                    func(childComplexity int) int
+		Task                        func(childComplexity int, id int) int
 		Tasks                       func(childComplexity int) int
 		User                        func(childComplexity int, id int) int
 		Users                       func(childComplexity int) int
@@ -440,6 +442,7 @@ type MutationResolver interface {
 	CreateJudgingGroup(ctx context.Context, input model.CreateJudgingGroupInput) (*model.JudgingGroup, error)
 	EditJudgingGroup(ctx context.Context, id int, input model.EditJudgingGroupInput) (*model.JudgingGroup, error)
 	DeleteJudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
+	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -471,6 +474,7 @@ type QueryResolver interface {
 	Article(ctx context.Context, id int) (*model.KBArticle, error)
 	JudgingProgress(ctx context.Context) (*model.JudgingProgress, error)
 	EntryCounts(ctx context.Context) (*model.EntryCounts, error)
+	Task(ctx context.Context, id int) (*model.Task, error)
 	Tasks(ctx context.Context) ([]*model.Task, error)
 	CompletedTasks(ctx context.Context) ([]*model.Task, error)
 	AvailableTasks(ctx context.Context) ([]*model.Task, error)
@@ -1355,6 +1359,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateJudgingGroup(childComplexity, args["input"].(model.CreateJudgingGroupInput)), true
 
+	case "Mutation.createTask":
+		if e.complexity.Mutation.CreateTask == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTask_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTask(childComplexity, args["input"].(model.CreateTaskInput)), true
+
 	case "Mutation.deleteAnnouncement":
 		if e.complexity.Mutation.DeleteAnnouncement == nil {
 			break
@@ -2053,6 +2069,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Sections(childComplexity), true
 
+	case "Query.task":
+		if e.complexity.Query.Task == nil {
+			break
+		}
+
+		args, err := ec.field_Query_task_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Task(childComplexity, args["id"].(int)), true
+
 	case "Query.tasks":
 		if e.complexity.Query.Tasks == nil {
 			break
@@ -2237,6 +2265,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAnnouncementInput,
 		ec.unmarshalInputCreateContestInput,
 		ec.unmarshalInputCreateJudgingGroupInput,
+		ec.unmarshalInputCreateTaskInput,
 		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputEditJudgingGroupInput,
@@ -3363,6 +3392,11 @@ type EntryCounts {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/tasks.graphqls", Input: `extend type Query {
     """
+    A single task
+    """
+    task(id: ID!): Task
+
+    """
     A list of all incomplete tasks. Requires View All Tasks permission.
     """
     tasks: [Task!]!
@@ -3381,6 +3415,13 @@ type EntryCounts {
     A list of tasks assigned to the logged in user. Requires authentication.
     """
     currentUserTasks: [Task!]!
+}
+
+extend type Mutation {
+    """
+    Creates a new task. Requires Edit All Tasks permission.
+    """
+    createTask(input: CreateTaskInput!): Task
 }
 
 """
@@ -3406,6 +3447,23 @@ type Task {
     The completion status of the task
     """
     status: String!
+
+    """
+    The date the task needs to be completed by
+    """
+    dueDate: String!
+}
+
+input CreateTaskInput {
+    """
+    A description of the task
+    """
+    title: String!
+
+    """
+    The ID of the user the task is assigned to, or null if unassigned
+    """
+    assignedUser: ID
 
     """
     The date the task needs to be completed by
@@ -3790,6 +3848,21 @@ func (ec *executionContext) field_Mutation_createJudgingGroup_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCreateJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateJudgingGroupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTask_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateTaskInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateTaskInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4288,6 +4361,21 @@ func (ec *executionContext) field_Query_judgingGroup_args(ctx context.Context, r
 }
 
 func (ec *executionContext) field_Query_section_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_task_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -11074,6 +11162,70 @@ func (ec *executionContext) fieldContext_Mutation_deleteJudgingGroup(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createTask(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTask(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTask(rctx, fc.Args["input"].(model.CreateTaskInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Task)
+	fc.Result = res
+	return ec.marshalOTask2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐTask(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Task_title(ctx, field)
+			case "assignedUser":
+				return ec.fieldContext_Task_assignedUser(ctx, field)
+			case "status":
+				return ec.fieldContext_Task_status(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Task_dueDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTask_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -14483,6 +14635,70 @@ func (ec *executionContext) fieldContext_Query_entryCounts(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntryCounts", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_task(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_task(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Task(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Task)
+	fc.Result = res
+	return ec.marshalOTask2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐTask(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_task(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Task_title(ctx, field)
+			case "assignedUser":
+				return ec.fieldContext_Task_assignedUser(ctx, field)
+			case "status":
+				return ec.fieldContext_Task_status(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Task_dueDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_task_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -18019,6 +18235,45 @@ func (ec *executionContext) unmarshalInputCreateJudgingGroupInput(ctx context.Co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateTaskInput(ctx context.Context, obj interface{}) (model.CreateTaskInput, error) {
+	var it model.CreateTaskInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			it.Title, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assignedUser":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assignedUser"))
+			it.AssignedUser, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dueDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDate"))
+			it.DueDate, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditContestInput(ctx context.Context, obj interface{}) (model.EditContestInput, error) {
 	var it model.EditContestInput
 	asMap := map[string]interface{}{}
@@ -19951,6 +20206,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteJudgingGroup(ctx, field)
 			})
 
+		case "createTask":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTask(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -20865,6 +21126,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_entryCounts(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "task":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_task(ctx, field)
 				return res
 			}
 
@@ -21881,6 +22162,11 @@ func (ec *executionContext) unmarshalNCreateContestInput2githubᚗcomᚋKAᚑCha
 
 func (ec *executionContext) unmarshalNCreateJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateJudgingGroupInput(ctx context.Context, v interface{}) (model.CreateJudgingGroupInput, error) {
 	res, err := ec.unmarshalInputCreateJudgingGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateTaskInput(ctx context.Context, v interface{}) (model.CreateTaskInput, error) {
+	res, err := ec.unmarshalInputCreateTaskInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -23037,6 +23323,22 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) unmarshalOID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalIntID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalIntID(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -23116,6 +23418,13 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOTask2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Task(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {

@@ -1,5 +1,10 @@
 extend type Query {
     """
+    A single task
+    """
+    task(id: ID!): Task
+
+    """
     A list of all incomplete tasks. Requires View All Tasks permission.
     """
     tasks: [Task!]!
@@ -18,6 +23,13 @@ extend type Query {
     A list of tasks assigned to the logged in user. Requires authentication.
     """
     currentUserTasks: [Task!]!
+}
+
+extend type Mutation {
+    """
+    Creates a new task. Requires Edit All Tasks permission.
+    """
+    createTask(input: CreateTaskInput!): Task
 }
 
 """
@@ -43,6 +55,23 @@ type Task {
     The completion status of the task
     """
     status: String!
+
+    """
+    The date the task needs to be completed by
+    """
+    dueDate: String!
+}
+
+input CreateTaskInput {
+    """
+    A description of the task
+    """
+    title: String!
+
+    """
+    The ID of the user the task is assigned to, or null if unassigned
+    """
+    assignedUser: ID
 
     """
     The date the task needs to be completed by

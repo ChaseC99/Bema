@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
@@ -17,6 +18,20 @@ func NewTaskModel() model.Task {
 	task.AssignedUser = &user
 
 	return task
+}
+
+func GetTaskById(ctx context.Context, id int) (*model.Task, error) {
+	row := db.DB.QueryRow("SELECT task_id, task_title, assigned_member, task_status, to_char(due_date, $1) FROM task WHERE task_id = $2 ORDER BY task_id ASC;", util.DateFormat, id)
+
+	task := NewTaskModel()
+	if err := row.Scan(&task.ID, &task.Title, &task.AssignedUser.ID, &task.Status, &task.DueDate); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "This task does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a task", err)
+	}
+
+	return &task, nil
 }
 
 func GetIncompleteTasks(ctx context.Context) ([]*model.Task, error) {
@@ -116,4 +131,14 @@ func GetTasksForUser(ctx context.Context, userId int) ([]*model.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func CreateTask(ctx context.Context, input *model.CreateTaskInput) (*int, error) {
+	var id int
+	row := db.DB.QueryRow("INSERT INTO task (task_title, assigned_member, due_date) VALUES ($1, $2, $3) RETURNING task_id;", input.Title, input.AssignedUser, input.DueDate)
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a task", err)
+	}
+
+	return &id, nil
 }
