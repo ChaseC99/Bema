@@ -17,27 +17,6 @@ const errors = require(process.cwd() + "/handlers/api/errors");
 
 const routeChecks = {
   admin: {
-    addEvaluatorGroup: [
-      check("group_name")
-      .isLength(nameChars)
-      .withMessage("Group name cannot be empty or longer than 200 characters")
-    ],
-    editEvaluatorGroup: [
-      check("group_id")
-      .isInt()
-      .withMessage("Group ID must be an integer"),
-      check("group_name")
-      .isLength(nameChars)
-      .withMessage("Group name cannot be empty or longer than 200 characters"),
-      check("is_active")
-      .isBoolean()
-      .withMessage("is_active must be a boolean")
-    ],
-    deleteEvaluatorGroup: [
-      check("group_id")
-      .isInt()
-      .withMessage("Group ID must be an integer")
-    ],
     setEntrySkillLevel: [
       check("entry_level")
       .isIn(skillLevels)
@@ -499,11 +478,6 @@ router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.
 router.post("/internal/entries/import", routeChecks.entries.import, wasValidated, entries.import);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
-
-// Admin
-router.post("/internal/admin/addEvaluatorGroup", routeChecks.admin.addEvaluatorGroup, wasValidated, admin.addEvaluatorGroup);
-router.put("/internal/admin/editEvaluatorGroup", routeChecks.admin.editEvaluatorGroup, wasValidated, admin.editEvaluatorGroup);
-router.delete("/internal/admin/deleteEvaluatorGroup", routeChecks.admin.deleteEvaluatorGroup, wasValidated, admin.deleteEvaluatorGroup);
 
 // Entry Skill Levels
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);

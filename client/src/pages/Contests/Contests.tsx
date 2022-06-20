@@ -36,7 +36,7 @@ type ContestMutationResponse = {
 
 const CREATE_CONTEST = gql`
   mutation CreateContest($input: CreateContestInput!) {
-    createContest(input: $input) {
+    contest: createContest(input: $input) {
       id
       name
       url
@@ -53,7 +53,7 @@ const CREATE_CONTEST = gql`
 
 const EDIT_CONTEST = gql`
   mutation EditContest($id: ID!, $input: EditContestInput!) {
-    editContest(id: $id, input: $input) {
+    contest: editContest(id: $id, input: $input) {
       id
       name
       url
@@ -70,7 +70,7 @@ const EDIT_CONTEST = gql`
 
 const DELETE_CONTEST = gql`
   mutation DeleteContest($id: ID!) {
-    deleteContest(id: $id) {
+    contest: deleteContest(id: $id) {
       id
       name
       url
