@@ -89,6 +89,7 @@ type CreateJudgingGroupInput struct {
 	Name string `json:"name"`
 }
 
+// The input required for creating a new task
 type CreateTaskInput struct {
 	// A description of the task
 	Title string `json:"title"`
@@ -143,6 +144,18 @@ type EditJudgingGroupInput struct {
 	Name string `json:"name"`
 	// Indicates whether new entries and users can be assigned to this group
 	IsActive bool `json:"isActive"`
+}
+
+// The input required for editing an existing task
+type EditTaskInput struct {
+	// A description of the task
+	Title string `json:"title"`
+	// The ID of the user the task is assigned to, or null if unassigned
+	AssignedUser *int `json:"assignedUser"`
+	// The completion status of the task
+	Status string `json:"status"`
+	// The date the task needs to be completed by
+	DueDate string `json:"dueDate"`
 }
 
 // A skill bracket and its respective entry count

@@ -239,6 +239,7 @@ type ComplexityRoot struct {
 		EditCriteria       func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry          func(childComplexity int, id int, input model.EditEntryInput) int
 		EditJudgingGroup   func(childComplexity int, id int, input model.EditJudgingGroupInput) int
+		EditTask           func(childComplexity int, id int, input model.EditTaskInput) int
 		FlagEntry          func(childComplexity int, id int) int
 		RemoveWinner       func(childComplexity int, id int) int
 	}
@@ -443,6 +444,7 @@ type MutationResolver interface {
 	EditJudgingGroup(ctx context.Context, id int, input model.EditJudgingGroupInput) (*model.JudgingGroup, error)
 	DeleteJudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
+	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1503,6 +1505,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditJudgingGroup(childComplexity, args["id"].(int), args["input"].(model.EditJudgingGroupInput)), true
 
+	case "Mutation.editTask":
+		if e.complexity.Mutation.EditTask == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editTask_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditTask(childComplexity, args["id"].(int), args["input"].(model.EditTaskInput)), true
+
 	case "Mutation.flagEntry":
 		if e.complexity.Mutation.FlagEntry == nil {
 			break
@@ -2269,6 +2283,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputEditJudgingGroupInput,
+		ec.unmarshalInputEditTaskInput,
 		ec.unmarshalInputJudgingCriteriaInput,
 	)
 	first := true
@@ -3422,6 +3437,10 @@ extend type Mutation {
     Creates a new task. Requires Edit All Tasks permission.
     """
     createTask(input: CreateTaskInput!): Task
+
+    """
+    """
+    editTask(id: ID!, input: EditTaskInput!): Task
 }
 
 """
@@ -3454,6 +3473,9 @@ type Task {
     dueDate: String!
 }
 
+"""
+The input required for creating a new task
+"""
 input CreateTaskInput {
     """
     A description of the task
@@ -3464,6 +3486,31 @@ input CreateTaskInput {
     The ID of the user the task is assigned to, or null if unassigned
     """
     assignedUser: ID
+
+    """
+    The date the task needs to be completed by
+    """
+    dueDate: String!
+}
+
+"""
+The input required for editing an existing task
+"""
+input EditTaskInput {
+    """
+    A description of the task
+    """
+    title: String!
+
+    """
+    The ID of the user the task is assigned to, or null if unassigned
+    """
+    assignedUser: ID
+
+    """
+    The completion status of the task
+    """
+    status: String!
 
     """
     The date the task needs to be completed by
@@ -4073,6 +4120,30 @@ func (ec *executionContext) field_Mutation_editJudgingGroup_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditJudgingGroupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editTask_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditTaskInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -11220,6 +11291,70 @@ func (ec *executionContext) fieldContext_Mutation_createTask(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createTask_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editTask(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editTask(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditTask(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditTaskInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Task)
+	fc.Result = res
+	return ec.marshalOTask2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐTask(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Task_title(ctx, field)
+			case "assignedUser":
+				return ec.fieldContext_Task_assignedUser(ctx, field)
+			case "status":
+				return ec.fieldContext_Task_status(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Task_dueDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editTask_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -18463,6 +18598,53 @@ func (ec *executionContext) unmarshalInputEditJudgingGroupInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditTaskInput(ctx context.Context, obj interface{}) (model.EditTaskInput, error) {
+	var it model.EditTaskInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			it.Title, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assignedUser":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assignedUser"))
+			it.AssignedUser, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dueDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDate"))
+			it.DueDate, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Context, obj interface{}) (model.JudgingCriteriaInput, error) {
 	var it model.JudgingCriteriaInput
 	asMap := map[string]interface{}{}
@@ -20210,6 +20392,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createTask(ctx, field)
+			})
+
+		case "editTask":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editTask(ctx, field)
 			})
 
 		default:
@@ -22182,6 +22370,11 @@ func (ec *executionContext) unmarshalNEditEntryInput2githubᚗcomᚋKAᚑChallen
 
 func (ec *executionContext) unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditJudgingGroupInput(ctx context.Context, v interface{}) (model.EditJudgingGroupInput, error) {
 	res, err := ec.unmarshalInputEditJudgingGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx context.Context, v interface{}) (model.EditTaskInput, error) {
+	res, err := ec.unmarshalInputEditTaskInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

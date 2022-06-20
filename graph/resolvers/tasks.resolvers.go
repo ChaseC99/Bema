@@ -28,6 +28,21 @@ func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTas
 	return r.Query().Task(ctx, *id)
 }
 
+func (r *mutationResolver) EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditAllTasks) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit tasks.")
+	}
+
+	err := models.EditTaskById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Task(ctx, id)
+}
+
 func (r *queryResolver) Task(ctx context.Context, id int) (*model.Task, error) {
 	user := auth.GetUserFromContext(ctx)
 

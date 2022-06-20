@@ -142,3 +142,11 @@ func CreateTask(ctx context.Context, input *model.CreateTaskInput) (*int, error)
 
 	return &id, nil
 }
+
+func EditTaskById(ctx context.Context, id int, input *model.EditTaskInput) error {
+	_, err := db.DB.Exec("UPDATE task SET task_title = $1, assigned_member = $2, due_date = $3, task_status = $4 WHERE task_id = $5", input.Title, input.AssignedUser, input.DueDate, input.Status, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a task", err)
+	}
+	return nil
+}

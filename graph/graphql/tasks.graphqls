@@ -30,6 +30,10 @@ extend type Mutation {
     Creates a new task. Requires Edit All Tasks permission.
     """
     createTask(input: CreateTaskInput!): Task
+
+    """
+    """
+    editTask(id: ID!, input: EditTaskInput!): Task
 }
 
 """
@@ -62,6 +66,9 @@ type Task {
     dueDate: String!
 }
 
+"""
+The input required for creating a new task
+"""
 input CreateTaskInput {
     """
     A description of the task
@@ -72,6 +79,31 @@ input CreateTaskInput {
     The ID of the user the task is assigned to, or null if unassigned
     """
     assignedUser: ID
+
+    """
+    The date the task needs to be completed by
+    """
+    dueDate: String!
+}
+
+"""
+The input required for editing an existing task
+"""
+input EditTaskInput {
+    """
+    A description of the task
+    """
+    title: String!
+
+    """
+    The ID of the user the task is assigned to, or null if unassigned
+    """
+    assignedUser: ID
+
+    """
+    The completion status of the task
+    """
+    status: String!
 
     """
     The date the task needs to be completed by
