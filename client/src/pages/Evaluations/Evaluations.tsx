@@ -1,4 +1,4 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
@@ -70,11 +70,35 @@ const GET_EVALUATIONS = gql`
   }
 `;
 
+type EditEvaluationResponse = {
+  evaluation: Evaluation
+}
+
+const EDIT_EVALUATION = gql`
+  mutation EditEvaluation($id: ID!, $input: EditEvaluationInput!) {
+    editEvaluation(id: $id, input: $input) {
+      id
+      entry {
+        id
+        title
+        url
+      }
+      creativity
+      complexity
+      execution
+      interpretation
+      total
+      skillLevel
+      canEdit
+    }
+  }
+`;
+
 function Evaluations() {
   const { evaluatorId, contestId } = useParams();
   const { handleGQLError } = useAppError();
   const { state } = useAppState();
-  const [editEvaluation, setEditEvaluation] = useState<Evaluation | null>(null);
+  const [evaluationToEdit, setEvaluationToEdit] = useState<Evaluation | null>(null);
   const [deleteEvaluationId, setDeleteEvaluationId] = useState<number | null>(null);
 
   const [fetchUsers, { loading: usersIsLoading, data: usersData }] = useLazyQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
@@ -85,6 +109,7 @@ function Evaluations() {
     },
     onError: handleGQLError
   });
+  const [editEvaluation, { loading: editEvaluationIsLoading }] = useMutation<EditEvaluationResponse>(EDIT_EVALUATION, { onError: handleGQLError });
 
   useEffect(() => {
     if (state.is_admin || state.user?.permissions.view_all_evaluations) {
@@ -103,22 +128,29 @@ function Evaluations() {
 
   const openEditEvaluationModal = (evalId: string) => {
     const evaluation = evaluationsData?.evaluations.find((e) => e.id === evalId) || null;
-    setEditEvaluation(evaluation);
+    setEvaluationToEdit(evaluation);
   }
 
   const closeEditEvaluatioinModal = () => {
-    setEditEvaluation(null);
+    setEvaluationToEdit(null);
   }
 
   const handleEditEvaluation = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/evaluations", {
-      edit_evaluation_id: editEvaluation?.id,
-      edit_entry_id: editEvaluation?.entry.id,
-      edit_creativity: values.creativity,
-      edit_complexity: values.complexity,
-      edit_execution: values.quality,
-      edit_interpretation: values.interpretation,
-      edit_evaluation_level: values.skill_level
+    if (!evaluationToEdit) {
+      return;
+    }
+
+    await editEvaluation({
+      variables: {
+        id: evaluationToEdit.id,
+        input: {
+          creativity: values.creativity,
+          complexity: values.complexity,
+          execution: values.quality,
+          interpretation: values.interpretation,
+          skillLevel: values.skill_level
+        }
+      }
     });
 
     refetchEvaluations();
@@ -239,13 +271,14 @@ function Evaluations() {
         </div>
       </section>
 
-      {editEvaluation &&
+      {evaluationToEdit &&
         <FormModal
           title="Edit Evaluation"
           submitLabel="Save"
           handleSubmit={handleEditEvaluation}
           handleCancel={closeEditEvaluatioinModal}
           cols={5}
+          loading={editEvaluationIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -254,7 +287,7 @@ function Evaluations() {
               id: "creativity",
               size: "MEDIUM",
               label: "Creativity",
-              defaultValue: editEvaluation.creativity.toString(),
+              defaultValue: evaluationToEdit.creativity.toString(),
               min: 0,
               max: 5,
               step: 0.5,
@@ -268,7 +301,7 @@ function Evaluations() {
               id: "complexity",
               size: "MEDIUM",
               label: "Complexity",
-              defaultValue: editEvaluation.complexity.toString(),
+              defaultValue: evaluationToEdit.complexity.toString(),
               min: 0,
               max: 5,
               step: 0.5,
@@ -282,7 +315,7 @@ function Evaluations() {
               id: "quality",
               size: "MEDIUM",
               label: "Quality",
-              defaultValue: editEvaluation.execution.toString(),
+              defaultValue: evaluationToEdit.execution.toString(),
               min: 0,
               max: 5,
               step: 0.5,
@@ -296,7 +329,7 @@ function Evaluations() {
               id: "interpretation",
               size: "MEDIUM",
               label: "Complexity",
-              defaultValue: editEvaluation.interpretation.toString(),
+              defaultValue: evaluationToEdit.interpretation.toString(),
               min: 0,
               max: 5,
               step: 0.5,
@@ -309,7 +342,7 @@ function Evaluations() {
               id: "skill-level",
               size: "MEDIUM",
               label: "Skill Level",
-              defaultValue: editEvaluation.skillLevel,
+              defaultValue: evaluationToEdit.skillLevel,
               choices: [
                 {
                   text: "Beginner",

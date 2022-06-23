@@ -3,7 +3,7 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, kaidPattern, contentChars, scores, skillLevels, taskStatuses, visibilities } = require(process.cwd() + "/util/variables");
+const { nameChars, kaidPattern, contentChars, scores, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
 
 const admin = require(process.cwd() + "/handlers/api/admin");
 const entries = require(process.cwd() + "/handlers/api/entries");
@@ -278,26 +278,6 @@ const routeChecks = {
     ])
   },
   evaluations: {
-    edit: [
-      check("edit_evaluation_id")
-      .isInt()
-      .withMessage("Evaluation ID must be an integer"),
-      check("edit_creativity")
-      .isIn(scores)
-      .withMessage("creativity score must be >= 0 and <= 5"),
-      check("edit_complexity")
-      .isIn(scores)
-      .withMessage("complexity score must be >= 0 and <= 5"),
-      check("edit_execution")
-      .isIn(scores)
-      .withMessage("execution score must be >= 0 and <= 5"),
-      check("edit_interpretation")
-      .isIn(scores)
-      .withMessage("interpretation score must be >= 0 and <= 5"),
-      check("edit_evaluation_level")
-      .isIn(skillLevels)
-      .withMessage("skill_level must be 'Advanced', 'Intermediate', or 'Beginner'")
-    ],
     delete: [
       check("evaluation_id")
       .isInt()
@@ -432,7 +412,6 @@ router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transfer
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Evaluations
-router.put("/internal/evaluations", routeChecks.evaluations.edit, wasValidated, evaluations.put);
 router.delete("/internal/evaluations", routeChecks.evaluations.delete, wasValidated, evaluations.delete);
 
 // Knowledge Base
