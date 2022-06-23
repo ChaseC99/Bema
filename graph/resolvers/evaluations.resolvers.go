@@ -9,7 +9,9 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
+	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
 func (r *evaluationResolver) Entry(ctx context.Context, obj *model.Evaluation) (*model.Entry, error) {
@@ -26,6 +28,47 @@ func (r *evaluationResolver) User(ctx context.Context, obj *model.Evaluation) (*
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *mutationResolver) EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error) {
+	evaluation, err := r.Query().Evaluation(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !evaluation.CanEdit {
+		return evaluation, nil
+	}
+
+	inputIsValid := util.ScoreIsValid(input.Creativity) && util.ScoreIsValid(input.Complexity) && util.ScoreIsValid(input.Interpretation) && util.ScoreIsValid(input.Execution)
+	if !inputIsValid {
+		return nil, nil
+	}
+
+	err = models.EditEvaluationById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Evaluation(ctx, id)
+}
+
+func (r *queryResolver) Evaluation(ctx context.Context, id int) (*model.Evaluation, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
+	evaluation, err := models.GetEvaluationById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if evaluation.User.ID != user.ID && !auth.HasPermission(user, auth.ViewAllEvaluations) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to view other users' evaluations.")
+	}
+
+	return evaluation, nil
 }
 
 func (r *queryResolver) Evaluations(ctx context.Context, userID int, contestID int) ([]*model.Evaluation, error) {

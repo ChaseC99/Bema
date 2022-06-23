@@ -23,6 +23,34 @@ func NewEvaluationModel() model.Evaluation {
 	return evaluation
 }
 
+func GetEvaluationById(ctx context.Context, id int) (*model.Evaluation, error) {
+	row := db.DB.QueryRow("SELECT ev.evaluation_id, ev.entry_id, ev.evaluator_id, ev.creativity, ev.complexity, ev.execution, ev.interpretation, to_char(ev.evaluation_tstz, $1), ev.evaluation_level, en.contest_id FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE evaluation_id = $2;", util.DisplayFancyDateFormat, id)
+
+	e := NewEvaluationModel()
+	var contestId int
+	if err := row.Scan(&e.ID, &e.Entry.ID, &e.User.ID, &e.Creativity, &e.Complexity, &e.Execution, &e.Interpretation, &e.Created, &e.SkillLevel, &contestId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "This evaluation does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving an evaluation.", err)
+	}
+	e.Total = e.Creativity + e.Complexity + e.Execution + e.Interpretation
+	e.CanEdit = false
+
+	currentContest, err := GetCurrentContest(ctx)
+	if err != nil || currentContest == nil {
+		return nil, err
+	}
+
+	user := auth.GetUserFromContext(ctx)
+
+	if (contestId == currentContest.ID && e.User.ID == user.ID) || user.Permissions.EditAllEvaluations {
+		e.CanEdit = true
+	}
+
+	return &e, nil
+}
+
 func GetEvaluationsForUserAndContest(ctx context.Context, userId int, contestId int) ([]*model.Evaluation, error) {
 	evaluations := []*model.Evaluation{}
 	user := auth.GetUserFromContext(ctx)
@@ -81,4 +109,12 @@ func GetUserTotalContestsJudged(ctx context.Context, userId int) (*int, error) {
 	}
 
 	return count, nil
+}
+
+func EditEvaluationById(ctx context.Context, id int, input *model.EditEvaluationInput) error {
+	_, err := db.DB.Exec("UPDATE evaluation SET creativity = $1, complexity = $2, execution = $3, interpretation = $4, evaluation_level = $5 WHERE evaluation_id = $6", input.Creativity, input.Complexity, input.Execution, input.Interpretation, input.SkillLevel, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating an evaluation.", err)
+	}
+	return nil
 }

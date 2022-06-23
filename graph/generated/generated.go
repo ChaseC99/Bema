@@ -239,6 +239,7 @@ type ComplexityRoot struct {
 		EditContest        func(childComplexity int, id int, input model.EditContestInput) int
 		EditCriteria       func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry          func(childComplexity int, id int, input model.EditEntryInput) int
+		EditEvaluation     func(childComplexity int, id int, input model.EditEvaluationInput) int
 		EditJudgingGroup   func(childComplexity int, id int, input model.EditJudgingGroupInput) int
 		EditTask           func(childComplexity int, id int, input model.EditTaskInput) int
 		FlagEntry          func(childComplexity int, id int) int
@@ -309,6 +310,7 @@ type ComplexityRoot struct {
 		EntryCounts                 func(childComplexity int) int
 		Error                       func(childComplexity int, id int) int
 		Errors                      func(childComplexity int, page int) int
+		Evaluation                  func(childComplexity int, id int) int
 		Evaluations                 func(childComplexity int, userID int, contestID int) int
 		FlaggedEntries              func(childComplexity int) int
 		InactiveUsers               func(childComplexity int) int
@@ -438,6 +440,7 @@ type MutationResolver interface {
 	DisqualifyEntry(ctx context.Context, id int) (*model.Entry, error)
 	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
 	DeleteEntry(ctx context.Context, id int) (*model.Entry, error)
+	EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error)
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	EditCriteria(ctx context.Context, id int, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	DeleteCriteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
@@ -466,6 +469,7 @@ type QueryResolver interface {
 	NextEntryToReviewSkillLevel(ctx context.Context) (*model.Entry, error)
 	Errors(ctx context.Context, page int) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
+	Evaluation(ctx context.Context, id int) (*model.Evaluation, error)
 	Evaluations(ctx context.Context, userID int, contestID int) ([]*model.Evaluation, error)
 	Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
 	AllCriteria(ctx context.Context) ([]*model.JudgingCriteria, error)
@@ -1507,6 +1511,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditEntry(childComplexity, args["id"].(int), args["input"].(model.EditEntryInput)), true
 
+	case "Mutation.editEvaluation":
+		if e.complexity.Mutation.EditEvaluation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editEvaluation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditEvaluation(childComplexity, args["id"].(int), args["input"].(model.EditEvaluationInput)), true
+
 	case "Mutation.editJudgingGroup":
 		if e.complexity.Mutation.EditJudgingGroup == nil {
 			break
@@ -2019,6 +2035,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Errors(childComplexity, args["page"].(int)), true
 
+	case "Query.evaluation":
+		if e.complexity.Query.Evaluation == nil {
+			break
+		}
+
+		args, err := ec.field_Query_evaluation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Evaluation(childComplexity, args["id"].(int)), true
+
 	case "Query.evaluations":
 		if e.complexity.Query.Evaluations == nil {
 			break
@@ -2296,6 +2324,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateTaskInput,
 		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
+		ec.unmarshalInputEditEvaluationInput,
 		ec.unmarshalInputEditJudgingGroupInput,
 		ec.unmarshalInputEditTaskInput,
 		ec.unmarshalInputJudgingCriteriaInput,
@@ -2977,9 +3006,21 @@ type Error {
 }`, BuiltIn: false},
 	{Name: "graph/graphql/evaluations.graphqls", Input: `extend type Query {
     """
+    A single evaluation
+    """
+    evaluation(id: ID!): Evaluation
+
+    """
     A list of evaluations for a given user and contest. Requires authentication.
     """
     evaluations(userId: ID!, contestId: ID!): [Evaluation]!
+}
+
+extend type Mutation {
+    """
+    Edits an existing evaluation, if it is editable
+    """
+    editEvaluation(id: ID!, input: EditEvaluationInput!): Evaluation
 }
 
 """
@@ -3040,6 +3081,33 @@ type Evaluation {
     Indicates whether the current user can edit the evaluation
     """
     canEdit: Boolean!
+}
+
+input EditEvaluationInput {
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/judging.graphqls", Input: `extend type Query {
     """
@@ -4139,6 +4207,30 @@ func (ec *executionContext) field_Mutation_editEntry_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_editEvaluation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditEvaluationInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditEvaluationInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditEvaluationInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_editJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4424,6 +4516,21 @@ func (ec *executionContext) field_Query_errors_args(ctx context.Context, rawArgs
 		}
 	}
 	args["page"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_evaluation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -10896,6 +11003,82 @@ func (ec *executionContext) fieldContext_Mutation_deleteEntry(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_editEvaluation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editEvaluation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditEvaluation(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditEvaluationInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Evaluation)
+	fc.Result = res
+	return ec.marshalOEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editEvaluation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Evaluation_id(ctx, field)
+			case "entry":
+				return ec.fieldContext_Evaluation_entry(ctx, field)
+			case "user":
+				return ec.fieldContext_Evaluation_user(ctx, field)
+			case "creativity":
+				return ec.fieldContext_Evaluation_creativity(ctx, field)
+			case "complexity":
+				return ec.fieldContext_Evaluation_complexity(ctx, field)
+			case "execution":
+				return ec.fieldContext_Evaluation_execution(ctx, field)
+			case "interpretation":
+				return ec.fieldContext_Evaluation_interpretation(ctx, field)
+			case "total":
+				return ec.fieldContext_Evaluation_total(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Evaluation_skillLevel(ctx, field)
+			case "created":
+				return ec.fieldContext_Evaluation_created(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_Evaluation_canEdit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Evaluation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editEvaluation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createCriteria(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createCriteria(ctx, field)
 	if err != nil {
@@ -14149,6 +14332,82 @@ func (ec *executionContext) fieldContext_Query_error(ctx context.Context, field 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_error_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_evaluation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_evaluation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Evaluation(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Evaluation)
+	fc.Result = res
+	return ec.marshalOEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_evaluation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Evaluation_id(ctx, field)
+			case "entry":
+				return ec.fieldContext_Evaluation_entry(ctx, field)
+			case "user":
+				return ec.fieldContext_Evaluation_user(ctx, field)
+			case "creativity":
+				return ec.fieldContext_Evaluation_creativity(ctx, field)
+			case "complexity":
+				return ec.fieldContext_Evaluation_complexity(ctx, field)
+			case "execution":
+				return ec.fieldContext_Evaluation_execution(ctx, field)
+			case "interpretation":
+				return ec.fieldContext_Evaluation_interpretation(ctx, field)
+			case "total":
+				return ec.fieldContext_Evaluation_total(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Evaluation_skillLevel(ctx, field)
+			case "created":
+				return ec.fieldContext_Evaluation_created(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_Evaluation_canEdit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Evaluation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_evaluation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -18666,6 +18925,61 @@ func (ec *executionContext) unmarshalInputEditEntryInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditEvaluationInput(ctx context.Context, obj interface{}) (model.EditEvaluationInput, error) {
+	var it model.EditEvaluationInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "creativity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("creativity"))
+			it.Creativity, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "complexity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("complexity"))
+			it.Complexity, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "execution":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("execution"))
+			it.Execution, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "interpretation":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interpretation"))
+			it.Interpretation, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "skillLevel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skillLevel"))
+			it.SkillLevel, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditJudgingGroupInput(ctx context.Context, obj interface{}) (model.EditJudgingGroupInput, error) {
 	var it model.EditJudgingGroupInput
 	asMap := map[string]interface{}{}
@@ -20451,6 +20765,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteEntry(ctx, field)
 			})
 
+		case "editEvaluation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editEvaluation(ctx, field)
+			})
+
 		case "createCriteria":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -21158,6 +21478,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_error(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "evaluation":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_evaluation(ctx, field)
 				return res
 			}
 
@@ -22470,6 +22810,11 @@ func (ec *executionContext) unmarshalNEditContestInput2githubᚗcomᚋKAᚑChall
 
 func (ec *executionContext) unmarshalNEditEntryInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditEntryInput(ctx context.Context, v interface{}) (model.EditEntryInput, error) {
 	res, err := ec.unmarshalInputEditEntryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditEvaluationInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditEvaluationInput(ctx context.Context, v interface{}) (model.EditEvaluationInput, error) {
+	res, err := ec.unmarshalInputEditEvaluationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

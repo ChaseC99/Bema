@@ -1,8 +1,20 @@
 extend type Query {
     """
+    A single evaluation
+    """
+    evaluation(id: ID!): Evaluation
+
+    """
     A list of evaluations for a given user and contest. Requires authentication.
     """
     evaluations(userId: ID!, contestId: ID!): [Evaluation]!
+}
+
+extend type Mutation {
+    """
+    Edits an existing evaluation, if it is editable
+    """
+    editEvaluation(id: ID!, input: EditEvaluationInput!): Evaluation
 }
 
 """
@@ -63,4 +75,31 @@ type Evaluation {
     Indicates whether the current user can edit the evaluation
     """
     canEdit: Boolean!
+}
+
+input EditEvaluationInput {
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
 }

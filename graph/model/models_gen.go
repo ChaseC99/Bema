@@ -139,6 +139,19 @@ type EditEntryInput struct {
 	IsSkillLevelLocked bool `json:"isSkillLevelLocked"`
 }
 
+type EditEvaluationInput struct {
+	// The creativity score
+	Creativity float64 `json:"creativity"`
+	// The complexity score
+	Complexity float64 `json:"complexity"`
+	// The execution score
+	Execution float64 `json:"execution"`
+	// The interpretation score
+	Interpretation float64 `json:"interpretation"`
+	// The suggested skill level of the entry
+	SkillLevel string `json:"skillLevel"`
+}
+
 type EditJudgingGroupInput struct {
 	// The name of the group
 	Name string `json:"name"`
