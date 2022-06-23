@@ -5,7 +5,6 @@ const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
 const { nameChars, kaidPattern, contentChars, scores, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
 
-const admin = require(process.cwd() + "/handlers/api/admin");
 const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
@@ -14,16 +13,6 @@ const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 const errors = require(process.cwd() + "/handlers/api/errors");
 
 const routeChecks = {
-  admin: {
-    setEntrySkillLevel: [
-      check("entry_level")
-      .isIn(skillLevels)
-      .withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'TBD'"),
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer")
-    ]
-  },
   entries: {
     add: [
       check("contest_id")
@@ -399,9 +388,6 @@ router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.
 router.post("/internal/entries/import", routeChecks.entries.import, wasValidated, entries.import);
 router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
-
-// Entry Skill Levels
-router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
 
 // Knowledge Base
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);

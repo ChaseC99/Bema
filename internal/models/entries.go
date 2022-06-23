@@ -435,7 +435,7 @@ func EditEntryById(ctx context.Context, id int, input *model.EditEntryInput) err
 }
 
 func SetEntryLevelById(ctx context.Context, id int, skillLevel string) error {
-	_, err := db.DB.Exec("UPDATE entry SET entry_level = $1, entry_level_locked = true, entry_id = $2;", skillLevel, id)
+	_, err := db.DB.Exec("UPDATE entry SET entry_level = $1, entry_level_locked = true WHERE entry_id = $2;", skillLevel, id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while setting an entry's skill level", err)
 	}

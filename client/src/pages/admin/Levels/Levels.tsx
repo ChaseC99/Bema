@@ -102,6 +102,39 @@ const DELETE_ENTRY = gql`
   }
 `;
 
+type SetEntryLevelResponse = {
+  entry: Entry
+}
+
+const SET_ENTRY_LEVEL = gql`
+  mutation SetEntryLevel($id: ID!, $skillLevel: String!) {
+    entry: setEntryLevel(id: $id, skillLevel: $skillLevel) {
+      id
+      title
+      url
+      kaid
+      author {
+        kaid
+        name
+        entries {
+          id
+          title
+          url
+          contest {
+            name
+          }
+          skillLevel
+          averageScore
+          isWinner
+          isDisqualified
+        }
+      }
+      height
+      votes
+    }
+  }
+`;
+
 function Levels() {
   const { handleGQLError } = useAppError();
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
@@ -111,6 +144,7 @@ function Levels() {
   const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
   const [disqualifyEntry, { loading: disqualifyEntryIsLoading }] = useMutation<EntryMutationResponse>(DISQUALIFY_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<EntryMutationResponse>(DELETE_ENTRY, { onError: handleGQLError });
+  const [setEntryLevel, { loading: setEntryLevelIsLoading }] = useMutation<SetEntryLevelResponse>(SET_ENTRY_LEVEL, { onError: handleGQLError });
 
   const handleProgramLoad = () => {
     setProgramIsLoading(false);
@@ -121,9 +155,15 @@ function Levels() {
   }
 
   const handleSetSkillLevel = async (level: string) => {
-    await request("PUT", "/api/internal/admin/skillLevels/setEntrySkillLevel", {
-      entry_id: entryData?.entry?.id,
-      entry_level: level
+    if (!entryData || !entryData.entry) {
+      return;
+    }
+
+    await setEntryLevel({
+      variables: {
+        id: entryData.entry.id,
+        skillLevel: level
+      }
     });
 
     handleFetchNextEntry();
@@ -207,9 +247,9 @@ function Levels() {
             <div className="container col-10 actions-container">
               <div>
                 <h4>Set Skill Level</h4>
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Beginner" text="Beginner" />
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Intermediate" text="Intermediate" />
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Advanced" text="Advanced" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Beginner" text="Beginner" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Intermediate" text="Intermediate" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Advanced" text="Advanced" />
               </div>
               <div>
                 <h4>Moderation</h4>
