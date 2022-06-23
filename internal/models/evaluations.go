@@ -118,3 +118,11 @@ func EditEvaluationById(ctx context.Context, id int, input *model.EditEvaluation
 	}
 	return nil
 }
+
+func DeleteEvaluationById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM evaluation WHERE evaluation_id = $1", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting an evaluation.", err)
+	}
+	return nil
+}

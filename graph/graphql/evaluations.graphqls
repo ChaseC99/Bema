@@ -15,6 +15,11 @@ extend type Mutation {
     Edits an existing evaluation, if it is editable
     """
     editEvaluation(id: ID!, input: EditEvaluationInput!): Evaluation
+
+    """
+    Deletes an existing evaluation. Requires Delete All Evaluations permission.
+    """
+    deleteEvaluation(id: ID!): Evaluation
 }
 
 """

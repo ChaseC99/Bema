@@ -53,6 +53,26 @@ func (r *mutationResolver) EditEvaluation(ctx context.Context, id int, input mod
 	return r.Query().Evaluation(ctx, id)
 }
 
+func (r *mutationResolver) DeleteEvaluation(ctx context.Context, id int) (*model.Evaluation, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteAllEvaluations) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete evaluations.")
+	}
+
+	evaluation, err := r.Query().Evaluation(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteEvaluationById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return evaluation, nil
+}
+
 func (r *queryResolver) Evaluation(ctx context.Context, id int) (*model.Evaluation, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {

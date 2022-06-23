@@ -232,6 +232,7 @@ type ComplexityRoot struct {
 		DeleteContest      func(childComplexity int, id int) int
 		DeleteCriteria     func(childComplexity int, id int) int
 		DeleteEntry        func(childComplexity int, id int) int
+		DeleteEvaluation   func(childComplexity int, id int) int
 		DeleteJudgingGroup func(childComplexity int, id int) int
 		DeleteTask         func(childComplexity int, id int) int
 		DisqualifyEntry    func(childComplexity int, id int) int
@@ -441,6 +442,7 @@ type MutationResolver interface {
 	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
 	DeleteEntry(ctx context.Context, id int) (*model.Entry, error)
 	EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error)
+	DeleteEvaluation(ctx context.Context, id int) (*model.Evaluation, error)
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	EditCriteria(ctx context.Context, id int, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
 	DeleteCriteria(ctx context.Context, id int) (*model.JudgingCriteria, error)
@@ -1426,6 +1428,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteEntry(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteEvaluation":
+		if e.complexity.Mutation.DeleteEvaluation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteEvaluation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteEvaluation(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteJudgingGroup":
 		if e.complexity.Mutation.DeleteJudgingGroup == nil {
@@ -3021,6 +3035,11 @@ extend type Mutation {
     Edits an existing evaluation, if it is editable
     """
     editEvaluation(id: ID!, input: EditEvaluationInput!): Evaluation
+
+    """
+    Deletes an existing evaluation. Requires Delete All Evaluations permission.
+    """
+    deleteEvaluation(id: ID!): Evaluation
 }
 
 """
@@ -4052,6 +4071,21 @@ func (ec *executionContext) field_Mutation_deleteCriteria_args(ctx context.Conte
 }
 
 func (ec *executionContext) field_Mutation_deleteEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteEvaluation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -11073,6 +11107,82 @@ func (ec *executionContext) fieldContext_Mutation_editEvaluation(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_editEvaluation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteEvaluation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteEvaluation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteEvaluation(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Evaluation)
+	fc.Result = res
+	return ec.marshalOEvaluation2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEvaluation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteEvaluation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Evaluation_id(ctx, field)
+			case "entry":
+				return ec.fieldContext_Evaluation_entry(ctx, field)
+			case "user":
+				return ec.fieldContext_Evaluation_user(ctx, field)
+			case "creativity":
+				return ec.fieldContext_Evaluation_creativity(ctx, field)
+			case "complexity":
+				return ec.fieldContext_Evaluation_complexity(ctx, field)
+			case "execution":
+				return ec.fieldContext_Evaluation_execution(ctx, field)
+			case "interpretation":
+				return ec.fieldContext_Evaluation_interpretation(ctx, field)
+			case "total":
+				return ec.fieldContext_Evaluation_total(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Evaluation_skillLevel(ctx, field)
+			case "created":
+				return ec.fieldContext_Evaluation_created(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_Evaluation_canEdit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Evaluation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteEvaluation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -20769,6 +20879,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_editEvaluation(ctx, field)
+			})
+
+		case "deleteEvaluation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteEvaluation(ctx, field)
 			})
 
 		case "createCriteria":
