@@ -70,13 +70,33 @@ const GET_EVALUATIONS = gql`
   }
 `;
 
-type EditEvaluationResponse = {
+type EvaluationMutationResponse = {
   evaluation: Evaluation
 }
 
 const EDIT_EVALUATION = gql`
   mutation EditEvaluation($id: ID!, $input: EditEvaluationInput!) {
     editEvaluation(id: $id, input: $input) {
+      id
+      entry {
+        id
+        title
+        url
+      }
+      creativity
+      complexity
+      execution
+      interpretation
+      total
+      skillLevel
+      canEdit
+    }
+  }
+`;
+
+const DELETE_EVALUATION = gql`
+  mutation DeleteEvaluation($id: ID!) {
+    deleteEvaluation(id: $id) {
       id
       entry {
         id
@@ -109,7 +129,8 @@ function Evaluations() {
     },
     onError: handleGQLError
   });
-  const [editEvaluation, { loading: editEvaluationIsLoading }] = useMutation<EditEvaluationResponse>(EDIT_EVALUATION, { onError: handleGQLError });
+  const [editEvaluation, { loading: editEvaluationIsLoading }] = useMutation<EvaluationMutationResponse>(EDIT_EVALUATION, { onError: handleGQLError });
+  const [deleteEvaluation, { loading: deleteEvaluationIsLoading }] = useMutation<EvaluationMutationResponse>(DELETE_EVALUATION, { onError: handleGQLError });
 
   useEffect(() => {
     if (state.is_admin || state.user?.permissions.view_all_evaluations) {
@@ -166,8 +187,10 @@ function Evaluations() {
   }
 
   const handleDeleteEvaluation = async (evalId: number) => {
-    await request("DELETE", "/api/internal/evaluations", {
-      evaluation_id: evalId
+    await deleteEvaluation({
+      variables: {
+        id: evalId
+      }
     });
 
     refetchEvaluations();
@@ -370,6 +393,7 @@ function Evaluations() {
           handleConfirm={handleDeleteEvaluation}
           handleCancel={closeDeleteEvaluatioinModal}
           destructive
+          loading={deleteEvaluationIsLoading}
           data={deleteEvaluationId}
         >
           <p>Are you sure you want to delete this evaluation? This action cannot be undone.</p>

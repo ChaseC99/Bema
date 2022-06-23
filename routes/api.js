@@ -10,7 +10,6 @@ const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
 const winners = require(process.cwd() + "/handlers/api/winners");
-const evaluations = require(process.cwd() + "/handlers/api/evaluations");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 const errors = require(process.cwd() + "/handlers/api/errors");
 
@@ -277,13 +276,6 @@ const routeChecks = {
       ]
     ])
   },
-  evaluations: {
-    delete: [
-      check("evaluation_id")
-      .isInt()
-      .withMessage("Evaluation ID must be an integer")
-    ]
-  },
   kb: {
     addSection: [
       check("section_name")
@@ -410,9 +402,6 @@ router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transfer
 
 // Entry Skill Levels
 router.put("/internal/admin/skillLevels/setEntrySkillLevel", routeChecks.admin.setEntrySkillLevel, wasValidated, admin.setEntrySkillLevel);
-
-// Evaluations
-router.delete("/internal/evaluations", routeChecks.evaluations.delete, wasValidated, evaluations.delete);
 
 // Knowledge Base
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);
