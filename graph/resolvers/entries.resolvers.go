@@ -294,6 +294,21 @@ func (r *mutationResolver) DeleteEntry(ctx context.Context, id int) (*model.Entr
 	return entry, nil
 }
 
+func (r *mutationResolver) SetEntryLevel(ctx context.Context, id int, skillLevel string) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil || !user.IsAdmin {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to set entry skill levels.")
+	}
+
+	err := models.SetEntryLevelById(ctx, id, skillLevel)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, id)
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {

@@ -70,6 +70,11 @@ extend type Mutation {
 	Permanently deletes an entry and all data associated with it
 	"""
 	deleteEntry(id: ID!): Entry
+
+	"""
+	Sets the skill level of an entry. Requires admin permission.
+	"""
+	setEntryLevel(id: ID!, skillLevel: String!): Entry
 }
 
 """
