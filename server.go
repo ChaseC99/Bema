@@ -46,7 +46,7 @@ func main() {
 		AllowCredentials: true,
 		Debug:            false,
 	}).Handler)
-	router.Use(auth.Middleware(nil))
+	router.Use(auth.Middleware())
 	router.Use(errors.Middleware(nil))
 
 	// Create graphql handler

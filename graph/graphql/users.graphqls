@@ -20,6 +20,13 @@ extend type Query {
   user(id: ID!): User
 }
 
+extend type Mutation {
+  """
+  Logs in a user
+  """
+  login(username: String!, password: String!): LoginResponse
+}
+
 """
 The full profile of a logged in user
 """
@@ -286,4 +293,21 @@ type Permissions {
   Allows the user to view all judging settings
   """
   view_judging_settings: Boolean!
+}
+
+type LoginResponse {
+  """
+  Indicates if the login attempt was successful
+  """
+  success: Boolean!
+
+  """
+  Indicates the user's account is disabled
+  """
+  isDisabled: Boolean!
+
+  """
+  The user's auth token
+  """
+  token: String
 }

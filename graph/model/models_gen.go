@@ -413,6 +413,15 @@ type KBSection struct {
 	Articles []*KBArticle `json:"articles"`
 }
 
+type LoginResponse struct {
+	// Indicates if the login attempt was successful
+	Success bool `json:"success"`
+	// Indicates the user's account is disabled
+	IsDisabled bool `json:"isDisabled"`
+	// The user's auth token
+	Token *string `json:"token"`
+}
+
 // The permissions set, associated with the User type
 type Permissions struct {
 	// Allows the user to add individual and bulk import entries

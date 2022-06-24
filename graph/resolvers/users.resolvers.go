@@ -9,8 +9,64 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
+
+func (r *mutationResolver) Login(ctx context.Context, username string, password string) (*model.LoginResponse, error) {
+	u := auth.GetUserFromContext(ctx)
+	if u != nil {
+		return nil, errs.NewForbiddenError(ctx, "You're already logged in!")
+	}
+
+	// Look up the user by username
+	user, err := models.GetUserByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the user does not exist, failed login
+	if user == nil {
+		return &model.LoginResponse{
+			Success:    false,
+			IsDisabled: false,
+		}, nil
+	}
+
+	// If the user's account is disabled, failed login
+	if *user.AccountLocked {
+		return &model.LoginResponse{
+			Success:    false,
+			IsDisabled: true,
+		}, nil
+	}
+
+	// Retrieve the user's stored password hash
+	hash, err := models.GetUserPasswordHashByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate the user's provided password
+	isValid := auth.ValidateUserLogin(password, *hash)
+
+	// The user provided a correct username / password, so log them in
+	if isValid {
+		// Generate an auth token
+		token := auth.CreateAuthToken(ctx, user.ID)
+
+		return &model.LoginResponse{
+			Success:    true,
+			IsDisabled: false,
+			Token:      token,
+		}, nil
+	}
+
+	return &model.LoginResponse{
+		Success:    false,
+		IsDisabled: false,
+	}, nil
+}
 
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)

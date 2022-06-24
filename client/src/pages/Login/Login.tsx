@@ -1,30 +1,61 @@
+import { gql, useMutation } from "@apollo/client";
 import React, { useState } from "react";
 import ExternalLink from "../../shared/ExternalLink";
 import { Form } from "../../shared/Forms";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
-import request from "../../util/request";
+import { setCookie } from "../../util/cookies";
+import useAppError from "../../util/errors";
 import "./Login.css";
 
+type LoginResponse = {
+  data: {
+    success: boolean
+    isDisabled: boolean
+    token: string | null
+  } | null
+}
+
+const LOGIN = gql`
+  mutation Login($username: String!, $password: String!) {
+    data: login(username: $username, password: $password) {
+      success
+      isDisabled
+      token
+    }
+  }
+`;
+
 function Login() {
+  const { handleGQLError } = useAppError();
   const [showForgotPwModal, setShowForgotPwModal] = useState<boolean>(false);
   const [wasFailedLogin, setWasFailedLogin] = useState<boolean>(false);
-  const [previousLogin, setPreviousLogin] = useState<{username: string, password: string}>({username: "", password: ""});
+  const [isAccountLocked, setIsAccountLocked] = useState<boolean>(false);
+  const [previousLogin, setPreviousLogin] = useState<{ username: string, password: string }>({ username: "", password: "" });
+  const [login, { loading: loginIsLoading, data: loginResponse }] = useMutation<LoginResponse>(LOGIN, { onError: handleGQLError })
 
   const handleLogin = async (values: { [name: string]: any }) => {
-    const loginData = await request("POST", "/api/auth/login", {
-      username: values.username,
-      password: values.password
+    const response = await login({
+      variables: {
+        username: values.username,
+        password: values.password
+      }
     });
+    const data = response?.data?.data;
 
-    if (loginData.error?.status === 401) {
+    if (data?.success && data.token) {
+      setCookie("auth", data.token, 4);
+      setWasFailedLogin(false);
+      window.location.reload();
+    }
+    else if (data?.isDisabled) {
+      setIsAccountLocked(true);
+    }
+    else {
       setPreviousLogin({
         username: values.username,
         password: values.password
       });
       setWasFailedLogin(true);
-    }
-    else {
-      window.location.reload();
     }
   }
 
@@ -56,6 +87,7 @@ function Login() {
                 onSubmit={handleLogin}
                 submitLabel="Login"
                 cols={12}
+                loading={loginIsLoading}
                 fields={[
                   {
                     fieldType: "INPUT",
@@ -83,9 +115,13 @@ function Login() {
                   }
                 ]}
               />
-              
-              {wasFailedLogin && 
+
+              {wasFailedLogin &&
                 <p className="failed-login">Your username or password is incorrect.</p>
+              }
+
+              {isAccountLocked &&
+                <p className="failed-login">Your account is disabled. Please contact an administrator for assistance.</p>
               }
             </div>
           </div>
