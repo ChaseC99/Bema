@@ -25,6 +25,11 @@ extend type Mutation {
   Logs in a user
   """
   login(username: String!, password: String!): LoginResponse
+
+  """
+  Logs out a user. Returns a boolean indicating success.
+  """
+  logout: Boolean!
 }
 
 """

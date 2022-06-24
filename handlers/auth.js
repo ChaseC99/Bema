@@ -36,18 +36,6 @@ exports.changePassword = function(request, response, next) {
   }
 }
 
-exports.logout = function(request, response, next) {
-  try {
-    if (request.decodedToken) {
-      response.clearCookie("jwtToken");
-      return response.redirect("/login");
-    }
-    handleNext(next, 401, "You cannot log out without being logged in first!");
-  } catch (error) {
-    handleNext(next, 500, "Unexpected error while attempting to log you out.", error)
-  }
-}
-
 exports.assumeUserIdentity = function(request, response, next) {
   try {
     if (request.decodedToken) {

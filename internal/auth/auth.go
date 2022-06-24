@@ -231,3 +231,8 @@ func CreateAuthToken(ctx context.Context, userId int) *string {
 
 	return &token
 }
+
+func RemoveAuthTokensForUser(ctx context.Context, userId int) error {
+	_, err := db.DB.Exec("DELETE FROM user_session WHERE user_id = $1", userId)
+	return err
+}

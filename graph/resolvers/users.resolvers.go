@@ -68,6 +68,20 @@ func (r *mutationResolver) Login(ctx context.Context, username string, password 
 	}, nil
 }
 
+func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+
+	err := auth.RemoveAuthTokensForUser(ctx, user.ID)
+	if err != nil {
+		return false, errs.NewInternalError(ctx, "An unexpected error occurred while logging out a user", err)
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 
