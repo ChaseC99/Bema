@@ -30,6 +30,11 @@ extend type Mutation {
   Logs out a user. Returns a boolean indicating success.
   """
   logout: Boolean!
+
+  """
+  Changes a user's password. Returns a boolean indicating success. Requires Change User Password permission.
+  """
+  changePassword(id: ID!, password: String!): Boolean!
 }
 
 """

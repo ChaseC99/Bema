@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu from "../../shared/ActionMenu";
@@ -51,6 +51,16 @@ const GET_USER_PROFILE = gql`
   }
 `;
 
+type ChangePasswordResponse = {
+  success: boolean
+}
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($id: ID!, $password: String!) {
+    success: changePassword(id: $id, password: $password)
+  }
+`;
+
 function EvaluatorProfile() {
   const { evaluatorId } = useParams();
   const { handleGQLError } = useAppError();
@@ -64,6 +74,7 @@ function EvaluatorProfile() {
     },
     onError: handleGQLError
   });
+  const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
 
   const openEditProfileModal = () => {
     setShowEditProfileModal(true);
@@ -94,9 +105,11 @@ function EvaluatorProfile() {
   }
 
   const handleChangePassword = async (values: { [name: string]: any}) => {
-    await request("PUT", "/api/auth/changePassword", {
-      evaluator_id: parseInt(evaluatorId || ""),
-      new_password: values.password
+    changePassword({
+      variables: {
+        id: evaluatorId,
+        password: values.password
+      }
     });
 
     closeChangePasswordModal();
@@ -156,7 +169,7 @@ function EvaluatorProfile() {
               </div>
             </div>
 
-            {((state.user?.evaluator_id === parseInt(evaluatorId || "")) || state.is_admin || state.user?.permissions.view_all_users) &&
+            {((state.user?.id === evaluatorId) || state.is_admin || state.user?.permissions.view_all_users) &&
               <div className="card col-6">
                 <div className="card-header">
                   <h3>Personal Information</h3>
@@ -185,7 +198,7 @@ function EvaluatorProfile() {
               </div>
             }
 
-            {((state.user?.evaluator_id === parseInt(evaluatorId || "")) || state.is_admin || state.user?.permissions.view_all_users) &&
+            {((state.user?.id === evaluatorId) || state.is_admin || state.user?.permissions.view_all_users) &&
               <div className="card col-6">
                 <div className="card-header">
                   <h3>Login Information</h3>
@@ -261,6 +274,7 @@ function EvaluatorProfile() {
           handleSubmit={handleChangePassword}
           handleCancel={closeChangePasswordModal}
           cols={4}
+          loading={changePasswordIsLoading}
           fields={[
             {
               fieldType: "INPUT",

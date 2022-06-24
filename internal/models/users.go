@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/util"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func NewUserModel() model.User {
@@ -142,5 +143,19 @@ func SetUserLastLoginById(ctx context.Context, id int) error {
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while logging in a user", err)
 	}
+	return nil
+}
+
+func ChangeUserPasswordById(ctx context.Context, id int, password string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while changing a user's password", err)
+	}
+
+	_, err = db.DB.Exec("UPDATE evaluator SET password = $1 WHERE evaluator_id = $2", hash, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while changing a user's password", err)
+	}
+
 	return nil
 }

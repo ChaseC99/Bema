@@ -1,4 +1,4 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { User } from ".";
 import Button from "../../../shared/Button";
@@ -132,6 +132,16 @@ const GET_USER_PERMISSIONS = gql`
   }
 `;
 
+type ChangePasswordResponse = {
+  success: boolean
+}
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($id: ID!, $password: String!) {
+    success: changePassword(id: $id, password: $password)
+  }
+`;
+
 function Users(props: UserProps) {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -143,6 +153,7 @@ function Users(props: UserProps) {
 
   const { loading: userIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS, { onError: handleGQLError });
   const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
+  const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -211,9 +222,11 @@ function Users(props: UserProps) {
   }
 
   const handleChangePassword = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/auth/changePassword", {
-      evaluator_id: changePasswordUserId,
-      new_password: values.password
+    await changePassword({
+      variables: {
+        id: changePasswordUserId,
+        password: values.password
+      }
     });
 
     closeChangePasswordModal();
@@ -466,6 +479,7 @@ function Users(props: UserProps) {
           handleSubmit={handleChangePassword}
           handleCancel={closeChangePasswordModal}
           cols={4}
+          loading={changePasswordIsLoading}
           fields={[
             {
               fieldType: "INPUT",

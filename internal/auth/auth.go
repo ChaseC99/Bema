@@ -119,7 +119,9 @@ func Middleware() func(http.Handler) http.Handler {
 					user = nil
 				}
 
-				user.IsImpersonated = originToken != nil
+				if user != nil {
+					user.IsImpersonated = originToken != nil
+				}
 			}
 
 			// Add user to request context

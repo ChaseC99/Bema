@@ -82,6 +82,21 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+func (r *mutationResolver) ChangePassword(ctx context.Context, id int, password string) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user.ID != id && !auth.HasPermission(user, auth.ChangeUserPasswords) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to change user passwords.")
+	}
+
+	err := models.ChangeUserPasswordById(ctx, id, password)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 
