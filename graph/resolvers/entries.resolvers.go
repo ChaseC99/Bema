@@ -309,6 +309,35 @@ func (r *mutationResolver) SetEntryLevel(ctx context.Context, id int, skillLevel
 	return r.Query().Entry(ctx, id)
 }
 
+func (r *mutationResolver) CreateEntryVote(ctx context.Context, entryID int, reason string) (*model.EntryVote, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.JudgeEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to vote for winning entries.")
+	}
+
+	entry, err := models.GetEntryById(ctx, entryID)
+	if err != nil {
+		return nil, err
+	}
+
+	contest, err := models.GetContestById(ctx, entry.Contest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !*contest.IsVotingEnabled {
+		return nil, errs.NewForbiddenError(ctx, "Voting is not enabled for this contest.")
+	}
+
+	id, err := models.CreateEntryVote(ctx, entryID, user.ID, reason)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().EntryVote(ctx, *id)
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
@@ -403,6 +432,21 @@ func (r *queryResolver) NextEntryToReviewSkillLevel(ctx context.Context) (*model
 		return nil, err
 	}
 	return entry, nil
+}
+
+func (r *queryResolver) EntryVote(ctx context.Context, id int) (*model.EntryVote, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil {
+		return nil, nil
+	}
+
+	vote, err := models.GetEntryVoteById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return vote, nil
 }
 
 // Entry returns generated.EntryResolver implementation.

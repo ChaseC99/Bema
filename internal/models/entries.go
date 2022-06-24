@@ -25,6 +25,16 @@ func NewEntryModel() model.Entry {
 	return entry
 }
 
+func NewEntryVoteModel() model.EntryVote {
+	vote := model.EntryVote{}
+
+	user := NewUserModel()
+
+	vote.User = &user
+
+	return vote
+}
+
 func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
@@ -440,4 +450,29 @@ func SetEntryLevelById(ctx context.Context, id int, skillLevel string) error {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while setting an entry's skill level", err)
 	}
 	return nil
+}
+
+func GetEntryVoteById(ctx context.Context, id int) (*model.EntryVote, error) {
+	row := db.DB.QueryRow("SELECT vote_id, evaluator_id, feedback FROM entry_vote WHERE vote_id = $1;", id)
+
+	entryVote := NewEntryVoteModel()
+	if err := row.Scan(&entryVote.ID, &entryVote.User.ID, &entryVote.Reason); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "Oops! This entry vote does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving an entry vote", err)
+	}
+
+	return &entryVote, nil
+}
+
+func CreateEntryVote(ctx context.Context, entryId int, userId int, reason string) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO entry_vote (entry_id, evaluator_id, feedback) VALUES ($1, $2, $3) RETURNING vote_id;", entryId, userId, reason)
+
+	var id *int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating an entry vote", err)
+	}
+
+	return id, nil
 }

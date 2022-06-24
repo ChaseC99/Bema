@@ -244,14 +244,6 @@ const routeChecks = {
     ]
   },
   winners: {
-    addVote: [
-      check("entry_id")
-      .isInt()
-      .withMessage("Entry ID must be an integer"),
-      check("feedback")
-      .isLength(contentChars)
-      .withMessage("Feedback must be between 1 and 5000 characters")
-    ],
     deleteVote: oneOf([
       [
         check("entry_id")
@@ -371,7 +363,6 @@ const routeChecks = {
 router.use(hasBody);
 
 // Winners
-router.post("/internal/winners/votes", routeChecks.winners.addVote, wasValidated, winners.addVote);
 router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 
 // Users

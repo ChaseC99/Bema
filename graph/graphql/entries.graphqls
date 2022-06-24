@@ -33,6 +33,11 @@ extend type Query {
 	The next entry to review its skill level. Requires Admin permission.
 	"""
 	nextEntryToReviewSkillLevel: Entry
+
+	"""
+	A single entry vote
+	"""
+	entryVote(id: ID!): EntryVote
 }
 
 extend type Mutation {
@@ -75,6 +80,11 @@ extend type Mutation {
 	Sets the skill level of an entry. Requires admin permission.
 	"""
 	setEntryLevel(id: ID!, skillLevel: String!): Entry
+
+	"""
+	Creates a new entry vote. Requires Judge Entries permission.
+	"""
+	createEntryVote(entryId: ID!, reason: String!): EntryVote
 }
 
 """

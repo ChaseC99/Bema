@@ -233,6 +233,7 @@ type ComplexityRoot struct {
 		CreateAnnouncement func(childComplexity int, input model.AnnouncementInput) int
 		CreateContest      func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria     func(childComplexity int, input model.JudgingCriteriaInput) int
+		CreateEntryVote    func(childComplexity int, entryID int, reason string) int
 		CreateJudgingGroup func(childComplexity int, input model.CreateJudgingGroupInput) int
 		CreateTask         func(childComplexity int, input model.CreateTaskInput) int
 		DeleteAnnouncement func(childComplexity int, id int) int
@@ -319,6 +320,7 @@ type ComplexityRoot struct {
 		EntriesPerLevel             func(childComplexity int, contestID int) int
 		Entry                       func(childComplexity int, id int) int
 		EntryCounts                 func(childComplexity int) int
+		EntryVote                   func(childComplexity int, id int) int
 		Error                       func(childComplexity int, id int) int
 		Errors                      func(childComplexity int, page int) int
 		Evaluation                  func(childComplexity int, id int) int
@@ -452,6 +454,7 @@ type MutationResolver interface {
 	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
 	DeleteEntry(ctx context.Context, id int) (*model.Entry, error)
 	SetEntryLevel(ctx context.Context, id int, skillLevel string) (*model.Entry, error)
+	CreateEntryVote(ctx context.Context, entryID int, reason string) (*model.EntryVote, error)
 	EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error)
 	DeleteEvaluation(ctx context.Context, id int) (*model.Evaluation, error)
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
@@ -483,6 +486,7 @@ type QueryResolver interface {
 	EntriesPerLevel(ctx context.Context, contestID int) ([]*model.EntriesPerLevel, error)
 	NextEntryToJudge(ctx context.Context) (*model.Entry, error)
 	NextEntryToReviewSkillLevel(ctx context.Context) (*model.Entry, error)
+	EntryVote(ctx context.Context, id int) (*model.EntryVote, error)
 	Errors(ctx context.Context, page int) ([]*model.Error, error)
 	Error(ctx context.Context, id int) (*model.Error, error)
 	Evaluation(ctx context.Context, id int) (*model.Evaluation, error)
@@ -1404,6 +1408,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateCriteria(childComplexity, args["input"].(model.JudgingCriteriaInput)), true
 
+	case "Mutation.createEntryVote":
+		if e.complexity.Mutation.CreateEntryVote == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createEntryVote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateEntryVote(childComplexity, args["entryId"].(int), args["reason"].(string)), true
+
 	case "Mutation.createJudgingGroup":
 		if e.complexity.Mutation.CreateJudgingGroup == nil {
 			break
@@ -2102,6 +2118,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.EntryCounts(childComplexity), true
+
+	case "Query.entryVote":
+		if e.complexity.Query.EntryVote == nil {
+			break
+		}
+
+		args, err := ec.field_Query_entryVote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EntryVote(childComplexity, args["id"].(int)), true
 
 	case "Query.error":
 		if e.complexity.Query.Error == nil {
@@ -2822,6 +2850,11 @@ input EditContestInput {
 	The next entry to review its skill level. Requires Admin permission.
 	"""
 	nextEntryToReviewSkillLevel: Entry
+
+	"""
+	A single entry vote
+	"""
+	entryVote(id: ID!): EntryVote
 }
 
 extend type Mutation {
@@ -2864,6 +2897,11 @@ extend type Mutation {
 	Sets the skill level of an entry. Requires admin permission.
 	"""
 	setEntryLevel(id: ID!, skillLevel: String!): Entry
+
+	"""
+	Creates a new entry vote. Requires Judge Entries permission.
+	"""
+	createEntryVote(entryId: ID!, reason: String!): EntryVote
 }
 
 """
@@ -4136,6 +4174,30 @@ func (ec *executionContext) field_Mutation_createCriteria_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createEntryVote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["entryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["entryId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["reason"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["reason"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4694,6 +4756,21 @@ func (ec *executionContext) field_Query_entries_args(ctx context.Context, rawArg
 		}
 	}
 	args["contestId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_entryVote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -11449,6 +11526,66 @@ func (ec *executionContext) fieldContext_Mutation_setEntryLevel(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createEntryVote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createEntryVote(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateEntryVote(rctx, fc.Args["entryId"].(int), fc.Args["reason"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntryVote)
+	fc.Result = res
+	return ec.marshalOEntryVote2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryVote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createEntryVote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntryVote_id(ctx, field)
+			case "user":
+				return ec.fieldContext_EntryVote_user(ctx, field)
+			case "reason":
+				return ec.fieldContext_EntryVote_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntryVote", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createEntryVote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_editEvaluation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_editEvaluation(ctx, field)
 	if err != nil {
@@ -14872,6 +15009,66 @@ func (ec *executionContext) fieldContext_Query_nextEntryToReviewSkillLevel(ctx c
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_entryVote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entryVote(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntryVote(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntryVote)
+	fc.Result = res
+	return ec.marshalOEntryVote2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryVote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entryVote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntryVote_id(ctx, field)
+			case "user":
+				return ec.fieldContext_EntryVote_user(ctx, field)
+			case "reason":
+				return ec.fieldContext_EntryVote_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntryVote", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entryVote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -21491,6 +21688,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_setEntryLevel(ctx, field)
 			})
 
+		case "createEntryVote":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createEntryVote(ctx, field)
+			})
+
 		case "editEvaluation":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -22191,6 +22394,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_nextEntryToReviewSkillLevel(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "entryVote":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entryVote(ctx, field)
 				return res
 			}
 
@@ -24690,6 +24913,13 @@ func (ec *executionContext) marshalOEntryCounts2ᚖgithubᚗcomᚋKAᚑChallenge
 		return graphql.Null
 	}
 	return ec._EntryCounts(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEntryVote2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntryVote(ctx context.Context, sel ast.SelectionSet, v *model.EntryVote) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._EntryVote(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx context.Context, sel ast.SelectionSet, v *model.Error) graphql.Marshaler {

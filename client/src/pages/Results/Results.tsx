@@ -150,6 +150,22 @@ type RemoveWinnerResponse = {
   entry: Entry
 }
 
+type EntryVoteMutationResponse = {
+  vote: EntryVote
+}
+
+const CREATE_ENTRY_VOTE = gql`
+  mutation CreateEntryVote($entryId: ID!, $reason: String!) {
+    vote: createEntryVote(entryId: $entryId, reason: $reason) {
+      id
+      user {
+        nickname
+      }
+      reason
+    }
+  }
+`;
+
 function Results() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -166,11 +182,11 @@ function Results() {
     },
     onError: handleGQLError
   });
-  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesByAverageScoreResponse>(GET_ENTRIES_BY_AVG_SCORE, { 
+  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesByAverageScoreResponse>(GET_ENTRIES_BY_AVG_SCORE, {
     variables: {
       contestId: contestId
     },
-    onError: handleGQLError 
+    onError: handleGQLError
   });
   const { loading: levelsIsLoading, data: levelsData } = useQuery<GetEntriesPerLevelResponse>(GET_ENTRIES_PER_LEVEL, {
     variables: {
@@ -182,6 +198,7 @@ function Results() {
 
   const [addWinner, { loading: addWinnerIsLoading }] = useMutation<AddWinnerResponse>(ADD_WINNER);
   const [removeWinner, { loading: removeWinnerIsLoading }] = useMutation<RemoveWinnerResponse>(REMOVE_WINNER);
+  const [addVote, { loading: addVoteIsLoading }] = useMutation<EntryVoteMutationResponse>(CREATE_ENTRY_VOTE, { onError: handleGQLError });
 
   const showDeleteWinnerModal = (id: string) => {
     setDeleteWinnerId(id);
@@ -225,9 +242,11 @@ function Results() {
   }
 
   const handleVoteForEntry = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/winners/votes", {
-      entry_id: voteForEntryId,
-      feedback: values.vote_reason
+    await addVote({
+      variables: {
+        entryId: voteForEntryId,
+        reason: values.vote_reason
+      }
     });
 
     refetchEntries();
@@ -322,7 +341,7 @@ function Results() {
 
       {showVotesForEntryId &&
         <InfoModal title={"Votes for Entry #" + showVotesForEntryId} handleClose={hideVotesModal}>
-          {entryVotesIsLoading ? 
+          {entryVotesIsLoading ?
             <LoadingSpinner size="MEDIUM" />
             :
             entryVotesData?.entry.judgeVotes.map((e) => {
@@ -347,6 +366,7 @@ function Results() {
           handleSubmit={handleVoteForEntry}
           handleCancel={hideVoteForm}
           cols={5}
+          loading={addVoteIsLoading}
           fields={[
             {
               fieldType: "TEXTAREA",
