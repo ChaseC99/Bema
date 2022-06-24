@@ -8,14 +8,14 @@ import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
-import request from "../../util/request";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
 import WinnersCard from "./WinnersCard";
 
 type EntryVote = {
-  id: number
+  id: string
   user: {
+    id: string
     nickname: string
   }
   reason: string
@@ -116,6 +116,7 @@ const GET_ENTRY_VOTES = gql`
       judgeVotes {
         id
         user {
+          id
           nickname
         }
         reason
@@ -159,6 +160,20 @@ const CREATE_ENTRY_VOTE = gql`
     vote: createEntryVote(entryId: $entryId, reason: $reason) {
       id
       user {
+        id
+        nickname
+      }
+      reason
+    }
+  }
+`;
+
+const DELETE_ENTRY_VOTE = gql`
+  mutation DeleteEntryVote($id: ID!) {
+    deleteEntryVote(id: $id) {
+      id
+      user {
+        id
         nickname
       }
       reason
@@ -172,7 +187,6 @@ function Results() {
   const { contestId } = useParams();
   const [addWinnerId, setAddWinnerId] = useState<string | null>(null);
   const [deleteWinnerId, setDeleteWinnerId] = useState<string | null>(null);
-  const [deleteVoteEntryId, setDeleteVoteEntryId] = useState<string | null>(null);
   const [voteForEntryId, setVoteForEntryId] = useState<string | null>(null);
   const [showVotesForEntryId, setShowVotesForEntryId] = useState<string | null>(null);
 
@@ -199,6 +213,7 @@ function Results() {
   const [addWinner, { loading: addWinnerIsLoading }] = useMutation<AddWinnerResponse>(ADD_WINNER);
   const [removeWinner, { loading: removeWinnerIsLoading }] = useMutation<RemoveWinnerResponse>(REMOVE_WINNER);
   const [addVote, { loading: addVoteIsLoading }] = useMutation<EntryVoteMutationResponse>(CREATE_ENTRY_VOTE, { onError: handleGQLError });
+  const [deleteVote, { loading: deleteVoteIsLoading }] = useMutation<EntryVoteMutationResponse>(DELETE_ENTRY_VOTE, { onError: handleGQLError });
 
   const showDeleteWinnerModal = (id: string) => {
     setDeleteWinnerId(id);
@@ -253,27 +268,15 @@ function Results() {
     hideVoteForm();
   }
 
-  const showConfirmRemoveVoteModal = (entryId: string) => {
-    setDeleteVoteEntryId(entryId);
-  }
-
-  const hideConfirmRemoveVoteModal = () => {
-    setDeleteVoteEntryId(null);
-  }
-
-  const handleRemoveVote = async (entryId: number, voteId?: number) => {
-    await request("DELETE", "/api/internal/winners/votes", {
-      entry_id: entryId,
-      vote_id: voteId || null
+  const handleRemoveVote = async (voteId: string) => {
+    await deleteVote({
+      variables: {
+        id: voteId
+      }
     });
 
     refetchEntries();
-    fetchEntryVotes({
-      variables: {
-        entryId: entryId
-      }
-    })
-    hideConfirmRemoveVoteModal();
+    setShowVotesForEntryId(null);
   }
 
   const showConfirmAddWinnerModal = (id: string) => {
@@ -318,7 +321,6 @@ function Results() {
                 votingEnabled={contestData?.contest.isVotingEnabled || false}
                 handleShowEntryVotes={showVotesModal}
                 showVoteForm={showVoteForm}
-                handleRemoveVote={showConfirmRemoveVoteModal}
                 handleAddWinner={showConfirmAddWinnerModal}
               />
             </div>
@@ -349,7 +351,7 @@ function Results() {
                 <div style={{ marginBottom: "30px" }} key={"vote-" + e.id}>
                   <span>
                     <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.user.nickname}</h4>
-                    {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(parseInt(showVotesForEntryId), e.id)} text="Delete" destructive />}
+                    {(state.is_admin || e.user.id === state.user?.id) && <Button type="tertiary" role="button" action={() => handleRemoveVote(e.id)} text="Delete" destructive />}
                   </span>
                   <p>{e.reason}</p>
                 </div>
@@ -380,12 +382,6 @@ function Results() {
             }
           ]}
         />
-      }
-
-      {deleteVoteEntryId &&
-        <ConfirmModal title="Delete vote?" confirmLabel="Delete" handleConfirm={handleRemoveVote} handleCancel={hideConfirmRemoveVoteModal} destructive data={deleteVoteEntryId}>
-          <p>Are you sure you want to delete this vote? This action cannot be undone.</p>
-        </ConfirmModal>
       }
     </React.Fragment>
   );

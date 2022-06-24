@@ -85,6 +85,11 @@ extend type Mutation {
 	Creates a new entry vote. Requires Judge Entries permission.
 	"""
 	createEntryVote(entryId: ID!, reason: String!): EntryVote
+
+	"""
+	Delets an existing entry vote
+	"""
+	deleteEntryVote(id: ID!): EntryVote
 }
 
 """

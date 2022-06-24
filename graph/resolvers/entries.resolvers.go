@@ -338,6 +338,40 @@ func (r *mutationResolver) CreateEntryVote(ctx context.Context, entryID int, rea
 	return r.Query().EntryVote(ctx, *id)
 }
 
+func (r *mutationResolver) DeleteEntryVote(ctx context.Context, id int) (*model.EntryVote, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	vote, err := r.Query().EntryVote(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !auth.HasPermission(user, auth.JudgeEntries) || user == nil || (vote.User.ID != user.ID && !user.IsAdmin) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to vote for winning entries.")
+	}
+
+	contestId, err := models.GetContestIdByVoteId(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	contest, err := models.GetContestById(ctx, *contestId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !*contest.IsVotingEnabled {
+		return nil, errs.NewForbiddenError(ctx, "Voting is not enabled for this contest.")
+	}
+
+	err = models.DeleteEntryVoteById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return vote, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {

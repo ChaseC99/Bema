@@ -476,3 +476,25 @@ func CreateEntryVote(ctx context.Context, entryId int, userId int, reason string
 
 	return id, nil
 }
+
+func DeleteEntryVoteById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM entry_vote WHERE vote_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting an entry vote", err)
+	}
+	return nil
+}
+
+func GetContestIdByVoteId(ctx context.Context, voteId int) (*int, error) {
+	row := db.DB.QueryRow("SELECT e.contest_id FROM entry_vote v INNER JOIN entry e ON e.entry_id = v.entry_id WHERE v.vote_id = $1;", voteId)
+
+	var contestId *int
+	if err := row.Scan(&contestId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NewNotFoundError(ctx, "Oops! This entry vote does not exist.")
+		}
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while looking up an entry vote", err)
+	}
+
+	return contestId, nil
+}

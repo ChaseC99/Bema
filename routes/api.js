@@ -8,7 +8,6 @@ const { nameChars, kaidPattern, contentChars, scores, skillLevels, visibilities 
 const entries = require(process.cwd() + "/handlers/api/entries");
 const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
-const winners = require(process.cwd() + "/handlers/api/winners");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 const errors = require(process.cwd() + "/handlers/api/errors");
 
@@ -243,20 +242,6 @@ const routeChecks = {
       ])
     ]
   },
-  winners: {
-    deleteVote: oneOf([
-      [
-        check("entry_id")
-        .isInt()
-        .withMessage("Entry ID must be an integer")
-      ],
-      [
-        check("vote_id")
-        .isInt()
-        .withMessage("Vote ID must be an integer")
-      ]
-    ])
-  },
   kb: {
     addSection: [
       check("section_name")
@@ -361,9 +346,6 @@ const routeChecks = {
 };
 
 router.use(hasBody);
-
-// Winners
-router.delete("/internal/winners/votes", routeChecks.winners.deleteVote, wasValidated, winners.deleteVote);
 
 // Users
 router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);

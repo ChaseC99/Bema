@@ -12,7 +12,6 @@ type EntriesByAvgScoreProps = {
   votingEnabled: boolean
   handleShowEntryVotes: (id: string) => void
   showVoteForm: (id: string) => void
-  handleRemoveVote: (id: string) => void
   handleAddWinner: (id: string) => void
   testId?: string
 }
@@ -61,16 +60,6 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
                 text: "Vote for entry",
                 data: e.id,
                 testId: "entry-" + e.id + "-vote-action"
-              });
-            }
-
-            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && e.isVotedByUser) {
-              entryActions.push({
-                role: "button",
-                action: props.handleRemoveVote,
-                text: "Remove Vote",
-                data: e.id,
-                testId: "entry-" + e.id + "-remove-vote-action"
               });
             }
 
