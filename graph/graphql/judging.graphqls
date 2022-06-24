@@ -60,6 +60,11 @@ extend type Mutation {
     Deletes an existing judging group
     """
     deleteJudgingGroup(id: ID!): JudgingGroup
+
+    """
+    Creates an evaluation for an entry
+    """
+    scoreEntry(id: ID!, input: ScoreEntryInput!): Evaluation
 }
 
 """
@@ -154,4 +159,31 @@ input EditJudgingGroupInput {
     Indicates whether new entries and users can be assigned to this group
     """
     isActive: Boolean!
+}
+
+input ScoreEntryInput {
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
 }

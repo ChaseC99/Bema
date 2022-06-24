@@ -493,6 +493,19 @@ type Progress struct {
 	Total int `json:"total"`
 }
 
+type ScoreEntryInput struct {
+	// The creativity score
+	Creativity float64 `json:"creativity"`
+	// The complexity score
+	Complexity float64 `json:"complexity"`
+	// The execution score
+	Execution float64 `json:"execution"`
+	// The interpretation score
+	Interpretation float64 `json:"interpretation"`
+	// The suggested skill level of the entry
+	SkillLevel string `json:"skillLevel"`
+}
+
 // A single task that can be assigned to and completed by a user
 type Task struct {
 	// A uniqune integer ID

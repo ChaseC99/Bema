@@ -61,28 +61,6 @@ const routeChecks = {
       .withMessage("New group ID must be an integer")
     ]
   },
-  judging: {
-    submit: [
-      check("entry_id")
-      .isInt()
-      .withMessage("entry_id must be an integer"),
-      check("creativity")
-      .isIn(scores)
-      .withMessage("creativity score must be >= 0 and <= 5"),
-      check("complexity")
-      .isIn(scores)
-      .withMessage("complexity score must be >= 0 and <= 5"),
-      check("quality_code")
-      .isIn(scores)
-      .withMessage("quality_code score must be >= 0 and <= 5"),
-      check("interpretation")
-      .isIn(scores)
-      .withMessage("interpretation score must be >= 0 and <= 5"),
-      check("skill_level")
-      .isIn(skillLevels)
-      .withMessage("skill_level must be 'Advanced', 'Intermediate', or 'Beginner'")
-    ]
-  },
   users: {
     add: [
       check("evaluator_name")
@@ -352,9 +330,6 @@ router.put("/internal/users/permissions", routeChecks.users.editPermissions, was
 router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
-
-// Judging
-router.post("/internal/judging/submit", routeChecks.judging.submit, wasValidated, judging.submit);
 
 // Entries
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);

@@ -79,6 +79,20 @@ const FLAG_ENTRY = gql`
   }
 `;
 
+type ScoreEntryResponse = {
+  evaluation: {
+    id: string
+  }
+}
+
+const SCORE_ENTRY = gql`
+  mutation ScoreEntry($entryId: ID!, $input: ScoreEntryInput!) {
+    evaluation: scoreEntry(id: $entryId, input: $input) {
+      id
+    }
+  }
+`;
+
 const DEFAULT_ENTRY: Entry = {
   id: "0",
   title: "Sample Entry",
@@ -96,15 +110,24 @@ function Judging() {
   const { loading: criteriaIsLoading, data: criteriaData } = useQuery<GetJudgingCriteriaResponse>(GET_JUDGING_CRITERIA, { onError: handleGQLError });
   const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
   const [flagEntry, { loading: flagEntryIsLoading }] = useMutation<FlagEntryResponse>(FLAG_ENTRY, { onError: handleGQLError });
+  const [scoreEntry, { loading: scoreEntryIsLoading }] = useMutation<ScoreEntryResponse>(SCORE_ENTRY, { onError: handleGQLError });
 
   const handleSubmit = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/judging/submit", {
-      entry_id: entryData?.entry?.id,
-      creativity: values.creativity,
-      complexity: values.complexity,
-      quality_code: values.quality,
-      interpretation: values.interpretation,
-      skill_level: values.skill_level
+    if (!entryData?.entry) {
+      return;
+    }
+
+    await scoreEntry({
+      variables: {
+        entryId: entryData.entry.id,
+        input: {
+          creativity: values.creativity,
+          complexity: values.complexity,
+          execution: values.quality,
+          interpretation: values.interpretation,
+          skillLevel: values.skill_level
+        }
+      }
     });
 
     handleFetchNextEntry();
@@ -175,6 +198,7 @@ function Judging() {
               submitLabel="Submit"
               cols={12}
               disabled={!state.logged_in}
+              loading={scoreEntryIsLoading}
               fields={[
                 {
                   fieldType: "SLIDER",

@@ -213,3 +213,49 @@ func DeleteJudgingGroupById(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func ScoreEntry(ctx context.Context, userId int, entryId int, input *model.ScoreEntryInput) (*int, error) {
+	_, err := db.DB.Exec("SELECT evaluate($1, $2, $3, $4, $5, $6, $7)", entryId, userId, input.Creativity, input.Complexity, input.Execution, input.Interpretation, input.SkillLevel)
+	if err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while submitting scores for an entry", err)
+	}
+
+	row := db.DB.QueryRow("SELECT evaluation_id FROM evaluation WHERE entry_id = $1 AND evaluator_id = $2 LIMIT 1;", entryId, userId)
+
+	var evaluationId *int
+	if err := row.Scan(&evaluationId); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while submitting scores for an entry", err)
+	}
+
+	return evaluationId, nil
+}
+
+func AutoUpdateEntryLevel(ctx context.Context, entryId int) error {
+	rows, err := db.DB.Query("SELECT entry_level FROM entry WHERE entry_author_kaid = (SELECT entry_author_kaid FROM entry WHERE entry_id = $1) AND entry_id != $1 ORDER BY entry_id DESC LIMIT 3;", entryId)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating an entry's skill level", err)
+	}
+
+	levels := []string{}
+	for rows.Next() {
+		var level string
+		if err := rows.Scan(&level); err != nil {
+			return errors.NewInternalError(ctx, "An unexpected error occurred while updating an entry's skill level", err)
+		}
+		levels = append(levels, level)
+	}
+
+	if len(levels) == 3 && levels[0] == "Advanced" && levels[1] == "Advanced" && levels[2] == "Advanced" {
+		_, err := db.DB.Exec("UPDATE entry SET entry_level = 'Advanced', entry_level_locked = true WHERE entry_id = $1;", entryId)
+		if err != nil {
+			return errors.NewInternalError(ctx, "An unexpected error occurred while updating an entry's skill level", err)
+		}
+	} else {
+		_, err = db.DB.Exec("SELECT update_entry_level($1);", entryId)
+		if err != nil {
+			return errors.NewInternalError(ctx, "An unexpected error occurred while updating an entry's skill level", err)
+		}
+	}
+
+	return nil
+}

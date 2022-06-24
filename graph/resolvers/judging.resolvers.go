@@ -140,6 +140,30 @@ func (r *mutationResolver) DeleteJudgingGroup(ctx context.Context, id int) (*mod
 	return group, nil
 }
 
+func (r *mutationResolver) ScoreEntry(ctx context.Context, id int, input model.ScoreEntryInput) (*model.Evaluation, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.JudgeEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to score entries.")
+	}
+
+	evalId, err := models.ScoreEntry(ctx, user.ID, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	entry, err := models.GetEntryById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !*entry.IsSkillLevelLocked {
+		models.AutoUpdateEntryLevel(ctx, id)
+	}
+
+	return r.Query().Evaluation(ctx, *evalId)
+}
+
 func (r *queryResolver) Criteria(ctx context.Context, id int) (*model.JudgingCriteria, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {
