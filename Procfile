@@ -1,1 +1,1 @@
-web: Bema
+web: bin/Bema
