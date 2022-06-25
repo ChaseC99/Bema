@@ -22,10 +22,7 @@ import (
 const defaultPort = "8080"
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading environment variables")
-	}
+	godotenv.Load(".env")
 
 	port := os.Getenv("PORT")
 	if port == "" {
