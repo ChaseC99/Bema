@@ -22,7 +22,7 @@ jobs:
           title: Bema
           graph: Bema
           variant: development
-          localSchemaFile: 'graph/schema.graphqls'
+          localSchemaFile: 'graph/graphql/*.graphqls'
           validationPeriod: P2W
           key: ${{ secrets.APOLLO_KEY }}
         env:
