@@ -235,6 +235,7 @@ function EvaluatorProfile() {
           handleSubmit={handleEditProfile}
           handleCancel={closeEditProfileModal}
           cols={4}
+          disabled
           fields={[
             {
               fieldType: "INPUT",

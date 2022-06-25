@@ -92,7 +92,7 @@ function ErrorDetail() {
             <span className="section-actions">
               <Button type="tertiary" role="link" action="/admin/errors" text="Back to all errors" />
               {(state.is_admin || state.user?.permissions.delete_errors) &&
-                <Button type="primary" role="button" action={openDeleteErrorModal} data={errorId} text="Delete" destructive />
+                <Button type="primary" role="button" action={openDeleteErrorModal} data={errorId} text="Delete" destructive disabled />
               }
             </span>
           </div>

@@ -283,7 +283,7 @@ function Users(props: UserProps) {
             <span className="section-actions">
               {!props.inactive && <Button type="tertiary" role="link" action="/admin/users/inactive" text="View deactivated users" />}
               {props.inactive && <Button type="tertiary" role="link" action="/admin/users" text="View active users" />}
-              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
+              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" disabled />}
             </span>
           </div>
           <div className="section-body">
@@ -372,6 +372,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditUser}
           handleCancel={closeEditUserModal}
           cols={4}
+          disabled
           fields={[
             {
               fieldType: "INPUT",
@@ -503,6 +504,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditPermissions}
           handleCancel={closeEditPermissionsModal}
           cols={4}
+          disabled
           fields={[
             {
               fieldType: "CHECKBOX",

@@ -139,7 +139,7 @@ function AssignedGroupsCard() {
         <div className="card-header">
           <h3>Assigned Groups</h3>
           {(state.is_admin || state.user?.permissions.assign_evaluator_groups) &&
-            <Button type="tertiary" role="button" action={openEditAllModal} text="Bulk Edit" />
+            <Button type="tertiary" role="button" action={openEditAllModal} text="Bulk Edit" disabled />
           }
         </div>
         <div className="card-body">
@@ -169,7 +169,8 @@ function AssignedGroupsCard() {
                               role: "button",
                               action: openEditIndividualModal,
                               text: "Edit",
-                              data: u.id
+                              data: u.id,
+                              disabled: true
                             }
                           ]} />
                         </Cell>

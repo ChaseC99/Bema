@@ -381,7 +381,8 @@ function Entries() {
                     {
                       role: "button",
                       action: openTransferGroupsForm,
-                      text: "Transfer"
+                      text: "Transfer",
+                      disabled: true
                     }
                   ]}
                   label="Update Groups"
