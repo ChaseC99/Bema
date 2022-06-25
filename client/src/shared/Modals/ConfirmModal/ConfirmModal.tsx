@@ -10,6 +10,7 @@ type ConfirmModalProps = {
   children: React.ReactChild | React.ReactChild[]
   destructive?: boolean
   data?: any
+  loading?: boolean
   testId?: string
 }
 
@@ -48,8 +49,8 @@ function ConfirmModal(props: ConfirmModalProps) {
         </div>
         <div className="modal-footer">
           <div className="confirm-modal-actions">
-            <Button type="tertiary" role="button" action={handleClose} text="Cancel" testId={props.testId + "-cancel"} />
-            <Button type="primary" role="button" action={handleConfirm} text={props.confirmLabel} destructive={props.destructive} testId={props.testId + "-confirm"} />
+            <Button type="tertiary" role="button" action={handleClose} text="Cancel" testId={props.testId + "-cancel"} disabled={props.loading} />
+            <Button type="primary" role="button" action={handleConfirm} text={props.confirmLabel} destructive={props.destructive} testId={props.testId + "-confirm"} loading={props.loading} />
           </div>
         </div>
       </div>

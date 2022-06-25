@@ -1,0 +1,128 @@
+extend type Query {
+    """
+    A list of all knowledge base sections
+    """
+    sections: [KBSection!]!
+
+    """
+    A single knowledge base section
+    """
+    section(id: ID!): KBSection
+
+    """
+    A single knowledge base article
+    """
+    article(id: ID!): KBArticle
+}
+
+"""
+A knowledge base section
+"""
+type KBSection {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The name of the section
+    """
+    name: String!
+
+    """
+    A description of the section
+    """
+    description: String!
+
+    """
+    The visibility of the section. Requires Edit KB Content permission.
+    """
+    visibility: String
+
+    """
+    A list of articles assigned to the section
+    """
+    articles: [KBArticle!]!
+}
+
+"""
+A knowledge base article
+"""
+type KBArticle {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The section the article is assigned to
+    """
+    section: KBSection
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article
+    """
+    lastUpdated: String!
+
+    """
+    The visibility of the article. Requires Edit KB Content permission.
+    """
+    visibility: String
+
+    """
+    Indicates whether the initial version of the article has been published. Requires Edit KB Content permission.
+    """
+    isPublished: Boolean
+
+    """
+    Indicates whether the article has an existing draft. Requires Edit KB Content permission.
+    """
+    hasDraft: Boolean
+
+    """
+    The current draft revision to the article
+    """
+    draft: KBArticleDraft
+}
+
+type KBArticleDraft {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The author of the article draft. Requires authentication.
+    """
+    author: User
+
+    """
+    The timestamp of the last update to the article draft
+    """
+    lastUpdated: String!
+}

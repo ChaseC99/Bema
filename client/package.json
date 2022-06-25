@@ -5,6 +5,7 @@
   "proxy": "http://localhost:6001",
   "dependencies": {
     "@apollo/client": "^3.6.4",
+    "@apollo/explorer": "^0.5.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",

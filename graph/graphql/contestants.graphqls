@@ -1,0 +1,41 @@
+extend type Query {
+    """
+    A single contestant
+    """
+    contestant(kaid: String!): Contestant
+
+    """
+    A list of contestants matching the search query. Can search by display name or KAID. Requires authentication.
+    """
+    contestantSearch(query: String!): [Contestant!]!
+}
+
+"""
+A Khan Academy user and contest participant
+"""
+type Contestant {
+    """
+    The user's unique KAID
+    """
+    kaid: String!
+
+    """
+    The user's most recent display name
+    """
+    name: String!
+
+    """
+    A list of entries submitted by the contestant. Requires authentication.
+    """
+    entries: [Entry!]
+
+    """
+    The total number of entries the contestant has submitted
+    """
+    entryCount: Int!
+
+    """
+    The total number of contests the contestant has participated in
+    """
+    contestCount: Int!
+}

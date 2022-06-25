@@ -1,0 +1,83 @@
+extend type Query {
+    """
+    A list of all announcements
+    """
+    announcements: [Announcement!]!
+
+    """
+    A single announcement
+    """
+    announcement(id: ID!): Announcement
+}
+
+extend type Mutation {
+    """
+    Creates a new announcement message
+    """
+    createAnnouncement(input: AnnouncementInput!): Announcement
+
+    """
+    Edits an existing announcement
+    """
+    editAnnouncement(id: ID!, input: AnnouncementInput!): Announcement
+
+    """
+    Deletes an existing announcement
+    """
+    deleteAnnouncement(id: ID!): Announcement
+}
+
+"""
+An announcement message
+"""
+type Announcement {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The author of the announcement
+    """
+    author: User
+
+    """
+    The creation date of the announcement
+    """
+    created: String!
+
+    """
+    The announcement title
+    """
+    title: String!
+
+    """
+    The announcement body
+    """
+    content: String!
+
+    """
+    Indicates whether the announcement is shown to unauthenticated users
+    """
+    isPublic: Boolean!
+}
+
+"""
+The input required to create or edit an announcement
+"""
+input AnnouncementInput {
+    """
+    The title of the announcement
+    """
+    title: String!
+
+    """
+    The message content
+    """
+    content: String!
+
+    """
+    Indicates whether the announcement is shown to unauthenticated users
+    """
+    isPublic: Boolean!
+}

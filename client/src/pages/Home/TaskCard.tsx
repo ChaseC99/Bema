@@ -4,7 +4,7 @@ import "./TaskCard.css";
 type TaskCardProps = {
   title: string
   status: "Not Started" | "Started"
-  id: number
+  id: string
   dueDate: string
   assigned: boolean
   updateTaskStatus: (data: any) => any

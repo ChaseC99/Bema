@@ -1,28 +1,39 @@
 .loading-spinner {
-    animation-name: spinner;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-    animation-duration: 1s;
-    margin: 0 auto;
-    display: block;
-}
-@keyframes spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+  margin: 0 auto;
+  display: block;
 }
 
-.loading-spinner.small {
-    width: 40px;
+.loading-spinner svg {
+  animation-name: spinner;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-duration: 1s;
 }
 
-.loading-spinner.medium {
-    width: 120px;
+.loading-spinner svg path {
+  fill: rgba(33, 36, 44, 0.16);
 }
 
 .loading-spinner.large {
-    width: 200px;
+  width: 200px;
+  height: 200px;
+}
+
+.loading-spinner.medium {
+  width: 120px;
+  height: 120px;
+}
+
+.loading-spinner.small {
+  width: 40px;
+  height: 40px;
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

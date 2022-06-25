@@ -1,17 +1,22 @@
+//go:generate go run github.com/99designs/gqlgen generate
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/KA-Challenge-Council/Bema/graph"
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
+	"github.com/KA-Challenge-Council/Bema/graph/resolvers"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
-	"github.com/go-chi/chi"
+	"github.com/KA-Challenge-Council/Bema/internal/db"
+	"github.com/KA-Challenge-Council/Bema/internal/errors"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
+
+	_ "github.com/lib/pq"
 )
 
 const defaultPort = "8080"
@@ -22,17 +27,38 @@ func main() {
 		log.Fatal("error loading environment variables")
 	}
 
-	port := os.Getenv("GRAPHQL_PORT")
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = os.Getenv("GRAPHQL_PORT")
+		if port == "" {
+			port = defaultPort
+		}
 	}
 
-	router := chi.NewRouter()
-	router.Use(auth.Middleware(nil))
+	// Create database connection
+	db.InitDB()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	// Create configuration and set directive handlers
+	config := generated.Config{Resolvers: &resolvers.Resolver{}}
+
+	// Create router
+	router := mux.NewRouter()
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"https://www.kachallengecouncil.org", "https://bema-development.herokuapp.com/", "https://studio.apollographql.com", "http://localhost:6001"},
+		AllowCredentials: true,
+		Debug:            false,
+	}).Handler)
+	router.Use(auth.Middleware())
+	router.Use(errors.Middleware(nil))
+
+	// Create graphql handler
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 	router.Handle("/api/internal/graphql", srv)
 
-	fmt.Println("Running server on port :" + port)
+	// Serve the react app
+	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./client/build"))))
+
+	// Start the server
+	log.Println("Running server on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

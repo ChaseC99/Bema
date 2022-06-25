@@ -1,29 +1,101 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Contest } from ".";
 import Button from "../../shared/Button";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
 import ContestCard from "./ContestCard";
-import fetchContests from "./fetchContestData";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import useAppError from "../../util/errors";
+
+const GET_ALL_CONTESTS = gql`
+  query GetAllContests {
+    contests {
+      id
+      name
+      url
+      author
+      badgeSlug
+      badgeImageUrl
+      startDate
+      endDate
+      isCurrent
+      isVotingEnabled
+    }
+  }
+`;
+
+type ContestData = {
+  contests: Contest[]
+}
+
+type ContestMutationResponse = {
+  contest: Contest
+}
+
+const CREATE_CONTEST = gql`
+  mutation CreateContest($input: CreateContestInput!) {
+    contest: createContest(input: $input) {
+      id
+      name
+      url
+      author
+      badgeSlug
+      badgeImageUrl
+      isCurrent
+      startDate
+      endDate
+      isVotingEnabled
+    }
+  }
+`;
+
+const EDIT_CONTEST = gql`
+  mutation EditContest($id: ID!, $input: EditContestInput!) {
+    contest: editContest(id: $id, input: $input) {
+      id
+      name
+      url
+      author
+      badgeSlug
+      badgeImageUrl
+      isCurrent
+      startDate
+      endDate
+      isVotingEnabled
+    }
+  }
+`;
+
+const DELETE_CONTEST = gql`
+  mutation DeleteContest($id: ID!) {
+    contest: deleteContest(id: $id) {
+      id
+      name
+      url
+      author
+      badgeSlug
+      badgeImageUrl
+      isCurrent
+      startDate
+      endDate
+      isVotingEnabled
+    }
+  }
+`;
 
 function Contests() {
   const { state } = useAppState();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [contests, setContests] = useState<Contest[]>([]);
+  const { handleGQLError } = useAppError();
   const [showCreateContest, setShowCreateContest] = useState<boolean>(false);
-  const [editContest, setEditContest] = useState<Contest | null>(null);
+  const [contestToEdit, setContestToEdit] = useState<Contest | null>(null);
   const [deleteContestId, setDeleteContestId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchContests()
-      .then((data) => {
-        setContests(data.contests);
-        setIsLoading(false);
-      })
-  }, []);
+  const { loading: isLoading, data: contestData, refetch: refetchContests } = useQuery<ContestData>(GET_ALL_CONTESTS, { onError: handleGQLError });
+  const [createContest, { loading: createContestIsLoading }] = useMutation<ContestMutationResponse>(CREATE_CONTEST, { onError: handleGQLError });
+  const [editContest, { loading: editContestIsLoading }] = useMutation<ContestMutationResponse>(EDIT_CONTEST, { onError: handleGQLError });
+  const [deleteContest, { loading: deleteContestIsLoading }] = useMutation<ContestMutationResponse>(DELETE_CONTEST, { onError: handleGQLError });
 
   const openCreateContestModal = () => {
     setShowCreateContest(true);
@@ -34,60 +106,55 @@ function Contests() {
   }
 
   const handleCreateContest = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/contests", {
-      contest_name: values.name,
-      contest_url: values.url,
-      contest_author: values.author,
-      contest_start_date: values.start_date,
-      contest_end_date: values.end_date,
-      contest_current: values.is_current,
+    await createContest({
+      variables: {
+        input: {
+          name: values.name,
+          url: values.url,
+          author: values.author,
+          isCurrent: values.is_current,
+          startDate: values.start_date,
+          endDate: values.end_date
+        }
+      }
     });
 
+    refetchContests();
     closeCreateContestModal();
-
-    window.location.reload();
   }
 
   const openEditContestModal = (id: number) => {
-    const contest = contests.find((c) => c.contest_id === id) || null;
-    setEditContest(contest);
+    const contest = contestData?.contests.find((c) => c.id === id) || null;
+    setContestToEdit(contest);
   }
 
   const closeEditContestModal = () => {
-    setEditContest(null);
+    setContestToEdit(null);
   }
 
   const handleEditContest = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/contests", {
-      edit_contest_id: editContest?.contest_id,
-      edit_contest_name: values.name,
-      edit_contest_url: values.url,
-      edit_contest_author: values.author,
-      edit_contest_start_date: values.start_date,
-      edit_contest_end_date: values.end_date,
-      edit_badge_name: values.badge_name,
-      edit_badge_image_url: values.badge_image_url,
-      edit_contest_current: values.is_current,
-      edit_voting_enabled: values.voting_enabled
-    });
-
-    const newContests = [...contests];
-    for (let i = 0; i < newContests.length; i++) {
-      if (newContests[i].contest_id === editContest?.contest_id) {
-        newContests[i].contest_name = values.name;
-        newContests[i].contest_url = values.url;
-        newContests[i].contest_author = values.author;
-        newContests[i].date_start = values.start_date;
-        newContests[i].date_end = values.end_date;
-        newContests[i].badge_name = values.badge_name;
-        newContests[i].badge_image_url = values.badge_image_url;
-        newContests[i].current = values.is_current;
-        newContests[i].voting_enabled = values.voting_enabled;
-        break;
-      }
+    if (!contestToEdit) {
+      return;
     }
 
-    setContests(newContests);
+    await editContest({
+      variables: {
+        id: contestToEdit?.id,
+        input: {
+          name: values.name,
+          url: values.url,
+          author: values.author,
+          isCurrent: values.is_current,
+          startDate: values.start_date,
+          endDate: values.end_date,
+          isVotingEnabled: values.voting_enabled,
+          badgeSlug: values.badge_name,
+          badgeImageUrl: values.badge_image_url
+        }
+      }
+    });
+
+    refetchContests();
     closeEditContestModal();
   }
 
@@ -100,13 +167,13 @@ function Contests() {
   }
 
   const handleDeleteContest = async (id: number) => {
-    await request("DELETE", "/api/internal/contests", {
-      contest_id: id
+    await deleteContest({
+      variables: {
+        id: id
+      }
     });
 
-    const newContests = contests.filter((c) => c.contest_id !== id);
-    setContests(newContests);
-
+    refetchContests();
     closeDeleteContestModal();
   }
 
@@ -123,15 +190,15 @@ function Contests() {
               <h2 data-testid="contests-header">Contests</h2>
 
               <span className="section-actions" data-testid="contests-section-actions">
-                {(state.is_admin || state.user?.permissions.edit_contests) &&
+                {(state.isAdmin || state.user?.permissions.edit_contests) &&
                   <Button type="primary" role="button" action={openCreateContestModal} text="New Contest" />
                 }
               </span>
             </div>
             <div className="section-body grid" data-testid="contests-section-body">
-              {contests.map((c) => {
+              {contestData?.contests.map((c) => {
                 return (
-                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} key={c.contest_id} />
+                  <ContestCard contest={c} handleEditContest={openEditContestModal} handleDeleteContest={openDeleteContestModal} key={c.id} />
                 );
               })}
             </div>
@@ -141,82 +208,12 @@ function Contests() {
 
       {showCreateContest &&
         <FormModal
-        title="Create Contest"
-        submitLabel="Create"
-        handleSubmit={handleCreateContest}
-        handleCancel={closeCreateContestModal}
-        cols={4}
-        fields={[
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "name",
-            id: "name",
-            size: "LARGE",
-            label: "Name",
-            defaultValue: "",
-            placeholder: "Contest: Name Here",
-            required: true
-          },
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "url",
-            id: "url",
-            size: "LARGE",
-            label: "URL",
-            description: "A link to the contest program. This is where entries will be imported from.",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "INPUT",
-            type: "text",
-            name: "author",
-            id: "author",
-            size: "LARGE",
-            label: "Author",
-            description: "The creator of the announcement program code.",
-            defaultValue: ""
-          },
-          {
-            fieldType: "DATE",
-            name: "start_date",
-            id: "start-date",
-            size: "MEDIUM",
-            label: "Start Date",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "DATE",
-            name: "end_date",
-            id: "end-date",
-            size: "MEDIUM",
-            label: "End Date",
-            defaultValue: "",
-            required: true
-          },
-          {
-            fieldType: "CHECKBOX",
-            name: "is_current",
-            id: "is-current",
-            size: "LARGE",
-            label: "Current Contest",
-            description: "Enables judging for the contest, and shows an Active badge on the contests page.",
-            defaultValue: false
-          }
-        ]}
-      />
-      }
-
-      {editContest &&
-        <FormModal
-          title="Edit Contest"
-          submitLabel="Save"
-          handleSubmit={handleEditContest}
-          handleCancel={closeEditContestModal}
+          title="Create Contest"
+          submitLabel="Create"
+          handleSubmit={handleCreateContest}
+          handleCancel={closeCreateContestModal}
           cols={4}
+          loading={createContestIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -225,7 +222,7 @@ function Contests() {
               id: "name",
               size: "LARGE",
               label: "Name",
-              defaultValue: editContest.contest_name,
+              defaultValue: "",
               placeholder: "Contest: Name Here",
               required: true
             },
@@ -237,7 +234,7 @@ function Contests() {
               size: "LARGE",
               label: "URL",
               description: "A link to the contest program. This is where entries will be imported from.",
-              defaultValue: editContest.contest_url,
+              defaultValue: "",
               required: true
             },
             {
@@ -248,7 +245,7 @@ function Contests() {
               size: "LARGE",
               label: "Author",
               description: "The creator of the announcement program code.",
-              defaultValue: editContest.contest_author || ""
+              defaultValue: ""
             },
             {
               fieldType: "DATE",
@@ -256,7 +253,7 @@ function Contests() {
               id: "start-date",
               size: "MEDIUM",
               label: "Start Date",
-              defaultValue: editContest.date_start,
+              defaultValue: "",
               required: true
             },
             {
@@ -265,7 +262,79 @@ function Contests() {
               id: "end-date",
               size: "MEDIUM",
               label: "End Date",
-              defaultValue: editContest.date_end,
+              defaultValue: "",
+              required: true
+            },
+            {
+              fieldType: "CHECKBOX",
+              name: "is_current",
+              id: "is-current",
+              size: "LARGE",
+              label: "Current Contest",
+              description: "Enables judging for the contest, and shows an Active badge on the contests page.",
+              defaultValue: false
+            }
+          ]}
+        />
+      }
+
+      {contestToEdit &&
+        <FormModal
+          title="Edit Contest"
+          submitLabel="Save"
+          handleSubmit={handleEditContest}
+          handleCancel={closeEditContestModal}
+          cols={4}
+          loading={editContestIsLoading}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "name",
+              id: "name",
+              size: "LARGE",
+              label: "Name",
+              defaultValue: contestToEdit.name,
+              placeholder: "Contest: Name Here",
+              required: true
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "url",
+              id: "url",
+              size: "LARGE",
+              label: "URL",
+              description: "A link to the contest program. This is where entries will be imported from.",
+              defaultValue: contestToEdit.url || "",
+              required: true
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "author",
+              id: "author",
+              size: "LARGE",
+              label: "Author",
+              description: "The creator of the announcement program code.",
+              defaultValue: contestToEdit.author || ""
+            },
+            {
+              fieldType: "DATE",
+              name: "start_date",
+              id: "start-date",
+              size: "MEDIUM",
+              label: "Start Date",
+              defaultValue: contestToEdit.startDate || "",
+              required: true
+            },
+            {
+              fieldType: "DATE",
+              name: "end_date",
+              id: "end-date",
+              size: "MEDIUM",
+              label: "End Date",
+              defaultValue: contestToEdit.endDate || "",
               required: true
             },
             {
@@ -276,7 +345,7 @@ function Contests() {
               size: "LARGE",
               label: "Badge Name",
               description: "The badge slug in the badge URL. (e.g. contest-fantasy-landscape)",
-              defaultValue: editContest.badge_name || "",
+              defaultValue: contestToEdit.badgeSlug || "",
               placeholder: "e.x. contest-fantasy-landscape"
             },
             {
@@ -286,7 +355,7 @@ function Contests() {
               id: "badge-image-url",
               size: "LARGE",
               label: "Badge Image URL",
-              defaultValue: editContest.badge_image_url || ""
+              defaultValue: contestToEdit.badgeImageUrl || ""
             },
             {
               fieldType: "CHECKBOX",
@@ -295,7 +364,7 @@ function Contests() {
               size: "LARGE",
               label: "Current Contest",
               description: "Enables judging for the contest, and shows an Active badge on the contests page.",
-              defaultValue: editContest.current
+              defaultValue: contestToEdit.isCurrent
             },
             {
               fieldType: "CHECKBOX",
@@ -304,7 +373,7 @@ function Contests() {
               size: "LARGE",
               label: "Enable Voting",
               description: "Enables judges to vote for winning entries.",
-              defaultValue: editContest.voting_enabled || false
+              defaultValue: contestToEdit.isVotingEnabled || false
             }
           ]}
         />
@@ -317,6 +386,7 @@ function Contests() {
           handleConfirm={handleDeleteContest}
           handleCancel={closeDeleteContestModal}
           destructive
+          loading={deleteContestIsLoading}
           data={deleteContestId}
         >
           <p>Are you sure you want to delete this contest? This action cannot be undone.</p>

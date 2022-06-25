@@ -20,7 +20,7 @@ function ContestCard(props: ContestCardProps) {
       role: "button",
       action: props.handleEditContest,
       text: "Edit",
-      data: props.contest.contest_id,
+      data: props.contest.id,
       testId: "edit-contest-action"
     });
   }
@@ -30,7 +30,7 @@ function ContestCard(props: ContestCardProps) {
       role: "button",
       action: props.handleDeleteContest,
       text: "Delete",
-      data: props.contest.contest_id,
+      data: props.contest.id,
       testId: "delete-contest-action"
     });
   }
@@ -39,18 +39,18 @@ function ContestCard(props: ContestCardProps) {
     <article className="card col-4" data-testid={props.testId}>
       <div className="card-header">
         <h3>
-          {props.contest.contest_name}
-          {props.contest.current && <span className="badge">Active</span>}
+          {props.contest.name}
+          {props.contest.isCurrent && <span className="badge">Active</span>}
         </h3>
         <ActionMenu actions={actions}/>
       </div>
       <div className="card-body">
-        <img src={props.contest.contest_url + "/latest.png"} alt="" style={{width: "200px", height: "200px"}} />
-        <p><span className="label">Start:</span> {props.contest.date_start}</p>
-        <p><span className="label">End:</span> {props.contest.date_end}</p>
-        <p><Link to={"/entries/" + props.contest.contest_id}>View Entries</Link></p>
-        {state.logged_in && <p><Link to={"/evaluations/" + state.user?.evaluator_id + "/" + props.contest.contest_id}>Evaluations</Link></p>}
-        <p><Link to={"/results/" + props.contest.contest_id}>View Results</Link></p>
+        <img src={props.contest.url + "/latest.png"} alt="" style={{width: "200px", height: "200px"}} />
+        <p><span className="label">Start:</span> {props.contest.startDate}</p>
+        <p><span className="label">End:</span> {props.contest.endDate}</p>
+        <p><Link to={"/entries/" + props.contest.id}>View Entries</Link></p>
+        {state.logged_in && <p><Link to={"/evaluations/" + state.user?.id + "/" + props.contest.id}>Evaluations</Link></p>}
+        <p><Link to={"/results/" + props.contest.id}>View Results</Link></p>
       </div>
     </article>
   );

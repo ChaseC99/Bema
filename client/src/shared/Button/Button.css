@@ -11,6 +11,7 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  min-width: 72px;
 }
 
 .btn-primary:hover {
@@ -33,6 +34,18 @@
 
 .btn-primary:disabled:hover {
   box-shadow: none !important;
+}
+
+.btn-primary .loading-spinner,
+.btn-destructive-primary .loading-spinner {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+}
+
+.btn-primary .loading-spinner path,
+.btn-destructive-primary .loading-spinner path {
+  fill: #ffffff;
 }
 
 .btn-secondary {

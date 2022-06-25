@@ -1,37 +1,159 @@
-import React, { useEffect, useState } from "react";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import { User } from ".";
 import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
-import { login, Permissions } from "../../../state/appStateReducer";
 import useAppState from "../../../state/useAppState";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchUserPermissions, fetchUsers } from "./fetchUsers";
 import UserCard from "./UserCard";
 
 type UserProps = {
   inactive?: boolean
 }
 
+type GetUsersResponse = {
+  users: User[]
+}
+
+type GetUserPermissionsResponse = {
+  user: {
+    permissions: {
+      add_entries: boolean
+      add_users: boolean
+      assign_entry_groups: boolean
+      assign_evaluator_groups: boolean
+      assume_user_identities: boolean
+      change_user_passwords: boolean
+      delete_all_evaluations: boolean
+      delete_all_tasks: boolean
+      delete_contests: boolean
+      delete_entries: boolean
+      delete_errors: boolean
+      delete_kb_content: boolean
+      edit_all_evaluations: boolean
+      edit_all_tasks: boolean
+      edit_contests: boolean
+      edit_entries: boolean
+      edit_kb_content: boolean
+      edit_user_profiles: boolean
+      judge_entries: boolean
+      manage_announcements: boolean
+      manage_judging_criteria: boolean
+      manage_judging_groups: boolean
+      manage_winners: boolean
+      publish_kb_content: boolean
+      view_admin_stats: boolean
+      view_all_evaluations: boolean
+      view_all_tasks: boolean
+      view_all_users: boolean
+      view_errors: boolean
+      view_judging_settings: boolean
+    }
+  }
+}
+
+const GET_ACTIVE_USERS = gql`
+  query GetActiveUsers {
+    users: users{
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
+const GET_INACTIVE_USERS = gql`
+  query GetInactiveUsers {
+    users: inactiveUsers{
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
+const GET_USER_PERMISSIONS = gql`
+  query GetUserPermissions($userId: ID!) {
+    user(id: $userId) {
+      permissions {
+        add_entries
+        add_users
+        assign_entry_groups
+        assign_evaluator_groups
+        assume_user_identities
+        change_user_passwords
+        delete_all_evaluations
+        delete_all_tasks
+        delete_contests
+        delete_entries
+        delete_errors
+        delete_kb_content
+        edit_all_evaluations
+        edit_all_tasks
+        edit_contests
+        edit_entries
+        edit_kb_content
+        edit_user_profiles
+        judge_entries
+        manage_announcements
+        manage_judging_criteria
+        manage_judging_groups
+        manage_winners
+        publish_kb_content
+        view_admin_stats
+        view_all_evaluations
+        view_all_tasks
+        view_all_users
+        view_errors
+        view_judging_settings
+      }
+    }
+  }
+`;
+
+type ChangePasswordResponse = {
+  success: boolean
+}
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($id: ID!, $password: String!) {
+    success: changePassword(id: $id, password: $password)
+  }
+`;
+
 function Users(props: UserProps) {
-  const { state, dispatch } = useAppState();
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [changePasswordUserId, setChangePasswordUserId] = useState<number | null>(null);
   const [editUserPermissionsId, setEditUserPermissionsId] = useState<number | null>(null);
-  const [editUserPermissions, setEditUserPermissions] = useState<Permissions | null>(null);
   const [impersonateUserId, setImpersonateUserId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchUsers()
-      .then((data) => {
-        setUsers(data.users);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading: userIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS, { onError: handleGQLError });
+  const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
+  const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -52,7 +174,7 @@ function Users(props: UserProps) {
 
     closeAddUserModal();
 
-    window.location.reload();
+    refetchUsers();
   }
 
   const openEditUserModal = (user: User) => {
@@ -65,7 +187,7 @@ function Users(props: UserProps) {
 
   const handleEditUser = async (values: { [name: string]: any }) => {
     await request("PUT", "/api/internal/users", {
-      edit_user_id: editUser?.evaluator_id,
+      edit_user_id: editUser?.id,
       edit_user_name: values.name,
       edit_user_kaid: values.kaid,
       edit_user_username: values.username,
@@ -73,29 +195,12 @@ function Users(props: UserProps) {
       edit_user_email: values.email,
       edit_user_start: values.term_start,
       edit_user_end: values.term_end,
-      edit_user_is_admin: state.is_admin ? values.is_admin : editUser?.is_admin,
-      edit_user_account_locked: state.is_admin ? values.account_disabled : editUser?.account_locked,
+      edit_user_is_admin: state.is_admin ? values.is_admin : editUser?.isAdmin,
+      edit_user_account_locked: state.is_admin ? values.account_disabled : editUser?.accountLocked,
       edit_user_receive_emails: values.receive_emails
     });
 
-    const newUsers = [...users];
-    for (let i = 0; i < newUsers.length; i++) {
-      if (newUsers[i].evaluator_id === editUser?.evaluator_id) {
-        newUsers[i].evaluator_name = values.name;
-        newUsers[i].evaluator_kaid = values.kaid;
-        newUsers[i].username = values.username;
-        newUsers[i].nickname = values.nickname;
-        newUsers[i].email = values.email;
-        newUsers[i].dt_term_start = values.term_start;
-        newUsers[i].dt_term_end = values.term_end;
-        newUsers[i].is_admin = state.is_admin ? values.is_admin : editUser?.is_admin;
-        newUsers[i].account_locked = state.is_admin ? values.account_disabled : editUser?.account_locked;
-        newUsers[i].receive_emails = values.receive_emails;
-
-        break;
-      }
-    }
-    setUsers(newUsers);
+    refetchUsers();
 
     closeEditUserModal();
   }
@@ -117,9 +222,11 @@ function Users(props: UserProps) {
   }
 
   const handleChangePassword = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/auth/changePassword", {
-      evaluator_id: changePasswordUserId,
-      new_password: values.password
+    await changePassword({
+      variables: {
+        id: changePasswordUserId,
+        password: values.password
+      }
     });
 
     closeChangePasswordModal();
@@ -128,15 +235,15 @@ function Users(props: UserProps) {
   const openEditPermissionsModal = (userId: number) => {
     setEditUserPermissionsId(userId);
 
-    fetchUserPermissions(userId)
-    .then((data) => {
-      setEditUserPermissions(data.permissions);
+    getUserPermissions({
+      variables: {
+        userId: userId
+      }
     });
   }
 
   const closeEditPermissionsModal = () => {
     setEditUserPermissionsId(null);
-    setEditUserPermissions(null);
   }
 
   const handleEditPermissions = async (values: { [name: string]: any }) => {
@@ -161,9 +268,7 @@ function Users(props: UserProps) {
       evaluator_kaid: userKaid
     });
 
-    const data = await request("GET", "/api/internal/users/getFullUserProfile");
-    closeImpersonateUserModal();
-    dispatch(login(data));
+    window.location.reload();
   }
 
   return (
@@ -178,13 +283,13 @@ function Users(props: UserProps) {
             <span className="section-actions">
               {!props.inactive && <Button type="tertiary" role="link" action="/admin/users/inactive" text="View deactivated users" />}
               {props.inactive && <Button type="tertiary" role="link" action="/admin/users" text="View active users" />}
-              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
+              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" disabled />}
             </span>
           </div>
           <div className="section-body">
-            {isLoading && <LoadingSpinner size="LARGE" />}
+            {userIsLoading && <LoadingSpinner size="LARGE" />}
 
-            {(!isLoading && !props.inactive) && users.filter((u) => !u.account_locked).map((u) => {
+            {!userIsLoading && usersData?.users.map((u) => {
               return (
                 <UserCard
                   user={u}
@@ -192,20 +297,7 @@ function Users(props: UserProps) {
                   handleChangePassword={openChangePasswordModal}
                   handleEditPermissions={openEditPermissionsModal}
                   handleImpersonateUser={openImpersonateUserModal}
-                  key={u.evaluator_id}
-                />
-              );
-            })}
-
-            {(!isLoading && props.inactive) && users.filter((u) => u.account_locked).map((u) => {
-              return (
-                <UserCard
-                  user={u}
-                  handleEditProfile={openEditUserModal}
-                  handleChangePassword={openChangePasswordModal}
-                  handleEditPermissions={openEditPermissionsModal}
-                  handleImpersonateUser={openImpersonateUserModal}
-                  key={u.evaluator_id}
+                  key={u.id}
                 />
               );
             })}
@@ -273,13 +365,14 @@ function Users(props: UserProps) {
         />
       }
 
-      {editUser && 
+      {editUser &&
         <FormModal
           title="Edit User"
           submitLabel="Save"
           handleSubmit={handleEditUser}
           handleCancel={closeEditUserModal}
           cols={4}
+          disabled
           fields={[
             {
               fieldType: "INPUT",
@@ -287,7 +380,7 @@ function Users(props: UserProps) {
               name: "name",
               id: "name",
               label: "Name",
-              defaultValue: editUser.evaluator_name,
+              defaultValue: editUser.name,
               size: "LARGE",
               required: true
             },
@@ -297,7 +390,7 @@ function Users(props: UserProps) {
               name: "kaid",
               id: "kaid",
               label: "KAID",
-              defaultValue: editUser.evaluator_kaid,
+              defaultValue: editUser.kaid,
               size: "LARGE",
               required: true
             },
@@ -319,7 +412,7 @@ function Users(props: UserProps) {
               id: "nickname",
               label: "Nickname",
               description: "The name shown to other users.",
-              defaultValue: editUser.nickname,
+              defaultValue: editUser.nickname || "",
               size: "LARGE",
               required: true
             },
@@ -337,7 +430,7 @@ function Users(props: UserProps) {
               name: "term_start",
               id: "term-start",
               label: "Term Start",
-              defaultValue: editUser.dt_term_start,
+              defaultValue: editUser.termStart || "",
               size: "MEDIUM"
             },
             {
@@ -345,7 +438,7 @@ function Users(props: UserProps) {
               name: "term_end",
               id: "term-end",
               label: "Term End",
-              defaultValue: editUser.dt_term_end,
+              defaultValue: editUser.termEnd || "",
               size: "MEDIUM"
             },
             {
@@ -354,7 +447,7 @@ function Users(props: UserProps) {
               id: "is-admin",
               label: "Administrator",
               description: "Grants the user all permissions. Use this with caution.",
-              defaultValue: editUser.is_admin,
+              defaultValue: editUser.isAdmin,
               disabled: !state.is_admin,
               size: "LARGE"
             },
@@ -364,7 +457,7 @@ function Users(props: UserProps) {
               id: "account-disabled",
               label: "Disable account",
               description: "Makes the user account inactive. The user will no longer be able to login.",
-              defaultValue: editUser.account_locked,
+              defaultValue: editUser.accountLocked,
               disabled: !state.is_admin,
               size: "LARGE"
             },
@@ -373,7 +466,7 @@ function Users(props: UserProps) {
               name: "receive_emails",
               id: "receive-emails",
               label: "Receive email notifications",
-              defaultValue: editUser.receive_emails,
+              defaultValue: editUser.notificationsEnabled,
               size: "LARGE"
             }
           ]}
@@ -387,6 +480,7 @@ function Users(props: UserProps) {
           handleSubmit={handleChangePassword}
           handleCancel={closeChangePasswordModal}
           cols={4}
+          loading={changePasswordIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -403,13 +497,14 @@ function Users(props: UserProps) {
         />
       }
 
-      {editUserPermissions &&
+      {(editUserPermissionsId && !permissionsIsLoading && permissionsData) &&
         <FormModal
           title="Edit Permissions"
           submitLabel="Save"
           handleSubmit={handleEditPermissions}
           handleCancel={closeEditPermissionsModal}
           cols={4}
+          disabled
           fields={[
             {
               fieldType: "CHECKBOX",
@@ -417,7 +512,7 @@ function Users(props: UserProps) {
               id: "judge-entries",
               label: "Judge Entries",
               description: "Allows the user to score entries. Disable this for view-only users.",
-              defaultValue: editUserPermissions.judge_entries,
+              defaultValue: permissionsData.user.permissions.judge_entries,
               size: "LARGE"
             },
             {
@@ -426,7 +521,7 @@ function Users(props: UserProps) {
               id: "manage-announcements",
               label: "Manage Announcements",
               description: "Allows the user to create, edit, and delete announcements.",
-              defaultValue: editUserPermissions.manage_announcements,
+              defaultValue: permissionsData.user.permissions.manage_announcements,
               size: "LARGE"
             },
             {
@@ -435,7 +530,7 @@ function Users(props: UserProps) {
               id: "view-admin-stats",
               label: "View Admin Stats",
               description: "Allows the user to view admin stats on the dashboard page.",
-              defaultValue: editUserPermissions.view_admin_stats,
+              defaultValue: permissionsData.user.permissions.view_admin_stats,
               size: "LARGE"
             },
             {
@@ -444,7 +539,7 @@ function Users(props: UserProps) {
               id: "edit-contests",
               label: "Edit Contests",
               description: "Allows the user to create and edit contests.",
-              defaultValue: editUserPermissions.edit_contests,
+              defaultValue: permissionsData.user.permissions.edit_contests,
               size: "LARGE"
             },
             {
@@ -453,7 +548,7 @@ function Users(props: UserProps) {
               id: "delete-contests",
               label: "Delete Contests",
               description: "Allows the user to delete contests and all their associated data.",
-              defaultValue: editUserPermissions.delete_contests,
+              defaultValue: permissionsData.user.permissions.delete_contests,
               size: "LARGE"
             },
             {
@@ -462,7 +557,7 @@ function Users(props: UserProps) {
               id: "add-entries",
               label: "Import Entries",
               description: "Allows the user to bulk import and individually add entries.",
-              defaultValue: editUserPermissions.add_entries,
+              defaultValue: permissionsData.user.permissions.add_entries,
               size: "LARGE"
             },
             {
@@ -471,7 +566,7 @@ function Users(props: UserProps) {
               id: "edit-entries",
               label: "Edit Entries",
               description: "Allows the user to edit all entries.",
-              defaultValue: editUserPermissions.edit_entries,
+              defaultValue: permissionsData.user.permissions.edit_entries,
               size: "LARGE"
             },
             {
@@ -480,7 +575,7 @@ function Users(props: UserProps) {
               id: "delete-entries",
               label: "Delete Entries",
               description: "Allows the user to delete entries and their associated data.",
-              defaultValue: editUserPermissions.delete_entries,
+              defaultValue: permissionsData.user.permissions.delete_entries,
               size: "LARGE"
             },
             {
@@ -489,7 +584,7 @@ function Users(props: UserProps) {
               id: "assign-entry-groups",
               label: "Assign Entry Groups",
               description: "Allows the user to assign entries to judging groups.",
-              defaultValue: editUserPermissions.assign_entry_groups,
+              defaultValue: permissionsData.user.permissions.assign_entry_groups,
               size: "LARGE"
             },
             {
@@ -498,7 +593,7 @@ function Users(props: UserProps) {
               id: "manage-winners",
               label: "Manage Winners",
               description: "Allows the user to add and remove winning entries.",
-              defaultValue: editUserPermissions.manage_winners,
+              defaultValue: permissionsData.user.permissions.manage_winners,
               size: "LARGE"
             },
             {
@@ -507,7 +602,7 @@ function Users(props: UserProps) {
               id: "view-all-evaluations",
               label: "View All Evaluations",
               description: "Allows the user to view all evaluations by other users.",
-              defaultValue: editUserPermissions.view_all_evaluations,
+              defaultValue: permissionsData.user.permissions.view_all_evaluations,
               size: "LARGE"
             },
             {
@@ -516,7 +611,7 @@ function Users(props: UserProps) {
               id: "edit-all-evaluations",
               label: "Edit All Evaluations",
               description: "Allows the user to edit all evaluations by other users.",
-              defaultValue: editUserPermissions.edit_all_evaluations,
+              defaultValue: permissionsData.user.permissions.edit_all_evaluations,
               size: "LARGE"
             },
             {
@@ -525,7 +620,7 @@ function Users(props: UserProps) {
               id: "delete-all-evaluations",
               label: "Delete All Evaluations",
               description: "Allows the user to delete all evaluations by other users",
-              defaultValue: editUserPermissions.delete_all_evaluations,
+              defaultValue: permissionsData.user.permissions.delete_all_evaluations,
               size: "LARGE"
             },
             {
@@ -534,7 +629,7 @@ function Users(props: UserProps) {
               id: "view-all-tasks",
               label: "View All Tasks",
               description: "Allows the user to view all created tasks.",
-              defaultValue: editUserPermissions.view_all_tasks,
+              defaultValue: permissionsData.user.permissions.view_all_tasks,
               size: "LARGE"
             },
             {
@@ -543,7 +638,7 @@ function Users(props: UserProps) {
               id: "edit-all-tasks",
               label: "Edit All Tasks",
               description: "Allows the user to edit all created tasks.",
-              defaultValue: editUserPermissions.edit_all_tasks,
+              defaultValue: permissionsData.user.permissions.edit_all_tasks,
               size: "LARGE"
             },
             {
@@ -552,7 +647,7 @@ function Users(props: UserProps) {
               id: "delete-all-tasks",
               label: "Delete All Tasks",
               description: "Allows the user to delete all created tasks.",
-              defaultValue: editUserPermissions.delete_all_tasks,
+              defaultValue: permissionsData.user.permissions.delete_all_tasks,
               size: "LARGE"
             },
             {
@@ -561,7 +656,7 @@ function Users(props: UserProps) {
               id: "view-judging-settings",
               label: "View Judging Settings",
               description: "Allows the user to view the judging settings page.",
-              defaultValue: editUserPermissions.view_judging_settings,
+              defaultValue: permissionsData.user.permissions.view_judging_settings,
               size: "LARGE"
             },
             {
@@ -570,7 +665,7 @@ function Users(props: UserProps) {
               id: "manage-judging-groups",
               label: "Edit Judging Groups",
               description: "Allows the user to create and edit judging groups.",
-              defaultValue: editUserPermissions.manage_judging_groups,
+              defaultValue: permissionsData.user.permissions.manage_judging_groups,
               size: "LARGE"
             },
             {
@@ -579,7 +674,7 @@ function Users(props: UserProps) {
               id: "assign-evaluator-groups",
               label: "Assign Judging Groups",
               description: "Allows the user to assign evaluators to judging groups.",
-              defaultValue: editUserPermissions.assign_evaluator_groups,
+              defaultValue: permissionsData.user.permissions.assign_evaluator_groups,
               size: "LARGE"
             },
             {
@@ -588,7 +683,7 @@ function Users(props: UserProps) {
               id: "manage-judging-criteria",
               label: "Manage Judging Criteria",
               description: "Allows the user to manage the judging criteria shown on the judging page.",
-              defaultValue: editUserPermissions.manage_judging_criteria,
+              defaultValue: permissionsData.user.permissions.manage_judging_criteria,
               size: "LARGE"
             },
             {
@@ -597,7 +692,7 @@ function Users(props: UserProps) {
               id: "edit-kb-content",
               label: "Edit KB Content",
               description: "Allows the user to create and edit KB sections and articles.",
-              defaultValue: editUserPermissions.edit_kb_content,
+              defaultValue: permissionsData.user.permissions.edit_kb_content,
               size: "LARGE"
             },
             {
@@ -606,7 +701,7 @@ function Users(props: UserProps) {
               id: "publish-kb-content",
               label: "Publish KB Content",
               description: "Allows the user to publish all draft KB articles.",
-              defaultValue: editUserPermissions.publish_kb_content,
+              defaultValue: permissionsData.user.permissions.publish_kb_content,
               size: "LARGE"
             },
             {
@@ -615,7 +710,7 @@ function Users(props: UserProps) {
               id: "delete-kb-content",
               label: "Delete KB Content",
               description: "Allows the user to delete all KB sections and articles.",
-              defaultValue: editUserPermissions.delete_kb_content,
+              defaultValue: permissionsData.user.permissions.delete_kb_content,
               size: "LARGE"
             },
             {
@@ -624,7 +719,7 @@ function Users(props: UserProps) {
               id: "view-all-users",
               label: "View All Users",
               description: "Allows the user to view all evaluator accounts and personal information.",
-              defaultValue: editUserPermissions.view_all_users,
+              defaultValue: permissionsData.user.permissions.view_all_users,
               size: "LARGE"
             },
             {
@@ -633,7 +728,7 @@ function Users(props: UserProps) {
               id: "add-users",
               label: "Add Users",
               description: "Allows the user to create new evaluator accounts.",
-              defaultValue: editUserPermissions.add_users,
+              defaultValue: permissionsData.user.permissions.add_users,
               size: "LARGE"
             },
             {
@@ -642,7 +737,7 @@ function Users(props: UserProps) {
               id: "edit-user-profiles",
               label: "Edit User Profiles",
               description: "Allows the user to edit evaluator profile information.",
-              defaultValue: editUserPermissions.edit_user_profiles,
+              defaultValue: permissionsData.user.permissions.edit_user_profiles,
               size: "LARGE"
             },
             {
@@ -651,7 +746,7 @@ function Users(props: UserProps) {
               id: "change-user-passwords",
               label: "Change User Passwords",
               description: "Allows the user to change other evaluators' passwords.",
-              defaultValue: editUserPermissions.change_user_passwords,
+              defaultValue: permissionsData.user.permissions.change_user_passwords,
               size: "LARGE"
             },
             {
@@ -660,7 +755,7 @@ function Users(props: UserProps) {
               id: "assume-user-identities",
               label: "Assume User Identities",
               description: "Allows the user to log in as another user.",
-              defaultValue: editUserPermissions.assume_user_identities,
+              defaultValue: permissionsData.user.permissions.assume_user_identities,
               size: "LARGE"
             },
             {
@@ -669,7 +764,7 @@ function Users(props: UserProps) {
               id: "view-errors",
               label: "View Errors",
               description: "Allows the user to view all logged errors.",
-              defaultValue: editUserPermissions.view_errors,
+              defaultValue: permissionsData.user.permissions.view_errors,
               size: "LARGE"
             },
             {
@@ -678,7 +773,7 @@ function Users(props: UserProps) {
               id: "delete-errors",
               label: "Delete Errors",
               description: "Allows the user to delete all logged errors.",
-              defaultValue: editUserPermissions.delete_errors,
+              defaultValue: permissionsData.user.permissions.delete_errors,
               size: "LARGE"
             },
           ]}

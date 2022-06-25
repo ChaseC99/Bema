@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
-import ErrorPage from "../../shared/ErrorPage";
 import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
@@ -9,51 +8,167 @@ import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import request from "../../util/request";
-import { fetchContest, fetchEntries, fetchEvaluatorGroups } from "./fetchEntries";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import useAppError from "../../util/errors";
+
+type GetEntriesResponse = {
+  entries: Entry[]
+}
 
 type Entry = {
-  assigned_group_id: number
-  contest_id: number
-  disqualified: boolean
-  entry_author: string
-  entry_created: string
-  entry_id: number
-  entry_kaid: string
-  entry_level: string
-  entry_level_locked: boolean
-  entry_title: string
-  entry_url: string
-  flagged: boolean
-  group_name: string
-  is_winner: boolean
+  id: string
+  url: string
+  kaid: string
+  title: string
+  author: {
+    name: string
+    kaid: string
+  }
+  skillLevel: string | null
+  created: string
+  group: {
+    id: string
+    name: string
+  } | null
+  height: number
+  isFlagged: boolean | null
+  isDisqualified: boolean | null
+  isSkillLevelLocked: boolean | null
 }
 
-type EntryPublic = {
-  contest_id: number
-  entry_author: string
-  entry_created: string
-  entry_id: number
-  entry_kaid: string
-  entry_title: string
-  entry_url: string
+const GET_ENTRIES = gql`
+  query GetEntries($contestId: ID!) {
+    entries(contestId: $contestId) {
+      id
+      url
+      kaid
+      title
+      author {
+        name
+        kaid
+      }
+      skillLevel
+      created
+      group {
+        id
+        name
+      }
+      height
+      isFlagged
+      isDisqualified
+      isSkillLevelLocked
+    }
+  }
+`;
+
+type EditEntryResponse = {
+  entry: Entry
 }
+
+const EDIT_ENTRY = gql`
+  mutation EditEntry($id: ID!, $input: EditEntryInput!) {
+    entry: editEntry(id: $id, input: $input) {
+      id
+      url
+      kaid
+      title
+      author {
+        name
+        kaid
+      }
+      skillLevel
+      created
+      group {
+        id
+        name
+      }
+      height
+      isFlagged
+      isDisqualified
+      isSkillLevelLocked
+    }
+  }
+`;
+
+type DeleteEntryResponse = {
+  entry: {
+    id: string
+  } | null
+}
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+type GetContestResponse = {
+  contest: {
+    name: string
+  }
+}
+
+const GET_CONTEST = gql`
+  query GetContest($id: ID!) {
+    contest(id: $id) {
+      name
+    }
+  }
+`;
 
 type Group = {
-  group_id: number
-  group_name: string
-  is_active: boolean
+  id: string
+  name: string
 }
+
+type GetActiveGroupsResponse = {
+  groups: Group[]
+}
+
+const GET_ACTIVE_GROUPS = gql`
+  query GetActiveGroups {
+    groups: activeJudgingGroups {
+      id
+      name
+    }
+  }
+`;
+
+type ImportEntriesResponse =  {
+  success: boolean
+}
+
+const IMPORT_ENTRIES = gql`
+  mutation ImportEntries($contestId: ID!) {
+    success: importEntries(contestId: $contestId)
+  }
+`;
+
+type AssignEntriesResponse = {
+  success: boolean
+}
+
+const ASSIGN_ALL_ENTRIES = gql`
+  mutation AssignAllEntriesToGroups($contestId: ID!) {
+    success: assignAllEntriesToGroups(contestId: $contestId)
+  }
+`;
+
+const ASSIGN_NEW_ENTRIES = gql`
+  mutation AssignAllEntriesToGroups($contestId: ID!) {
+    assignNewEntriesToGroups(contestId: $contestId)
+  }
+`;
 
 function Entries() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const { contestId } = useParams();
-  const [entries, setEntries] = useState<Entry[] | EntryPublic[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [contest, setContest] = useState(null);
-  const [entriesAreLoading, setEntriesAreLoading] = useState<boolean>(true);
-  const [groupsAreLoading, setGroupsAreLoading] = useState<boolean>(true);
-  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
-  const [editEntry, setEditEntry] = useState<Entry | null>(null);
+  const [entryToEdit, setEntryToEdit] = useState<Entry | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState<boolean>(false);
   const [showImportSingleEntryForm, setShowImportSingleEntryForm] = useState<boolean>(false);
@@ -61,63 +176,57 @@ function Entries() {
   const [showConfirmAssignNew, setShowConfirmAssignNew] = useState<boolean>(false);
   const [showTransferGroupsForm, setShowTransferGroupsForm] = useState<boolean>(false);
 
-  useEffect(() => {
-    fetchEntries(contestId || "")
-      .then((data) => {
-        setEntries(data.entries);
-        setEntriesAreLoading(false);
-      });
+  const { loading: groupsIsLoading, data: groupsData } = useQuery<GetActiveGroupsResponse>(GET_ACTIVE_GROUPS, { onError: handleGQLError });
+  const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
+  const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
+  const [assignAllEntries, { loading: assignAllEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_ALL_ENTRIES, { onError: handleGQLError });
+  const [assignNewEntries, { loading: assignNewEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_NEW_ENTRIES, { onError: handleGQLError });
+  
+  const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+    variables: {
+      id: contestId
+    },
+    onError: handleGQLError
+  });
 
-    fetchEvaluatorGroups()
-      .then((data) => {
-        setGroups(data.groups);
-        setGroupsAreLoading(false);
-      })
+  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesResponse>(GET_ENTRIES, { 
+    variables: {
+      contestId: contestId
+    },
+    onError: handleGQLError 
+  });
 
-    fetchContest(contestId || "")
-    .then((data) => {
-      setContest(data.contest);
-      setContestIsLoading(false);
-    });
-  }, [contestId]);
-
-  const showEditEntryForm = (id: number) => {
-    const entry = entries.find((e) => e.entry_id === id) as Entry;
-    setEditEntry(entry);
+  const showEditEntryForm = (id: string) => {
+    const entry = entriesData?.entries.find((e) => e.id === id) as Entry;
+    setEntryToEdit(entry);
   }
 
   const hideEditEntryForm = () => {
-    setEditEntry(null);
+    setEntryToEdit(null);
   }
 
   const handleEditEntry = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/entries", {
-      edit_entry_id: editEntry?.entry_id,
-      edit_entry_title: values.title,
-      edit_entry_author: values.author,
-      edit_entry_level: values.skill_level,
-      edit_entry_level_locked: values.skill_level_locked,
-      edit_entry_group: values.group,
-      edit_flagged: values.flagged,
-      edit_disqualified: values.disqualified,
-    });
-
-    const newEntries: Entry[] = [...entries as Entry[]];
-    for (let i = 0; i < newEntries.length; i++) {
-      if (newEntries[i].entry_id === editEntry?.entry_id) {
-        newEntries[i].entry_title = values.title;
-        newEntries[i].entry_author = values.author;
-        newEntries[i].entry_level = values.skill_level;
-        newEntries[i].entry_level_locked = values.skill_level_locked;
-        newEntries[i].assigned_group_id = values.group;
-        newEntries[i].group_name = groups.find((g) => g.group_id === values.group_id)?.group_name || "None";
-        newEntries[i].flagged = values.flagged;
-        newEntries[i].disqualified = values.disqualified;
-        break;
-      }
+    if (!entryToEdit) {
+      return;
     }
 
-    setEntries(newEntries);
+    await editEntry({
+      variables: {
+        id: entryToEdit.id,
+        input: {
+          title: values.title,
+          skillLevel: values.skill_level,
+          height: values.height,
+          group: values.group,
+          isFlagged: values.flagged,
+          isDisqualified: values.disqualified,
+          isSkillLevelLocked: values.skill_level_locked
+        }
+      }
+    });
+
+    refetchEntries();
     hideEditEntryForm();
   }
 
@@ -130,12 +239,13 @@ function Entries() {
   }
 
   const handleDeleteEntry = async (id: number) => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: id
+    await deleteEntry({
+      variables: {
+        id: id
+      }
     });
 
-    const newEntries = entries.filter((e) => e.entry_id !== id);
-    setEntries(newEntries);
+    refetchEntries();
     closeConfirmDeleteEntryModal();
   }
 
@@ -148,13 +258,14 @@ function Entries() {
   }
 
   const handleEntryImport = async () => {
-    await request("POST", "/api/internal/entries/import", {
-      contest_id: contestId
+    await importEntries({
+      variables: {
+        contestId: contestId
+      }
     });
 
+    refetchEntries();
     closeImportConfirmModal();
-
-    window.location.reload();
   }
 
   const showImportIndividualEntryForm = () => {
@@ -178,13 +289,14 @@ function Entries() {
   }
 
   const handleAssignAllEntries = async () => {
-    await request("PUT", "/api/internal/entries/assignToGroups", {
-      contest_id: contestId,
-      assignAll: true
+    await assignAllEntries({
+      variables: {
+        contestId: contestId
+      }
     });
 
+    refetchEntries();
     closeConfirmAssignAllEntriesModal();
-    window.location.reload();
   }
 
   const openConfirmAssignNewEntriesModal = () => {
@@ -196,13 +308,14 @@ function Entries() {
   }
 
   const handleAssignNewEntries = async () => {
-    await request("PUT", "/api/internal/entries/assignToGroups", {
-      contest_id: contestId,
-      assignAll: false
-    });
+    await assignNewEntries({
+      variables: {
+        contestId: contestId
+      }
+    })
 
+    refetchEntries();
     closeConfirmAssignNewEntriesModal();
-    window.location.reload();
   }
 
   const openTransferGroupsForm = () => {
@@ -220,14 +333,8 @@ function Entries() {
       new_entry_group: values.new_group
     });
 
+    refetchEntries();
     closeTransferGroupsForm();
-    window.location.reload();
-  }
-
-  if (!contestIsLoading && contest == null) {
-    return (
-      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
-    );
   }
 
   return (
@@ -274,7 +381,8 @@ function Entries() {
                     {
                       role: "button",
                       action: openTransferGroupsForm,
-                      text: "Transfer"
+                      text: "Transfer",
+                      disabled: true
                     }
                   ]}
                   label="Update Groups"
@@ -283,9 +391,9 @@ function Entries() {
             </span>
           </div>
 
-          {(entriesAreLoading || groupsAreLoading || contestIsLoading) && <LoadingSpinner size="LARGE" />}
+          {(entriesIsLoading || groupsIsLoading || contestIsLoading) && <LoadingSpinner size="LARGE" />}
 
-          {!(entriesAreLoading || groupsAreLoading || contestIsLoading) &&
+          {(!(entriesIsLoading || groupsIsLoading || contestIsLoading) && entriesData) &&
             <Table>
               <TableHead>
                 <Row>
@@ -299,20 +407,17 @@ function Entries() {
                 </Row>
               </TableHead>
               <TableBody>
-                {entries.map((e) => {
+                {entriesData.entries.map((e) => {
                   if (!state.logged_in) {
-                    const entry = e as unknown as EntryPublic;
                     return (
-                      <Row key={entry.entry_id}>
-                        <Cell>{entry.entry_id}</Cell>
-                        <Cell><ExternalLink to={entry.entry_url}>{entry.entry_title}</ExternalLink></Cell>
-                        <Cell>{entry.entry_author}</Cell>
-                        <Cell>{entry.entry_created}</Cell>
+                      <Row key={e.id}>
+                        <Cell>{e.id}</Cell>
+                        <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                        <Cell>{e.author.name}</Cell>
+                        <Cell>{e.created}</Cell>
                       </Row>
                     );
                   }
-
-                  const entry = e as unknown as Entry;
 
                   const actions: Action[] = [];
                   if (state.is_admin || state.user?.permissions.edit_entries) {
@@ -320,7 +425,7 @@ function Entries() {
                       role: "button",
                       action: showEditEntryForm,
                       text: "Edit",
-                      data: entry.entry_id
+                      data: e.id
                     });
                   }
 
@@ -329,19 +434,18 @@ function Entries() {
                       role: "button",
                       action: openConfirmDeleteEntryModal,
                       text: "Delete",
-                      data: entry.entry_id
+                      data: e.id
                     });
                   }
 
                   return (
-
-                    <Row key={entry.entry_id}>
-                      <Cell>{entry.entry_id}</Cell>
-                      <Cell><ExternalLink to={entry.entry_url}>{entry.entry_title}</ExternalLink></Cell>
-                      <Cell>{entry.entry_author}</Cell>
-                      <Cell>{entry.entry_created}</Cell>
-                      <Cell>{entry.entry_level}</Cell>
-                      <Cell>{entry.assigned_group_id ? entry.assigned_group_id : "None"}</Cell>
+                    <Row key={e.id}>
+                      <Cell>{e.id}</Cell>
+                      <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                      <Cell><Link to={"/contestants/" + e.author.kaid}>{e.author.name}</Link></Cell>
+                      <Cell>{e.created}</Cell>
+                      <Cell>{e.skillLevel || ""}</Cell>
+                      <Cell>{e.group ? e.group.name : "None"}</Cell>
                       <Cell>
                         <ActionMenu actions={actions} />
                       </Cell>
@@ -354,13 +458,14 @@ function Entries() {
         </div>
       </section>
 
-      {editEntry &&
+      {entryToEdit &&
         <FormModal
           title="Edit Entry"
           submitLabel="Save"
           handleSubmit={handleEditEntry}
           handleCancel={hideEditEntryForm}
           cols={4}
+          loading={editEntryIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -369,17 +474,17 @@ function Entries() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editEntry.entry_title,
+              defaultValue: entryToEdit.title,
               required: true
             },
             {
               fieldType: "INPUT",
               type: "text",
-              name: "author",
-              id: "author",
+              name: "height",
+              id: "height",
               size: "LARGE",
-              label: "Author",
-              defaultValue: editEntry.entry_author,
+              label: "Height",
+              defaultValue: entryToEdit.height.toString(),
               required: true
             },
             {
@@ -388,7 +493,7 @@ function Entries() {
               id: "skill-level",
               size: "MEDIUM",
               label: "Skill Level",
-              defaultValue: editEntry.entry_level,
+              defaultValue: entryToEdit.skillLevel,
               choices: [
                 {
                   text: "TBD",
@@ -410,18 +515,18 @@ function Entries() {
               required: true
             },
             {
-              fieldType: "SELECT", // TODO: Disable for users who can't assign entry groups
+              fieldType: "SELECT",
               name: "group",
               id: "group",
               size: "MEDIUM",
               label: "Assigned Group",
-              defaultValue: editEntry.assigned_group_id,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              defaultValue: entryToEdit.group?.id,
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              }),
+              }) : [],
               disabled: !(state.is_admin || state.user?.permissions.assign_entry_groups)
             },
             {
@@ -431,7 +536,7 @@ function Entries() {
               size: "LARGE",
               label: "Level Locked",
               description: "Prevents the skill level from automatically being updated upon new evaluations.",
-              defaultValue: editEntry.entry_level_locked
+              defaultValue: entryToEdit.isSkillLevelLocked || false
             },
             {
               fieldType: "CHECKBOX",
@@ -440,7 +545,7 @@ function Entries() {
               size: "LARGE",
               label: "Flagged",
               description: "Flagged entries are not shown in the judging queue for evaluators.",
-              defaultValue: editEntry.flagged
+              defaultValue: entryToEdit.isFlagged || false
             },
             {
               fieldType: "CHECKBOX",
@@ -449,7 +554,7 @@ function Entries() {
               size: "LARGE",
               label: "Disqualified",
               description: "Disqualified entries are marked as removed from the contest.",
-              defaultValue: editEntry.disqualified
+              defaultValue: entryToEdit.isDisqualified || false
             }
           ]}
         />
@@ -462,6 +567,7 @@ function Entries() {
           handleConfirm={handleDeleteEntry}
           handleCancel={closeConfirmDeleteEntryModal}
           destructive
+          loading={deleteEntryIsLoading}
           data={deleteEntryId}
         >
           <p>Are you sure you want to delete this entry? All data associated with this entry will be permanently deleted.</p>
@@ -475,6 +581,7 @@ function Entries() {
           confirmLabel="Import"
           handleConfirm={handleEntryImport}
           handleCancel={closeImportConfirmModal}
+          loading={importEntriesIsLoading}
         >
           <p>Are you sure you want to import entries? This will add all new spin-offs of the contest program that were created since the most recently imported entry.</p>
         </ConfirmModal>
@@ -509,6 +616,7 @@ function Entries() {
           confirmLabel="Assign Groups"
           handleConfirm={handleAssignAllEntries}
           handleCancel={closeConfirmAssignAllEntriesModal}
+          loading={assignAllEntriesIsLoading}
         >
           <p>Are you sure you want to assign all entries to groups? This will evenly assign all entries to the active groups, even if the entry is already assigned to a group.</p>
         </ConfirmModal>
@@ -520,6 +628,7 @@ function Entries() {
           confirmLabel="Assign Groups"
           handleConfirm={handleAssignNewEntries}
           handleCancel={closeConfirmAssignNewEntriesModal}
+          loading={assignNewEntriesIsLoading}
         >
           <p>Are you sure you want to assign all new entries to groups? This will allow evaluators to score the entries if judging for the contest is enabled.</p>
         </ConfirmModal>
@@ -542,12 +651,12 @@ function Entries() {
               placeholder: "Select a group",
               defaultValue: "",
               required: true,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              })
+              }) : [],
             },
             {
               fieldType: "SELECT",
@@ -558,12 +667,12 @@ function Entries() {
               placeholder: "Select a group",
               defaultValue: "",
               required: true,
-              choices: groups.filter((g) => g.is_active).map((g) => {
+              choices: groupsData ? groupsData.groups.map((g) => {
                 return {
-                  text: g.group_id + " - " + g.group_name,
-                  value: g.group_id
+                  text: g.id + " - " + g.name,
+                  value: g.id
                 }
-              })
+              }) : [],
             }
           ]}
         />

@@ -17,6 +17,7 @@ type FormProps = {
   submitLabel: string
   cols?: number
   disabled?: boolean
+  loading?: boolean
   testId?: string
 }
 
@@ -297,8 +298,8 @@ function Form(props: FormProps) {
       </div>
 
       <div className="form-actions">
-        {props.onCancel && <Button type="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} />}
-        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0 || props.disabled} />
+        {props.onCancel && <Button type="tertiary" role="button" action={props.onCancel} text="Cancel" testId={props.testId + "-cancel"} disabled={props.loading} />}
+        <Button type="primary" role="button" action={handleSubmit} text={props.submitLabel} testId={props.testId + "-submit"} disabled={Object.keys(errors).length > 0 || props.disabled} loading={props.loading} />
       </div>
     </div>
   );

@@ -1,0 +1,110 @@
+extend type Query {
+    """
+    A single evaluation
+    """
+    evaluation(id: ID!): Evaluation
+
+    """
+    A list of evaluations for a given user and contest. Requires authentication.
+    """
+    evaluations(userId: ID!, contestId: ID!): [Evaluation]!
+}
+
+extend type Mutation {
+    """
+    Edits an existing evaluation, if it is editable
+    """
+    editEvaluation(id: ID!, input: EditEvaluationInput!): Evaluation
+
+    """
+    Deletes an existing evaluation. Requires Delete All Evaluations permission.
+    """
+    deleteEvaluation(id: ID!): Evaluation
+}
+
+"""
+An evaluation of an entry
+"""
+type Evaluation {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The entry the evaluation is for
+    """
+    entry: Entry!
+
+    """
+    The user that submitted the evaluation
+    """
+    user: User!
+
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The total score
+    """
+    total: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
+
+    """
+    The timestamp of when the evaluation was submitted
+    """
+    created: String!
+
+    """
+    Indicates whether the current user can edit the evaluation
+    """
+    canEdit: Boolean!
+}
+
+input EditEvaluationInput {
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
+}

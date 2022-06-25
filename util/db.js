@@ -12,38 +12,39 @@ exports.MODE_DEV = "mode_dev";
 exports.MODE_PROD = "mode_prod";
 
 let state = {
-	pool: null,
-	mode: null,
+  pool: null,
+  mode: null,
 };
 
 // Initial connection helper.
 exports.connect = (mode, done) => {
-    state.pool = new Pool({
-        connectionString: mode === exports.MODE_PROD ? PROD_DB : DEV_DB,
-    });
+  state.pool = new Pool({
+    connectionString: mode === exports.MODE_PROD ? PROD_DB : DEV_DB,
+    max: 5
+  });
 
-    state.pool.on("error", (err, client) => {
-        console.log("PG Pool error!", err, "Client upon which the error occurred: ", client);
-        process.exit(-1);
-    });
+  state.pool.on("error", (err, client) => {
+    console.log("PG Pool error!", err, "Client upon which the error occurred: ", client);
+    process.exit(-1);
+  });
 
-	state.mode = mode;
+  state.mode = mode;
 
-	done();
+  done();
 };
 
 // Easily run a query.
 exports.query = (text, params, callback) => {
-	return state.pool.query(text, params)
-        .then(res => callback(res))
-        .catch(err => {
-			console.log("Error from db.js", err);
-			callback({ error: err });
-        });
+  return state.pool.query(text, params)
+    .then(res => callback(res))
+    .catch(err => {
+      console.log("Error from db.js", err);
+      callback({ error: err });
+    });
 };
 
 exports.shutdown = () => {
-    return state.pool.end().then(() => console.log("Pool has shutdown"));
+  return state.pool.end().then(() => console.log("Pool has shutdown"));
 }
 
 // Taken from my MySQL module, might not need.

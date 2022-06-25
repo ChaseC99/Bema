@@ -38,6 +38,10 @@ export function renderWithRouter(component: React.ReactElement<any, string | Rea
 export function defaultAppStateLoggedOut(): AppState {
   return {
     user: null,
+    loggedIn: false,
+    isAdmin: false,
+    isImpersonated: false,
+    originKaid: null,
     logged_in: false,
     is_admin: false,
     is_impersonated: false,
@@ -54,14 +58,18 @@ export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permis
   return {
     user: {
       evaluator_id: 10,
-      evaluator_name: "Test Evaluator 10",
-      evaluator_kaid: "kaid_1234567890",
-      account_locked: false,
+      id: "10",
+      name: "Test Evaluator 10",
+      kaid: "kaid_1234567890",
       email: "evaluator10@kachallengecouncil.org",
       username: "evaluator10",
       nickname: "Test Evaluator",
       permissions: permissions ? customPermissions(permissions) : defaultPermissions()
     },
+    loggedIn: true,
+    isAdmin: false,
+    isImpersonated: false,
+    originKaid: null,
     logged_in: true,
     is_admin: false,
     is_impersonated: false,

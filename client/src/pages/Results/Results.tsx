@@ -1,54 +1,221 @@
-import React, { useEffect, useState } from "react";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { EntriesPerLevel, EntryVote, EntryWithScores, EntryWithScoresPublic, WinningEntry } from ".";
 import Button from "../../shared/Button";
-import ErrorPage from "../../shared/ErrorPage";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../shared/Modals";
 import InfoModal from "../../shared/Modals/InfoModal/InfoModal";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
+import useAppError from "../../util/errors";
 import EntriesByAvgScoreCard from "./EntriesByAvgScoreCard";
 import EntriesPerLevelCard from "./EntriesPerLevelCard";
-import { fetchContest, fetchEntryVotes, fetchResults } from "./fetchResults";
 import WinnersCard from "./WinnersCard";
+
+type EntryVote = {
+  id: string
+  user: {
+    id: string
+    nickname: string
+  }
+  reason: string
+}
+
+export type Entry = {
+  id: string
+  title: string
+  url: string
+  author: {
+    kaid: string
+    name: string
+  } | null
+  evaluationCount: number
+  skillLevel: string
+  averageScore: number
+  voteCount: number
+  isVotedByUser: boolean
+  judgeVotes: EntryVote[]
+}
+
+type GetContestResponse = {
+  contest: {
+    name: string
+    winners: Entry[]
+    isVotingEnabled: boolean
+  }
+}
+
+const GET_CONTEST = gql`
+  query GetContest($id: ID!) {
+    contest(id: $id) {
+      name
+      winners {
+        id
+        title
+        url
+        author {
+          kaid
+          name
+        }
+        skillLevel
+      }
+      isVotingEnabled
+    }
+  }
+`;
+
+export type EntryLevel = {
+  level: string
+  count: number
+}
+
+type GetEntriesPerLevelResponse = {
+  entriesPerLevel: EntryLevel[]
+}
+
+const GET_ENTRIES_PER_LEVEL = gql`
+  query GetEntriesPerLevel($contestId: ID!) {
+    entriesPerLevel(contestId: $contestId) {
+      level
+      count
+    }
+  }
+`;
+
+type GetEntriesByAverageScoreResponse = {
+  entries: Entry[]
+}
+
+const GET_ENTRIES_BY_AVG_SCORE = gql`
+  query GetEntriesByAverageScore($contestId: ID!) {
+    entries: entriesByAverageScore(contestId: $contestId) {
+      id
+      title
+      url
+      author {
+        kaid
+        name
+      }
+      evaluationCount
+      skillLevel
+      averageScore
+      voteCount
+      isVotedByUser
+    }
+  }
+`;
+
+type GetEntryVotesResponse = {
+  entry: Entry
+}
+
+const GET_ENTRY_VOTES = gql`
+  query GetEntryVotes($entryId: ID!) {
+    entry(id: $entryId) {
+      id
+      judgeVotes {
+        id
+        user {
+          id
+          nickname
+        }
+        reason
+      }
+    }
+  }
+`;
+
+const ADD_WINNER = gql`
+  mutation AddWinner($entryId: ID!) {
+    entry: addWinner(id: $entryId) {
+      id
+      isWinner
+    }
+  }
+`;
+
+type AddWinnerResponse = {
+  entry: Entry
+}
+
+const REMOVE_WINNER = gql`
+  mutation RemoveWinner($entryId: ID!) {
+    entry: removeWinner(id: $entryId) {
+      id
+      isWinner
+    }
+  }
+`;
+
+type RemoveWinnerResponse = {
+  entry: Entry
+}
+
+type EntryVoteMutationResponse = {
+  vote: EntryVote
+}
+
+const CREATE_ENTRY_VOTE = gql`
+  mutation CreateEntryVote($entryId: ID!, $reason: String!) {
+    vote: createEntryVote(entryId: $entryId, reason: $reason) {
+      id
+      user {
+        id
+        nickname
+      }
+      reason
+    }
+  }
+`;
+
+const DELETE_ENTRY_VOTE = gql`
+  mutation DeleteEntryVote($id: ID!) {
+    deleteEntryVote(id: $id) {
+      id
+      user {
+        id
+        nickname
+      }
+      reason
+    }
+  }
+`;
 
 function Results() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
   const { contestId } = useParams();
-  const [contest, setContest] = useState(null);
-  const [contestIsLoading, setContestIsLoading] = useState<boolean>(true);
-  const [winners, setWinners] = useState<WinningEntry[]>([]);
-  const [entriesPerLevel, setEntriesPerLevel] = useState<EntriesPerLevel[]>([]);
-  const [entries, setEntries] = useState<EntryWithScores[] | EntryWithScoresPublic[]>([]);
-  const [votingEnabled, setVotingEnabled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [addWinnerId, setAddWinnerId] = useState<number | null>(null);
-  const [deleteWinnerId, setDeleteWinnerId] = useState<number | null>(null);
-  const [deleteVoteEntryId, setDeleteVoteEntryId] = useState<number | null>(null);
-  const [voteForEntryId, setVoteForEntryId] = useState<number | null>(null);
-  const [showVotesForEntryId, setShowVotesForEntryId] = useState<number | null>(null);
-  const [entryVotes, setEntryVotes] = useState<EntryVote[]>([]);
+  const [addWinnerId, setAddWinnerId] = useState<string | null>(null);
+  const [deleteWinnerId, setDeleteWinnerId] = useState<string | null>(null);
+  const [voteForEntryId, setVoteForEntryId] = useState<string | null>(null);
+  const [showVotesForEntryId, setShowVotesForEntryId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchResults(contestId || "")
-      .then((data) => {
-        setWinners(data.results.winners);
-        setEntriesPerLevel(data.results.entriesPerLevel);
-        setEntries(data.results.entriesByAvgScore);
-        setVotingEnabled(data.voting_enabled);
-        setIsLoading(false);
-      });
+  const { loading: contestIsLoading, data: contestData, refetch: refetchContest } = useQuery<GetContestResponse | null>(GET_CONTEST, {
+    variables: {
+      id: contestId
+    },
+    onError: handleGQLError
+  });
+  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesByAverageScoreResponse>(GET_ENTRIES_BY_AVG_SCORE, {
+    variables: {
+      contestId: contestId
+    },
+    onError: handleGQLError
+  });
+  const { loading: levelsIsLoading, data: levelsData } = useQuery<GetEntriesPerLevelResponse>(GET_ENTRIES_PER_LEVEL, {
+    variables: {
+      contestId: contestId
+    },
+    onError: handleGQLError
+  });
+  const [fetchEntryVotes, { loading: entryVotesIsLoading, data: entryVotesData }] = useLazyQuery<GetEntryVotesResponse>(GET_ENTRY_VOTES, { onError: handleGQLError });
 
-    fetchContest(contestId || "")
-      .then((data) => {
-        setContest(data.contest);
-        setContestIsLoading(false);
-      });
-  }, [contestId]);
+  const [addWinner, { loading: addWinnerIsLoading }] = useMutation<AddWinnerResponse>(ADD_WINNER);
+  const [removeWinner, { loading: removeWinnerIsLoading }] = useMutation<RemoveWinnerResponse>(REMOVE_WINNER);
+  const [addVote, { loading: addVoteIsLoading }] = useMutation<EntryVoteMutationResponse>(CREATE_ENTRY_VOTE, { onError: handleGQLError });
+  const [deleteVote, { loading: deleteVoteIsLoading }] = useMutation<EntryVoteMutationResponse>(DELETE_ENTRY_VOTE, { onError: handleGQLError });
 
-  const showDeleteWinnerModal = (id: number) => {
+  const showDeleteWinnerModal = (id: string) => {
     setDeleteWinnerId(id);
   }
 
@@ -56,29 +223,32 @@ function Results() {
     setDeleteWinnerId(null);
   }
 
-  const handleRemoveWinner = async (id: number) => {
-    await request("DELETE", "/api/internal/winners", {
-      entry_id: id
+  const handleRemoveWinner = async (id: string) => {
+    removeWinner({
+      variables: {
+        entryId: id
+      }
     });
 
-    let newWinners = winners.filter((w) => w.entry_id !== id);
-    setWinners(newWinners);
+    refetchContest();
     setDeleteWinnerId(null);
   }
 
-  const showVotesModal = (id: number) => {
-    fetchEntryVotes(id)
-      .then((data) => {
-        setShowVotesForEntryId(id);
-        setEntryVotes(data);
-      })
+  const showVotesModal = (id: string) => {
+    fetchEntryVotes({
+      variables: {
+        entryId: id
+      }
+    });
+
+    setShowVotesForEntryId(id);
   }
 
   const hideVotesModal = () => {
     setShowVotesForEntryId(null);
   }
 
-  const showVoteForm = (id: number) => {
+  const showVoteForm = (id: string) => {
     setVoteForEntryId(id);
   }
 
@@ -87,58 +257,29 @@ function Results() {
   }
 
   const handleVoteForEntry = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/winners/votes", {
-      entry_id: voteForEntryId,
-      feedback: values.vote_reason
+    await addVote({
+      variables: {
+        entryId: voteForEntryId,
+        reason: values.vote_reason
+      }
     });
 
-    let newEntries = [...entries] as unknown as EntryWithScores[];
-    for (let i = 0; i < newEntries.length; i++) {
-      if (newEntries[i].entry_id === voteForEntryId) {
-        newEntries[i].voted_by_user = true;
-        newEntries[i].vote_count = newEntries[i].vote_count + 1;
-        break;
-      }
-    }
-    setEntries(newEntries);
-
+    refetchEntries();
     hideVoteForm();
   }
 
-  const showConfirmRemoveVoteModal = (entryId: number) => {
-    setDeleteVoteEntryId(entryId);
-  }
-
-  const hideConfirmRemoveVoteModal = () => {
-    setDeleteVoteEntryId(null);
-  }
-
-  const handleRemoveVote = async (entryId: number, voteId?: number) => {
-    await request("DELETE", "/api/internal/winners/votes", {
-      entry_id: entryId,
-      vote_id: voteId || null
+  const handleRemoveVote = async (voteId: string) => {
+    await deleteVote({
+      variables: {
+        id: voteId
+      }
     });
 
-    let newEntries = [...entries] as unknown as EntryWithScores[];
-    for (let i = 0; i < newEntries.length; i++) {
-      if (newEntries[i].entry_id === entryId) {
-        if (!voteId) {
-          newEntries[i].voted_by_user = false;
-        }
-        else {
-          const newEntryVotes = entryVotes.filter((e) => e.vote_id !== voteId);
-          setEntryVotes(newEntryVotes);
-        }
-        newEntries[i].vote_count = newEntries[i].vote_count - 1;
-        break;
-      }
-      setEntries(newEntries);
-    }
-
-    hideConfirmRemoveVoteModal();
+    refetchEntries();
+    setShowVotesForEntryId(null);
   }
 
-  const showConfirmAddWinnerModal = (id: number) => {
+  const showConfirmAddWinnerModal = (id: string) => {
     setAddWinnerId(id);
   }
 
@@ -146,37 +287,15 @@ function Results() {
     setAddWinnerId(null);
   }
 
-  const handleAddWinner = async (id: number) => {
-    await request("POST", "/api/internal/winners", {
-      entry_id: id
+  const handleAddWinner = async (id: string) => {
+    addWinner({
+      variables: {
+        entryId: id
+      }
     });
 
-    const entry = entries.find((e) => e.entry_id === id) as (EntryWithScores | undefined);
-
-    if (entry) {
-      let newWinners = [...winners];
-      newWinners.push({
-        entry_author: entry.entry_author,
-        entry_id: entry.entry_id,
-        entry_level: entry.entry_level,
-        entry_title: entry.title,
-        entry_url: entry.entry_url,
-      });
-
-      newWinners = newWinners.sort((a, b) => {
-        return a.entry_level.localeCompare(b.entry_level);
-      });
-
-      setWinners(newWinners);
-    }
-
+    refetchContest();
     hideConfirmAddWinnerModal();
-  }
-
-  if (!contestIsLoading && contest == null) {
-    return (
-      <ErrorPage type="NOT FOUND" message="This contest does not exist." />
-    );
   }
 
   return (
@@ -189,20 +308,19 @@ function Results() {
             <h2 data-testid="results-page-section-header">Results</h2>
           </div>
 
-          {isLoading && <LoadingSpinner size="LARGE" />}
+          {(entriesIsLoading || contestIsLoading || levelsIsLoading) && <LoadingSpinner size="LARGE" />}
 
-          {!isLoading &&
+          {!(entriesIsLoading || contestIsLoading || levelsIsLoading) &&
             <div className="section-body container" data-testid="results-page-section-body">
-              <WinnersCard winners={winners} handleRemoveWinner={showDeleteWinnerModal} />
+              <WinnersCard winners={contestData?.contest.winners || []} handleRemoveWinner={showDeleteWinnerModal} />
 
-              <EntriesPerLevelCard entriesPerLevel={entriesPerLevel} />
+              <EntriesPerLevelCard entriesPerLevel={levelsData?.entriesPerLevel || []} />
 
               <EntriesByAvgScoreCard
-                entriesByAvgScore={entries}
-                votingEnabled={votingEnabled}
+                entriesByAvgScore={entriesData ? entriesData.entries : []}
+                votingEnabled={contestData?.contest.isVotingEnabled || false}
                 handleShowEntryVotes={showVotesModal}
                 showVoteForm={showVoteForm}
-                handleRemoveVote={showConfirmRemoveVoteModal}
                 handleAddWinner={showConfirmAddWinnerModal}
               />
             </div>
@@ -211,31 +329,35 @@ function Results() {
       </section>
 
       {addWinnerId &&
-        <ConfirmModal title="Mark as winner?" confirmLabel="Mark As Winner" handleConfirm={handleAddWinner} handleCancel={hideConfirmAddWinnerModal} data={addWinnerId}>
+        <ConfirmModal title="Mark as winner?" confirmLabel="Mark As Winner" handleConfirm={handleAddWinner} handleCancel={hideConfirmAddWinnerModal} data={addWinnerId} loading={addWinnerIsLoading}>
           <p>Are you sure you want to mark this entry as a winner? This is a public action that will be viewable by external users.</p>
           <p>Before marking as a winner, make sure the entry is in the correct bracket and that the author's account has been checked for any potential disqualifications.</p>
         </ConfirmModal>
       }
 
       {deleteWinnerId &&
-        <ConfirmModal title="Remove winner?" confirmLabel="Remove" handleConfirm={handleRemoveWinner} handleCancel={hideDeleteWinnerModal} destructive data={deleteWinnerId}>
+        <ConfirmModal title="Remove winner?" confirmLabel="Remove" handleConfirm={handleRemoveWinner} handleCancel={hideDeleteWinnerModal} destructive data={deleteWinnerId} loading={removeWinnerIsLoading}>
           <p>Are you sure you want to remove this winner? This is a public action that will be viewable by external users.</p>
         </ConfirmModal>
       }
 
       {showVotesForEntryId &&
         <InfoModal title={"Votes for Entry #" + showVotesForEntryId} handleClose={hideVotesModal}>
-          {entryVotes.map((e) => {
-            return (
-              <div style={{ marginBottom: "30px" }} key={"vote-" + e.vote_id}>
-                <span>
-                  <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.nickname}</h4>
-                  {state.is_admin && <Button type="tertiary" role="button" action={() => handleRemoveVote(e.entry_id, e.vote_id)} text="Delete" destructive />}
-                </span>
-                <p>{e.feedback}</p>
-              </div>
-            );
-          })}
+          {entryVotesIsLoading ?
+            <LoadingSpinner size="MEDIUM" />
+            :
+            entryVotesData?.entry.judgeVotes.map((e) => {
+              return (
+                <div style={{ marginBottom: "30px" }} key={"vote-" + e.id}>
+                  <span>
+                    <h4 style={{ margin: "0 15px 0 0", display: "inline-block" }}>{e.user.nickname}</h4>
+                    {(state.is_admin || e.user.id === state.user?.id) && <Button type="tertiary" role="button" action={() => handleRemoveVote(e.id)} text="Delete" destructive />}
+                  </span>
+                  <p>{e.reason}</p>
+                </div>
+              );
+            }) || ""
+          }
         </InfoModal>
       }
 
@@ -246,6 +368,7 @@ function Results() {
           handleSubmit={handleVoteForEntry}
           handleCancel={hideVoteForm}
           cols={5}
+          loading={addVoteIsLoading}
           fields={[
             {
               fieldType: "TEXTAREA",
@@ -259,12 +382,6 @@ function Results() {
             }
           ]}
         />
-      }
-
-      {deleteVoteEntryId &&
-        <ConfirmModal title="Delete vote?" confirmLabel="Delete" handleConfirm={handleRemoveVote} handleCancel={hideConfirmRemoveVoteModal} destructive data={deleteVoteEntryId}>
-          <p>Are you sure you want to delete this vote? This action cannot be undone.</p>
-        </ConfirmModal>
       }
     </React.Fragment>
   );

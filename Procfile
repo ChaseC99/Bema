@@ -1,2 +1,1 @@
-web: npm start
-api: bin/Bema
+web: bin/Bema
