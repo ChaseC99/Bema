@@ -144,7 +144,23 @@ type ImportEntriesResponse =  {
 
 const IMPORT_ENTRIES = gql`
   mutation ImportEntries($contestId: ID!) {
-    importEntries(contestId: $contestId)
+    success: importEntries(contestId: $contestId)
+  }
+`;
+
+type AssignEntriesResponse = {
+  success: boolean
+}
+
+const ASSIGN_ALL_ENTRIES = gql`
+  mutation AssignAllEntriesToGroups($contestId: ID!) {
+    success: assignAllEntriesToGroups(contestId: $contestId)
+  }
+`;
+
+const ASSIGN_NEW_ENTRIES = gql`
+  mutation AssignAllEntriesToGroups($contestId: ID!) {
+    assignNewEntriesToGroups(contestId: $contestId)
   }
 `;
 
@@ -164,6 +180,8 @@ function Entries() {
   const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
   const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
+  const [assignAllEntries, { loading: assignAllEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_ALL_ENTRIES, { onError: handleGQLError });
+  const [assignNewEntries, { loading: assignNewEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_NEW_ENTRIES, { onError: handleGQLError });
   
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -271,9 +289,10 @@ function Entries() {
   }
 
   const handleAssignAllEntries = async () => {
-    await request("PUT", "/api/internal/entries/assignToGroups", {
-      contest_id: contestId,
-      assignAll: true
+    await assignAllEntries({
+      variables: {
+        contestId: contestId
+      }
     });
 
     refetchEntries();
@@ -289,10 +308,11 @@ function Entries() {
   }
 
   const handleAssignNewEntries = async () => {
-    await request("PUT", "/api/internal/entries/assignToGroups", {
-      contest_id: contestId,
-      assignAll: false
-    });
+    await assignNewEntries({
+      variables: {
+        contestId: contestId
+      }
+    })
 
     refetchEntries();
     closeConfirmAssignNewEntriesModal();
@@ -595,6 +615,7 @@ function Entries() {
           confirmLabel="Assign Groups"
           handleConfirm={handleAssignAllEntries}
           handleCancel={closeConfirmAssignAllEntriesModal}
+          loading={assignAllEntriesIsLoading}
         >
           <p>Are you sure you want to assign all entries to groups? This will evenly assign all entries to the active groups, even if the entry is already assigned to a group.</p>
         </ConfirmModal>
@@ -606,6 +627,7 @@ function Entries() {
           confirmLabel="Assign Groups"
           handleConfirm={handleAssignNewEntries}
           handleCancel={closeConfirmAssignNewEntriesModal}
+          loading={assignNewEntriesIsLoading}
         >
           <p>Are you sure you want to assign all new entries to groups? This will allow evaluators to score the entries if judging for the contest is enabled.</p>
         </ConfirmModal>

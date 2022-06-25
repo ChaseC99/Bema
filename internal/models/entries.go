@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"math"
 
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
@@ -518,4 +519,56 @@ func CreateEntry(ctx context.Context, contestId int, input *EntryInput) (*int, e
 	}
 
 	return &id, nil
+}
+
+func AssignAllEntriesToGroups(ctx context.Context, contestId int) error {
+	groups, err := GetActiveJudgingGroups(ctx)
+	if err != nil {
+		return err
+	}
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE disqualified = false AND contest_id = $1;", contestId)
+
+	var entryCount int
+	if err := row.Scan(&entryCount); err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while assigning all entries to groups", err)
+	}
+
+	offset := 0
+	limit := math.Ceil(float64(entryCount) / float64(len(groups)))
+
+	for i := range groups {
+		_, err := db.DB.Exec("UPDATE entry SET assigned_group_id = $1 WHERE entry_id IN (SELECT entry_id FROM entry WHERE contest_id = $2 AND disqualified = false ORDER BY entry_id ASC LIMIT $3 OFFSET $4) AND contest_id = $2;", groups[i].ID, contestId, limit, offset)
+		if err != nil {
+			return errors.NewInternalError(ctx, "An unexpected error occurred while assigning all entries to groups", err)
+		}
+		offset += int(limit)
+	}
+
+	return nil
+}
+
+func AssignNewEntriesToGroups(ctx context.Context, contestId int) error {
+	groups, err := GetActiveJudgingGroups(ctx)
+	if err != nil {
+		return err
+	}
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM entry WHERE disqualified = false AND contest_id = $1 AND assigned_group_id IS NULL;", contestId)
+
+	var entryCount int
+	if err := row.Scan(&entryCount); err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while assigning new entries to groups", err)
+	}
+
+	limit := math.Ceil(float64(entryCount) / float64(len(groups)))
+
+	for i := range groups {
+		_, err := db.DB.Exec("UPDATE entry SET assigned_group_id = $1 WHERE entry_id IN (SELECT entry_id FROM entry WHERE contest_id = $2 AND disqualified = false AND assigned_group_id IS NULL ORDER BY entry_id ASC LIMIT $3) AND contest_id = $2;", groups[i].ID, contestId, limit)
+		if err != nil {
+			return errors.NewInternalError(ctx, "An unexpected error occurred while assigning new entries to groups", err)
+		}
+	}
+
+	return nil
 }

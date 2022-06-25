@@ -95,6 +95,16 @@ extend type Mutation {
 	Imports all new entries for a contest. Returns a boolean indicating success. Requires Add Entries permission.
 	"""
 	importEntries(contestId: ID!): Boolean!
+
+	"""
+	Assigns all entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
+	"""
+	assignAllEntriesToGroups(contestId: ID!): Boolean!
+
+	"""
+	Assigns new entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
+	"""
+	assignNewEntriesToGroups(contestId: ID!): Boolean!
 }
 
 """

@@ -6,7 +6,6 @@ const wasValidated = require(process.cwd() + "/middleware/wasValidated");
 const { nameChars, kaidPattern, contentChars, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
 
 const entries = require(process.cwd() + "/handlers/api/entries");
-const judging = require(process.cwd() + "/handlers/api/judging");
 const users = require(process.cwd() + "/handlers/api/users");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 const errors = require(process.cwd() + "/handlers/api/errors");
@@ -38,11 +37,6 @@ const routeChecks = {
       check("entry_height")
       .isInt()
       .withMessage("Entry height must be an integer")
-    ],
-    assignToGroups: [
-      check("contest_id")
-      .isInt()
-      .withMessage("Contest ID must be an integer")
     ],
     transferEntryGroups: [
       check("contest_id")
@@ -328,7 +322,6 @@ router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
 
 // Entries
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
-router.put("/internal/entries/assignToGroups", routeChecks.entries.assignToGroups, wasValidated, entries.assignToGroups);
 router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
 
 // Knowledge Base

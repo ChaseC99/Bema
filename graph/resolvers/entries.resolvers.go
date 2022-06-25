@@ -445,6 +445,36 @@ func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bo
 	return true, nil
 }
 
+func (r *mutationResolver) AssignAllEntriesToGroups(ctx context.Context, contestID int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEntryGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to assign entries to groups.")
+	}
+
+	err := models.AssignAllEntriesToGroups(ctx, contestID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (r *mutationResolver) AssignNewEntriesToGroups(ctx context.Context, contestID int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEntryGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to assign entries to groups.")
+	}
+
+	err := models.AssignNewEntriesToGroups(ctx, contestID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
