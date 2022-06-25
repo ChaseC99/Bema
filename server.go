@@ -7,13 +7,12 @@ import (
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/resolvers"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
-	"github.com/go-chi/chi"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
@@ -28,9 +27,12 @@ func main() {
 		log.Fatal("error loading environment variables")
 	}
 
-	port := os.Getenv("GRAPHQL_PORT")
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = os.Getenv("GRAPHQL_PORT")
+		if port == "" {
+			port = defaultPort
+		}
 	}
 
 	// Create database connection
@@ -40,7 +42,7 @@ func main() {
 	config := generated.Config{Resolvers: &resolvers.Resolver{}}
 
 	// Create router
-	router := chi.NewRouter()
+	router := mux.NewRouter()
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://www.kachallengecouncil.org", "https://bema-development.herokuapp.com/", "https://studio.apollographql.com", "http://localhost:6001"},
 		AllowCredentials: true,
@@ -53,11 +55,8 @@ func main() {
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 	router.Handle("/api/internal/graphql", srv)
 
-	// Render a playground editor in dev mode
-	mode := os.Getenv("APP_STATE")
-	if mode == "dev" {
-		router.Handle("/", playground.Handler("Bema", "/api/internal/graphql"))
-	}
+	// Serve the react app
+	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./client/build"))))
 
 	// Start the server
 	log.Println("Running server on port :" + port)
