@@ -5,6 +5,11 @@ package resolvers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
@@ -51,6 +56,10 @@ func (r *entryResolver) SkillLevel(ctx context.Context, obj *model.Entry) (*stri
 func (r *entryResolver) Group(ctx context.Context, obj *model.Entry) (*model.JudgingGroup, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {
+		return nil, nil
+	}
+
+	if obj.Group == nil {
 		return nil, nil
 	}
 
@@ -370,6 +379,70 @@ func (r *mutationResolver) DeleteEntryVote(ctx context.Context, id int) (*model.
 	}
 
 	return vote, nil
+}
+
+func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AddEntries) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to import entries.")
+	}
+
+	contest, err := models.GetContestById(ctx, contestID)
+	if err != nil {
+		return false, err
+	}
+
+	//programs := []*models.EntryInput{}
+
+	splitURL := strings.Split(*contest.URL, "/")
+	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:%s/top-forks?sort=2&page=0&limit=1000", splitURL[len(splitURL)-1])
+
+	res, err := http.Get(APIEndpoint)
+	if err != nil {
+		return false, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return false, err
+	}
+
+	type Scratchpad struct {
+		Created    string `json:"created"`
+		Title      string `json:"title"`
+		Votes      int    `json:"sumVotesIncremented"`
+		URL        string `json:"url"`
+		AuthorKAID string `json:"authorKaid"`
+		AuthorName string `json:"authorNickname"`
+	}
+
+	type Response struct {
+		Scratchpads []Scratchpad `json:"scratchpads"`
+	}
+
+	var data Response
+	json.Unmarshal(body, &data)
+
+	for i := range data.Scratchpads {
+		urlSplit := strings.Split(data.Scratchpads[i].URL, "/")
+		input := &models.EntryInput{
+			URL:        data.Scratchpads[i].URL,
+			Kaid:       urlSplit[len(urlSplit)-1],
+			Title:      data.Scratchpads[i].Title,
+			AuthorName: data.Scratchpads[i].AuthorName,
+			AuthorKaid: data.Scratchpads[i].AuthorKAID,
+			Votes:      data.Scratchpads[i].Votes,
+			Created:    data.Scratchpads[i].Created,
+		}
+
+		_, err := models.CreateEntry(ctx, contestID, input)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
 
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {

@@ -37,8 +37,8 @@ type Entry = {
 }
 
 const GET_ENTRIES = gql`
-  query GetEntries {
-    entries(contestId:"71") {
+  query GetEntries($contestId: ID!) {
+    entries(contestId: $contestId) {
       id
       url
       kaid
@@ -138,6 +138,16 @@ const GET_ACTIVE_GROUPS = gql`
   }
 `;
 
+type ImportEntriesResponse =  {
+  success: boolean
+}
+
+const IMPORT_ENTRIES = gql`
+  mutation ImportEntries($contestId: ID!) {
+    importEntries(contestId: $contestId)
+  }
+`;
+
 function Entries() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -153,7 +163,8 @@ function Entries() {
   const { loading: groupsIsLoading, data: groupsData } = useQuery<GetActiveGroupsResponse>(GET_ACTIVE_GROUPS, { onError: handleGQLError });
   const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
-
+  const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
+  
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
       id: contestId
@@ -161,7 +172,12 @@ function Entries() {
     onError: handleGQLError
   });
 
-  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesResponse>(GET_ENTRIES, { onError: handleGQLError });
+  const { loading: entriesIsLoading, data: entriesData, refetch: refetchEntries } = useQuery<GetEntriesResponse>(GET_ENTRIES, { 
+    variables: {
+      contestId: contestId
+    },
+    onError: handleGQLError 
+  });
 
   const showEditEntryForm = (id: string) => {
     const entry = entriesData?.entries.find((e) => e.id === id) as Entry;
@@ -224,13 +240,14 @@ function Entries() {
   }
 
   const handleEntryImport = async () => {
-    await request("POST", "/api/internal/entries/import", {
-      contest_id: contestId
+    await importEntries({
+      variables: {
+        contestId: contestId
+      }
     });
 
+    refetchEntries();
     closeImportConfirmModal();
-
-    window.location.reload();
   }
 
   const showImportIndividualEntryForm = () => {
@@ -543,6 +560,7 @@ function Entries() {
           confirmLabel="Import"
           handleConfirm={handleEntryImport}
           handleCancel={closeImportConfirmModal}
+          loading={importEntriesIsLoading}
         >
           <p>Are you sure you want to import entries? This will add all new spin-offs of the contest program that were created since the most recently imported entry.</p>
         </ConfirmModal>

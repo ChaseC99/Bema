@@ -11,6 +11,16 @@ import (
 	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
+type EntryInput struct {
+	URL        string
+	Kaid       string
+	Title      string
+	AuthorName string
+	AuthorKaid string
+	Votes      int
+	Created    string
+}
+
 func NewEntryModel() model.Entry {
 	var entry model.Entry
 
@@ -497,4 +507,15 @@ func GetContestIdByVoteId(ctx context.Context, voteId int) (*int, error) {
 	}
 
 	return contestId, nil
+}
+
+func CreateEntry(ctx context.Context, contestId int, input *EntryInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO entry (contest_id, entry_url, entry_kaid, entry_title, entry_author, entry_votes, entry_created, entry_author_kaid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(contest_id, entry_kaid) DO UPDATE SET entry_title = excluded.entry_title, entry_author = excluded.entry_author, entry_votes = excluded.entry_votes RETURNING entry_id;", contestId, input.URL, input.Kaid, input.Title, input.AuthorName, input.Votes, input.Created, input.AuthorKaid)
+
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while adding an entry", err)
+	}
+
+	return &id, nil
 }

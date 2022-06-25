@@ -253,6 +253,7 @@ type ComplexityRoot struct {
 		EditJudgingGroup   func(childComplexity int, id int, input model.EditJudgingGroupInput) int
 		EditTask           func(childComplexity int, id int, input model.EditTaskInput) int
 		FlagEntry          func(childComplexity int, id int) int
+		ImportEntries      func(childComplexity int, contestID int) int
 		Login              func(childComplexity int, username string, password string) int
 		Logout             func(childComplexity int) int
 		RemoveWinner       func(childComplexity int, id int) int
@@ -458,6 +459,7 @@ type MutationResolver interface {
 	SetEntryLevel(ctx context.Context, id int, skillLevel string) (*model.Entry, error)
 	CreateEntryVote(ctx context.Context, entryID int, reason string) (*model.EntryVote, error)
 	DeleteEntryVote(ctx context.Context, id int) (*model.EntryVote, error)
+	ImportEntries(ctx context.Context, contestID int) (bool, error)
 	EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error)
 	DeleteEvaluation(ctx context.Context, id int) (*model.Evaluation, error)
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
@@ -1651,6 +1653,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FlagEntry(childComplexity, args["id"].(int)), true
+
+	case "Mutation.importEntries":
+		if e.complexity.Mutation.ImportEntries == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_importEntries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ImportEntries(childComplexity, args["contestId"].(int)), true
 
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
@@ -2936,6 +2950,11 @@ extend type Mutation {
 	Delets an existing entry vote
 	"""
 	deleteEntryVote(id: ID!): EntryVote
+
+	"""
+	Imports all new entries for a contest. Returns a boolean indicating success. Requires Add Entries permission.
+	"""
+	importEntries(contestId: ID!): Boolean!
 }
 
 """
@@ -4609,6 +4628,21 @@ func (ec *executionContext) field_Mutation_flagEntry_args(ctx context.Context, r
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_importEntries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contestId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contestId"] = arg0
 	return args, nil
 }
 
@@ -11745,6 +11779,61 @@ func (ec *executionContext) fieldContext_Mutation_deleteEntryVote(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteEntryVote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_importEntries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_importEntries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ImportEntries(rctx, fc.Args["contestId"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_importEntries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_importEntries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -21996,6 +22085,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteEntryVote(ctx, field)
 			})
 
+		case "importEntries":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_importEntries(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "editEvaluation":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
