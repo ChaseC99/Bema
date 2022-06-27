@@ -3,41 +3,12 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, contentChars, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
+const { contentChars, visibilities } = require(process.cwd() + "/util/variables");
 
-const entries = require(process.cwd() + "/handlers/api/entries");
 const users = require(process.cwd() + "/handlers/api/users");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 
 const routeChecks = {
-  entries: {
-    add: [
-      check("contest_id")
-      .isInt()
-      .withMessage("Contest ID must be an integer"),
-      check("entry_url")
-      .isURL()
-      .withMessage("Entry url must be a valid URL"),
-      check("entry_kaid")
-      .isInt()
-      .withMessage("Entry KAID must be an integer"),
-      check("entry_title")
-      .isLength(nameChars)
-      .withMessage("Entry title cannot be empty or longer than 200 characters"),
-      check("entry_author")
-      .isLength(nameChars)
-      .withMessage("Entry author cannot be empty or longer than 200 characters"),
-      check("entry_level")
-      .isIn(skillLevels)
-      .withMessage("Entry level must be 'Advanced', 'Intermediate', 'Beginner', or 'TBD'"),
-      check("entry_votes")
-      .isInt()
-      .withMessage("Entry votes must be an integer"),
-      check("entry_height")
-      .isInt()
-      .withMessage("Entry height must be an integer")
-    ]
-  },
   users: {
     editPermissions: [
       check("evaluator_id")
@@ -256,9 +227,6 @@ router.use(hasBody);
 // Users
 router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
-
-// Entries
-router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
 
 // Knowledge Base
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);

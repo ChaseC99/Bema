@@ -97,6 +97,11 @@ extend type Mutation {
 	importEntries(contestId: ID!): Boolean!
 
 	"""
+	Imports a single entry given the program KAID. Requires Add Entries permission.
+	"""
+	importEntry(contestId: ID!, kaid: String!): Entry
+
+	"""
 	Assigns all entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
 	"""
 	assignAllEntriesToGroups(contestId: ID!): Boolean!

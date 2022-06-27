@@ -259,6 +259,7 @@ type ComplexityRoot struct {
 		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
 		FlagEntry                func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
+		ImportEntry              func(childComplexity int, contestID int, kaid string) int
 		Login                    func(childComplexity int, username string, password string) int
 		Logout                   func(childComplexity int) int
 		RemoveWinner             func(childComplexity int, id int) int
@@ -466,6 +467,7 @@ type MutationResolver interface {
 	CreateEntryVote(ctx context.Context, entryID int, reason string) (*model.EntryVote, error)
 	DeleteEntryVote(ctx context.Context, id int) (*model.EntryVote, error)
 	ImportEntries(ctx context.Context, contestID int) (bool, error)
+	ImportEntry(ctx context.Context, contestID int, kaid string) (*model.Entry, error)
 	AssignAllEntriesToGroups(ctx context.Context, contestID int) (bool, error)
 	AssignNewEntriesToGroups(ctx context.Context, contestID int) (bool, error)
 	TransferEntryGroups(ctx context.Context, contest int, prevGroup int, newGroup int) (bool, error)
@@ -1737,6 +1739,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ImportEntries(childComplexity, args["contestId"].(int)), true
+
+	case "Mutation.importEntry":
+		if e.complexity.Mutation.ImportEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_importEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ImportEntry(childComplexity, args["contestId"].(int), args["kaid"].(string)), true
 
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
@@ -3041,6 +3055,11 @@ extend type Mutation {
 	Imports all new entries for a contest. Returns a boolean indicating success. Requires Add Entries permission.
 	"""
 	importEntries(contestId: ID!): Boolean!
+
+	"""
+	Imports a single entry given the program KAID. Requires Add Entries permission.
+	"""
+	importEntry(contestId: ID!, kaid: String!): Entry
 
 	"""
 	Assigns all entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
@@ -4924,6 +4943,30 @@ func (ec *executionContext) field_Mutation_importEntries_args(ctx context.Contex
 		}
 	}
 	args["contestId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_importEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contestId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contestId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["kaid"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kaid"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["kaid"] = arg1
 	return args, nil
 }
 
@@ -12148,6 +12191,100 @@ func (ec *executionContext) fieldContext_Mutation_importEntries(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_importEntries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_importEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_importEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ImportEntry(rctx, fc.Args["contestId"].(int), fc.Args["kaid"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_importEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
+			case "judgeVotes":
+				return ec.fieldContext_Entry_judgeVotes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_importEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -22965,6 +23102,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "importEntry":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_importEntry(ctx, field)
+			})
+
 		case "assignAllEntriesToGroups":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {

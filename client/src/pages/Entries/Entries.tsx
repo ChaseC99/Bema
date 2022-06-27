@@ -147,6 +147,35 @@ const IMPORT_ENTRIES = gql`
   }
 `;
 
+type ImportEntryResponse = {
+  entry: Entry
+}
+
+const IMPORT_ENTRY = gql`
+  mutation ImportEntry($contestId: ID!, $kaid: String!) {
+    importEntry(contestId: $contestId, kaid: $kaid) {
+      id
+      url
+      kaid
+      title
+      author {
+        name
+        kaid
+      }
+      skillLevel
+      created
+      group {
+        id
+        name
+      }
+      height
+      isFlagged
+      isDisqualified
+      isSkillLevelLocked
+    }
+  }
+`;
+
 type AssignEntriesResponse = {
   success: boolean
 }
@@ -189,6 +218,7 @@ function Entries() {
   const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
   const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
+  const [importEntry, { loading: importEntryIsLoading }] = useMutation<ImportEntryResponse>(IMPORT_ENTRY, { onError: handleGQLError });
   const [assignAllEntries, { loading: assignAllEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_ALL_ENTRIES, { onError: handleGQLError });
   const [assignNewEntries, { loading: assignNewEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_NEW_ENTRIES, { onError: handleGQLError });
   const [transferEntries, { loading: transferEntriesIsLoading }] = useMutation<TransferEntriesResponse>(TRANSFER_ENTRIES, { onError: handleGQLError });
@@ -287,7 +317,15 @@ function Entries() {
   }
 
   const handleImportIndividualEntry = async (values: { [name: string]: any }) => {
-    // TODO: Make call to API to import a single entry
+    await importEntry({
+      variables: {
+        contestId: contestId,
+        kaid: values.kaid
+      }
+    });
+
+    refetchEntries();
+    hideImportIndividualEntryForm();
   }
 
   const openConfirmAssignAllEntriesModal = () => {
@@ -353,7 +391,7 @@ function Entries() {
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
 
-      <section id="entries-page-section" className="container col-12">
+      <section id="entries-page-section" className="container col-12" style={{ marginBottom: "150px" }}>
         <div className="col-12">
           <div className="section-header col-12">
             <h2 data-testid="entries-page-section-header">Entries</h2>
@@ -371,7 +409,6 @@ function Entries() {
                       role: "button",
                       action: showImportIndividualEntryForm,
                       text: "Single Entry",
-                      disabled: true
                     }
                   ]}
                   label="Import Entries"
@@ -605,14 +642,15 @@ function Entries() {
           handleSubmit={handleImportIndividualEntry}
           handleCancel={hideImportIndividualEntryForm}
           cols={4}
+          loading={importEntryIsLoading}
           fields={[
             {
               fieldType: "INPUT",
               type: "text",
-              name: "program_id",
-              id: "program-id",
+              name: "kaid",
+              id: "kaid",
               size: "LARGE",
-              label: "Entry ID",
+              label: "Entry KAID",
               description: "The program ID is the last part of the program URL.",
               defaultValue: "",
               required: true
