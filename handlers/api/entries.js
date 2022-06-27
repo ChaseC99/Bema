@@ -42,34 +42,4 @@ exports.add = (request, response, next) => {
   }
 }
 
-exports.transferEntryGroups = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        contest_id,
-        current_entry_group,
-        new_entry_group
-      } = request.body;
-
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.assign_entry_groups || is_admin) {
-        return db.query("UPDATE entry SET assigned_group_id = $1 WHERE assigned_group_id = $2 AND contest_id = $3", [new_entry_group, current_entry_group, contest_id], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem transfering the entry groups.", res.error);
-          }
-          successMsg(response);
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to transfer entry groups.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to transfer entry groups.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while transferring entry groups.", error);
-  }
-}
-
 module.exports = exports;

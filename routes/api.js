@@ -37,17 +37,6 @@ const routeChecks = {
       check("entry_height")
       .isInt()
       .withMessage("Entry height must be an integer")
-    ],
-    transferEntryGroups: [
-      check("contest_id")
-      .isInt()
-      .withMessage("Contest ID must be an integer"),
-      check("current_entry_group")
-      .isInt()
-      .withMessage("Current group ID must be an integer"),
-      check("new_entry_group")
-      .isInt()
-      .withMessage("New group ID must be an integer")
     ]
   },
   users: {
@@ -322,7 +311,6 @@ router.post("/internal/users", routeChecks.users.add, wasValidated, users.add);
 
 // Entries
 router.post("/internal/entries", routeChecks.entries.add, wasValidated, entries.add);
-router.put("/internal/entries/transferEntryGroups", routeChecks.entries.transferEntryGroups, wasValidated, entries.transferEntryGroups);
 
 // Knowledge Base
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);

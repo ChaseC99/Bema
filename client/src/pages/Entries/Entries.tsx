@@ -7,7 +7,6 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 
@@ -164,6 +163,16 @@ const ASSIGN_NEW_ENTRIES = gql`
   }
 `;
 
+type TransferEntriesResponse = {
+  success: true
+}
+
+const TRANSFER_ENTRIES = gql`
+  mutation TransferEntryGroups($contest: ID!, $prevGroup: ID!, $newGroup: ID!) {
+    transferEntryGroups(contest: $contest, prevGroup: $prevGroup, newGroup: $newGroup)
+  }
+`;
+
 function Entries() {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -182,6 +191,7 @@ function Entries() {
   const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
   const [assignAllEntries, { loading: assignAllEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_ALL_ENTRIES, { onError: handleGQLError });
   const [assignNewEntries, { loading: assignNewEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_NEW_ENTRIES, { onError: handleGQLError });
+  const [transferEntries, { loading: transferEntriesIsLoading }] = useMutation<TransferEntriesResponse>(TRANSFER_ENTRIES, { onError: handleGQLError });
   
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -327,10 +337,12 @@ function Entries() {
   }
 
   const handleTransferGroups = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/entries/transferEntryGroups", {
-      contest_id: contestId,
-      current_entry_group: values.old_group,
-      new_entry_group: values.new_group
+    await transferEntries({
+      variables: {
+        contest: contestId,
+        prevGroup: values.old_group,
+        newGroup: values.new_group
+      }
     });
 
     refetchEntries();
@@ -382,7 +394,6 @@ function Entries() {
                       role: "button",
                       action: openTransferGroupsForm,
                       text: "Transfer",
-                      disabled: true
                     }
                   ]}
                   label="Update Groups"
@@ -641,6 +652,7 @@ function Entries() {
           handleSubmit={handleTransferGroups}
           handleCancel={closeTransferGroupsForm}
           cols={4}
+          loading={transferEntriesIsLoading}
           fields={[
             {
               fieldType: "SELECT",
