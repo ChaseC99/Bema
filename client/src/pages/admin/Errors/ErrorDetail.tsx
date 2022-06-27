@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Button from "../../../shared/Button";
@@ -43,6 +43,27 @@ const GET_ERROR_DETAILS = gql`
   }
 `;
 
+type DeleteErrorResponse = {
+  error: Error
+}
+
+const DELETE_ERROR = gql`
+  mutation DeleteError($id: ID!) {
+    error: deleteError(id: $id) {
+      id
+      message
+      stack
+      timestamp
+      requestOrigin
+      requestReferrer
+      requestUserAgent
+      user {
+        id
+      }
+    }
+  }
+`;
+
 function ErrorDetail() {
   const { errorId } = useParams();
   const { state } = useAppState();
@@ -57,6 +78,8 @@ function ErrorDetail() {
     onError: handleGQLError
   });
 
+  const [deleteError, { loading: deleteErrorIsLoading }] = useMutation<DeleteErrorResponse>(DELETE_ERROR, { onError: handleGQLError });
+
   const openDeleteErrorModal = (id: number) => {
     setDeleteErrorId(id);
   }
@@ -66,8 +89,10 @@ function ErrorDetail() {
   }
 
   const handleDeleteError = async (id: number) => {
-    await request("DELETE", "/api/internal/errors", {
-      error_id: id
+    await deleteError({
+      variables: {
+        id: id
+      }
     });
 
     closeDeleteErrorModal();
@@ -92,7 +117,7 @@ function ErrorDetail() {
             <span className="section-actions">
               <Button type="tertiary" role="link" action="/admin/errors" text="Back to all errors" />
               {(state.is_admin || state.user?.permissions.delete_errors) &&
-                <Button type="primary" role="button" action={openDeleteErrorModal} data={errorId} text="Delete" destructive disabled />
+                <Button type="primary" role="button" action={openDeleteErrorModal} data={errorId} text="Delete" destructive />
               }
             </span>
           </div>
@@ -120,6 +145,7 @@ function ErrorDetail() {
           confirmLabel="Delete"
           handleConfirm={handleDeleteError}
           handleCancel={closeDeleteErrorModal}
+          loading={deleteErrorIsLoading}
           destructive
           data={deleteErrorId}
         >

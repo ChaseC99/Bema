@@ -3,12 +3,11 @@ const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
 const { check, oneOf } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
-const { nameChars, kaidPattern, contentChars, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
+const { nameChars, contentChars, skillLevels, visibilities } = require(process.cwd() + "/util/variables");
 
 const entries = require(process.cwd() + "/handlers/api/entries");
 const users = require(process.cwd() + "/handlers/api/users");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
-const errors = require(process.cwd() + "/handlers/api/errors");
 
 const routeChecks = {
   entries: {
@@ -249,13 +248,6 @@ const routeChecks = {
       .isLength(contentChars)
       .withMessage("Article content must be between 0 and 5000 characters")
     ]
-  },
-  errors: {
-    delete: [
-      check("error_id")
-      .isInt()
-      .withMessage("error_id must be an integer")
-    ]
   }
 };
 
@@ -278,8 +270,5 @@ router.put("/internal/kb/articles/properties", routeChecks.kb.editArticlePropert
 router.delete("/internal/kb/articles", routeChecks.kb.deleteArticle, wasValidated, kb.deleteArticle);
 router.post("/internal/kb/articles/drafts", routeChecks.kb.addArticleDraft, wasValidated, kb.addArticleDraft);
 router.put("/internal/kb/articles/drafts", routeChecks.kb.editArticleDraft, wasValidated, kb.editArticleDraft);
-
-// Errors
-router.delete("/internal/errors", routeChecks.errors.delete, wasValidated, errors.delete);
 
 module.exports = router;
