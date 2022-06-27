@@ -35,6 +35,11 @@ extend type Mutation {
   Changes a user's password. Returns a boolean indicating success. Requires Change User Password permission.
   """
   changePassword(id: ID!, password: String!): Boolean!
+
+  """
+  Creates a new user account. Requires Add Users permission.
+  """
+  createUser(input: CreateUserInput!): User
 }
 
 """
@@ -320,4 +325,31 @@ type LoginResponse {
   The user's auth token
   """
   token: String
+}
+
+input CreateUserInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
 }

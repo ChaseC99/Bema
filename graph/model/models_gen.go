@@ -99,6 +99,19 @@ type CreateTaskInput struct {
 	DueDate string `json:"dueDate"`
 }
 
+type CreateUserInput struct {
+	// The user's real name
+	Name string `json:"name"`
+	// The user's email address
+	Email *string `json:"email"`
+	// The KAID associated with the user's Khan Academy account
+	Kaid string `json:"kaid"`
+	// The username the user will use to login
+	Username string `json:"username"`
+	// The user's start date
+	TermStart string `json:"termStart"`
+}
+
 // The input required for editing a contest
 type EditContestInput struct {
 	// The name of the contest

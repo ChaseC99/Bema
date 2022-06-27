@@ -159,3 +159,19 @@ func ChangeUserPasswordById(ctx context.Context, id int, password string) error 
 
 	return nil
 }
+
+func CreateUser(ctx context.Context, input *model.CreateUserInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5) RETURNING evaluator_id;", input.Name, input.Email, input.Kaid, input.Username, input.TermStart)
+
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a new user", err)
+	}
+
+	_, err := db.DB.Exec("INSERT INTO evaluator_permissions (evaluator_id) VALUES ($1)", id)
+	if err != nil {
+		return &id, errors.NewInternalError(ctx, "An unexpected error occurred while creating a new user", err)
+	}
+
+	return &id, nil
+}

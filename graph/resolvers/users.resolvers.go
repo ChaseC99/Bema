@@ -97,6 +97,21 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, id int, password 
 	return true, nil
 }
 
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AddUsers) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create users.")
+	}
+
+	id, err := models.CreateUser(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().User(ctx, *id)
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 

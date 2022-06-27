@@ -6,42 +6,6 @@ const {
 } = require(process.cwd() + "/util/functions");
 const db = require(process.cwd() + "/util/db");
 
-exports.add = (request, response, next) => {
-  try {
-    if (request.decodedToken) {
-      let {
-        evaluator_name,
-        email,
-        evaluator_kaid,
-        username,
-        date_start
-      } = request.body;
-      let {
-        is_admin
-      } = request.decodedToken;
-
-      if (request.decodedToken.permissions.add_users || is_admin) {
-        return db.query("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5)", [evaluator_name, email, evaluator_kaid, username, date_start], res => {
-          if (res.error) {
-            return handleNext(next, 400, "There was a problem adding this user.", res.error);
-          }
-          return db.query("INSERT INTO evaluator_permissions (evaluator_id, judge_entries) VALUES ($1, true)", [evaluator_id], res => {
-            if (res.error) {
-              return handleNext(next, 400, "There was a problem adding this user's default permissions.", res.error);
-            }
-            successMsg(response);
-          });
-        });
-      } else {
-        return handleNext(next, 403, "You're not authorized to create new users.");
-      }
-    }
-    return handleNext(next, 401, "You must log in to create new users.");
-  } catch (error) {
-    return handleNext(next, 500, "Unexpected error while creating a new user.", error);
-  }
-}
-
 exports.edit = (request, response, next) => {
   try {
     if (request.decodedToken && (request.decodedToken.permissions.edit_user_profiles || request.decodedToken.is_admin)) {

@@ -142,6 +142,29 @@ const CHANGE_PASSWORD = gql`
   }
 `;
 
+type CreateUserResponse = {
+  user: User
+}
+
+const CREATE_USER = gql`
+  mutation CreateUser($input: CreateUserInput!) {
+    createUser(input: $input) {
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
 function Users(props: UserProps) {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -154,6 +177,7 @@ function Users(props: UserProps) {
   const { loading: userIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS, { onError: handleGQLError });
   const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
   const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
+  const [createUser, { loading: createUserIsLoading }] = useMutation<CreateUserResponse>(CREATE_USER, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -164,16 +188,19 @@ function Users(props: UserProps) {
   }
 
   const handleAddUser = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/users", {
-      evaluator_name: values.name,
-      email: values.email,
-      evaluator_kaid: values.kaid,
-      username: values.username,
-      user_start: values.term_start
+    await createUser({
+      variables: {
+        input: {
+          name: values.name,
+          email: values.email,
+          kaid: values.kaid,
+          username: values.username,
+          termStart: values.term_start
+        }
+      }
     });
 
     closeAddUserModal();
-
     refetchUsers();
   }
 
@@ -283,7 +310,7 @@ function Users(props: UserProps) {
             <span className="section-actions">
               {!props.inactive && <Button type="tertiary" role="link" action="/admin/users/inactive" text="View deactivated users" />}
               {props.inactive && <Button type="tertiary" role="link" action="/admin/users" text="View active users" />}
-              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" disabled />}
+              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
             </span>
           </div>
           <div className="section-body">
@@ -312,6 +339,7 @@ function Users(props: UserProps) {
           handleSubmit={handleAddUser}
           handleCancel={closeAddUserModal}
           cols={4}
+          loading={createUserIsLoading}
           fields={[
             {
               fieldType: "INPUT",
