@@ -183,3 +183,11 @@ func EditUserById(ctx context.Context, id int, input *model.EditUserProfileInput
 	}
 	return nil
 }
+
+func EditUserPermissionsById(ctx context.Context, id int, input *model.EditUserPermissionsInput) error {
+	_, err := db.DB.Exec("UPDATE evaluator_permissions SET view_admin_stats = $1, edit_contests = $2, delete_contests = $3, add_entries = $4, edit_entries = $5, delete_entries = $6, assign_entry_groups = $7, view_all_evaluations = $8, edit_all_evaluations = $9, delete_all_evaluations = $10, manage_winners = $11, view_all_tasks = $12, edit_all_tasks = $13, delete_all_tasks = $14, view_judging_settings = $15, manage_judging_groups = $16, assign_evaluator_groups = $17, manage_judging_criteria = $18, view_all_users = $19, edit_user_profiles = $20, change_user_passwords = $21, assume_user_identities = $22, add_users = $23, view_errors = $24, delete_errors = $25, judge_entries = $26, edit_kb_content = $27, delete_kb_content = $28, publish_kb_content = $29, manage_announcements = $30 WHERE evaluator_id = $31", input.ViewAdminStats, input.EditContests, input.DeleteContests, input.AddEntries, input.EditEntries, input.DeleteEntries, input.AssignEntryGroups, input.ViewAllEvaluations, input.EditAllEvaluations, input.DeleteAllEvaluations, input.ManageWinners, input.ViewAllTasks, input.EditAllTasks, input.DeleteAllTasks, input.ViewJudgingSettings, input.ManageJudgingGroups, input.AssignEvaluatorGroups, input.ManageJudgingCriteria, input.ViewAllUsers, input.EditUserProfiles, input.ChangeUserPasswords, input.AssumeUserIdentities, input.AddUsers, input.ViewErrors, input.DeleteErrors, input.JudgeEntries, input.EditKbContent, input.DeleteKbContent, input.PublishKbContent, input.ManageAnnouncements, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a user's permissions", err)
+	}
+	return nil
+}

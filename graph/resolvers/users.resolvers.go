@@ -144,6 +144,26 @@ func (r *mutationResolver) EditUserProfile(ctx context.Context, id int, input mo
 	return r.Query().User(ctx, id)
 }
 
+func (r *mutationResolver) EditUserPermissions(ctx context.Context, id int, input model.EditUserPermissionsInput) (*model.Permissions, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil || !user.IsAdmin {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit user permissions.")
+	}
+
+	err := models.EditUserPermissionsById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions, err := models.GetUserPermissionsById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissions, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 

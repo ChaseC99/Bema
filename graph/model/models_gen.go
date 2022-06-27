@@ -184,6 +184,68 @@ type EditTaskInput struct {
 	DueDate string `json:"dueDate"`
 }
 
+type EditUserPermissionsInput struct {
+	// Allows the user to add individual and bulk import entries
+	AddEntries bool `json:"add_entries"`
+	// Allows the user to create new user accounts
+	AddUsers bool `json:"add_users"`
+	// Allows the user to assign entries to judging groups
+	AssignEntryGroups bool `json:"assign_entry_groups"`
+	// Allows the user to assign evaluators to judging groups
+	AssignEvaluatorGroups bool `json:"assign_evaluator_groups"`
+	// Allows the user to impersonate other users
+	AssumeUserIdentities bool `json:"assume_user_identities"`
+	// Allows the user to change the passwords of other users
+	ChangeUserPasswords bool `json:"change_user_passwords"`
+	// Allows the user to delete all evaluations
+	DeleteAllEvaluations bool `json:"delete_all_evaluations"`
+	// Allows the user to delete all tasks
+	DeleteAllTasks bool `json:"delete_all_tasks"`
+	// Allows the user to delete all contests and associated data
+	DeleteContests bool `json:"delete_contests"`
+	// Allows the user to delete all entries
+	DeleteEntries bool `json:"delete_entries"`
+	// Allows the user to delete all errors
+	DeleteErrors bool `json:"delete_errors"`
+	// Allows the user to delete all KB articles and sections
+	DeleteKbContent bool `json:"delete_kb_content"`
+	// Allows the user to edit all evaluations
+	EditAllEvaluations bool `json:"edit_all_evaluations"`
+	// Allows the user to edit all tasks
+	EditAllTasks bool `json:"edit_all_tasks"`
+	// Allows the user to edit all contests
+	EditContests bool `json:"edit_contests"`
+	// Allows the user to edit all entries
+	EditEntries bool `json:"edit_entries"`
+	// Allows the user to edit all KB articles and sections
+	EditKbContent bool `json:"edit_kb_content"`
+	// Allows the user to edit all user profiles
+	EditUserProfiles bool `json:"edit_user_profiles"`
+	JudgeEntries     bool `json:"judge_entries"`
+	// Allows the user to create, edit, and delete announcements
+	ManageAnnouncements bool `json:"manage_announcements"`
+	// Allows the user to create, edit, and delete judging criteria
+	ManageJudgingCriteria bool `json:"manage_judging_criteria"`
+	// Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+	ManageJudgingGroups bool `json:"manage_judging_groups"`
+	// Allows the user to add and remove winning entries
+	ManageWinners bool `json:"manage_winners"`
+	// Allows the user to publish draft KB articles
+	PublishKbContent bool `json:"publish_kb_content"`
+	// Allows the user to view admin stats on the dashboard
+	ViewAdminStats bool `json:"view_admin_stats"`
+	// Allows the user to view all evaluations
+	ViewAllEvaluations bool `json:"view_all_evaluations"`
+	// Allows the user to view all tasks
+	ViewAllTasks bool `json:"view_all_tasks"`
+	// Allows the user to view all user accounts
+	ViewAllUsers bool `json:"view_all_users"`
+	// Allows the user to view all errors
+	ViewErrors bool `json:"view_errors"`
+	// Allows the user to view all judging settings
+	ViewJudgingSettings bool `json:"view_judging_settings"`
+}
+
 type EditUserProfileInput struct {
 	// The user's real name
 	Name string `json:"name"`

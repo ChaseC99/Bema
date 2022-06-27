@@ -256,6 +256,7 @@ type ComplexityRoot struct {
 		EditEvaluation           func(childComplexity int, id int, input model.EditEvaluationInput) int
 		EditJudgingGroup         func(childComplexity int, id int, input model.EditJudgingGroupInput) int
 		EditTask                 func(childComplexity int, id int, input model.EditTaskInput) int
+		EditUserPermissions      func(childComplexity int, id int, input model.EditUserPermissionsInput) int
 		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
 		FlagEntry                func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
@@ -489,6 +490,7 @@ type MutationResolver interface {
 	ChangePassword(ctx context.Context, id int, password string) (bool, error)
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
 	EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error)
+	EditUserPermissions(ctx context.Context, id int, input model.EditUserPermissionsInput) (*model.Permissions, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1704,6 +1706,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditTask(childComplexity, args["id"].(int), args["input"].(model.EditTaskInput)), true
 
+	case "Mutation.editUserPermissions":
+		if e.complexity.Mutation.EditUserPermissions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editUserPermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditUserPermissions(childComplexity, args["id"].(int), args["input"].(model.EditUserPermissionsInput)), true
+
 	case "Mutation.editUserProfile":
 		if e.complexity.Mutation.EditUserProfile == nil {
 			break
@@ -2588,6 +2602,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditEvaluationInput,
 		ec.unmarshalInputEditJudgingGroupInput,
 		ec.unmarshalInputEditTaskInput,
+		ec.unmarshalInputEditUserPermissionsInput,
 		ec.unmarshalInputEditUserProfileInput,
 		ec.unmarshalInputJudgingCriteriaInput,
 		ec.unmarshalInputScoreEntryInput,
@@ -4004,6 +4019,11 @@ extend type Mutation {
   Edits an existing user's profile. Requires Edit User Profiles permission.
   """
   editUserProfile(id: ID!, input: EditUserProfileInput!): User
+
+  """
+  Updates a user's permissions. Requires Admin permission.
+  """
+  editUserPermissions(id: ID!, input: EditUserPermissionsInput!): Permissions
 }
 
 """
@@ -4368,6 +4388,156 @@ input EditUserProfileInput {
   Indicates whether the user has email notifications enabled for new announcements
   """
   notificationsEnabled: Boolean!
+}
+
+input EditUserPermissionsInput {
+  """
+  Allows the user to add individual and bulk import entries
+  """
+  add_entries: Boolean!
+
+  """
+  Allows the user to create new user accounts
+  """
+  add_users: Boolean!
+
+  """
+  Allows the user to assign entries to judging groups
+  """
+  assign_entry_groups: Boolean!
+
+  """
+  Allows the user to assign evaluators to judging groups
+  """
+  assign_evaluator_groups: Boolean!
+
+  """
+  Allows the user to impersonate other users
+  """
+  assume_user_identities: Boolean!
+
+  """
+  Allows the user to change the passwords of other users
+  """
+  change_user_passwords: Boolean!
+
+  """
+  Allows the user to delete all evaluations
+  """
+  delete_all_evaluations: Boolean!
+
+  """
+  Allows the user to delete all tasks
+  """
+  delete_all_tasks: Boolean!
+
+  """
+  Allows the user to delete all contests and associated data
+  """
+  delete_contests: Boolean!
+
+  """
+  Allows the user to delete all entries
+  """
+  delete_entries: Boolean!
+
+  """
+  Allows the user to delete all errors
+  """
+  delete_errors: Boolean!
+
+  """
+  Allows the user to delete all KB articles and sections
+  """
+  delete_kb_content: Boolean!
+
+  """
+  Allows the user to edit all evaluations
+  """
+  edit_all_evaluations: Boolean!
+
+  """
+  Allows the user to edit all tasks
+  """
+  edit_all_tasks: Boolean!
+
+  """
+  Allows the user to edit all contests
+  """
+  edit_contests: Boolean!
+
+  """
+  Allows the user to edit all entries
+  """
+  edit_entries: Boolean!
+
+  """
+  Allows the user to edit all KB articles and sections
+  """
+  edit_kb_content: Boolean!
+
+  """
+  Allows the user to edit all user profiles
+  """
+  edit_user_profiles: Boolean!
+
+  # Allows the user to score entries
+  judge_entries: Boolean!
+
+  """
+  Allows the user to create, edit, and delete announcements
+  """
+  manage_announcements: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging criteria
+  """
+  manage_judging_criteria: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+  """
+  manage_judging_groups: Boolean!
+
+  """
+  Allows the user to add and remove winning entries
+  """
+  manage_winners: Boolean!
+
+  """
+  Allows the user to publish draft KB articles
+  """
+  publish_kb_content: Boolean!
+
+  """
+  Allows the user to view admin stats on the dashboard
+  """
+  view_admin_stats: Boolean!
+
+  """
+  Allows the user to view all evaluations
+  """
+  view_all_evaluations: Boolean!
+
+  """
+  Allows the user to view all tasks
+  """
+  view_all_tasks: Boolean!
+
+  """
+  Allows the user to view all user accounts
+  """
+  view_all_users: Boolean!
+
+  """
+  Allows the user to view all errors
+  """
+  view_errors: Boolean!
+
+  """
+  Allows the user to view all judging settings
+  """
+  view_judging_settings: Boolean!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4884,6 +5054,30 @@ func (ec *executionContext) field_Mutation_editTask_args(ctx context.Context, ra
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editUserPermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditUserPermissionsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditUserPermissionsInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserPermissionsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13649,6 +13843,120 @@ func (ec *executionContext) fieldContext_Mutation_editUserProfile(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_editUserPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editUserPermissions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditUserPermissions(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditUserPermissionsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Permissions)
+	fc.Result = res
+	return ec.marshalOPermissions2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermissions(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editUserPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "add_entries":
+				return ec.fieldContext_Permissions_add_entries(ctx, field)
+			case "add_users":
+				return ec.fieldContext_Permissions_add_users(ctx, field)
+			case "assign_entry_groups":
+				return ec.fieldContext_Permissions_assign_entry_groups(ctx, field)
+			case "assign_evaluator_groups":
+				return ec.fieldContext_Permissions_assign_evaluator_groups(ctx, field)
+			case "assume_user_identities":
+				return ec.fieldContext_Permissions_assume_user_identities(ctx, field)
+			case "change_user_passwords":
+				return ec.fieldContext_Permissions_change_user_passwords(ctx, field)
+			case "delete_all_evaluations":
+				return ec.fieldContext_Permissions_delete_all_evaluations(ctx, field)
+			case "delete_all_tasks":
+				return ec.fieldContext_Permissions_delete_all_tasks(ctx, field)
+			case "delete_contests":
+				return ec.fieldContext_Permissions_delete_contests(ctx, field)
+			case "delete_entries":
+				return ec.fieldContext_Permissions_delete_entries(ctx, field)
+			case "delete_errors":
+				return ec.fieldContext_Permissions_delete_errors(ctx, field)
+			case "delete_kb_content":
+				return ec.fieldContext_Permissions_delete_kb_content(ctx, field)
+			case "edit_all_evaluations":
+				return ec.fieldContext_Permissions_edit_all_evaluations(ctx, field)
+			case "edit_all_tasks":
+				return ec.fieldContext_Permissions_edit_all_tasks(ctx, field)
+			case "edit_contests":
+				return ec.fieldContext_Permissions_edit_contests(ctx, field)
+			case "edit_entries":
+				return ec.fieldContext_Permissions_edit_entries(ctx, field)
+			case "edit_kb_content":
+				return ec.fieldContext_Permissions_edit_kb_content(ctx, field)
+			case "edit_user_profiles":
+				return ec.fieldContext_Permissions_edit_user_profiles(ctx, field)
+			case "judge_entries":
+				return ec.fieldContext_Permissions_judge_entries(ctx, field)
+			case "manage_announcements":
+				return ec.fieldContext_Permissions_manage_announcements(ctx, field)
+			case "manage_judging_criteria":
+				return ec.fieldContext_Permissions_manage_judging_criteria(ctx, field)
+			case "manage_judging_groups":
+				return ec.fieldContext_Permissions_manage_judging_groups(ctx, field)
+			case "manage_winners":
+				return ec.fieldContext_Permissions_manage_winners(ctx, field)
+			case "publish_kb_content":
+				return ec.fieldContext_Permissions_publish_kb_content(ctx, field)
+			case "view_admin_stats":
+				return ec.fieldContext_Permissions_view_admin_stats(ctx, field)
+			case "view_all_evaluations":
+				return ec.fieldContext_Permissions_view_all_evaluations(ctx, field)
+			case "view_all_tasks":
+				return ec.fieldContext_Permissions_view_all_tasks(ctx, field)
+			case "view_all_users":
+				return ec.fieldContext_Permissions_view_all_users(ctx, field)
+			case "view_errors":
+				return ec.fieldContext_Permissions_view_errors(ctx, field)
+			case "view_judging_settings":
+				return ec.fieldContext_Permissions_view_judging_settings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Permissions", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editUserPermissions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -21179,6 +21487,261 @@ func (ec *executionContext) unmarshalInputEditTaskInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditUserPermissionsInput(ctx context.Context, obj interface{}) (model.EditUserPermissionsInput, error) {
+	var it model.EditUserPermissionsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "add_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("add_entries"))
+			it.AddEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "add_users":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("add_users"))
+			it.AddUsers, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assign_entry_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assign_entry_groups"))
+			it.AssignEntryGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assign_evaluator_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assign_evaluator_groups"))
+			it.AssignEvaluatorGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assume_user_identities":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assume_user_identities"))
+			it.AssumeUserIdentities, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "change_user_passwords":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("change_user_passwords"))
+			it.ChangeUserPasswords, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_all_evaluations"))
+			it.DeleteAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_all_tasks"))
+			it.DeleteAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_contests":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_contests"))
+			it.DeleteContests, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_entries"))
+			it.DeleteEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_errors":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_errors"))
+			it.DeleteErrors, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_kb_content"))
+			it.DeleteKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_all_evaluations"))
+			it.EditAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_all_tasks"))
+			it.EditAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_contests":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_contests"))
+			it.EditContests, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_entries"))
+			it.EditEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_kb_content"))
+			it.EditKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_user_profiles":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_user_profiles"))
+			it.EditUserProfiles, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "judge_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("judge_entries"))
+			it.JudgeEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_announcements":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_announcements"))
+			it.ManageAnnouncements, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_judging_criteria":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_judging_criteria"))
+			it.ManageJudgingCriteria, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_judging_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_judging_groups"))
+			it.ManageJudgingGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_winners":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_winners"))
+			it.ManageWinners, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "publish_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publish_kb_content"))
+			it.PublishKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_admin_stats":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_admin_stats"))
+			it.ViewAdminStats, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_evaluations"))
+			it.ViewAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_tasks"))
+			it.ViewAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_users":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_users"))
+			it.ViewAllUsers, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_errors":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_errors"))
+			it.ViewErrors, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_judging_settings":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_judging_settings"))
+			it.ViewJudgingSettings, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditUserProfileInput(ctx context.Context, obj interface{}) (model.EditUserProfileInput, error) {
 	var it model.EditUserProfileInput
 	asMap := map[string]interface{}{}
@@ -23249,6 +23812,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_editUserProfile(ctx, field)
 			})
 
+		case "editUserPermissions":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editUserPermissions(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25274,6 +25843,11 @@ func (ec *executionContext) unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑ
 
 func (ec *executionContext) unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx context.Context, v interface{}) (model.EditTaskInput, error) {
 	res, err := ec.unmarshalInputEditTaskInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditUserPermissionsInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserPermissionsInput(ctx context.Context, v interface{}) (model.EditUserPermissionsInput, error) {
+	res, err := ec.unmarshalInputEditUserPermissionsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

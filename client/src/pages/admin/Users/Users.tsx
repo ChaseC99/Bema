@@ -188,6 +188,78 @@ const EDIT_USER_PROFILE = gql`
   }
 `;
 
+type EditUserPermissionsResponse = {
+  permissions: {
+    add_entries: boolean
+    add_users: boolean
+    assign_entry_groups: boolean
+    assign_evaluator_groups: boolean
+    assume_user_identities: boolean
+    change_user_passwords: boolean
+    delete_all_evaluations: boolean
+    delete_all_tasks: boolean
+    delete_contests: boolean
+    delete_entries: boolean
+    delete_errors: boolean
+    delete_kb_content: boolean
+    edit_all_evaluations: boolean
+    edit_all_tasks: boolean
+    edit_contests: boolean
+    edit_entries: boolean
+    edit_kb_content: boolean
+    edit_user_profiles: boolean
+    judge_entries: boolean
+    manage_announcements: boolean
+    manage_judging_criteria: boolean
+    manage_judging_groups: boolean
+    manage_winners: boolean
+    publish_kb_content: boolean
+    view_admin_stats: boolean
+    view_all_evaluations: boolean
+    view_all_tasks: boolean
+    view_all_users: boolean
+    view_errors: boolean
+    view_judging_settings: boolean
+  }
+}
+
+const EDIT_USER_PERMISSIONS = gql`
+  mutation EditUserPermissions($id: ID!, $input: EditUserPermissionsInput!) {
+    editUserPermissions(id: $id, input: $input) {
+      add_entries
+      add_users
+      assign_entry_groups
+      assign_evaluator_groups
+      assume_user_identities
+      change_user_passwords
+      delete_all_evaluations
+      delete_all_tasks
+      delete_contests
+      delete_entries
+      delete_errors
+      delete_kb_content
+      edit_all_evaluations
+      edit_all_tasks
+      edit_contests
+      edit_entries
+      edit_kb_content
+      edit_user_profiles
+      judge_entries
+      manage_announcements
+      manage_judging_criteria
+      manage_judging_groups
+      manage_winners
+      publish_kb_content
+      view_admin_stats
+      view_all_evaluations
+      view_all_tasks
+      view_all_users
+      view_errors
+      view_judging_settings
+    }
+  }
+`;
+
 function Users(props: UserProps) {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -202,6 +274,7 @@ function Users(props: UserProps) {
   const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
   const [createUser, { loading: createUserIsLoading }] = useMutation<CreateUserResponse>(CREATE_USER, { onError: handleGQLError });
   const [editUserProfile, { loading: editUserProfileIsLoading }] = useMutation<EditUserProfileResponse>(EDIT_USER_PROFILE, { onError: handleGQLError });
+  const [editUserPermissions, { loading: editUserPermissionsIsLoading }] = useMutation<EditUserPermissionsResponse>(EDIT_USER_PERMISSIONS, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -305,9 +378,17 @@ function Users(props: UserProps) {
   }
 
   const handleEditPermissions = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/users/permissions", {
-      evaluator_id: editUserPermissionsId,
-      ...values
+    if (!editUserPermissionsId) {
+      return;
+    }
+
+    await editUserPermissions({
+      variables: {
+        id: editUserPermissionsId,
+        input: {
+          ...values
+        }
+      }
     });
 
     closeEditPermissionsModal();
@@ -563,7 +644,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditPermissions}
           handleCancel={closeEditPermissionsModal}
           cols={4}
-          disabled
+          loading={editUserPermissionsIsLoading}
           fields={[
             {
               fieldType: "CHECKBOX",
