@@ -105,6 +105,11 @@ extend type Mutation {
 	Assigns new entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
 	"""
 	assignNewEntriesToGroups(contestId: ID!): Boolean!
+
+	"""
+	Transfers entries from the previous judging group to the new judging group. Returns a boolean indicating success. Requires Assign Entry Groups permission.
+	"""
+	transferEntryGroups(contest: ID!, prevGroup: ID!, newGroup: ID!): Boolean!
 }
 
 """

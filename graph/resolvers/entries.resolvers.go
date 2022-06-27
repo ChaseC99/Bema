@@ -475,6 +475,21 @@ func (r *mutationResolver) AssignNewEntriesToGroups(ctx context.Context, contest
 	return true, nil
 }
 
+func (r *mutationResolver) TransferEntryGroups(ctx context.Context, contest int, prevGroup int, newGroup int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEntryGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to transfer entry groups.")
+	}
+
+	err := models.TransferEntryGroups(ctx, contest, prevGroup, newGroup)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) Entries(ctx context.Context, contestID int) ([]*model.Entry, error) {
 	entries, err := models.GetEntriesByContestId(ctx, contestID)
 	if err != nil {
