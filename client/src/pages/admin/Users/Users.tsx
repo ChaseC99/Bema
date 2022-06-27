@@ -148,7 +148,30 @@ type CreateUserResponse = {
 
 const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
-    createUser(input: $input) {
+    user: createUser(input: $input) {
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
+type EditUserProfileResponse = {
+  user: User
+}
+
+const EDIT_USER_PROFILE = gql`
+  mutation EditUserProfile($id: ID!, $input: EditUserProfileInput!) {
+    user: editUserProfile(id: $id, input: $input) {
       id
       name
       kaid
@@ -178,6 +201,7 @@ function Users(props: UserProps) {
   const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
   const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
   const [createUser, { loading: createUserIsLoading }] = useMutation<CreateUserResponse>(CREATE_USER, { onError: handleGQLError });
+  const [editUserProfile, { loading: editUserProfileIsLoading }] = useMutation<EditUserProfileResponse>(EDIT_USER_PROFILE, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -213,22 +237,29 @@ function Users(props: UserProps) {
   }
 
   const handleEditUser = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/users", {
-      edit_user_id: editUser?.id,
-      edit_user_name: values.name,
-      edit_user_kaid: values.kaid,
-      edit_user_username: values.username,
-      edit_user_nickname: values.nickname,
-      edit_user_email: values.email,
-      edit_user_start: values.term_start,
-      edit_user_end: values.term_end,
-      edit_user_is_admin: state.is_admin ? values.is_admin : editUser?.isAdmin,
-      edit_user_account_locked: state.is_admin ? values.account_disabled : editUser?.accountLocked,
-      edit_user_receive_emails: values.receive_emails
+    if (!editUser) {
+      return;
+    }
+
+    await editUserProfile({
+      variables: {
+        id: editUser.id,
+        input: {
+          name: values.name,
+          email: values.email,
+          kaid: values.kaid,
+          username: values.username,
+          nickname: values.nickname,
+          termStart: values.term_start,
+          termEnd: values.term_end,
+          isAdmin: values.is_admin,
+          accountLocked: values.account_disabled,
+          notificationsEnabled: values.receive_emails
+        }
+      }
     });
 
     refetchUsers();
-
     closeEditUserModal();
   }
 
@@ -400,7 +431,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditUser}
           handleCancel={closeEditUserModal}
           cols={4}
-          disabled
+          loading={editUserProfileIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -458,7 +489,7 @@ function Users(props: UserProps) {
               name: "term_start",
               id: "term-start",
               label: "Term Start",
-              defaultValue: editUser.termStart || "",
+              defaultValue: editUser.termStart,
               size: "MEDIUM"
             },
             {
@@ -466,7 +497,7 @@ function Users(props: UserProps) {
               name: "term_end",
               id: "term-end",
               label: "Term End",
-              defaultValue: editUser.termEnd || "",
+              defaultValue: editUser.termEnd,
               size: "MEDIUM"
             },
             {

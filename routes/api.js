@@ -40,48 +40,6 @@ const routeChecks = {
     ]
   },
   users: {
-    add: [
-      check("evaluator_name")
-      .isLength(nameChars)
-      .withMessage("User's name cannot be empty or longer than 200 characters"),
-      check("email")
-      .isEmail()
-      .withMessage("User's email must be a valid email"),
-      check("evaluator_kaid")
-      .matches(kaidPattern)
-      .withMessage("User KAID must have correct format"),
-      check("username")
-      .isLength(nameChars)
-      .withMessage("User's username cannot be empty or longer than 200 characters")
-    ],
-    edit: [
-      oneOf([
-        [
-          check("edit_user_id")
-          .isInt()
-          .withMessage("User ID must be an integer"),
-          check("edit_user_name")
-          .isLength(nameChars)
-          .withMessage("User name cannot be empty or longer than 200 characters"),
-          check("edit_user_kaid")
-          .matches(kaidPattern)
-          .withMessage("User KAID must have correct format")
-        ],
-        [
-          check("nickname")
-          .not().isEmpty()
-          .withMessage("Display name cannot be empty"),
-          check("receive_emails")
-          .isBoolean()
-          .withMessage("receive_emails must be a boolean")
-        ],
-        [
-          check("username")
-          .isLength(nameChars)
-          .withMessage("username is invalid")
-        ]
-      ])
-    ],
     editPermissions: [
       check("evaluator_id")
       .isInt()
@@ -305,7 +263,6 @@ router.use(hasBody);
 
 // Users
 router.put("/internal/users/permissions", routeChecks.users.editPermissions, wasValidated, users.editPermissions);
-router.put("/internal/users", routeChecks.users.edit, wasValidated, users.edit);
 router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 
 // Entries

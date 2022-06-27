@@ -129,6 +129,13 @@ func (r *mutationResolver) EditUserProfile(ctx context.Context, id int, input mo
 		input.AccountLocked = *u.AccountLocked
 	}
 
+	if !user.IsAdmin && !auth.HasPermission(user, auth.EditUserProfiles) {
+		input.Kaid = u.Kaid
+		input.Name = *u.Name
+		input.TermStart = *u.TermStart
+		input.TermEnd = u.TermEnd
+	}
+
 	err = models.EditUserById(ctx, id, &input)
 	if err != nil {
 		return nil, err
