@@ -40,6 +40,11 @@ extend type Mutation {
   Creates a new user account. Requires Add Users permission.
   """
   createUser(input: CreateUserInput!): User
+
+  """
+  Edits an existing user's profile. Requires Edit User Profiles permission.
+  """
+  editUserProfile(id: ID!, input: EditUserProfileInput!): User
 }
 
 """
@@ -352,4 +357,56 @@ input CreateUserInput {
   The user's start date
   """
   termStart: String!
+}
+
+input EditUserProfileInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's display name
+  """
+  nickname: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+
+  """
+  The user's end date
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires Admin permission.
+  """
+  isAdmin: Boolean!
+
+  """
+  Indicates if the account has been deactivated. Requires Admin permission.
+  """
+  accountLocked: Boolean!
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean!
 }

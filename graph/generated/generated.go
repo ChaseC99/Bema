@@ -255,6 +255,7 @@ type ComplexityRoot struct {
 		EditEvaluation           func(childComplexity int, id int, input model.EditEvaluationInput) int
 		EditJudgingGroup         func(childComplexity int, id int, input model.EditJudgingGroupInput) int
 		EditTask                 func(childComplexity int, id int, input model.EditTaskInput) int
+		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
 		FlagEntry                func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
 		Login                    func(childComplexity int, username string, password string) int
@@ -483,6 +484,7 @@ type MutationResolver interface {
 	Logout(ctx context.Context) (bool, error)
 	ChangePassword(ctx context.Context, id int, password string) (bool, error)
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
+	EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1686,6 +1688,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditTask(childComplexity, args["id"].(int), args["input"].(model.EditTaskInput)), true
 
+	case "Mutation.editUserProfile":
+		if e.complexity.Mutation.EditUserProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editUserProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditUserProfile(childComplexity, args["id"].(int), args["input"].(model.EditUserProfileInput)), true
+
 	case "Mutation.flagEntry":
 		if e.complexity.Mutation.FlagEntry == nil {
 			break
@@ -2546,6 +2560,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditEvaluationInput,
 		ec.unmarshalInputEditJudgingGroupInput,
 		ec.unmarshalInputEditTaskInput,
+		ec.unmarshalInputEditUserProfileInput,
 		ec.unmarshalInputJudgingCriteriaInput,
 		ec.unmarshalInputScoreEntryInput,
 	)
@@ -3944,6 +3959,11 @@ extend type Mutation {
   Creates a new user account. Requires Add Users permission.
   """
   createUser(input: CreateUserInput!): User
+
+  """
+  Edits an existing user's profile. Requires Edit User Profiles permission.
+  """
+  editUserProfile(id: ID!, input: EditUserProfileInput!): User
 }
 
 """
@@ -4256,6 +4276,58 @@ input CreateUserInput {
   The user's start date
   """
   termStart: String!
+}
+
+input EditUserProfileInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's display name
+  """
+  nickname: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+
+  """
+  The user's end date
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires Admin permission.
+  """
+  isAdmin: Boolean!
+
+  """
+  Indicates if the account has been deactivated. Requires Admin permission.
+  """
+  accountLocked: Boolean!
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4757,6 +4829,30 @@ func (ec *executionContext) field_Mutation_editTask_args(ctx context.Context, ra
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editUserProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditUserProfileInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditUserProfileInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserProfileInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13224,6 +13320,92 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_editUserProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editUserProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditUserProfile(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditUserProfileInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editUserProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editUserProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -20754,6 +20936,101 @@ func (ec *executionContext) unmarshalInputEditTaskInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditUserProfileInput(ctx context.Context, obj interface{}) (model.EditUserProfileInput, error) {
+	var it model.EditUserProfileInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "kaid":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kaid"))
+			it.Kaid, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nickname":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nickname"))
+			it.Nickname, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "termStart":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termStart"))
+			it.TermStart, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "termEnd":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termEnd"))
+			it.TermEnd, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isAdmin":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdmin"))
+			it.IsAdmin, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "accountLocked":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountLocked"))
+			it.AccountLocked, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "notificationsEnabled":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notificationsEnabled"))
+			it.NotificationsEnabled, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Context, obj interface{}) (model.JudgingCriteriaInput, error) {
 	var it model.JudgingCriteriaInput
 	asMap := map[string]interface{}{}
@@ -22709,6 +22986,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createUser(ctx, field)
+			})
+
+		case "editUserProfile":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editUserProfile(ctx, field)
 			})
 
 		default:
@@ -24736,6 +25019,11 @@ func (ec *executionContext) unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑ
 
 func (ec *executionContext) unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx context.Context, v interface{}) (model.EditTaskInput, error) {
 	res, err := ec.unmarshalInputEditTaskInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditUserProfileInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserProfileInput(ctx context.Context, v interface{}) (model.EditUserProfileInput, error) {
+	res, err := ec.unmarshalInputEditUserProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

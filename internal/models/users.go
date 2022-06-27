@@ -175,3 +175,11 @@ func CreateUser(ctx context.Context, input *model.CreateUserInput) (*int, error)
 
 	return &id, nil
 }
+
+func EditUserById(ctx context.Context, id int, input *model.EditUserProfileInput) error {
+	_, err := db.DB.Exec("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, is_admin = $3, dt_term_start = $4, dt_term_end = $5, account_locked = $6, email = $7, username = $8, nickname = $9, receive_emails = $10 WHERE evaluator_id = $11", input.Name, input.Kaid, input.IsAdmin, input.TermStart, input.TermEnd, input.AccountLocked, input.Email, input.Username, input.Nickname, input.NotificationsEnabled, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a user's profile", err)
+	}
+	return nil
+}

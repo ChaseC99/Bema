@@ -184,6 +184,29 @@ type EditTaskInput struct {
 	DueDate string `json:"dueDate"`
 }
 
+type EditUserProfileInput struct {
+	// The user's real name
+	Name string `json:"name"`
+	// The user's email address
+	Email *string `json:"email"`
+	// The KAID associated with the user's Khan Academy account
+	Kaid string `json:"kaid"`
+	// The username the user will use to login
+	Username string `json:"username"`
+	// The user's display name
+	Nickname string `json:"nickname"`
+	// The user's start date
+	TermStart string `json:"termStart"`
+	// The user's end date
+	TermEnd *string `json:"termEnd"`
+	// Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires Admin permission.
+	IsAdmin bool `json:"isAdmin"`
+	// Indicates if the account has been deactivated. Requires Admin permission.
+	AccountLocked bool `json:"accountLocked"`
+	// Indicates whether the user has email notifications enabled for new announcements
+	NotificationsEnabled bool `json:"notificationsEnabled"`
+}
+
 // A skill bracket and its respective entry count
 type EntriesPerLevel struct {
 	// The name of the skill bracket
