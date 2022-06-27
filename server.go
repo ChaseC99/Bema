@@ -53,7 +53,10 @@ func main() {
 	router.Handle("/api/internal/graphql", srv)
 
 	// Serve the react app
-	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./client/build"))))
+	router.PathPrefix("/static").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./client/build"))))
+	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./client/build/index.html")
+	})
 
 	// Start the server
 	log.Println("Running server on port :" + port)
