@@ -10,6 +10,13 @@ extend type Query {
     error(id: ID!): Error
 }
 
+extend type Mutation {
+    """
+    Deletes an error. Requires Delete Errors permission.
+    """
+    deleteError(id: ID!): Error
+}
+
 """
 A logged application error
 """

@@ -55,3 +55,11 @@ func GetErrorById(ctx context.Context, id int) (*model.Error, error) {
 
 	return &e, nil
 }
+
+func DeleteErrorById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM error WHERE error_id = $1;", id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a logged error", err)
+	}
+	return nil
+}
