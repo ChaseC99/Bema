@@ -1,36 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const hasBody = require(process.cwd() + "/middleware/hasBody");
-const { check, oneOf } = require('express-validator/check');
+const { check } = require('express-validator/check');
 const wasValidated = require(process.cwd() + "/middleware/wasValidated");
 const { contentChars, visibilities } = require(process.cwd() + "/util/variables");
 
-const users = require(process.cwd() + "/handlers/api/users");
 const kb = require(process.cwd() + "/handlers/api/knowledge-base");
 
 const routeChecks = {
-  users: {
-    assignToEvaluatorGroup: [
-      oneOf([
-        [
-          check("evaluator_id")
-          .isInt()
-          .withMessage("User ID must be an integer or null"),
-          check("group_id")
-          .isInt()
-          .withMessage("Group ID must be an integer")
-        ],
-        [
-          check("evaluator_id")
-          .isInt()
-          .withMessage("User ID must be an integer or null"),
-          check("group_id")
-          .isIn([null])
-          .withMessage("Group ID must be an integer")
-        ]
-      ])
-    ]
-  },
   kb: {
     addSection: [
       check("section_name")
@@ -128,9 +105,6 @@ const routeChecks = {
 };
 
 router.use(hasBody);
-
-// Users
-router.put("/internal/users/assignToEvaluatorGroup", routeChecks.users.assignToEvaluatorGroup, wasValidated, users.assignToEvaluatorGroup);
 
 // Knowledge Base
 router.put("/internal/kb/sections", routeChecks.kb.editSection, wasValidated, kb.editSection);

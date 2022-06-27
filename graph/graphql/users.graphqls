@@ -50,6 +50,11 @@ extend type Mutation {
   Updates a user's permissions. Requires Admin permission.
   """
   editUserPermissions(id: ID!, input: EditUserPermissionsInput!): Permissions
+
+  """
+  Assigns a user to a judging group. Returns a boolean indicating success. Requires Assign Evaluator Groups permission.
+  """
+  assignUserToJudgingGroup(userId: ID!, groupId: ID): Boolean!
 }
 
 """

@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import ActionMenu from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
@@ -51,6 +51,16 @@ const GET_ALL_GROUPS = gql`
   }
 `;
 
+type AssignUserToGroupResponse = {
+  success: boolean
+}
+
+const ASSIGN_USER_TO_GROUP = gql`
+  mutation AssignUserToJudgingGroup($userId: ID!, $groupId: ID) {
+    assignUserToJudgingGroup(userId: $userId, groupId: $groupId)
+  }
+`;
+
 const compareUserGroups = (a: User, b: User): number => {
   if (a.assignedGroup === null) {
     return -1;
@@ -70,6 +80,7 @@ function AssignedGroupsCard() {
 
   const { loading: usersIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetAllUsersAndGroupsResponse>(GET_ALL_USERS_AND_GROUPS, { onError: handleGQLError });
   const { loading: groupsIsLoading, data: groupsData } = useQuery<GetAllGroupsResponse>(GET_ALL_GROUPS, { onError: handleGQLError });
+  const [assignUserToGroup, { loading: assignUserToGroupIsLoading }] = useMutation<AssignUserToGroupResponse>(ASSIGN_USER_TO_GROUP, { onError: handleGQLError });
 
   const openEditAllModal = () => {
     setShowBulkEditModal(true);
@@ -79,16 +90,18 @@ function AssignedGroupsCard() {
     setShowBulkEditModal(false);
   }
 
-  const handleEditAll = (values: { [name: string]: any }) => {
+  const handleEditAll = async (values: { [name: string]: any }) => {
     if (!usersData) {
       return;
     }
 
     for (let i = 0; i < usersData.users.length; i++) {
       if (usersData.users[i].assignedGroup !== values[usersData.users[i].id]) {
-        request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
-          group_id: values[usersData.users[i].id],
-          evaluator_id: usersData.users[i].id
+        await assignUserToGroup({
+          variables: {
+            userId: usersData.users[i].id,
+            groupId: values[usersData.users[i].id]
+          }
         });
       }
 
@@ -107,9 +120,15 @@ function AssignedGroupsCard() {
   }
 
   const handleEditIndividual = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/users/assignToEvaluatorGroup", {
-      group_id: values.group_id,
-      evaluator_id: editAssignedGroup?.id
+    if (!editAssignedGroup) {
+      return;
+    }
+
+    await assignUserToGroup({
+      variables: {
+        userId: editAssignedGroup.id,
+        groupId: values.group_id
+      }
     });
 
     refetchUsers();
@@ -139,7 +158,7 @@ function AssignedGroupsCard() {
         <div className="card-header">
           <h3>Assigned Groups</h3>
           {(state.is_admin || state.user?.permissions.assign_evaluator_groups) &&
-            <Button type="tertiary" role="button" action={openEditAllModal} text="Bulk Edit" disabled />
+            <Button type="tertiary" role="button" action={openEditAllModal} text="Bulk Edit" />
           }
         </div>
         <div className="card-body">
@@ -170,7 +189,6 @@ function AssignedGroupsCard() {
                               action: openEditIndividualModal,
                               text: "Edit",
                               data: u.id,
-                              disabled: true
                             }
                           ]} />
                         </Cell>
@@ -191,6 +209,7 @@ function AssignedGroupsCard() {
           handleSubmit={handleEditIndividual}
           handleCancel={closeEditIndividualModal}
           cols={4}
+          loading={assignUserToGroupIsLoading}
           fields={[
             {
               fieldType: "SELECT",
@@ -217,6 +236,7 @@ function AssignedGroupsCard() {
           handleSubmit={handleEditAll}
           handleCancel={closeEditAllModal}
           cols={4}
+          loading={assignUserToGroupIsLoading}
           fields={usersData?.users.map((a) => createField(a)) || []}
         />
       }

@@ -191,3 +191,11 @@ func EditUserPermissionsById(ctx context.Context, id int, input *model.EditUserP
 	}
 	return nil
 }
+
+func AssignUserToJudgingGroup(ctx context.Context, userId int, groupId *int) error {
+	_, err := db.DB.Exec("UPDATE evaluator SET group_id = $1 WHERE evaluator_id = $2", groupId, userId)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while assigning a user to a judging group", err)
+	}
+	return nil
+}

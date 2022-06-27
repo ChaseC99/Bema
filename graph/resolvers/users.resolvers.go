@@ -164,6 +164,21 @@ func (r *mutationResolver) EditUserPermissions(ctx context.Context, id int, inpu
 	return permissions, nil
 }
 
+func (r *mutationResolver) AssignUserToJudgingGroup(ctx context.Context, userID int, groupID *int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEvaluatorGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to assign evaluators to groups.")
+	}
+
+	err := models.AssignUserToJudgingGroup(ctx, userID, groupID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 
