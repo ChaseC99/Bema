@@ -238,6 +238,7 @@ type ComplexityRoot struct {
 		CreateCriteria           func(childComplexity int, input model.JudgingCriteriaInput) int
 		CreateEntryVote          func(childComplexity int, entryID int, reason string) int
 		CreateJudgingGroup       func(childComplexity int, input model.CreateJudgingGroupInput) int
+		CreateSection            func(childComplexity int, input model.KBSectionInput) int
 		CreateTask               func(childComplexity int, input model.CreateTaskInput) int
 		CreateUser               func(childComplexity int, input model.CreateUserInput) int
 		DeleteAnnouncement       func(childComplexity int, id int) int
@@ -483,6 +484,7 @@ type MutationResolver interface {
 	EditJudgingGroup(ctx context.Context, id int, input model.EditJudgingGroupInput) (*model.JudgingGroup, error)
 	DeleteJudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	ScoreEntry(ctx context.Context, id int, input model.ScoreEntryInput) (*model.Evaluation, error)
+	CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 	DeleteTask(ctx context.Context, id int) (*model.Task, error)
@@ -1491,6 +1493,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateJudgingGroup(childComplexity, args["input"].(model.CreateJudgingGroupInput)), true
+
+	case "Mutation.createSection":
+		if e.complexity.Mutation.CreateSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSection(childComplexity, args["input"].(model.KBSectionInput)), true
 
 	case "Mutation.createTask":
 		if e.complexity.Mutation.CreateTask == nil {
@@ -2619,6 +2633,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditUserPermissionsInput,
 		ec.unmarshalInputEditUserProfileInput,
 		ec.unmarshalInputJudgingCriteriaInput,
+		ec.unmarshalInputKBSectionInput,
 		ec.unmarshalInputScoreEntryInput,
 	)
 	first := true
@@ -3664,6 +3679,13 @@ input ScoreEntryInput {
     article(id: ID!): KBArticle
 }
 
+extend type Mutation {
+    """
+    Creates a new KB section
+    """
+    createSection(input: KBSectionInput!): KBSection
+}
+
 """
 A knowledge base section
 """
@@ -3774,6 +3796,23 @@ type KBArticleDraft {
     The timestamp of the last update to the article draft
     """
     lastUpdated: String!
+}
+
+input KBSectionInput {
+    """
+    The name of the section
+    """
+    name: String!
+
+    """
+    A description of the section
+    """
+    description: String!
+
+    """
+    The visibility of the section
+    """
+    visibility: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/reports.graphqls", Input: `extend type Query {
     """
@@ -4749,6 +4788,21 @@ func (ec *executionContext) field_Mutation_createJudgingGroup_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCreateJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateJudgingGroupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.KBSectionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13357,6 +13411,70 @@ func (ec *executionContext) fieldContext_Mutation_scoreEntry(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_scoreEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSection(rctx, fc.Args["input"].(model.KBSectionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -21982,6 +22100,45 @@ func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputKBSectionInput(ctx context.Context, obj interface{}) (model.KBSectionInput, error) {
+	var it model.KBSectionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "visibility":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			it.Visibility, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputScoreEntryInput(ctx context.Context, obj interface{}) (model.ScoreEntryInput, error) {
 	var it model.ScoreEntryInput
 	asMap := map[string]interface{}{}
@@ -23854,6 +24011,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_scoreEntry(ctx, field)
+			})
+
+		case "createSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSection(ctx, field)
 			})
 
 		case "createTask":
@@ -26567,6 +26730,11 @@ func (ec *executionContext) marshalNKBSection2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBSection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx context.Context, v interface{}) (model.KBSectionInput, error) {
+	res, err := ec.unmarshalInputKBSectionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNProgress2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐProgress(ctx context.Context, sel ast.SelectionSet, v model.Progress) graphql.Marshaler {

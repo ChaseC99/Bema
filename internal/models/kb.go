@@ -220,3 +220,14 @@ func GetKBArticleDraftByArticleId(ctx context.Context, articleId int) (*model.KB
 
 	return &d, nil
 }
+
+func CreateKBSection(ctx context.Context, input *model.KBSectionInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO kb_section (section_name, section_description, section_visibility) VALUES ($1, $2, $3) RETURNING section_id;", input.Name, input.Description, input.Visibility)
+
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a KB section", err)
+	}
+
+	return &id, nil
+}

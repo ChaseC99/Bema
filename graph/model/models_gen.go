@@ -511,6 +511,15 @@ type KBSection struct {
 	Articles []*KBArticle `json:"articles"`
 }
 
+type KBSectionInput struct {
+	// The name of the section
+	Name string `json:"name"`
+	// A description of the section
+	Description string `json:"description"`
+	// The visibility of the section
+	Visibility string `json:"visibility"`
+}
+
 type LoginResponse struct {
 	// Indicates if the login attempt was successful
 	Success bool `json:"success"`

@@ -15,6 +15,13 @@ extend type Query {
     article(id: ID!): KBArticle
 }
 
+extend type Mutation {
+    """
+    Creates a new KB section
+    """
+    createSection(input: KBSectionInput!): KBSection
+}
+
 """
 A knowledge base section
 """
@@ -125,4 +132,21 @@ type KBArticleDraft {
     The timestamp of the last update to the article draft
     """
     lastUpdated: String!
+}
+
+input KBSectionInput {
+    """
+    The name of the section
+    """
+    name: String!
+
+    """
+    A description of the section
+    """
+    description: String!
+
+    """
+    The visibility of the section
+    """
+    visibility: String!
 }

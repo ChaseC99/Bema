@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -104,6 +105,21 @@ func (r *kBSectionResolver) Articles(ctx context.Context, obj *model.KBSection) 
 		return []*model.KBArticle{}, err
 	}
 	return articles, nil
+}
+
+func (r *mutationResolver) CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create KB sections.")
+	}
+
+	id, err := models.CreateKBSection(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Section(ctx, *id)
 }
 
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
