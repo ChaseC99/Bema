@@ -137,6 +137,34 @@ func (r *mutationResolver) EditSection(ctx context.Context, id int, input model.
 	return r.Query().Section(ctx, id)
 }
 
+func (r *mutationResolver) DeleteSection(ctx context.Context, id int) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete KB sections.")
+	}
+
+	section, err := r.Query().Section(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	articles, err := models.GetAdminKBArticlesBySection(ctx, section.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(articles) > 0 {
+		return nil, errs.NewForbiddenError(ctx, "This section has articles associated with it and cannot be deleted.")
+	}
+
+	err = models.DeleteKBSectionById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return section, nil
+}
+
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
 	user := auth.GetUserFromContext(ctx)
 

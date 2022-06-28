@@ -249,6 +249,7 @@ type ComplexityRoot struct {
 		DeleteError              func(childComplexity int, id int) int
 		DeleteEvaluation         func(childComplexity int, id int) int
 		DeleteJudgingGroup       func(childComplexity int, id int) int
+		DeleteSection            func(childComplexity int, id int) int
 		DeleteTask               func(childComplexity int, id int) int
 		DisqualifyEntry          func(childComplexity int, id int) int
 		EditAnnouncement         func(childComplexity int, id int, input model.AnnouncementInput) int
@@ -487,6 +488,7 @@ type MutationResolver interface {
 	ScoreEntry(ctx context.Context, id int, input model.ScoreEntryInput) (*model.Evaluation, error)
 	CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error)
 	EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error)
+	DeleteSection(ctx context.Context, id int) (*model.KBSection, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 	DeleteTask(ctx context.Context, id int) (*model.Task, error)
@@ -1627,6 +1629,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteJudgingGroup(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteSection":
+		if e.complexity.Mutation.DeleteSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSection(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteTask":
 		if e.complexity.Mutation.DeleteTask == nil {
@@ -3695,14 +3709,19 @@ input ScoreEntryInput {
 
 extend type Mutation {
     """
-    Creates a new KB section
+    Creates a new KB section. Requires Edit KB Content permission.
     """
     createSection(input: KBSectionInput!): KBSection
 
     """
-    Edits an existing KB section
+    Edits an existing KB section. Requires Edit KB Content permission.
     """
     editSection(id: ID!, input: KBSectionInput!): KBSection
+
+    """
+    Deletes a KB section. Requires Delete KB Content permission.
+    """
+    deleteSection(id: ID!): KBSection
 }
 
 """
@@ -4966,6 +4985,21 @@ func (ec *executionContext) field_Mutation_deleteEvaluation_args(ctx context.Con
 }
 
 func (ec *executionContext) field_Mutation_deleteJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -13582,6 +13616,70 @@ func (ec *executionContext) fieldContext_Mutation_editSection(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_editSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSection(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -24130,6 +24228,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_editSection(ctx, field)
+			})
+
+		case "deleteSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSection(ctx, field)
 			})
 
 		case "createTask":

@@ -17,14 +17,19 @@ extend type Query {
 
 extend type Mutation {
     """
-    Creates a new KB section
+    Creates a new KB section. Requires Edit KB Content permission.
     """
     createSection(input: KBSectionInput!): KBSection
 
     """
-    Edits an existing KB section
+    Edits an existing KB section. Requires Edit KB Content permission.
     """
     editSection(id: ID!, input: KBSectionInput!): KBSection
+
+    """
+    Deletes a KB section. Requires Delete KB Content permission.
+    """
+    deleteSection(id: ID!): KBSection
 }
 
 """

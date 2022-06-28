@@ -241,3 +241,13 @@ func EditKBSectionById(ctx context.Context, id int, input *model.KBSectionInput)
 
 	return nil
 }
+
+func DeleteKBSectionById(ctx context.Context, id int) error {
+	_, err := db.DB.Exec("DELETE FROM kb_section WHERE section_id = $1;", id)
+
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while deleting a KB section", err)
+	}
+
+	return nil
+}
