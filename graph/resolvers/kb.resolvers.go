@@ -122,6 +122,21 @@ func (r *mutationResolver) CreateSection(ctx context.Context, input model.KBSect
 	return r.Query().Section(ctx, *id)
 }
 
+func (r *mutationResolver) EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit KB sections.")
+	}
+
+	err := models.EditKBSectionById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Section(ctx, id)
+}
+
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
 	user := auth.GetUserFromContext(ctx)
 

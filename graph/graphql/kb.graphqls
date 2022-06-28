@@ -20,6 +20,11 @@ extend type Mutation {
     Creates a new KB section
     """
     createSection(input: KBSectionInput!): KBSection
+
+    """
+    Edits an existing KB section
+    """
+    editSection(id: ID!, input: KBSectionInput!): KBSection
 }
 
 """

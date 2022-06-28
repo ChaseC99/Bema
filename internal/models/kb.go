@@ -231,3 +231,13 @@ func CreateKBSection(ctx context.Context, input *model.KBSectionInput) (*int, er
 
 	return &id, nil
 }
+
+func EditKBSectionById(ctx context.Context, id int, input *model.KBSectionInput) error {
+	_, err := db.DB.Exec("UPDATE kb_section SET section_name = $1, section_description = $2, section_visibility = $3 WHERE section_id = $4;", input.Name, input.Description, input.Visibility, id)
+
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a KB section", err)
+	}
+
+	return nil
+}

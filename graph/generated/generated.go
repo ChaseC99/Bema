@@ -257,6 +257,7 @@ type ComplexityRoot struct {
 		EditEntry                func(childComplexity int, id int, input model.EditEntryInput) int
 		EditEvaluation           func(childComplexity int, id int, input model.EditEvaluationInput) int
 		EditJudgingGroup         func(childComplexity int, id int, input model.EditJudgingGroupInput) int
+		EditSection              func(childComplexity int, id int, input model.KBSectionInput) int
 		EditTask                 func(childComplexity int, id int, input model.EditTaskInput) int
 		EditUserPermissions      func(childComplexity int, id int, input model.EditUserPermissionsInput) int
 		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
@@ -485,6 +486,7 @@ type MutationResolver interface {
 	DeleteJudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	ScoreEntry(ctx context.Context, id int, input model.ScoreEntryInput) (*model.Evaluation, error)
 	CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error)
+	EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 	DeleteTask(ctx context.Context, id int) (*model.Task, error)
@@ -1721,6 +1723,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditJudgingGroup(childComplexity, args["id"].(int), args["input"].(model.EditJudgingGroupInput)), true
+
+	case "Mutation.editSection":
+		if e.complexity.Mutation.EditSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditSection(childComplexity, args["id"].(int), args["input"].(model.KBSectionInput)), true
 
 	case "Mutation.editTask":
 		if e.complexity.Mutation.EditTask == nil {
@@ -3684,6 +3698,11 @@ extend type Mutation {
     Creates a new KB section
     """
     createSection(input: KBSectionInput!): KBSection
+
+    """
+    Edits an existing KB section
+    """
+    editSection(id: ID!, input: KBSectionInput!): KBSection
 }
 
 """
@@ -5127,6 +5146,30 @@ func (ec *executionContext) field_Mutation_editJudgingGroup_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditJudgingGroupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.KBSectionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13475,6 +13518,70 @@ func (ec *executionContext) fieldContext_Mutation_createSection(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditSection(rctx, fc.Args["id"].(int), fc.Args["input"].(model.KBSectionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -24017,6 +24124,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createSection(ctx, field)
+			})
+
+		case "editSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editSection(ctx, field)
 			})
 
 		case "createTask":
