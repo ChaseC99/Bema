@@ -1,8 +1,10 @@
-import { gql, useQuery } from "@apollo/client";
-import React from "react";
-import { Link } from "react-router-dom";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
+import { Link, Navigate } from "react-router-dom";
 import Badge from "../../../shared/Badge";
+import Button from "../../../shared/Button";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
+import { FormModal } from "../../../shared/Modals";
 import KBAdminSidebar from "../../../shared/Sidebars/KBAdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppError from "../../../util/errors";
@@ -70,6 +72,38 @@ const GET_ARTICLE_DRAFTS = gql`
   }
 `;
 
+type CreateArticleResponse = {
+  article: {
+    id: string
+  }
+}
+
+const CREATE_ARTICLE = gql`
+  mutation CreateArticle($input: KBArticleInput!) {
+    article: createArticle(input: $input) {
+      id
+    }
+  }
+`;
+
+type Section = {
+  id: string
+  name: string
+}
+
+type GetSectionsResponse = {
+  sections: Section[]
+}
+
+const GET_SECTIONS = gql`
+  query GetSections {
+    sections {
+      id
+      name
+    }
+  }
+`;
+
 type Filter = 'ALL' | 'DRAFTS';
 
 type KBAdminHomeProps = {
@@ -89,7 +123,39 @@ function getQuery(filter: Filter) {
 
 export default function KBAdminHome(props: KBAdminHomeProps) {
   const { handleGQLError } = useAppError();
+  const [showCreateArticleForm, setShowCreateArticleForm] = useState<boolean>(false);
+  const [navigateTo, setNavigateTo] = useState<string | null>(null);
   const { loading: articlesIsLoading, data: articlesData } = useQuery<GetArticlesResponse>(getQuery(props.filter), { onError: handleGQLError });
+  const { loading: sectionsIsLoading, data: sectionsData } = useQuery<GetSectionsResponse>(GET_SECTIONS, { onError: handleGQLError });
+  const [createArticle, { loading: createArticleIsLoading }] = useMutation<CreateArticleResponse>(CREATE_ARTICLE, { onError: handleGQLError });
+
+  const openCreateArticleModal = () => {
+    setShowCreateArticleForm(true);
+  }
+
+  const closeCreateArticleModal = () => {
+    setShowCreateArticleForm(false);
+  }
+
+  const handleCreateArticle = async (values: { [name: string]: any }) => {
+    const { data } = await createArticle({
+      variables: {
+        input: {
+          section: values.section,
+          title: values.title,
+          content: "",
+          visibility: values.visibility,
+        }
+      },
+    });
+
+    closeCreateArticleModal();
+    setNavigateTo(data?.article.id || null);
+  }
+
+  if (navigateTo !== null) {
+    return <Navigate to={"/admin/kb/article/" + navigateTo} />
+  }
 
   return (
     <React.Fragment>
@@ -99,6 +165,7 @@ export default function KBAdminHome(props: KBAdminHomeProps) {
         <div className="col-12">
           <div className="section-header">
             <h2>All Articles</h2>
+            <Button type="primary" role="button" action={openCreateArticleModal} text="Create Article" />
           </div>
           <div className="section-body container col-12">
             {articlesIsLoading && <LoadingSpinner size='LARGE' />}
@@ -135,6 +202,65 @@ export default function KBAdminHome(props: KBAdminHomeProps) {
           </div>
         </div>
       </section>
+
+      {showCreateArticleForm &&
+        <FormModal 
+          title="Create Article"
+          submitLabel="Create"
+          handleSubmit={handleCreateArticle}
+          handleCancel={closeCreateArticleModal}
+          cols={4}
+          loading={createArticleIsLoading}
+          fields={[
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "title",
+              id: "title",
+              defaultValue: "",
+              size: "LARGE",
+              label: "Title",
+              required: true,
+            },
+            {
+              fieldType: 'SELECT',
+              name: 'section',
+              id: 'section',
+              size: 'LARGE',
+              label: 'Section',
+              defaultValue: null,
+              choices: sectionsData?.sections.map((section) => ({
+                text: section.name,
+                value: section.id,
+              })) || [],
+              required: true,
+            },
+            {
+              fieldType: 'SELECT',
+              name: 'visibility',
+              id: 'visibility',
+              size: 'LARGE',
+              label: 'Visibility',
+              defaultValue: null,
+              choices: [
+                {
+                  text: 'Admins Only',
+                  value: 'Admins Only',
+                },
+                {
+                  text: 'Evaluators Only',
+                  value: 'Evaluators Only',
+                },
+                {
+                  text: 'Public',
+                  value: 'Public',
+                }
+              ],
+              required: true,
+            }
+          ]}
+        />
+      }
 
     </React.Fragment>
   );

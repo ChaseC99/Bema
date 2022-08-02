@@ -380,7 +380,11 @@ export default function KBAdminArticle() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', position: 'absolute', right: '20px' }}>
                         <Button type="tertiary" role="button" action={showEditArticleForm} text="Edit Article" />
                       </div>
-                      {parse(articleData.article.content.replaceAll("\n\n", "</p><p>").replaceAll("<p><br></p>", ""))}
+                      {articleData.article.content !== "" ? 
+                        parse(articleData.article.content.replaceAll("\n\n", "</p><p>").replaceAll("<p><br></p>", ""))
+                        :
+                        <p>This article does not have any published content.</p>
+                      }
                     </div>
                   </div>
                 }
