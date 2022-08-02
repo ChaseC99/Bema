@@ -184,7 +184,7 @@ export default function KBAdminHome(props: KBAdminHomeProps) {
                 <TableBody>
                   {articlesData.articles.map((article) => {
                     return (
-                      <Row>
+                      <Row key={article.id}>
                         <Cell>
                           <Link to={'/admin/kb/article/' + article.id}>{article.title}</Link>
                           {!article.isPublished ? <Badge text='Not Published' color='#1865f2' type='primary' /> : ''}

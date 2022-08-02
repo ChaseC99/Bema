@@ -30,6 +30,7 @@ import useAppError, { clearError } from "./util/errors";
 import Explorer from "./pages/admin/Explorer";
 import KBAdminHome from "./pages/KnowledgeBase/KBAdminHome";
 import KBAdminArticle from "./pages/KnowledgeBase/KBAdminArticle";
+import KBAdminSections from "./pages/KnowledgeBase/KBAdminSections";
 
 function App() {
   const { error, dispatch } = useAppError();
@@ -85,6 +86,7 @@ function App() {
             <Route path="/admin/kb" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminHome filter="ALL" /></ProtectedRoute>} />
             <Route path="/admin/kb/drafts" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminHome filter="DRAFTS" /></ProtectedRoute>} />
             <Route path="/admin/kb/article/:articleId" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminArticle /></ProtectedRoute>}></Route>
+            <Route path="/admin/kb/sections" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminSections /></ProtectedRoute>}></Route>
 
             <Route path="/login" element={<UnauthenticatedRoute><Login /></UnauthenticatedRoute>} />
             <Route path="/logout" element={<AuthenticatedRoute><Logout /></AuthenticatedRoute>} />
