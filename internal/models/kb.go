@@ -235,7 +235,7 @@ func GetEvaluatorKBArticlesBySection(ctx context.Context, sectionId int) ([]*mod
 func GetAdminKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE section_id = $1 ORDER BY article_id ASC", util.DisplayFancyDateFormat, sectionId)
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE section_id = $2 ORDER BY article_id ASC", util.DisplayFancyDateFormat, sectionId)
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
 	}
