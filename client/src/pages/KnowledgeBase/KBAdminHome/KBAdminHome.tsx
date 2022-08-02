@@ -168,9 +168,9 @@ export default function KBAdminHome(props: KBAdminHomeProps) {
             <Button type="primary" role="button" action={openCreateArticleModal} text="Create Article" />
           </div>
           <div className="section-body container col-12">
-            {articlesIsLoading && <LoadingSpinner size='LARGE' />}
+            {(articlesIsLoading || sectionsIsLoading) && <LoadingSpinner size='LARGE' />}
 
-            {(!articlesIsLoading && articlesData) && 
+            {(!articlesIsLoading && articlesData && !sectionsIsLoading && sectionsData) && 
               <Table>
                 <TableHead>
                   <Row>
