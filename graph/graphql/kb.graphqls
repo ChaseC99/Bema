@@ -13,6 +13,11 @@ extend type Query {
     A single knowledge base article
     """
     article(id: ID!): KBArticle
+
+    """
+    A list of all KB articles
+    """
+    articles(filter: String): [KBArticle!]!
 }
 
 extend type Mutation {
@@ -30,6 +35,41 @@ extend type Mutation {
     Deletes a KB section. Requires Delete KB Content permission.
     """
     deleteSection(id: ID!): KBSection
+
+    """
+    Creates a new KB article. Requires Edit KB Content permission.
+    """
+    createArticle(input: KBArticleInput!): KBArticle
+
+    """
+    Edits an existing KB article by editing the current unpublished draft or by creating a new draft if the previous one is published. Requires Edit KB Content permission.
+    """
+    editArticle(id: ID!, input: KBArticleInput!): KBArticle
+
+    """
+    Edits the visibility and sectioin of an existing KB Article. Requires Edit KB Content permission.
+    """
+    editArticleProperties(id: ID!, visibility: String!, section: ID!): KBArticle
+
+    """
+    Deletes an existing KB article. Requires Delete KB Content permission.
+    """
+    deleteArticle(id: ID!): KBArticle
+
+    """
+    Deletes the most recent unpublished draft for a KB article. Requires Edit KB Content permission.
+    """
+    deleteArticleDraft(id: ID!): KBArticle
+
+    """
+    Publishes an existing KB article draft. Requires Publish KB Content permission.
+    """
+    publishArticle(id: ID!): KBArticle
+
+    """
+    Unpublishes an existing KB article. Requires Publish KB Content permission.
+    """
+    unpublishArticle(id: ID!): KBArticle
 }
 
 """
@@ -157,6 +197,28 @@ input KBSectionInput {
 
     """
     The visibility of the section
+    """
+    visibility: String!
+}
+
+input KBArticleInput {
+    """
+    The ID of the section the article is assigned to
+    """
+    section: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The visibility of the article
     """
     visibility: String!
 }

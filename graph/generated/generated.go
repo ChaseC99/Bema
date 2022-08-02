@@ -234,6 +234,7 @@ type ComplexityRoot struct {
 		AssignUserToJudgingGroup func(childComplexity int, userID int, groupID *int) int
 		ChangePassword           func(childComplexity int, id int, password string) int
 		CreateAnnouncement       func(childComplexity int, input model.AnnouncementInput) int
+		CreateArticle            func(childComplexity int, input model.KBArticleInput) int
 		CreateContest            func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria           func(childComplexity int, input model.JudgingCriteriaInput) int
 		CreateEntryVote          func(childComplexity int, entryID int, reason string) int
@@ -242,6 +243,8 @@ type ComplexityRoot struct {
 		CreateTask               func(childComplexity int, input model.CreateTaskInput) int
 		CreateUser               func(childComplexity int, input model.CreateUserInput) int
 		DeleteAnnouncement       func(childComplexity int, id int) int
+		DeleteArticle            func(childComplexity int, id int) int
+		DeleteArticleDraft       func(childComplexity int, id int) int
 		DeleteContest            func(childComplexity int, id int) int
 		DeleteCriteria           func(childComplexity int, id int) int
 		DeleteEntry              func(childComplexity int, id int) int
@@ -253,6 +256,8 @@ type ComplexityRoot struct {
 		DeleteTask               func(childComplexity int, id int) int
 		DisqualifyEntry          func(childComplexity int, id int) int
 		EditAnnouncement         func(childComplexity int, id int, input model.AnnouncementInput) int
+		EditArticle              func(childComplexity int, id int, input model.KBArticleInput) int
+		EditArticleProperties    func(childComplexity int, id int, visibility string, section int) int
 		EditContest              func(childComplexity int, id int, input model.EditContestInput) int
 		EditCriteria             func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry                func(childComplexity int, id int, input model.EditEntryInput) int
@@ -267,10 +272,12 @@ type ComplexityRoot struct {
 		ImportEntry              func(childComplexity int, contestID int, kaid string) int
 		Login                    func(childComplexity int, username string, password string) int
 		Logout                   func(childComplexity int) int
+		PublishArticle           func(childComplexity int, id int) int
 		RemoveWinner             func(childComplexity int, id int) int
 		ScoreEntry               func(childComplexity int, id int, input model.ScoreEntryInput) int
 		SetEntryLevel            func(childComplexity int, id int, skillLevel string) int
 		TransferEntryGroups      func(childComplexity int, contest int, prevGroup int, newGroup int) int
+		UnpublishArticle         func(childComplexity int, id int) int
 	}
 
 	Permissions struct {
@@ -319,6 +326,7 @@ type ComplexityRoot struct {
 		Announcement                func(childComplexity int, id int) int
 		Announcements               func(childComplexity int) int
 		Article                     func(childComplexity int, id int) int
+		Articles                    func(childComplexity int, filter *string) int
 		AvailableTasks              func(childComplexity int) int
 		CompletedTasks              func(childComplexity int) int
 		Contest                     func(childComplexity int, id int) int
@@ -489,6 +497,13 @@ type MutationResolver interface {
 	CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error)
 	EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error)
 	DeleteSection(ctx context.Context, id int) (*model.KBSection, error)
+	CreateArticle(ctx context.Context, input model.KBArticleInput) (*model.KBArticle, error)
+	EditArticle(ctx context.Context, id int, input model.KBArticleInput) (*model.KBArticle, error)
+	EditArticleProperties(ctx context.Context, id int, visibility string, section int) (*model.KBArticle, error)
+	DeleteArticle(ctx context.Context, id int) (*model.KBArticle, error)
+	DeleteArticleDraft(ctx context.Context, id int) (*model.KBArticle, error)
+	PublishArticle(ctx context.Context, id int) (*model.KBArticle, error)
+	UnpublishArticle(ctx context.Context, id int) (*model.KBArticle, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 	DeleteTask(ctx context.Context, id int) (*model.Task, error)
@@ -530,6 +545,7 @@ type QueryResolver interface {
 	Sections(ctx context.Context) ([]*model.KBSection, error)
 	Section(ctx context.Context, id int) (*model.KBSection, error)
 	Article(ctx context.Context, id int) (*model.KBArticle, error)
+	Articles(ctx context.Context, filter *string) ([]*model.KBArticle, error)
 	JudgingProgress(ctx context.Context) (*model.JudgingProgress, error)
 	EntryCounts(ctx context.Context) (*model.EntryCounts, error)
 	Task(ctx context.Context, id int) (*model.Task, error)
@@ -1450,6 +1466,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(model.AnnouncementInput)), true
 
+	case "Mutation.createArticle":
+		if e.complexity.Mutation.CreateArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateArticle(childComplexity, args["input"].(model.KBArticleInput)), true
+
 	case "Mutation.createContest":
 		if e.complexity.Mutation.CreateContest == nil {
 			break
@@ -1545,6 +1573,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteAnnouncement(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteArticle":
+		if e.complexity.Mutation.DeleteArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteArticle(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteArticleDraft":
+		if e.complexity.Mutation.DeleteArticleDraft == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteArticleDraft_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteArticleDraft(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteContest":
 		if e.complexity.Mutation.DeleteContest == nil {
@@ -1677,6 +1729,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(model.AnnouncementInput)), true
+
+	case "Mutation.editArticle":
+		if e.complexity.Mutation.EditArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditArticle(childComplexity, args["id"].(int), args["input"].(model.KBArticleInput)), true
+
+	case "Mutation.editArticleProperties":
+		if e.complexity.Mutation.EditArticleProperties == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editArticleProperties_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditArticleProperties(childComplexity, args["id"].(int), args["visibility"].(string), args["section"].(int)), true
 
 	case "Mutation.editContest":
 		if e.complexity.Mutation.EditContest == nil {
@@ -1841,6 +1917,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Logout(childComplexity), true
 
+	case "Mutation.publishArticle":
+		if e.complexity.Mutation.PublishArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_publishArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PublishArticle(childComplexity, args["id"].(int)), true
+
 	case "Mutation.removeWinner":
 		if e.complexity.Mutation.RemoveWinner == nil {
 			break
@@ -1888,6 +1976,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.TransferEntryGroups(childComplexity, args["contest"].(int), args["prevGroup"].(int), args["newGroup"].(int)), true
+
+	case "Mutation.unpublishArticle":
+		if e.complexity.Mutation.UnpublishArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unpublishArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnpublishArticle(childComplexity, args["id"].(int)), true
 
 	case "Permissions.add_entries":
 		if e.complexity.Permissions.AddEntries == nil {
@@ -2171,6 +2271,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Article(childComplexity, args["id"].(int)), true
+
+	case "Query.articles":
+		if e.complexity.Query.Articles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_articles_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Articles(childComplexity, args["filter"].(*string)), true
 
 	case "Query.availableTasks":
 		if e.complexity.Query.AvailableTasks == nil {
@@ -2661,6 +2773,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditUserPermissionsInput,
 		ec.unmarshalInputEditUserProfileInput,
 		ec.unmarshalInputJudgingCriteriaInput,
+		ec.unmarshalInputKBArticleInput,
 		ec.unmarshalInputKBSectionInput,
 		ec.unmarshalInputScoreEntryInput,
 	)
@@ -3705,6 +3818,11 @@ input ScoreEntryInput {
     A single knowledge base article
     """
     article(id: ID!): KBArticle
+
+    """
+    A list of all KB articles
+    """
+    articles(filter: String): [KBArticle!]!
 }
 
 extend type Mutation {
@@ -3722,6 +3840,41 @@ extend type Mutation {
     Deletes a KB section. Requires Delete KB Content permission.
     """
     deleteSection(id: ID!): KBSection
+
+    """
+    Creates a new KB article. Requires Edit KB Content permission.
+    """
+    createArticle(input: KBArticleInput!): KBArticle
+
+    """
+    Edits an existing KB article by editing the current unpublished draft or by creating a new draft if the previous one is published. Requires Edit KB Content permission.
+    """
+    editArticle(id: ID!, input: KBArticleInput!): KBArticle
+
+    """
+    Edits the visibility and sectioin of an existing KB Article. Requires Edit KB Content permission.
+    """
+    editArticleProperties(id: ID!, visibility: String!, section: ID!): KBArticle
+
+    """
+    Deletes an existing KB article. Requires Delete KB Content permission.
+    """
+    deleteArticle(id: ID!): KBArticle
+
+    """
+    Deletes the most recent unpublished draft for a KB article. Requires Edit KB Content permission.
+    """
+    deleteArticleDraft(id: ID!): KBArticle
+
+    """
+    Publishes an existing KB article draft. Requires Publish KB Content permission.
+    """
+    publishArticle(id: ID!): KBArticle
+
+    """
+    Unpublishes an existing KB article. Requires Publish KB Content permission.
+    """
+    unpublishArticle(id: ID!): KBArticle
 }
 
 """
@@ -3849,6 +4002,28 @@ input KBSectionInput {
 
     """
     The visibility of the section
+    """
+    visibility: String!
+}
+
+input KBArticleInput {
+    """
+    The ID of the section the article is assigned to
+    """
+    section: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The visibility of the article
     """
     visibility: String!
 }`, BuiltIn: false},
@@ -4765,6 +4940,21 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.KBArticleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createContest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4880,6 +5070,36 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 }
 
 func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteArticleDraft_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -5060,6 +5280,63 @@ func (ec *executionContext) field_Mutation_editAnnouncement_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editArticleProperties_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["visibility"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["visibility"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["section"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("section"))
+		arg2, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["section"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.KBArticleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5362,6 +5639,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_publishArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_removeWinner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5458,6 +5750,21 @@ func (ec *executionContext) field_Mutation_transferEntryGroups_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_unpublishArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5500,6 +5807,21 @@ func (ec *executionContext) field_Query_article_args(ctx context.Context, rawArg
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_articles_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
 	return args, nil
 }
 
@@ -13686,6 +14008,524 @@ func (ec *executionContext) fieldContext_Mutation_deleteSection(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateArticle(rctx, fc.Args["input"].(model.KBArticleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditArticle(rctx, fc.Args["id"].(int), fc.Args["input"].(model.KBArticleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editArticleProperties(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editArticleProperties(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditArticleProperties(rctx, fc.Args["id"].(int), fc.Args["visibility"].(string), fc.Args["section"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editArticleProperties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editArticleProperties_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteArticleDraft(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteArticleDraft(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteArticleDraft(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteArticleDraft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteArticleDraft_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_publishArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_publishArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PublishArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_publishArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_publishArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_unpublishArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_unpublishArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UnpublishArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_unpublishArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_unpublishArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createTask(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createTask(ctx, field)
 	if err != nil {
@@ -17816,6 +18656,83 @@ func (ec *executionContext) fieldContext_Query_article(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_article_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_articles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_articles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Articles(rctx, fc.Args["filter"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.KBArticle)
+	fc.Result = res
+	return ec.marshalNKBArticle2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_articles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_articles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -22305,6 +23222,53 @@ func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputKBArticleInput(ctx context.Context, obj interface{}) (model.KBArticleInput, error) {
+	var it model.KBArticleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "section":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("section"))
+			it.Section, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			it.Title, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			it.Content, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "visibility":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			it.Visibility, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputKBSectionInput(ctx context.Context, obj interface{}) (model.KBSectionInput, error) {
 	var it model.KBSectionInput
 	asMap := map[string]interface{}{}
@@ -24236,6 +25200,48 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteSection(ctx, field)
 			})
 
+		case "createArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createArticle(ctx, field)
+			})
+
+		case "editArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editArticle(ctx, field)
+			})
+
+		case "editArticleProperties":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editArticleProperties(ctx, field)
+			})
+
+		case "deleteArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteArticle(ctx, field)
+			})
+
+		case "deleteArticleDraft":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteArticleDraft(ctx, field)
+			})
+
+		case "publishArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_publishArticle(ctx, field)
+			})
+
+		case "unpublishArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_unpublishArticle(ctx, field)
+			})
+
 		case "createTask":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -25216,6 +26222,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_article(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "articles":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_articles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -26893,6 +27922,11 @@ func (ec *executionContext) marshalNKBArticle2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBArticle(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx context.Context, v interface{}) (model.KBArticleInput, error) {
+	res, err := ec.unmarshalInputKBArticleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNKBSection2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KBSection) graphql.Marshaler {

@@ -497,6 +497,17 @@ type KBArticleDraft struct {
 	LastUpdated string `json:"lastUpdated"`
 }
 
+type KBArticleInput struct {
+	// The ID of the section the article is assigned to
+	Section int `json:"section"`
+	// The title of the article
+	Title string `json:"title"`
+	// The content of the article
+	Content string `json:"content"`
+	// The visibility of the article
+	Visibility string `json:"visibility"`
+}
+
 // A knowledge base section
 type KBSection struct {
 	// A unique integer ID

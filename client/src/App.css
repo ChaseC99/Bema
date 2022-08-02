@@ -23,6 +23,10 @@
   justify-content: center !important;
 }
 
+.container.row {
+  flex-direction: row;
+}
+
 .col-12 {
   width: 100%;
 }
