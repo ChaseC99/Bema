@@ -1,4 +1,4 @@
-extend type Query {
+type Query {
     """
     A list of all announcements
     """
@@ -10,7 +10,7 @@ extend type Query {
     announcement(id: ID!): Announcement
 }
 
-extend type Mutation {
+type Mutation {
     """
     Creates a new announcement message
     """
