@@ -1,7 +1,7 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import parse from "html-react-parser";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import KBAdminSidebar from "../../../shared/Sidebars/KBAdminSidebar";
 import useAppError from "../../../util/errors";
