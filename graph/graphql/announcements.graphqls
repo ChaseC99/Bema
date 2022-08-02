@@ -1,9 +1,4 @@
-schema {
-	query: Query
-	mutation: Mutation
-}
-
-type Query {
+extend type Query {
 	"""
 	A list of all announcements
 	"""
@@ -15,7 +10,7 @@ type Query {
 	announcement(id: ID!): Announcement
 }
 
-type Mutation {
+extend type Mutation {
 	"""
 	Creates a new announcement message
 	"""
