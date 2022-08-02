@@ -142,6 +142,124 @@ const CHANGE_PASSWORD = gql`
   }
 `;
 
+type CreateUserResponse = {
+  user: User
+}
+
+const CREATE_USER = gql`
+  mutation CreateUser($input: CreateUserInput!) {
+    user: createUser(input: $input) {
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
+type EditUserProfileResponse = {
+  user: User
+}
+
+const EDIT_USER_PROFILE = gql`
+  mutation EditUserProfile($id: ID!, $input: EditUserProfileInput!) {
+    user: editUserProfile(id: $id, input: $input) {
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
+    }
+  }
+`;
+
+type EditUserPermissionsResponse = {
+  permissions: {
+    add_entries: boolean
+    add_users: boolean
+    assign_entry_groups: boolean
+    assign_evaluator_groups: boolean
+    assume_user_identities: boolean
+    change_user_passwords: boolean
+    delete_all_evaluations: boolean
+    delete_all_tasks: boolean
+    delete_contests: boolean
+    delete_entries: boolean
+    delete_errors: boolean
+    delete_kb_content: boolean
+    edit_all_evaluations: boolean
+    edit_all_tasks: boolean
+    edit_contests: boolean
+    edit_entries: boolean
+    edit_kb_content: boolean
+    edit_user_profiles: boolean
+    judge_entries: boolean
+    manage_announcements: boolean
+    manage_judging_criteria: boolean
+    manage_judging_groups: boolean
+    manage_winners: boolean
+    publish_kb_content: boolean
+    view_admin_stats: boolean
+    view_all_evaluations: boolean
+    view_all_tasks: boolean
+    view_all_users: boolean
+    view_errors: boolean
+    view_judging_settings: boolean
+  }
+}
+
+const EDIT_USER_PERMISSIONS = gql`
+  mutation EditUserPermissions($id: ID!, $input: EditUserPermissionsInput!) {
+    editUserPermissions(id: $id, input: $input) {
+      add_entries
+      add_users
+      assign_entry_groups
+      assign_evaluator_groups
+      assume_user_identities
+      change_user_passwords
+      delete_all_evaluations
+      delete_all_tasks
+      delete_contests
+      delete_entries
+      delete_errors
+      delete_kb_content
+      edit_all_evaluations
+      edit_all_tasks
+      edit_contests
+      edit_entries
+      edit_kb_content
+      edit_user_profiles
+      judge_entries
+      manage_announcements
+      manage_judging_criteria
+      manage_judging_groups
+      manage_winners
+      publish_kb_content
+      view_admin_stats
+      view_all_evaluations
+      view_all_tasks
+      view_all_users
+      view_errors
+      view_judging_settings
+    }
+  }
+`;
+
 function Users(props: UserProps) {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -154,6 +272,9 @@ function Users(props: UserProps) {
   const { loading: userIsLoading, data: usersData, refetch: refetchUsers } = useQuery<GetUsersResponse>(props.inactive ? GET_INACTIVE_USERS : GET_ACTIVE_USERS, { onError: handleGQLError });
   const [getUserPermissions, { loading: permissionsIsLoading, data: permissionsData }] = useLazyQuery<GetUserPermissionsResponse>(GET_USER_PERMISSIONS, { onError: handleGQLError });
   const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
+  const [createUser, { loading: createUserIsLoading }] = useMutation<CreateUserResponse>(CREATE_USER, { onError: handleGQLError });
+  const [editUserProfile, { loading: editUserProfileIsLoading }] = useMutation<EditUserProfileResponse>(EDIT_USER_PROFILE, { onError: handleGQLError });
+  const [editUserPermissions, { loading: editUserPermissionsIsLoading }] = useMutation<EditUserPermissionsResponse>(EDIT_USER_PERMISSIONS, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -164,16 +285,19 @@ function Users(props: UserProps) {
   }
 
   const handleAddUser = async (values: { [name: string]: any }) => {
-    await request("POST", "/api/internal/users", {
-      evaluator_name: values.name,
-      email: values.email,
-      evaluator_kaid: values.kaid,
-      username: values.username,
-      user_start: values.term_start
+    await createUser({
+      variables: {
+        input: {
+          name: values.name,
+          email: values.email,
+          kaid: values.kaid,
+          username: values.username,
+          termStart: values.term_start
+        }
+      }
     });
 
     closeAddUserModal();
-
     refetchUsers();
   }
 
@@ -186,22 +310,29 @@ function Users(props: UserProps) {
   }
 
   const handleEditUser = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/users", {
-      edit_user_id: editUser?.id,
-      edit_user_name: values.name,
-      edit_user_kaid: values.kaid,
-      edit_user_username: values.username,
-      edit_user_nickname: values.nickname,
-      edit_user_email: values.email,
-      edit_user_start: values.term_start,
-      edit_user_end: values.term_end,
-      edit_user_is_admin: state.is_admin ? values.is_admin : editUser?.isAdmin,
-      edit_user_account_locked: state.is_admin ? values.account_disabled : editUser?.accountLocked,
-      edit_user_receive_emails: values.receive_emails
+    if (!editUser) {
+      return;
+    }
+
+    await editUserProfile({
+      variables: {
+        id: editUser.id,
+        input: {
+          name: values.name,
+          email: values.email,
+          kaid: values.kaid,
+          username: values.username,
+          nickname: values.nickname,
+          termStart: values.term_start,
+          termEnd: values.term_end,
+          isAdmin: values.is_admin,
+          accountLocked: values.account_disabled,
+          notificationsEnabled: values.receive_emails
+        }
+      }
     });
 
     refetchUsers();
-
     closeEditUserModal();
   }
 
@@ -247,9 +378,17 @@ function Users(props: UserProps) {
   }
 
   const handleEditPermissions = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/users/permissions", {
-      evaluator_id: editUserPermissionsId,
-      ...values
+    if (!editUserPermissionsId) {
+      return;
+    }
+
+    await editUserPermissions({
+      variables: {
+        id: editUserPermissionsId,
+        input: {
+          ...values
+        }
+      }
     });
 
     closeEditPermissionsModal();
@@ -283,7 +422,7 @@ function Users(props: UserProps) {
             <span className="section-actions">
               {!props.inactive && <Button type="tertiary" role="link" action="/admin/users/inactive" text="View deactivated users" />}
               {props.inactive && <Button type="tertiary" role="link" action="/admin/users" text="View active users" />}
-              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" disabled />}
+              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
             </span>
           </div>
           <div className="section-body">
@@ -312,6 +451,7 @@ function Users(props: UserProps) {
           handleSubmit={handleAddUser}
           handleCancel={closeAddUserModal}
           cols={4}
+          loading={createUserIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -372,7 +512,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditUser}
           handleCancel={closeEditUserModal}
           cols={4}
-          disabled
+          loading={editUserProfileIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -430,7 +570,7 @@ function Users(props: UserProps) {
               name: "term_start",
               id: "term-start",
               label: "Term Start",
-              defaultValue: editUser.termStart || "",
+              defaultValue: editUser.termStart,
               size: "MEDIUM"
             },
             {
@@ -438,7 +578,7 @@ function Users(props: UserProps) {
               name: "term_end",
               id: "term-end",
               label: "Term End",
-              defaultValue: editUser.termEnd || "",
+              defaultValue: editUser.termEnd,
               size: "MEDIUM"
             },
             {
@@ -504,7 +644,7 @@ function Users(props: UserProps) {
           handleSubmit={handleEditPermissions}
           handleCancel={closeEditPermissionsModal}
           cols={4}
-          disabled
+          loading={editUserPermissionsIsLoading}
           fields={[
             {
               fieldType: "CHECKBOX",

@@ -393,8 +393,6 @@ func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bo
 		return false, err
 	}
 
-	//programs := []*models.EntryInput{}
-
 	splitURL := strings.Split(*contest.URL, "/")
 	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:%s/top-forks?sort=2&page=0&limit=1000", splitURL[len(splitURL)-1])
 
@@ -445,6 +443,64 @@ func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bo
 	return true, nil
 }
 
+func (r *mutationResolver) ImportEntry(ctx context.Context, contestID int, kaid string) (*model.Entry, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AddEntries) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to import entries.")
+	}
+
+	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/show_scratchpad?scratchpad_id=%s", kaid)
+
+	res, err := http.Get(APIEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	type Scratchpad struct {
+		URL        string `json:"url"`
+		AuthorKaid string `json:"kaid"`
+		Title      string `json:"title"`
+		Votes      int    `json:"sumVotesIncremented"`
+		Created    string `json:"created"`
+		Height     int    `json:"height"`
+	}
+
+	type Author struct {
+		AuthorName string `json:"nickname"`
+	}
+
+	type Response struct {
+		Scratchpad Scratchpad `json:"scratchpad"`
+		Author     Author     `json:"creatorProfile"`
+	}
+
+	var data Response
+	json.Unmarshal(body, &data)
+
+	input := &models.EntryInput{
+		URL:        data.Scratchpad.URL,
+		Kaid:       kaid,
+		Title:      data.Scratchpad.Title,
+		AuthorName: data.Author.AuthorName,
+		AuthorKaid: data.Scratchpad.AuthorKaid,
+		Votes:      data.Scratchpad.Votes,
+		Created:    data.Scratchpad.Created,
+	}
+
+	id, err := models.CreateEntry(ctx, contestID, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Entry(ctx, *id)
+}
+
 func (r *mutationResolver) AssignAllEntriesToGroups(ctx context.Context, contestID int) (bool, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -468,6 +524,21 @@ func (r *mutationResolver) AssignNewEntriesToGroups(ctx context.Context, contest
 	}
 
 	err := models.AssignNewEntriesToGroups(ctx, contestID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (r *mutationResolver) TransferEntryGroups(ctx context.Context, contest int, prevGroup int, newGroup int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEntryGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to transfer entry groups.")
+	}
+
+	err := models.TransferEntryGroups(ctx, contest, prevGroup, newGroup)
 	if err != nil {
 		return false, err
 	}

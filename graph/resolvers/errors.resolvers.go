@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -19,6 +20,26 @@ func (r *errorResolver) User(ctx context.Context, obj *model.Error) (*model.User
 	}
 
 	return user, nil
+}
+
+func (r *mutationResolver) DeleteError(ctx context.Context, id int) (*model.Error, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteErrors) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete errors.")
+	}
+
+	e, err := r.Query().Error(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteErrorById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (r *queryResolver) Errors(ctx context.Context, page int) ([]*model.Error, error) {

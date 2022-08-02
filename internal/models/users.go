@@ -159,3 +159,43 @@ func ChangeUserPasswordById(ctx context.Context, id int, password string) error 
 
 	return nil
 }
+
+func CreateUser(ctx context.Context, input *model.CreateUserInput) (*int, error) {
+	row := db.DB.QueryRow("INSERT INTO evaluator (evaluator_name, email, evaluator_kaid, username, dt_term_start) VALUES ($1, $2, $3, $4, $5) RETURNING evaluator_id;", input.Name, input.Email, input.Kaid, input.Username, input.TermStart)
+
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while creating a new user", err)
+	}
+
+	_, err := db.DB.Exec("INSERT INTO evaluator_permissions (evaluator_id) VALUES ($1)", id)
+	if err != nil {
+		return &id, errors.NewInternalError(ctx, "An unexpected error occurred while creating a new user", err)
+	}
+
+	return &id, nil
+}
+
+func EditUserById(ctx context.Context, id int, input *model.EditUserProfileInput) error {
+	_, err := db.DB.Exec("UPDATE evaluator SET evaluator_name = $1, evaluator_kaid = $2, is_admin = $3, dt_term_start = $4, dt_term_end = $5, account_locked = $6, email = $7, username = $8, nickname = $9, receive_emails = $10 WHERE evaluator_id = $11", input.Name, input.Kaid, input.IsAdmin, input.TermStart, input.TermEnd, input.AccountLocked, input.Email, input.Username, input.Nickname, input.NotificationsEnabled, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a user's profile", err)
+	}
+	return nil
+}
+
+func EditUserPermissionsById(ctx context.Context, id int, input *model.EditUserPermissionsInput) error {
+	_, err := db.DB.Exec("UPDATE evaluator_permissions SET view_admin_stats = $1, edit_contests = $2, delete_contests = $3, add_entries = $4, edit_entries = $5, delete_entries = $6, assign_entry_groups = $7, view_all_evaluations = $8, edit_all_evaluations = $9, delete_all_evaluations = $10, manage_winners = $11, view_all_tasks = $12, edit_all_tasks = $13, delete_all_tasks = $14, view_judging_settings = $15, manage_judging_groups = $16, assign_evaluator_groups = $17, manage_judging_criteria = $18, view_all_users = $19, edit_user_profiles = $20, change_user_passwords = $21, assume_user_identities = $22, add_users = $23, view_errors = $24, delete_errors = $25, judge_entries = $26, edit_kb_content = $27, delete_kb_content = $28, publish_kb_content = $29, manage_announcements = $30 WHERE evaluator_id = $31", input.ViewAdminStats, input.EditContests, input.DeleteContests, input.AddEntries, input.EditEntries, input.DeleteEntries, input.AssignEntryGroups, input.ViewAllEvaluations, input.EditAllEvaluations, input.DeleteAllEvaluations, input.ManageWinners, input.ViewAllTasks, input.EditAllTasks, input.DeleteAllTasks, input.ViewJudgingSettings, input.ManageJudgingGroups, input.AssignEvaluatorGroups, input.ManageJudgingCriteria, input.ViewAllUsers, input.EditUserProfiles, input.ChangeUserPasswords, input.AssumeUserIdentities, input.AddUsers, input.ViewErrors, input.DeleteErrors, input.JudgeEntries, input.EditKbContent, input.DeleteKbContent, input.PublishKbContent, input.ManageAnnouncements, id)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while updating a user's permissions", err)
+	}
+	return nil
+}
+
+func AssignUserToJudgingGroup(ctx context.Context, userId int, groupId *int) error {
+	_, err := db.DB.Exec("UPDATE evaluator SET group_id = $1 WHERE evaluator_id = $2", groupId, userId)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while assigning a user to a judging group", err)
+	}
+	return nil
+}

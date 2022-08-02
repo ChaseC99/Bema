@@ -35,6 +35,26 @@ extend type Mutation {
   Changes a user's password. Returns a boolean indicating success. Requires Change User Password permission.
   """
   changePassword(id: ID!, password: String!): Boolean!
+
+  """
+  Creates a new user account. Requires Add Users permission.
+  """
+  createUser(input: CreateUserInput!): User
+
+  """
+  Edits an existing user's profile. Requires Edit User Profiles permission.
+  """
+  editUserProfile(id: ID!, input: EditUserProfileInput!): User
+
+  """
+  Updates a user's permissions. Requires Admin permission.
+  """
+  editUserPermissions(id: ID!, input: EditUserPermissionsInput!): Permissions
+
+  """
+  Assigns a user to a judging group. Returns a boolean indicating success. Requires Assign Evaluator Groups permission.
+  """
+  assignUserToJudgingGroup(userId: ID!, groupId: ID): Boolean!
 }
 
 """
@@ -320,4 +340,233 @@ type LoginResponse {
   The user's auth token
   """
   token: String
+}
+
+input CreateUserInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+}
+
+input EditUserProfileInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's display name
+  """
+  nickname: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+
+  """
+  The user's end date
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires Admin permission.
+  """
+  isAdmin: Boolean!
+
+  """
+  Indicates if the account has been deactivated. Requires Admin permission.
+  """
+  accountLocked: Boolean!
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean!
+}
+
+input EditUserPermissionsInput {
+  """
+  Allows the user to add individual and bulk import entries
+  """
+  add_entries: Boolean!
+
+  """
+  Allows the user to create new user accounts
+  """
+  add_users: Boolean!
+
+  """
+  Allows the user to assign entries to judging groups
+  """
+  assign_entry_groups: Boolean!
+
+  """
+  Allows the user to assign evaluators to judging groups
+  """
+  assign_evaluator_groups: Boolean!
+
+  """
+  Allows the user to impersonate other users
+  """
+  assume_user_identities: Boolean!
+
+  """
+  Allows the user to change the passwords of other users
+  """
+  change_user_passwords: Boolean!
+
+  """
+  Allows the user to delete all evaluations
+  """
+  delete_all_evaluations: Boolean!
+
+  """
+  Allows the user to delete all tasks
+  """
+  delete_all_tasks: Boolean!
+
+  """
+  Allows the user to delete all contests and associated data
+  """
+  delete_contests: Boolean!
+
+  """
+  Allows the user to delete all entries
+  """
+  delete_entries: Boolean!
+
+  """
+  Allows the user to delete all errors
+  """
+  delete_errors: Boolean!
+
+  """
+  Allows the user to delete all KB articles and sections
+  """
+  delete_kb_content: Boolean!
+
+  """
+  Allows the user to edit all evaluations
+  """
+  edit_all_evaluations: Boolean!
+
+  """
+  Allows the user to edit all tasks
+  """
+  edit_all_tasks: Boolean!
+
+  """
+  Allows the user to edit all contests
+  """
+  edit_contests: Boolean!
+
+  """
+  Allows the user to edit all entries
+  """
+  edit_entries: Boolean!
+
+  """
+  Allows the user to edit all KB articles and sections
+  """
+  edit_kb_content: Boolean!
+
+  """
+  Allows the user to edit all user profiles
+  """
+  edit_user_profiles: Boolean!
+
+  # Allows the user to score entries
+  judge_entries: Boolean!
+
+  """
+  Allows the user to create, edit, and delete announcements
+  """
+  manage_announcements: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging criteria
+  """
+  manage_judging_criteria: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+  """
+  manage_judging_groups: Boolean!
+
+  """
+  Allows the user to add and remove winning entries
+  """
+  manage_winners: Boolean!
+
+  """
+  Allows the user to publish draft KB articles
+  """
+  publish_kb_content: Boolean!
+
+  """
+  Allows the user to view admin stats on the dashboard
+  """
+  view_admin_stats: Boolean!
+
+  """
+  Allows the user to view all evaluations
+  """
+  view_all_evaluations: Boolean!
+
+  """
+  Allows the user to view all tasks
+  """
+  view_all_tasks: Boolean!
+
+  """
+  Allows the user to view all user accounts
+  """
+  view_all_users: Boolean!
+
+  """
+  Allows the user to view all errors
+  """
+  view_errors: Boolean!
+
+  """
+  Allows the user to view all judging settings
+  """
+  view_judging_settings: Boolean!
 }

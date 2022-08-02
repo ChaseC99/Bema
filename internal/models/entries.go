@@ -572,3 +572,11 @@ func AssignNewEntriesToGroups(ctx context.Context, contestId int) error {
 
 	return nil
 }
+
+func TransferEntryGroups(ctx context.Context, contestId int, prevGroup int, newGroup int) error {
+	_, err := db.DB.Exec("UPDATE entry SET assigned_group_id = $1 WHERE assigned_group_id = $2 AND contest_id = $3;", newGroup, prevGroup, contestId)
+	if err != nil {
+		return errors.NewInternalError(ctx, "An unexpected error occurred while transferring entry groups", err)
+	}
+	return nil
+}

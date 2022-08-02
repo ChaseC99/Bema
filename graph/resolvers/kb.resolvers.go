@@ -9,6 +9,7 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/generated"
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/auth"
+	errs "github.com/KA-Challenge-Council/Bema/internal/errors"
 	"github.com/KA-Challenge-Council/Bema/internal/models"
 )
 
@@ -106,6 +107,179 @@ func (r *kBSectionResolver) Articles(ctx context.Context, obj *model.KBSection) 
 	return articles, nil
 }
 
+func (r *mutationResolver) CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create KB sections.")
+	}
+
+	id, err := models.CreateKBSection(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Section(ctx, *id)
+}
+
+func (r *mutationResolver) EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit KB sections.")
+	}
+
+	err := models.EditKBSectionById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Section(ctx, id)
+}
+
+func (r *mutationResolver) DeleteSection(ctx context.Context, id int) (*model.KBSection, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete KB sections.")
+	}
+
+	section, err := r.Query().Section(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	articles, err := models.GetAdminKBArticlesBySection(ctx, section.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(articles) > 0 {
+		return nil, errs.NewForbiddenError(ctx, "This section has articles associated with it and cannot be deleted.")
+	}
+
+	err = models.DeleteKBSectionById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return section, nil
+}
+
+func (r *mutationResolver) CreateArticle(ctx context.Context, input model.KBArticleInput) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create KB articles.")
+	}
+
+	id, err := models.CreateKBArticle(ctx, &input, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Article(ctx, *id)
+}
+
+func (r *mutationResolver) EditArticle(ctx context.Context, id int, input model.KBArticleInput) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit KB articles.")
+	}
+
+	err := models.EditKBArticle(ctx, id, &input, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Article(ctx, id)
+}
+
+func (r *mutationResolver) EditArticleProperties(ctx context.Context, id int, visibility string, section int) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit KB articles.")
+	}
+
+	err := models.EditKBArticleProperties(ctx, id, visibility, section)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Article(ctx, id)
+}
+
+func (r *mutationResolver) DeleteArticle(ctx context.Context, id int) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.DeleteKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete KB articles.")
+	}
+
+	article, err := r.Query().Article(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteKBArticle(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return article, nil
+}
+
+func (r *mutationResolver) DeleteArticleDraft(ctx context.Context, id int) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to delete KB article drafts.")
+	}
+
+	article, err := r.Query().Article(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteKBArticleDraft(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return article, nil
+}
+
+func (r *mutationResolver) PublishArticle(ctx context.Context, id int) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.PublishKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to publish KB articles.")
+	}
+
+	err := models.PublishKBArticle(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Article(ctx, id)
+}
+
+func (r *mutationResolver) UnpublishArticle(ctx context.Context, id int) (*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.PublishKbContent) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to unpublish KB articles.")
+	}
+
+	err := models.UnpublishKBArticle(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().Article(ctx, id)
+}
+
 func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -170,6 +344,31 @@ func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, 
 	}
 
 	return nil, nil
+}
+
+func (r *queryResolver) Articles(ctx context.Context, filter *string) ([]*model.KBArticle, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return []*model.KBArticle{}, errs.NewForbiddenError(ctx, "You do not have permission to view the full list of KB articles.")
+	}
+
+	var articles []*model.KBArticle
+	var err error
+
+	if filter == nil {
+		articles, err = models.GetAllKBArticles(ctx)
+	} else if *filter == "DRAFTS" {
+		articles, err = models.GetAllKBArticlesWithDrafts(ctx)
+	} else {
+		articles, err = models.GetAllKBArticles(ctx)
+	}
+
+	if err != nil {
+		return []*model.KBArticle{}, nil
+	}
+
+	return articles, nil
 }
 
 // KBArticle returns generated.KBArticleResolver implementation.

@@ -97,6 +97,88 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, id int, password 
 	return true, nil
 }
 
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AddUsers) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to create users.")
+	}
+
+	id, err := models.CreateUser(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().User(ctx, *id)
+}
+
+func (r *mutationResolver) EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditUserProfiles) {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit user profiles")
+	}
+
+	u, err := r.Query().User(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !user.IsAdmin {
+		input.IsAdmin = *u.IsAdmin
+		input.AccountLocked = *u.AccountLocked
+	}
+
+	if !user.IsAdmin && !auth.HasPermission(user, auth.EditUserProfiles) {
+		input.Kaid = u.Kaid
+		input.Name = *u.Name
+		input.TermStart = *u.TermStart
+		input.TermEnd = u.TermEnd
+	}
+
+	err = models.EditUserById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Query().User(ctx, id)
+}
+
+func (r *mutationResolver) EditUserPermissions(ctx context.Context, id int, input model.EditUserPermissionsInput) (*model.Permissions, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil || !user.IsAdmin {
+		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit user permissions.")
+	}
+
+	err := models.EditUserPermissionsById(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions, err := models.GetUserPermissionsById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissions, nil
+}
+
+func (r *mutationResolver) AssignUserToJudgingGroup(ctx context.Context, userID int, groupID *int) (bool, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssignEvaluatorGroups) {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to assign evaluators to groups.")
+	}
+
+	err := models.AssignUserToJudgingGroup(ctx, userID, groupID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 

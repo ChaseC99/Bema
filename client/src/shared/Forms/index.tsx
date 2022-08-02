@@ -101,7 +101,7 @@ export type DateField = {
   fieldType: "DATE"
   name: string
   id: string
-  defaultValue: string
+  defaultValue: string | null
   size: "SMALL" | "MEDIUM" | "LARGE"
   label: string
   description?: string

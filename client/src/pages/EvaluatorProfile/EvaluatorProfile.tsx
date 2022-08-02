@@ -2,6 +2,7 @@ import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import ActionMenu from "../../shared/ActionMenu";
+import Button from "../../shared/Button";
 import ExternalLink from "../../shared/ExternalLink";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import { FormModal } from "../../shared/Modals";
@@ -12,6 +13,7 @@ import request from "../../util/request";
 type GetUserProfileResponse = {
   user: {
     id: string
+    name: string
     nickname: string | null
     kaid: string
     termStart: string | null
@@ -20,6 +22,8 @@ type GetUserProfileResponse = {
     notificationsEnabled: boolean | null
     username: string
     lastLogin: string | null
+    isAdmin: boolean
+    accountLocked: boolean
     totalEvaluations: number
     totalContestsJudged: number
     assignedGroup: {
@@ -33,6 +37,7 @@ const GET_USER_PROFILE = gql`
   query GetUserProfile($userId: ID!) {
     user(id: $userId) {
       id
+      name
       nickname
       kaid
       termStart
@@ -41,12 +46,52 @@ const GET_USER_PROFILE = gql`
       notificationsEnabled
       username
       lastLogin
+      isAdmin
+      accountLocked
       totalEvaluations
       totalContestsJudged
       assignedGroup {
         id
         name
       }
+    }
+  }
+`;
+
+type User = {
+  id: number
+  name: string
+  kaid: string
+  username: string
+  nickname: string | null
+  email: string | null
+  notificationsEnabled: boolean
+  termStart: string | null
+  termEnd: string | null
+  lastLogin: string | null
+  accountLocked: boolean
+  isAdmin: boolean
+}
+
+type EditUserProfileResponse = {
+  user: User
+}
+
+const EDIT_USER_PROFILE = gql`
+  mutation EditUserProfile($id: ID!, $input: EditUserProfileInput!) {
+    user: editUserProfile(id: $id, input: $input) {
+      id
+      name
+      kaid
+      username
+      nickname
+      email
+      notificationsEnabled
+      termStart
+      termEnd
+      lastLogin
+      accountLocked
+      isAdmin
     }
   }
 `;
@@ -75,6 +120,7 @@ function EvaluatorProfile() {
     onError: handleGQLError
   });
   const [changePassword, { loading: changePasswordIsLoading }] = useMutation<ChangePasswordResponse>(CHANGE_PASSWORD, { onError: handleGQLError });
+  const [editUserProfile, { loading: editUserProfileIsLoading }] = useMutation<EditUserProfileResponse>(EDIT_USER_PROFILE, { onError: handleGQLError });
 
   const openEditProfileModal = () => {
     setShowEditProfileModal(true);
@@ -85,11 +131,26 @@ function EvaluatorProfile() {
   }
 
   const handleEditProfile = async (values: { [name: string]: any}) => {
-    await request("PUT", "/api/internal/users", {
-      evaluator_id: parseInt(evaluatorId || ""),
-      nickname: values.nickname,
-      email: values.email.length > 0 ? values.email : null,
-      receive_emails: values.receive_emails
+    if (!profileData?.user) {
+      return;
+    }
+
+    await editUserProfile({
+      variables: {
+        id: evaluatorId,
+        input: {
+          name: profileData.user.name,
+          email: values.email,
+          kaid: profileData.user.kaid,
+          username: values.username,
+          nickname: values.nickname,
+          termStart: profileData.user.termStart,
+          termEnd: profileData.user.termEnd,
+          isAdmin: profileData.user.isAdmin,
+          accountLocked: profileData.user.accountLocked,
+          notificationsEnabled: values.receive_emails
+        }
+      }
     });
 
     refetchProfile();
@@ -128,11 +189,14 @@ function EvaluatorProfile() {
       <section className="container center col-12">
         <div className="col-8">
           <div className="section-header">
-            {state.user?.evaluator_id === parseInt(evaluatorId || "") ?
+            {state.user?.id === evaluatorId ?
               <h2>Your Profile</h2>
               :
               <h2>User Profile {profileData && "- " + profileData.user.nickname}</h2>
             }
+            <span className="section-actions">
+              {(state.user?.id === evaluatorId || state.isAdmin || state.user?.permissions.edit_all_evaluations) && <Button type="tertiary" role="button" action={openEditProfileModal} text="Edit Profile" />}
+            </span>
           </div>
           <div className="section-body">
             <div className="card col-6">
@@ -173,16 +237,6 @@ function EvaluatorProfile() {
               <div className="card col-6">
                 <div className="card-header">
                   <h3>Personal Information</h3>
-                  {((state.user?.evaluator_id === parseInt(evaluatorId || "")) && !state.is_admin && !state.user.permissions.edit_user_profiles) &&
-                    <ActionMenu actions={[
-                      {
-                        role: "button",
-                        action: openEditProfileModal,
-                        text: "Edit profile"
-                      }
-                    ]}
-                    />
-                  }
                 </div>
                 <div className="card-body">
                   {profileIsLoading && <LoadingSpinner size="MEDIUM" />}
@@ -235,7 +289,7 @@ function EvaluatorProfile() {
           handleSubmit={handleEditProfile}
           handleCancel={closeEditProfileModal}
           cols={4}
-          disabled
+          loading={editUserProfileIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -246,6 +300,17 @@ function EvaluatorProfile() {
               description: "This is the name that is shown to other Bema users.",
               size: "LARGE",
               defaultValue: profileData?.user.nickname || ""
+            },
+            {
+              fieldType: "INPUT",
+              type: "text",
+              name: "username",
+              id: "username",
+              label: "Username",
+              description: "This username is used to login to the site.",
+              defaultValue: profileData?.user.username || "",
+              size: "LARGE",
+              required: true
             },
             {
               fieldType: "INPUT",

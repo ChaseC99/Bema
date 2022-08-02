@@ -7,7 +7,6 @@ import { ConfirmModal, FormModal } from "../../shared/Modals";
 import ContestsSidebar from "../../shared/Sidebars/ContestsSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 
@@ -148,6 +147,35 @@ const IMPORT_ENTRIES = gql`
   }
 `;
 
+type ImportEntryResponse = {
+  entry: Entry
+}
+
+const IMPORT_ENTRY = gql`
+  mutation ImportEntry($contestId: ID!, $kaid: String!) {
+    importEntry(contestId: $contestId, kaid: $kaid) {
+      id
+      url
+      kaid
+      title
+      author {
+        name
+        kaid
+      }
+      skillLevel
+      created
+      group {
+        id
+        name
+      }
+      height
+      isFlagged
+      isDisqualified
+      isSkillLevelLocked
+    }
+  }
+`;
+
 type AssignEntriesResponse = {
   success: boolean
 }
@@ -161,6 +189,16 @@ const ASSIGN_ALL_ENTRIES = gql`
 const ASSIGN_NEW_ENTRIES = gql`
   mutation AssignAllEntriesToGroups($contestId: ID!) {
     assignNewEntriesToGroups(contestId: $contestId)
+  }
+`;
+
+type TransferEntriesResponse = {
+  success: true
+}
+
+const TRANSFER_ENTRIES = gql`
+  mutation TransferEntryGroups($contest: ID!, $prevGroup: ID!, $newGroup: ID!) {
+    transferEntryGroups(contest: $contest, prevGroup: $prevGroup, newGroup: $newGroup)
   }
 `;
 
@@ -180,8 +218,10 @@ function Entries() {
   const [editEntry, { loading: editEntryIsLoading }] = useMutation<EditEntryResponse>(EDIT_ENTRY, { onError: handleGQLError });
   const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<DeleteEntryResponse>(DELETE_ENTRY, { onError: handleGQLError });
   const [importEntries, { loading: importEntriesIsLoading }] = useMutation<ImportEntriesResponse>(IMPORT_ENTRIES, { onError: handleGQLError });
+  const [importEntry, { loading: importEntryIsLoading }] = useMutation<ImportEntryResponse>(IMPORT_ENTRY, { onError: handleGQLError });
   const [assignAllEntries, { loading: assignAllEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_ALL_ENTRIES, { onError: handleGQLError });
   const [assignNewEntries, { loading: assignNewEntriesIsLoading }] = useMutation<AssignEntriesResponse>(ASSIGN_NEW_ENTRIES, { onError: handleGQLError });
+  const [transferEntries, { loading: transferEntriesIsLoading }] = useMutation<TransferEntriesResponse>(TRANSFER_ENTRIES, { onError: handleGQLError });
   
   const { loading: contestIsLoading } = useQuery<GetContestResponse | null>(GET_CONTEST, {
     variables: {
@@ -277,7 +317,15 @@ function Entries() {
   }
 
   const handleImportIndividualEntry = async (values: { [name: string]: any }) => {
-    // TODO: Make call to API to import a single entry
+    await importEntry({
+      variables: {
+        contestId: contestId,
+        kaid: values.kaid
+      }
+    });
+
+    refetchEntries();
+    hideImportIndividualEntryForm();
   }
 
   const openConfirmAssignAllEntriesModal = () => {
@@ -327,10 +375,12 @@ function Entries() {
   }
 
   const handleTransferGroups = async (values: { [name: string]: any }) => {
-    await request("PUT", "/api/internal/entries/transferEntryGroups", {
-      contest_id: contestId,
-      current_entry_group: values.old_group,
-      new_entry_group: values.new_group
+    await transferEntries({
+      variables: {
+        contest: contestId,
+        prevGroup: values.old_group,
+        newGroup: values.new_group
+      }
     });
 
     refetchEntries();
@@ -341,7 +391,7 @@ function Entries() {
     <React.Fragment>
       <ContestsSidebar rootPath="/entries" />
 
-      <section id="entries-page-section" className="container col-12">
+      <section id="entries-page-section" className="container col-12" style={{ marginBottom: "150px" }}>
         <div className="col-12">
           <div className="section-header col-12">
             <h2 data-testid="entries-page-section-header">Entries</h2>
@@ -359,7 +409,6 @@ function Entries() {
                       role: "button",
                       action: showImportIndividualEntryForm,
                       text: "Single Entry",
-                      disabled: true
                     }
                   ]}
                   label="Import Entries"
@@ -382,7 +431,6 @@ function Entries() {
                       role: "button",
                       action: openTransferGroupsForm,
                       text: "Transfer",
-                      disabled: true
                     }
                   ]}
                   label="Update Groups"
@@ -594,14 +642,15 @@ function Entries() {
           handleSubmit={handleImportIndividualEntry}
           handleCancel={hideImportIndividualEntryForm}
           cols={4}
+          loading={importEntryIsLoading}
           fields={[
             {
               fieldType: "INPUT",
               type: "text",
-              name: "program_id",
-              id: "program-id",
+              name: "kaid",
+              id: "kaid",
               size: "LARGE",
-              label: "Entry ID",
+              label: "Entry KAID",
               description: "The program ID is the last part of the program URL.",
               defaultValue: "",
               required: true
@@ -641,6 +690,7 @@ function Entries() {
           handleSubmit={handleTransferGroups}
           handleCancel={closeTransferGroupsForm}
           cols={4}
+          loading={transferEntriesIsLoading}
           fields={[
             {
               fieldType: "SELECT",

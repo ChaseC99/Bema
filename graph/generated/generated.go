@@ -231,36 +231,53 @@ type ComplexityRoot struct {
 		ApproveEntry             func(childComplexity int, id int) int
 		AssignAllEntriesToGroups func(childComplexity int, contestID int) int
 		AssignNewEntriesToGroups func(childComplexity int, contestID int) int
+		AssignUserToJudgingGroup func(childComplexity int, userID int, groupID *int) int
 		ChangePassword           func(childComplexity int, id int, password string) int
 		CreateAnnouncement       func(childComplexity int, input model.AnnouncementInput) int
+		CreateArticle            func(childComplexity int, input model.KBArticleInput) int
 		CreateContest            func(childComplexity int, input model.CreateContestInput) int
 		CreateCriteria           func(childComplexity int, input model.JudgingCriteriaInput) int
 		CreateEntryVote          func(childComplexity int, entryID int, reason string) int
 		CreateJudgingGroup       func(childComplexity int, input model.CreateJudgingGroupInput) int
+		CreateSection            func(childComplexity int, input model.KBSectionInput) int
 		CreateTask               func(childComplexity int, input model.CreateTaskInput) int
+		CreateUser               func(childComplexity int, input model.CreateUserInput) int
 		DeleteAnnouncement       func(childComplexity int, id int) int
+		DeleteArticle            func(childComplexity int, id int) int
+		DeleteArticleDraft       func(childComplexity int, id int) int
 		DeleteContest            func(childComplexity int, id int) int
 		DeleteCriteria           func(childComplexity int, id int) int
 		DeleteEntry              func(childComplexity int, id int) int
 		DeleteEntryVote          func(childComplexity int, id int) int
+		DeleteError              func(childComplexity int, id int) int
 		DeleteEvaluation         func(childComplexity int, id int) int
 		DeleteJudgingGroup       func(childComplexity int, id int) int
+		DeleteSection            func(childComplexity int, id int) int
 		DeleteTask               func(childComplexity int, id int) int
 		DisqualifyEntry          func(childComplexity int, id int) int
 		EditAnnouncement         func(childComplexity int, id int, input model.AnnouncementInput) int
+		EditArticle              func(childComplexity int, id int, input model.KBArticleInput) int
+		EditArticleProperties    func(childComplexity int, id int, visibility string, section int) int
 		EditContest              func(childComplexity int, id int, input model.EditContestInput) int
 		EditCriteria             func(childComplexity int, id int, input model.JudgingCriteriaInput) int
 		EditEntry                func(childComplexity int, id int, input model.EditEntryInput) int
 		EditEvaluation           func(childComplexity int, id int, input model.EditEvaluationInput) int
 		EditJudgingGroup         func(childComplexity int, id int, input model.EditJudgingGroupInput) int
+		EditSection              func(childComplexity int, id int, input model.KBSectionInput) int
 		EditTask                 func(childComplexity int, id int, input model.EditTaskInput) int
+		EditUserPermissions      func(childComplexity int, id int, input model.EditUserPermissionsInput) int
+		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
 		FlagEntry                func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
+		ImportEntry              func(childComplexity int, contestID int, kaid string) int
 		Login                    func(childComplexity int, username string, password string) int
 		Logout                   func(childComplexity int) int
+		PublishArticle           func(childComplexity int, id int) int
 		RemoveWinner             func(childComplexity int, id int) int
 		ScoreEntry               func(childComplexity int, id int, input model.ScoreEntryInput) int
 		SetEntryLevel            func(childComplexity int, id int, skillLevel string) int
+		TransferEntryGroups      func(childComplexity int, contest int, prevGroup int, newGroup int) int
+		UnpublishArticle         func(childComplexity int, id int) int
 	}
 
 	Permissions struct {
@@ -309,6 +326,7 @@ type ComplexityRoot struct {
 		Announcement                func(childComplexity int, id int) int
 		Announcements               func(childComplexity int) int
 		Article                     func(childComplexity int, id int) int
+		Articles                    func(childComplexity int, filter *string) int
 		AvailableTasks              func(childComplexity int) int
 		CompletedTasks              func(childComplexity int) int
 		Contest                     func(childComplexity int, id int) int
@@ -462,8 +480,11 @@ type MutationResolver interface {
 	CreateEntryVote(ctx context.Context, entryID int, reason string) (*model.EntryVote, error)
 	DeleteEntryVote(ctx context.Context, id int) (*model.EntryVote, error)
 	ImportEntries(ctx context.Context, contestID int) (bool, error)
+	ImportEntry(ctx context.Context, contestID int, kaid string) (*model.Entry, error)
 	AssignAllEntriesToGroups(ctx context.Context, contestID int) (bool, error)
 	AssignNewEntriesToGroups(ctx context.Context, contestID int) (bool, error)
+	TransferEntryGroups(ctx context.Context, contest int, prevGroup int, newGroup int) (bool, error)
+	DeleteError(ctx context.Context, id int) (*model.Error, error)
 	EditEvaluation(ctx context.Context, id int, input model.EditEvaluationInput) (*model.Evaluation, error)
 	DeleteEvaluation(ctx context.Context, id int) (*model.Evaluation, error)
 	CreateCriteria(ctx context.Context, input model.JudgingCriteriaInput) (*model.JudgingCriteria, error)
@@ -473,12 +494,26 @@ type MutationResolver interface {
 	EditJudgingGroup(ctx context.Context, id int, input model.EditJudgingGroupInput) (*model.JudgingGroup, error)
 	DeleteJudgingGroup(ctx context.Context, id int) (*model.JudgingGroup, error)
 	ScoreEntry(ctx context.Context, id int, input model.ScoreEntryInput) (*model.Evaluation, error)
+	CreateSection(ctx context.Context, input model.KBSectionInput) (*model.KBSection, error)
+	EditSection(ctx context.Context, id int, input model.KBSectionInput) (*model.KBSection, error)
+	DeleteSection(ctx context.Context, id int) (*model.KBSection, error)
+	CreateArticle(ctx context.Context, input model.KBArticleInput) (*model.KBArticle, error)
+	EditArticle(ctx context.Context, id int, input model.KBArticleInput) (*model.KBArticle, error)
+	EditArticleProperties(ctx context.Context, id int, visibility string, section int) (*model.KBArticle, error)
+	DeleteArticle(ctx context.Context, id int) (*model.KBArticle, error)
+	DeleteArticleDraft(ctx context.Context, id int) (*model.KBArticle, error)
+	PublishArticle(ctx context.Context, id int) (*model.KBArticle, error)
+	UnpublishArticle(ctx context.Context, id int) (*model.KBArticle, error)
 	CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error)
 	EditTask(ctx context.Context, id int, input model.EditTaskInput) (*model.Task, error)
 	DeleteTask(ctx context.Context, id int) (*model.Task, error)
 	Login(ctx context.Context, username string, password string) (*model.LoginResponse, error)
 	Logout(ctx context.Context) (bool, error)
 	ChangePassword(ctx context.Context, id int, password string) (bool, error)
+	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
+	EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error)
+	EditUserPermissions(ctx context.Context, id int, input model.EditUserPermissionsInput) (*model.Permissions, error)
+	AssignUserToJudgingGroup(ctx context.Context, userID int, groupID *int) (bool, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -510,6 +545,7 @@ type QueryResolver interface {
 	Sections(ctx context.Context) ([]*model.KBSection, error)
 	Section(ctx context.Context, id int) (*model.KBSection, error)
 	Article(ctx context.Context, id int) (*model.KBArticle, error)
+	Articles(ctx context.Context, filter *string) ([]*model.KBArticle, error)
 	JudgingProgress(ctx context.Context) (*model.JudgingProgress, error)
 	EntryCounts(ctx context.Context) (*model.EntryCounts, error)
 	Task(ctx context.Context, id int) (*model.Task, error)
@@ -1394,6 +1430,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AssignNewEntriesToGroups(childComplexity, args["contestId"].(int)), true
 
+	case "Mutation.assignUserToJudgingGroup":
+		if e.complexity.Mutation.AssignUserToJudgingGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_assignUserToJudgingGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AssignUserToJudgingGroup(childComplexity, args["userId"].(int), args["groupId"].(*int)), true
+
 	case "Mutation.changePassword":
 		if e.complexity.Mutation.ChangePassword == nil {
 			break
@@ -1417,6 +1465,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateAnnouncement(childComplexity, args["input"].(model.AnnouncementInput)), true
+
+	case "Mutation.createArticle":
+		if e.complexity.Mutation.CreateArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateArticle(childComplexity, args["input"].(model.KBArticleInput)), true
 
 	case "Mutation.createContest":
 		if e.complexity.Mutation.CreateContest == nil {
@@ -1466,6 +1526,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateJudgingGroup(childComplexity, args["input"].(model.CreateJudgingGroupInput)), true
 
+	case "Mutation.createSection":
+		if e.complexity.Mutation.CreateSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSection(childComplexity, args["input"].(model.KBSectionInput)), true
+
 	case "Mutation.createTask":
 		if e.complexity.Mutation.CreateTask == nil {
 			break
@@ -1478,6 +1550,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateTask(childComplexity, args["input"].(model.CreateTaskInput)), true
 
+	case "Mutation.createUser":
+		if e.complexity.Mutation.CreateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.CreateUserInput)), true
+
 	case "Mutation.deleteAnnouncement":
 		if e.complexity.Mutation.DeleteAnnouncement == nil {
 			break
@@ -1489,6 +1573,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteAnnouncement(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteArticle":
+		if e.complexity.Mutation.DeleteArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteArticle(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteArticleDraft":
+		if e.complexity.Mutation.DeleteArticleDraft == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteArticleDraft_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteArticleDraft(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteContest":
 		if e.complexity.Mutation.DeleteContest == nil {
@@ -1538,6 +1646,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteEntryVote(childComplexity, args["id"].(int)), true
 
+	case "Mutation.deleteError":
+		if e.complexity.Mutation.DeleteError == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteError_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteError(childComplexity, args["id"].(int)), true
+
 	case "Mutation.deleteEvaluation":
 		if e.complexity.Mutation.DeleteEvaluation == nil {
 			break
@@ -1561,6 +1681,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteJudgingGroup(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteSection":
+		if e.complexity.Mutation.DeleteSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSection(childComplexity, args["id"].(int)), true
 
 	case "Mutation.deleteTask":
 		if e.complexity.Mutation.DeleteTask == nil {
@@ -1597,6 +1729,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditAnnouncement(childComplexity, args["id"].(int), args["input"].(model.AnnouncementInput)), true
+
+	case "Mutation.editArticle":
+		if e.complexity.Mutation.EditArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditArticle(childComplexity, args["id"].(int), args["input"].(model.KBArticleInput)), true
+
+	case "Mutation.editArticleProperties":
+		if e.complexity.Mutation.EditArticleProperties == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editArticleProperties_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditArticleProperties(childComplexity, args["id"].(int), args["visibility"].(string), args["section"].(int)), true
 
 	case "Mutation.editContest":
 		if e.complexity.Mutation.EditContest == nil {
@@ -1658,6 +1814,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditJudgingGroup(childComplexity, args["id"].(int), args["input"].(model.EditJudgingGroupInput)), true
 
+	case "Mutation.editSection":
+		if e.complexity.Mutation.EditSection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editSection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditSection(childComplexity, args["id"].(int), args["input"].(model.KBSectionInput)), true
+
 	case "Mutation.editTask":
 		if e.complexity.Mutation.EditTask == nil {
 			break
@@ -1669,6 +1837,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditTask(childComplexity, args["id"].(int), args["input"].(model.EditTaskInput)), true
+
+	case "Mutation.editUserPermissions":
+		if e.complexity.Mutation.EditUserPermissions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editUserPermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditUserPermissions(childComplexity, args["id"].(int), args["input"].(model.EditUserPermissionsInput)), true
+
+	case "Mutation.editUserProfile":
+		if e.complexity.Mutation.EditUserProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editUserProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditUserProfile(childComplexity, args["id"].(int), args["input"].(model.EditUserProfileInput)), true
 
 	case "Mutation.flagEntry":
 		if e.complexity.Mutation.FlagEntry == nil {
@@ -1694,6 +1886,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ImportEntries(childComplexity, args["contestId"].(int)), true
 
+	case "Mutation.importEntry":
+		if e.complexity.Mutation.ImportEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_importEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ImportEntry(childComplexity, args["contestId"].(int), args["kaid"].(string)), true
+
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
 			break
@@ -1712,6 +1916,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Logout(childComplexity), true
+
+	case "Mutation.publishArticle":
+		if e.complexity.Mutation.PublishArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_publishArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PublishArticle(childComplexity, args["id"].(int)), true
 
 	case "Mutation.removeWinner":
 		if e.complexity.Mutation.RemoveWinner == nil {
@@ -1748,6 +1964,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.SetEntryLevel(childComplexity, args["id"].(int), args["skillLevel"].(string)), true
+
+	case "Mutation.transferEntryGroups":
+		if e.complexity.Mutation.TransferEntryGroups == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_transferEntryGroups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TransferEntryGroups(childComplexity, args["contest"].(int), args["prevGroup"].(int), args["newGroup"].(int)), true
+
+	case "Mutation.unpublishArticle":
+		if e.complexity.Mutation.UnpublishArticle == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unpublishArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnpublishArticle(childComplexity, args["id"].(int)), true
 
 	case "Permissions.add_entries":
 		if e.complexity.Permissions.AddEntries == nil {
@@ -2031,6 +2271,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Article(childComplexity, args["id"].(int)), true
+
+	case "Query.articles":
+		if e.complexity.Query.Articles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_articles_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Articles(childComplexity, args["filter"].(*string)), true
 
 	case "Query.availableTasks":
 		if e.complexity.Query.AvailableTasks == nil {
@@ -2512,12 +2764,17 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateContestInput,
 		ec.unmarshalInputCreateJudgingGroupInput,
 		ec.unmarshalInputCreateTaskInput,
+		ec.unmarshalInputCreateUserInput,
 		ec.unmarshalInputEditContestInput,
 		ec.unmarshalInputEditEntryInput,
 		ec.unmarshalInputEditEvaluationInput,
 		ec.unmarshalInputEditJudgingGroupInput,
 		ec.unmarshalInputEditTaskInput,
+		ec.unmarshalInputEditUserPermissionsInput,
+		ec.unmarshalInputEditUserProfileInput,
 		ec.unmarshalInputJudgingCriteriaInput,
+		ec.unmarshalInputKBArticleInput,
+		ec.unmarshalInputKBSectionInput,
 		ec.unmarshalInputScoreEntryInput,
 	)
 	first := true
@@ -2985,6 +3242,11 @@ extend type Mutation {
 	importEntries(contestId: ID!): Boolean!
 
 	"""
+	Imports a single entry given the program KAID. Requires Add Entries permission.
+	"""
+	importEntry(contestId: ID!, kaid: String!): Entry
+
+	"""
 	Assigns all entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
 	"""
 	assignAllEntriesToGroups(contestId: ID!): Boolean!
@@ -2993,6 +3255,11 @@ extend type Mutation {
 	Assigns new entries for a contest to judging groups. Returns a boolean indicating success. Requires Assign Entry Groups permission.
 	"""
 	assignNewEntriesToGroups(contestId: ID!): Boolean!
+
+	"""
+	Transfers entries from the previous judging group to the new judging group. Returns a boolean indicating success. Requires Assign Entry Groups permission.
+	"""
+	transferEntryGroups(contest: ID!, prevGroup: ID!, newGroup: ID!): Boolean!
 }
 
 """
@@ -3184,6 +3451,13 @@ input EditEntryInput {
     A single logged error. Requires View Errors permission.
     """
     error(id: ID!): Error
+}
+
+extend type Mutation {
+    """
+    Deletes an error. Requires Delete Errors permission.
+    """
+    deleteError(id: ID!): Error
 }
 
 """
@@ -3544,6 +3818,63 @@ input ScoreEntryInput {
     A single knowledge base article
     """
     article(id: ID!): KBArticle
+
+    """
+    A list of all KB articles
+    """
+    articles(filter: String): [KBArticle!]!
+}
+
+extend type Mutation {
+    """
+    Creates a new KB section. Requires Edit KB Content permission.
+    """
+    createSection(input: KBSectionInput!): KBSection
+
+    """
+    Edits an existing KB section. Requires Edit KB Content permission.
+    """
+    editSection(id: ID!, input: KBSectionInput!): KBSection
+
+    """
+    Deletes a KB section. Requires Delete KB Content permission.
+    """
+    deleteSection(id: ID!): KBSection
+
+    """
+    Creates a new KB article. Requires Edit KB Content permission.
+    """
+    createArticle(input: KBArticleInput!): KBArticle
+
+    """
+    Edits an existing KB article by editing the current unpublished draft or by creating a new draft if the previous one is published. Requires Edit KB Content permission.
+    """
+    editArticle(id: ID!, input: KBArticleInput!): KBArticle
+
+    """
+    Edits the visibility and sectioin of an existing KB Article. Requires Edit KB Content permission.
+    """
+    editArticleProperties(id: ID!, visibility: String!, section: ID!): KBArticle
+
+    """
+    Deletes an existing KB article. Requires Delete KB Content permission.
+    """
+    deleteArticle(id: ID!): KBArticle
+
+    """
+    Deletes the most recent unpublished draft for a KB article. Requires Edit KB Content permission.
+    """
+    deleteArticleDraft(id: ID!): KBArticle
+
+    """
+    Publishes an existing KB article draft. Requires Publish KB Content permission.
+    """
+    publishArticle(id: ID!): KBArticle
+
+    """
+    Unpublishes an existing KB article. Requires Publish KB Content permission.
+    """
+    unpublishArticle(id: ID!): KBArticle
 }
 
 """
@@ -3656,6 +3987,45 @@ type KBArticleDraft {
     The timestamp of the last update to the article draft
     """
     lastUpdated: String!
+}
+
+input KBSectionInput {
+    """
+    The name of the section
+    """
+    name: String!
+
+    """
+    A description of the section
+    """
+    description: String!
+
+    """
+    The visibility of the section
+    """
+    visibility: String!
+}
+
+input KBArticleInput {
+    """
+    The ID of the section the article is assigned to
+    """
+    section: ID!
+
+    """
+    The title of the article
+    """
+    title: String!
+
+    """
+    The content of the article
+    """
+    content: String!
+
+    """
+    The visibility of the article
+    """
+    visibility: String!
 }`, BuiltIn: false},
 	{Name: "graph/graphql/reports.graphqls", Input: `extend type Query {
     """
@@ -3905,6 +4275,26 @@ extend type Mutation {
   Changes a user's password. Returns a boolean indicating success. Requires Change User Password permission.
   """
   changePassword(id: ID!, password: String!): Boolean!
+
+  """
+  Creates a new user account. Requires Add Users permission.
+  """
+  createUser(input: CreateUserInput!): User
+
+  """
+  Edits an existing user's profile. Requires Edit User Profiles permission.
+  """
+  editUserProfile(id: ID!, input: EditUserProfileInput!): User
+
+  """
+  Updates a user's permissions. Requires Admin permission.
+  """
+  editUserPermissions(id: ID!, input: EditUserPermissionsInput!): Permissions
+
+  """
+  Assigns a user to a judging group. Returns a boolean indicating success. Requires Assign Evaluator Groups permission.
+  """
+  assignUserToJudgingGroup(userId: ID!, groupId: ID): Boolean!
 }
 
 """
@@ -4190,6 +4580,235 @@ type LoginResponse {
   The user's auth token
   """
   token: String
+}
+
+input CreateUserInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+}
+
+input EditUserProfileInput {
+  """
+  The user's real name
+  """
+  name: String!
+
+  """
+  The user's email address
+  """
+  email: String
+
+  """
+  The KAID associated with the user's Khan Academy account
+  """
+  kaid: String!
+
+  """
+  The username the user will use to login
+  """
+  username: String!
+
+  """
+  The user's display name
+  """
+  nickname: String!
+
+  """
+  The user's start date
+  """
+  termStart: String!
+
+  """
+  The user's end date
+  """
+  termEnd: String
+
+  """
+  Indicates whether the user is an admin, which allows them to perform all actions and access all data. Requires Admin permission.
+  """
+  isAdmin: Boolean!
+
+  """
+  Indicates if the account has been deactivated. Requires Admin permission.
+  """
+  accountLocked: Boolean!
+
+  """
+  Indicates whether the user has email notifications enabled for new announcements
+  """
+  notificationsEnabled: Boolean!
+}
+
+input EditUserPermissionsInput {
+  """
+  Allows the user to add individual and bulk import entries
+  """
+  add_entries: Boolean!
+
+  """
+  Allows the user to create new user accounts
+  """
+  add_users: Boolean!
+
+  """
+  Allows the user to assign entries to judging groups
+  """
+  assign_entry_groups: Boolean!
+
+  """
+  Allows the user to assign evaluators to judging groups
+  """
+  assign_evaluator_groups: Boolean!
+
+  """
+  Allows the user to impersonate other users
+  """
+  assume_user_identities: Boolean!
+
+  """
+  Allows the user to change the passwords of other users
+  """
+  change_user_passwords: Boolean!
+
+  """
+  Allows the user to delete all evaluations
+  """
+  delete_all_evaluations: Boolean!
+
+  """
+  Allows the user to delete all tasks
+  """
+  delete_all_tasks: Boolean!
+
+  """
+  Allows the user to delete all contests and associated data
+  """
+  delete_contests: Boolean!
+
+  """
+  Allows the user to delete all entries
+  """
+  delete_entries: Boolean!
+
+  """
+  Allows the user to delete all errors
+  """
+  delete_errors: Boolean!
+
+  """
+  Allows the user to delete all KB articles and sections
+  """
+  delete_kb_content: Boolean!
+
+  """
+  Allows the user to edit all evaluations
+  """
+  edit_all_evaluations: Boolean!
+
+  """
+  Allows the user to edit all tasks
+  """
+  edit_all_tasks: Boolean!
+
+  """
+  Allows the user to edit all contests
+  """
+  edit_contests: Boolean!
+
+  """
+  Allows the user to edit all entries
+  """
+  edit_entries: Boolean!
+
+  """
+  Allows the user to edit all KB articles and sections
+  """
+  edit_kb_content: Boolean!
+
+  """
+  Allows the user to edit all user profiles
+  """
+  edit_user_profiles: Boolean!
+
+  # Allows the user to score entries
+  judge_entries: Boolean!
+
+  """
+  Allows the user to create, edit, and delete announcements
+  """
+  manage_announcements: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging criteria
+  """
+  manage_judging_criteria: Boolean!
+
+  """
+  Allows the user to create, edit, and delete judging groups. Needs the assign_evaluator_groups permission to also assign users to groups.
+  """
+  manage_judging_groups: Boolean!
+
+  """
+  Allows the user to add and remove winning entries
+  """
+  manage_winners: Boolean!
+
+  """
+  Allows the user to publish draft KB articles
+  """
+  publish_kb_content: Boolean!
+
+  """
+  Allows the user to view admin stats on the dashboard
+  """
+  view_admin_stats: Boolean!
+
+  """
+  Allows the user to view all evaluations
+  """
+  view_all_evaluations: Boolean!
+
+  """
+  Allows the user to view all tasks
+  """
+  view_all_tasks: Boolean!
+
+  """
+  Allows the user to view all user accounts
+  """
+  view_all_users: Boolean!
+
+  """
+  Allows the user to view all errors
+  """
+  view_errors: Boolean!
+
+  """
+  Allows the user to view all judging settings
+  """
+  view_judging_settings: Boolean!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4258,6 +4877,30 @@ func (ec *executionContext) field_Mutation_assignNewEntriesToGroups_args(ctx con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_assignUserToJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["groupId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
+		arg1, err = ec.unmarshalOID2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["groupId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4289,6 +4932,21 @@ func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.KBArticleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4366,6 +5024,21 @@ func (ec *executionContext) field_Mutation_createJudgingGroup_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.KBSectionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createTask_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4381,7 +5054,52 @@ func (ec *executionContext) field_Mutation_createTask_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateUserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateUserInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateUserInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteArticleDraft_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -4456,6 +5174,21 @@ func (ec *executionContext) field_Mutation_deleteEntry_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteError_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteEvaluation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4472,6 +5205,21 @@ func (ec *executionContext) field_Mutation_deleteEvaluation_args(ctx context.Con
 }
 
 func (ec *executionContext) field_Mutation_deleteJudgingGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -4532,6 +5280,63 @@ func (ec *executionContext) field_Mutation_editAnnouncement_args(ctx context.Con
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNAnnouncementInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐAnnouncementInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editArticleProperties_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["visibility"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["visibility"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["section"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("section"))
+		arg2, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["section"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.KBArticleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4660,6 +5465,30 @@ func (ec *executionContext) field_Mutation_editJudgingGroup_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_editSection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.KBSectionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_editTask_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4676,6 +5505,54 @@ func (ec *executionContext) field_Mutation_editTask_args(ctx context.Context, ra
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editUserPermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditUserPermissionsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditUserPermissionsInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserPermissionsInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editUserProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EditUserProfileInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEditUserProfileInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserProfileInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4714,6 +5591,30 @@ func (ec *executionContext) field_Mutation_importEntries_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_importEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contestId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contestId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contestId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["kaid"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kaid"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["kaid"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4735,6 +5636,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 		}
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_publishArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4801,6 +5717,54 @@ func (ec *executionContext) field_Mutation_setEntryLevel_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_transferEntryGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["contest"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contest"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contest"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["prevGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prevGroup"))
+		arg1, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["prevGroup"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["newGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newGroup"))
+		arg2, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newGroup"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_unpublishArticle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4843,6 +5807,21 @@ func (ec *executionContext) field_Query_article_args(ctx context.Context, rawArg
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_articles_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
 	return args, nil
 }
 
@@ -11908,6 +12887,100 @@ func (ec *executionContext) fieldContext_Mutation_importEntries(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_importEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_importEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ImportEntry(rctx, fc.Args["contestId"].(int), fc.Args["kaid"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Entry)
+	fc.Result = res
+	return ec.marshalOEntry2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_importEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Entry_id(ctx, field)
+			case "contest":
+				return ec.fieldContext_Entry_contest(ctx, field)
+			case "url":
+				return ec.fieldContext_Entry_url(ctx, field)
+			case "kaid":
+				return ec.fieldContext_Entry_kaid(ctx, field)
+			case "title":
+				return ec.fieldContext_Entry_title(ctx, field)
+			case "author":
+				return ec.fieldContext_Entry_author(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Entry_skillLevel(ctx, field)
+			case "votes":
+				return ec.fieldContext_Entry_votes(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
+			case "height":
+				return ec.fieldContext_Entry_height(ctx, field)
+			case "isWinner":
+				return ec.fieldContext_Entry_isWinner(ctx, field)
+			case "group":
+				return ec.fieldContext_Entry_group(ctx, field)
+			case "isFlagged":
+				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "isDisqualified":
+				return ec.fieldContext_Entry_isDisqualified(ctx, field)
+			case "isSkillLevelLocked":
+				return ec.fieldContext_Entry_isSkillLevelLocked(ctx, field)
+			case "averageScore":
+				return ec.fieldContext_Entry_averageScore(ctx, field)
+			case "evaluationCount":
+				return ec.fieldContext_Entry_evaluationCount(ctx, field)
+			case "voteCount":
+				return ec.fieldContext_Entry_voteCount(ctx, field)
+			case "isVotedByUser":
+				return ec.fieldContext_Entry_isVotedByUser(ctx, field)
+			case "judgeVotes":
+				return ec.fieldContext_Entry_judgeVotes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Entry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_importEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_assignAllEntriesToGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_assignAllEntriesToGroups(ctx, field)
 	if err != nil {
@@ -12012,6 +13085,131 @@ func (ec *executionContext) fieldContext_Mutation_assignNewEntriesToGroups(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_assignNewEntriesToGroups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_transferEntryGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_transferEntryGroups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TransferEntryGroups(rctx, fc.Args["contest"].(int), fc.Args["prevGroup"].(int), fc.Args["newGroup"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_transferEntryGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_transferEntryGroups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteError(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteError(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteError(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Error)
+	fc.Result = res
+	return ec.marshalOError2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐError(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteError(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Error_id(ctx, field)
+			case "message":
+				return ec.fieldContext_Error_message(ctx, field)
+			case "stack":
+				return ec.fieldContext_Error_stack(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_Error_timestamp(ctx, field)
+			case "requestOrigin":
+				return ec.fieldContext_Error_requestOrigin(ctx, field)
+			case "requestReferrer":
+				return ec.fieldContext_Error_requestReferrer(ctx, field)
+			case "requestUserAgent":
+				return ec.fieldContext_Error_requestUserAgent(ctx, field)
+			case "user":
+				return ec.fieldContext_Error_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Error", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteError_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12618,6 +13816,716 @@ func (ec *executionContext) fieldContext_Mutation_scoreEntry(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSection(rctx, fc.Args["input"].(model.KBSectionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditSection(rctx, fc.Args["id"].(int), fc.Args["input"].(model.KBSectionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSection(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBSection)
+	fc.Result = res
+	return ec.marshalOKBSection2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBSection_id(ctx, field)
+			case "name":
+				return ec.fieldContext_KBSection_name(ctx, field)
+			case "description":
+				return ec.fieldContext_KBSection_description(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBSection_visibility(ctx, field)
+			case "articles":
+				return ec.fieldContext_KBSection_articles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBSection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateArticle(rctx, fc.Args["input"].(model.KBArticleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditArticle(rctx, fc.Args["id"].(int), fc.Args["input"].(model.KBArticleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editArticleProperties(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editArticleProperties(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditArticleProperties(rctx, fc.Args["id"].(int), fc.Args["visibility"].(string), fc.Args["section"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editArticleProperties(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editArticleProperties_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteArticleDraft(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteArticleDraft(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteArticleDraft(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteArticleDraft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteArticleDraft_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_publishArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_publishArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PublishArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_publishArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_publishArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_unpublishArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_unpublishArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UnpublishArticle(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.KBArticle)
+	fc.Result = res
+	return ec.marshalOKBArticle2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_unpublishArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_unpublishArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createTask(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createTask(ctx, field)
 	if err != nil {
@@ -12963,6 +14871,347 @@ func (ec *executionContext) fieldContext_Mutation_changePassword(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_changePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(model.CreateUserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editUserProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editUserProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditUserProfile(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditUserProfileInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editUserProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "kaid":
+				return ec.fieldContext_User_kaid(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "accountLocked":
+				return ec.fieldContext_User_accountLocked(ctx, field)
+			case "permissions":
+				return ec.fieldContext_User_permissions(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
+			case "lastLogin":
+				return ec.fieldContext_User_lastLogin(ctx, field)
+			case "termStart":
+				return ec.fieldContext_User_termStart(ctx, field)
+			case "termEnd":
+				return ec.fieldContext_User_termEnd(ctx, field)
+			case "notificationsEnabled":
+				return ec.fieldContext_User_notificationsEnabled(ctx, field)
+			case "assignedGroup":
+				return ec.fieldContext_User_assignedGroup(ctx, field)
+			case "totalEvaluations":
+				return ec.fieldContext_User_totalEvaluations(ctx, field)
+			case "totalContestsJudged":
+				return ec.fieldContext_User_totalContestsJudged(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editUserProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editUserPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editUserPermissions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditUserPermissions(rctx, fc.Args["id"].(int), fc.Args["input"].(model.EditUserPermissionsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Permissions)
+	fc.Result = res
+	return ec.marshalOPermissions2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐPermissions(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editUserPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "add_entries":
+				return ec.fieldContext_Permissions_add_entries(ctx, field)
+			case "add_users":
+				return ec.fieldContext_Permissions_add_users(ctx, field)
+			case "assign_entry_groups":
+				return ec.fieldContext_Permissions_assign_entry_groups(ctx, field)
+			case "assign_evaluator_groups":
+				return ec.fieldContext_Permissions_assign_evaluator_groups(ctx, field)
+			case "assume_user_identities":
+				return ec.fieldContext_Permissions_assume_user_identities(ctx, field)
+			case "change_user_passwords":
+				return ec.fieldContext_Permissions_change_user_passwords(ctx, field)
+			case "delete_all_evaluations":
+				return ec.fieldContext_Permissions_delete_all_evaluations(ctx, field)
+			case "delete_all_tasks":
+				return ec.fieldContext_Permissions_delete_all_tasks(ctx, field)
+			case "delete_contests":
+				return ec.fieldContext_Permissions_delete_contests(ctx, field)
+			case "delete_entries":
+				return ec.fieldContext_Permissions_delete_entries(ctx, field)
+			case "delete_errors":
+				return ec.fieldContext_Permissions_delete_errors(ctx, field)
+			case "delete_kb_content":
+				return ec.fieldContext_Permissions_delete_kb_content(ctx, field)
+			case "edit_all_evaluations":
+				return ec.fieldContext_Permissions_edit_all_evaluations(ctx, field)
+			case "edit_all_tasks":
+				return ec.fieldContext_Permissions_edit_all_tasks(ctx, field)
+			case "edit_contests":
+				return ec.fieldContext_Permissions_edit_contests(ctx, field)
+			case "edit_entries":
+				return ec.fieldContext_Permissions_edit_entries(ctx, field)
+			case "edit_kb_content":
+				return ec.fieldContext_Permissions_edit_kb_content(ctx, field)
+			case "edit_user_profiles":
+				return ec.fieldContext_Permissions_edit_user_profiles(ctx, field)
+			case "judge_entries":
+				return ec.fieldContext_Permissions_judge_entries(ctx, field)
+			case "manage_announcements":
+				return ec.fieldContext_Permissions_manage_announcements(ctx, field)
+			case "manage_judging_criteria":
+				return ec.fieldContext_Permissions_manage_judging_criteria(ctx, field)
+			case "manage_judging_groups":
+				return ec.fieldContext_Permissions_manage_judging_groups(ctx, field)
+			case "manage_winners":
+				return ec.fieldContext_Permissions_manage_winners(ctx, field)
+			case "publish_kb_content":
+				return ec.fieldContext_Permissions_publish_kb_content(ctx, field)
+			case "view_admin_stats":
+				return ec.fieldContext_Permissions_view_admin_stats(ctx, field)
+			case "view_all_evaluations":
+				return ec.fieldContext_Permissions_view_all_evaluations(ctx, field)
+			case "view_all_tasks":
+				return ec.fieldContext_Permissions_view_all_tasks(ctx, field)
+			case "view_all_users":
+				return ec.fieldContext_Permissions_view_all_users(ctx, field)
+			case "view_errors":
+				return ec.fieldContext_Permissions_view_errors(ctx, field)
+			case "view_judging_settings":
+				return ec.fieldContext_Permissions_view_judging_settings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Permissions", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editUserPermissions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_assignUserToJudgingGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_assignUserToJudgingGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AssignUserToJudgingGroup(rctx, fc.Args["userId"].(int), fc.Args["groupId"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_assignUserToJudgingGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_assignUserToJudgingGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -16407,6 +18656,83 @@ func (ec *executionContext) fieldContext_Query_article(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_article_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_articles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_articles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Articles(rctx, fc.Args["filter"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.KBArticle)
+	fc.Result = res
+	return ec.marshalNKBArticle2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_articles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticle_id(ctx, field)
+			case "section":
+				return ec.fieldContext_KBArticle_section(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticle_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticle_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticle_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticle_lastUpdated(ctx, field)
+			case "visibility":
+				return ec.fieldContext_KBArticle_visibility(ctx, field)
+			case "isPublished":
+				return ec.fieldContext_KBArticle_isPublished(ctx, field)
+			case "hasDraft":
+				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
+			case "draft":
+				return ec.fieldContext_KBArticle_draft(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_articles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -20153,6 +22479,61 @@ func (ec *executionContext) unmarshalInputCreateTaskInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, obj interface{}) (model.CreateUserInput, error) {
+	var it model.CreateUserInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "kaid":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kaid"))
+			it.Kaid, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "termStart":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termStart"))
+			it.TermStart, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditContestInput(ctx context.Context, obj interface{}) (model.EditContestInput, error) {
 	var it model.EditContestInput
 	asMap := map[string]interface{}{}
@@ -20444,6 +22825,356 @@ func (ec *executionContext) unmarshalInputEditTaskInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditUserPermissionsInput(ctx context.Context, obj interface{}) (model.EditUserPermissionsInput, error) {
+	var it model.EditUserPermissionsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "add_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("add_entries"))
+			it.AddEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "add_users":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("add_users"))
+			it.AddUsers, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assign_entry_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assign_entry_groups"))
+			it.AssignEntryGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assign_evaluator_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assign_evaluator_groups"))
+			it.AssignEvaluatorGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assume_user_identities":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assume_user_identities"))
+			it.AssumeUserIdentities, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "change_user_passwords":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("change_user_passwords"))
+			it.ChangeUserPasswords, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_all_evaluations"))
+			it.DeleteAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_all_tasks"))
+			it.DeleteAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_contests":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_contests"))
+			it.DeleteContests, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_entries"))
+			it.DeleteEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_errors":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_errors"))
+			it.DeleteErrors, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "delete_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delete_kb_content"))
+			it.DeleteKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_all_evaluations"))
+			it.EditAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_all_tasks"))
+			it.EditAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_contests":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_contests"))
+			it.EditContests, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_entries"))
+			it.EditEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_kb_content"))
+			it.EditKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edit_user_profiles":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edit_user_profiles"))
+			it.EditUserProfiles, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "judge_entries":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("judge_entries"))
+			it.JudgeEntries, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_announcements":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_announcements"))
+			it.ManageAnnouncements, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_judging_criteria":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_judging_criteria"))
+			it.ManageJudgingCriteria, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_judging_groups":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_judging_groups"))
+			it.ManageJudgingGroups, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "manage_winners":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("manage_winners"))
+			it.ManageWinners, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "publish_kb_content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publish_kb_content"))
+			it.PublishKbContent, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_admin_stats":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_admin_stats"))
+			it.ViewAdminStats, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_evaluations":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_evaluations"))
+			it.ViewAllEvaluations, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_tasks"))
+			it.ViewAllTasks, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_all_users":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_all_users"))
+			it.ViewAllUsers, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_errors":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_errors"))
+			it.ViewErrors, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "view_judging_settings":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("view_judging_settings"))
+			it.ViewJudgingSettings, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputEditUserProfileInput(ctx context.Context, obj interface{}) (model.EditUserProfileInput, error) {
+	var it model.EditUserProfileInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "kaid":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kaid"))
+			it.Kaid, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nickname":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nickname"))
+			it.Nickname, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "termStart":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termStart"))
+			it.TermStart, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "termEnd":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termEnd"))
+			it.TermEnd, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isAdmin":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdmin"))
+			it.IsAdmin, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "accountLocked":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountLocked"))
+			it.AccountLocked, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "notificationsEnabled":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notificationsEnabled"))
+			it.NotificationsEnabled, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Context, obj interface{}) (model.JudgingCriteriaInput, error) {
 	var it model.JudgingCriteriaInput
 	asMap := map[string]interface{}{}
@@ -20482,6 +23213,92 @@ func (ec *executionContext) unmarshalInputJudgingCriteriaInput(ctx context.Conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
 			it.SortOrder, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputKBArticleInput(ctx context.Context, obj interface{}) (model.KBArticleInput, error) {
+	var it model.KBArticleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "section":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("section"))
+			it.Section, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			it.Title, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			it.Content, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "visibility":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			it.Visibility, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputKBSectionInput(ctx context.Context, obj interface{}) (model.KBSectionInput, error) {
+	var it model.KBSectionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "visibility":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			it.Visibility, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -22272,6 +25089,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "importEntry":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_importEntry(ctx, field)
+			})
+
 		case "assignAllEntriesToGroups":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -22290,6 +25113,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "transferEntryGroups":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_transferEntryGroups(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteError":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteError(ctx, field)
+			})
+
 		case "editEvaluation":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -22344,6 +25182,66 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_scoreEntry(ctx, field)
 			})
 
+		case "createSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSection(ctx, field)
+			})
+
+		case "editSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editSection(ctx, field)
+			})
+
+		case "deleteSection":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSection(ctx, field)
+			})
+
+		case "createArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createArticle(ctx, field)
+			})
+
+		case "editArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editArticle(ctx, field)
+			})
+
+		case "editArticleProperties":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editArticleProperties(ctx, field)
+			})
+
+		case "deleteArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteArticle(ctx, field)
+			})
+
+		case "deleteArticleDraft":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteArticleDraft(ctx, field)
+			})
+
+		case "publishArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_publishArticle(ctx, field)
+			})
+
+		case "unpublishArticle":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_unpublishArticle(ctx, field)
+			})
+
 		case "createTask":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -22381,6 +25279,33 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_changePassword(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUser(ctx, field)
+			})
+
+		case "editUserProfile":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editUserProfile(ctx, field)
+			})
+
+		case "editUserPermissions":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editUserPermissions(ctx, field)
+			})
+
+		case "assignUserToJudgingGroup":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_assignUserToJudgingGroup(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -23297,6 +26222,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_article(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "articles":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_articles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -24384,6 +27332,11 @@ func (ec *executionContext) unmarshalNCreateTaskInput2githubᚗcomᚋKAᚑChalle
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateUserInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐCreateUserInput(ctx context.Context, v interface{}) (model.CreateUserInput, error) {
+	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNEditContestInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditContestInput(ctx context.Context, v interface{}) (model.EditContestInput, error) {
 	res, err := ec.unmarshalInputEditContestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -24406,6 +27359,16 @@ func (ec *executionContext) unmarshalNEditJudgingGroupInput2githubᚗcomᚋKAᚑ
 
 func (ec *executionContext) unmarshalNEditTaskInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditTaskInput(ctx context.Context, v interface{}) (model.EditTaskInput, error) {
 	res, err := ec.unmarshalInputEditTaskInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditUserPermissionsInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserPermissionsInput(ctx context.Context, v interface{}) (model.EditUserPermissionsInput, error) {
+	res, err := ec.unmarshalInputEditUserPermissionsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditUserProfileInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐEditUserProfileInput(ctx context.Context, v interface{}) (model.EditUserProfileInput, error) {
+	res, err := ec.unmarshalInputEditUserProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -24961,6 +27924,11 @@ func (ec *executionContext) marshalNKBArticle2ᚖgithubᚗcomᚋKAᚑChallenge�
 	return ec._KBArticle(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx context.Context, v interface{}) (model.KBArticleInput, error) {
+	res, err := ec.unmarshalInputKBArticleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNKBSection2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KBSection) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -25013,6 +27981,11 @@ func (ec *executionContext) marshalNKBSection2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBSection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNKBSectionInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBSectionInput(ctx context.Context, v interface{}) (model.KBSectionInput, error) {
+	res, err := ec.unmarshalInputKBSectionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNProgress2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐProgress(ctx context.Context, sel ast.SelectionSet, v model.Progress) graphql.Marshaler {
