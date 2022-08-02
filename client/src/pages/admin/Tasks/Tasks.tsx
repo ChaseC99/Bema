@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ActionMenu, { Action } from "../../../shared/ActionMenu";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import Button from "../../../shared/Button";
@@ -6,22 +6,18 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
-import request from "../../../util/request";
-import { fetchCompleteTasks, fetchEvaluators, fetchIncompleteTasks } from "./fetchTaskData";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import useAppError from "../../../util/errors";
 
 type Task = {
-  assigned_member: number | null
-  due_date: string
-  evaluator_name: string | null
-  task_id: number
-  task_status: "Not Started" | "Started" | "Completed"
-  task_title: string
-}
-
-type CreateTaskData = {
-  assigned_member: number | null
-  due_date: string
+  id: string
   title: string
+  assignedUser: {
+    id: string
+    nickname: string
+  } | null
+  status: "Not Started" | "Started" | "Completed"
+  dueDate: string
 }
 
 type EditTaskData = {
@@ -31,36 +27,118 @@ type EditTaskData = {
   status: "Not Started" | "Started" | "Completed"
 }
 
-type Evaluator = {
-  evaluator_id: number
-  evaluator_name: string
-  nickname: string
+type GetTasksResponse = {
+  tasks: Task[]
 }
+
+const GET_COMPLETED_TASKS = gql`
+  query GetCompletedTasks {
+    tasks: completedTasks {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+const GET_INCOMPLETE_TASKS = gql`
+  query GetIncompleteTasks {
+    tasks {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+type GetUsersResponse = {
+  users: {
+    id: number
+    nickname: string
+  }[]
+}
+
+const GET_USERS = gql`
+  query GetAllUsers {
+    users{
+      id
+      nickname
+    }
+  }
+`;
+
+type TaskMutationResponse = {
+  task: Task
+}
+
+const CREATE_TASK = gql`
+  mutation CreateTask($input: CreateTaskInput!) {
+    task: createTask(input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+const EDIT_TASK = gql`
+  mutation EditTask($id: ID!, $input: EditTaskInput!) {
+    task: editTask(id: $id, input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+const DELETE_TASK = gql`
+  mutation DeleteTask($id: ID!) {
+    task: deleteTask(id: $id) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
 
 function Tasks() {
   const { state } = useAppState();
-  const [incompleteTasks, setIncompleteTasks] = useState<Task[]>([]);
-  const [incompleteTasksIsLoading, setIncompleteTasksIsLoading] = useState<boolean>(true);
-  const [completeTasks, setCompleteTasks] = useState<Task[]>([]);
-  const [completeTasksHasBeenRequested, setCompleteTasksHasBeenRequested] = useState<boolean>(false);
-  const [completeTasksIsLoading, setCompleteTasksIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
   const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);
-  const [editTask, setEditTask] = useState<Task | null>(null);
-  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
-  const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchIncompleteTasks()
-      .then(data => {
-        setIncompleteTasks(data);
-        setIncompleteTasksIsLoading(false);
-      });
-
-    fetchEvaluators()
-      .then(data => {
-        setEvaluators(data);
-      });
-  }, []);
+  const { data: usersData } = useQuery<GetUsersResponse>(GET_USERS, { onError: handleGQLError });
+  const { loading: incompleteTasksIsLoading, data: incompleteTasksData, refetch: refetchIncompleteTasks } = useQuery<GetTasksResponse>(GET_INCOMPLETE_TASKS);
+  const [fetchCompletedTasks, { loading: completedTasksIsLoading, data: completedTasksData, refetch: refetchCompletedTasks }] = useLazyQuery<GetTasksResponse>(GET_COMPLETED_TASKS);
+  const [createTask, { loading: createTaskIsLoading }] = useMutation<TaskMutationResponse>(CREATE_TASK, { onError: handleGQLError });
+  const [editTask, { loading: editTaskIsLoading }] = useMutation<TaskMutationResponse>(EDIT_TASK, { onError: handleGQLError });
+  const [deleteTask, { loading: deleteTaskIsLoading }] = useMutation<TaskMutationResponse>(DELETE_TASK, { onError: handleGQLError });
 
   const openNewTaskModal = () => {
     setShowNewTaskModal(true);
@@ -70,111 +148,71 @@ function Tasks() {
     setShowNewTaskModal(false);
   }
 
-  const handleCreateTask = (values: { [name: string]: any }) => {
-    const data = values as CreateTaskData;
-
-    request("POST", "/api/internal/tasks", {
-      task_title: data.title,
-      due_date: data.due_date,
-      assigned_member: data.assigned_member,
-      task_status: "Not Started"
+  const handleCreateTask = async (values: { [name: string]: any }) => {
+    await createTask({
+      variables: {
+        input: {
+          title: values.title,
+          assignedUser: values.assigned_member,
+          dueDate: values.due_date
+        }
+      }
     });
 
+    refetchIncompleteTasks();
     setShowNewTaskModal(false);
   }
 
-  const openEditTaskModal = (id: number) => {
-    let task = incompleteTasks.find((t) => t.task_id === id);
+  const openEditTaskModal = (id: string) => {
+    let task = incompleteTasksData?.tasks.find((t) => t.id === id);
 
     if (!task) {
-      task = completeTasks.find((t) => t.task_id === id);
+      task = completedTasksData?.tasks.find((t) => t.id === id);
     }
 
-    setEditTask(task || null);
+    setTaskToEdit(task || null);
   }
 
   const closeEditTaskModal = () => {
-    setEditTask(null);
+    setTaskToEdit(null);
   }
 
-  const handleEditTask = (values: { [name: string]: any }) => {
-    if (!editTask) return;
+  const handleEditTask = async (values: { [name: string]: any }) => {
+    if (!taskToEdit) return;
 
     const data = values as EditTaskData;
 
-    request("PUT", "/api/internal/tasks", {
-      edit_task_id: editTask?.task_id,
-      edit_task_title: data.title,
-      edit_due_date: data.due_date,
-      edit_assigned_member: data.assigned_member,
-      edit_task_status: data.status,
+    await editTask({
+      variables: {
+        id: taskToEdit.id,
+        input: {
+          title: data.title,
+          dueDate: data.due_date,
+          assignedUser: data.assigned_member,
+          status: data.status
+        }
+      }
     });
 
-    if (editTask?.task_status !== "Completed" && data.status !== "Completed") {
-      let newIncompleteTasks = [...incompleteTasks];
-      for (let i = 0; i < newIncompleteTasks.length; i++) {
-        if (newIncompleteTasks[i].task_id === editTask.task_id) {
-          newIncompleteTasks[i].task_title = data.title;
-          newIncompleteTasks[i].due_date = data.due_date;
-          newIncompleteTasks[i].assigned_member = data.assigned_member;
-          newIncompleteTasks[i].evaluator_name = data.assigned_member ? getEvaluatorNameById(data.assigned_member) : "Available for Sign Up";
-          newIncompleteTasks[i].task_status = data.status;
-        }
+    if (taskToEdit.status !== "Completed" && data.status !== "Completed") {
+      refetchIncompleteTasks();
+    }
+    else if (taskToEdit.status === "Completed" && data.status === "Completed") {
+      if (completedTasksData) {
+        refetchCompletedTasks();
       }
-      setIncompleteTasks(newIncompleteTasks);
-    }
-    else if (editTask?.task_status !== "Completed" && data.status === "Completed") {
-      let newIncompleteTasks = [...incompleteTasks];
-      newIncompleteTasks = newIncompleteTasks.filter((t) => t.task_id !== editTask.task_id);
-
-      let newCompleteTasks = [...completeTasks];
-      newCompleteTasks.push({
-        assigned_member: data.assigned_member,
-        due_date: data.due_date,
-        evaluator_name: data.assigned_member ? getEvaluatorNameById(data.assigned_member) : "Available for Sign Up",
-        task_id: editTask.task_id,
-        task_status: data.status,
-        task_title: data.title
-      });
-
-      setIncompleteTasks(newIncompleteTasks);
-      setCompleteTasks(newCompleteTasks);
-    }
-    else if (editTask?.task_status === "Completed" && data.status !== "Completed") {
-      let newIncompleteTasks = [...incompleteTasks];
-      newIncompleteTasks.push({
-        assigned_member: data.assigned_member,
-        due_date: data.due_date,
-        evaluator_name: data.assigned_member ? getEvaluatorNameById(data.assigned_member) : "Available for Sign Up",
-        task_id: editTask.task_id,
-        task_status: data.status,
-        task_title: data.title
-      });
-
-      let newCompleteTasks = [...completeTasks];
-      newCompleteTasks = newCompleteTasks.filter((t) => t.task_id !== editTask.task_id);
-
-      setIncompleteTasks(newIncompleteTasks);
-      setCompleteTasks(newCompleteTasks);
     }
     else {
-      let newCompleteTasks = [...completeTasks];
-      for (let i = 0; i < newCompleteTasks.length; i++) {
-        if (newCompleteTasks[i].task_id === editTask.task_id) {
-          newCompleteTasks[i].task_title = data.title;
-          newCompleteTasks[i].due_date = data.due_date;
-          newCompleteTasks[i].assigned_member = data.assigned_member;
-          newCompleteTasks[i].evaluator_name = data.assigned_member ? getEvaluatorNameById(data.assigned_member) : "Available for Sign Up";
-          newCompleteTasks[i].task_status = data.status;
-        }
+      refetchIncompleteTasks();
+      if (completedTasksData) {
+        refetchCompletedTasks();
       }
-      setCompleteTasks(newCompleteTasks);
     }
 
-    setEditTask(null);
+    setTaskToEdit(null);
   }
 
-  const openDeleteTaskModal = (id: number) => {
+  const openDeleteTaskModal = (id: string) => {
     setDeleteTaskId(id);
   }
 
@@ -183,33 +221,26 @@ function Tasks() {
   }
 
   const handleDeleteTask = async (id: number) => {
-    await request("DELETE", "/api/internal/tasks", {
-      task_id: id
+    await deleteTask({
+      variables: {
+        id: id
+      }
     });
 
-    let newIncompleteTasks = [...incompleteTasks]
-    newIncompleteTasks = newIncompleteTasks.filter((t) => t.task_id !== id);
-    setIncompleteTasks(newIncompleteTasks);
+    refetchIncompleteTasks();
 
-    let newCompleteTasks = [...completeTasks]
-    newCompleteTasks = newCompleteTasks.filter((t) => t.task_id !== id);
-    setCompleteTasks(newCompleteTasks);
+    if (completedTasksData) {
+      refetchCompletedTasks();
+    }
 
     setDeleteTaskId(null);
   }
 
   const loadCompletedTasks = () => {
-    setCompleteTasksIsLoading(true);
-    setCompleteTasksHasBeenRequested(true);
-
-    fetchCompleteTasks()
-      .then(data => {
-        setCompleteTasks(data);
-        setCompleteTasksIsLoading(false);
-      });
+    fetchCompletedTasks();
   }
 
-  const getTaskActions = (taskId: number) => {
+  const getTaskActions = (taskId: string) => {
     const actions: Action[] = [];
 
     if (state.user?.permissions.edit_all_tasks) {
@@ -231,12 +262,6 @@ function Tasks() {
     }
 
     return actions;
-  }
-
-  const getEvaluatorNameById = (id: number) => {
-    const e = evaluators.find((e) => e.evaluator_id === id);
-
-    return e?.evaluator_name || null;
   }
 
   return (
@@ -267,43 +292,43 @@ function Tasks() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {incompleteTasks.map((t) => {
+                  {incompleteTasksData ? incompleteTasksData.tasks.map((t) => {
                     if (state.user?.permissions.edit_all_tasks || state.user?.permissions.delete_all_tasks) {
                       return (
-                        <Row key={t.task_id}>
-                          <Cell>{t.task_title}</Cell>
-                          <Cell>{t.due_date}</Cell>
-                          <Cell>{t.evaluator_name ? t.evaluator_name : "Available for Sign Up"}</Cell>
-                          <Cell>{t.task_status}</Cell>
-                          <Cell><ActionMenu actions={getTaskActions(t.task_id)} /></Cell>
+                        <Row key={t.id}>
+                          <Cell>{t.title}</Cell>
+                          <Cell>{t.dueDate}</Cell>
+                          <Cell>{t.assignedUser ? t.assignedUser.nickname : "Available for Sign Up"}</Cell>
+                          <Cell>{t.status}</Cell>
+                          <Cell><ActionMenu actions={getTaskActions(t.id)} /></Cell>
                         </Row>
                       );
                     }
 
                     return (
-                      <Row key={t.task_id}>
-                        <Cell>{t.task_title}</Cell>
-                        <Cell>{t.due_date}</Cell>
-                        <Cell>{t.evaluator_name ? t.evaluator_name : "Available for Sign Up"}</Cell>
-                        <Cell>{t.task_status}</Cell>
+                      <Row key={t.id}>
+                        <Cell>{t.title}</Cell>
+                        <Cell>{t.dueDate}</Cell>
+                        <Cell>{t.assignedUser ? t.assignedUser.nickname : "Available for Sign Up"}</Cell>
+                        <Cell>{t.status}</Cell>
                       </Row>
                     );
-                  })}
+                  }) : ""}
                 </TableBody>
               </Table>
             }
 
-            {!completeTasksHasBeenRequested &&
+            {(!completedTasksIsLoading && !completedTasksData) &&
               <div className="container col-12 center">
                 <Button type="secondary" role="button" action={loadCompletedTasks} text="Load completed tasks" />
               </div>
             }
 
-            {completeTasksHasBeenRequested &&
+            {(completedTasksIsLoading || completedTasksData) &&
               <React.Fragment>
-                {completeTasksIsLoading && <LoadingSpinner size="MEDIUM" />}
+                {completedTasksIsLoading && <LoadingSpinner size="MEDIUM" />}
 
-                {!completeTasksIsLoading &&
+                {!completedTasksIsLoading &&
                   <Table label="Completed Tasks">
                     <TableHead>
                       <Row>
@@ -315,28 +340,28 @@ function Tasks() {
                       </Row>
                     </TableHead>
                     <TableBody>
-                      {completeTasks.map((t) => {
+                      {completedTasksData ? completedTasksData.tasks.map((t) => {
                         if (state.user?.permissions.edit_all_tasks || state.user?.permissions.delete_all_tasks) {
                           return (
-                            <Row key={t.task_id}>
-                              <Cell>{t.task_title}</Cell>
-                              <Cell>{t.due_date}</Cell>
-                              <Cell>{t.evaluator_name ? t.evaluator_name : "Available for Sign Up"}</Cell>
-                              <Cell>{t.task_status}</Cell>
-                              <Cell><ActionMenu actions={getTaskActions(t.task_id)} /></Cell>
+                            <Row key={t.id}>
+                              <Cell>{t.title}</Cell>
+                              <Cell>{t.dueDate}</Cell>
+                              <Cell>{t.assignedUser ? t.assignedUser.nickname : "Available for Sign Up"}</Cell>
+                              <Cell>{t.status}</Cell>
+                              <Cell><ActionMenu actions={getTaskActions(t.id)} /></Cell>
                             </Row>
                           );
                         }
 
                         return (
-                          <Row key={t.task_id}>
-                            <Cell>{t.task_title}</Cell>
-                            <Cell>{t.due_date}</Cell>
-                            <Cell>{t.evaluator_name ? t.evaluator_name : "Available for Sign Up"}</Cell>
-                            <Cell>{t.task_status}</Cell>
+                          <Row key={t.id}>
+                            <Cell>{t.title}</Cell>
+                            <Cell>{t.dueDate}</Cell>
+                            <Cell>{t.assignedUser ? t.assignedUser.nickname : "Available for Sign Up"}</Cell>
+                            <Cell>{t.status}</Cell>
                           </Row>
                         );
-                      })}
+                      }) : ""}
                     </TableBody>
                   </Table>
                 }
@@ -352,6 +377,7 @@ function Tasks() {
           submitLabel="Create"
           handleSubmit={handleCreateTask}
           handleCancel={closeNewTaskModal}
+          loading={createTaskIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -385,12 +411,12 @@ function Tasks() {
                   text: "Available for Sign Up",
                   value: null
                 },
-                ...evaluators.map((e) => {
+                ...(usersData ? usersData.users.map((u) => {
                   return {
-                    text: e.evaluator_name,
-                    value: e.evaluator_id
+                    text: u.nickname,
+                    value: u.id
                   }
-                })
+                }) : [])
               ]
             }
           ]}
@@ -398,12 +424,13 @@ function Tasks() {
         />
       }
 
-      {editTask &&
+      {taskToEdit &&
         <FormModal
           title="Edit Task"
           submitLabel="Save"
           handleSubmit={handleEditTask}
           handleCancel={closeEditTaskModal}
+          loading={editTaskIsLoading}
           fields={[
             {
               fieldType: "INPUT",
@@ -412,7 +439,7 @@ function Tasks() {
               id: "title",
               size: "LARGE",
               label: "Title",
-              defaultValue: editTask.task_title,
+              defaultValue: taskToEdit.title,
               required: true
             },
             {
@@ -421,7 +448,7 @@ function Tasks() {
               id: "due-date",
               size: "MEDIUM",
               label: "Due date",
-              defaultValue: editTask.due_date,
+              defaultValue: taskToEdit.dueDate,
               required: true
             },
             {
@@ -431,7 +458,7 @@ function Tasks() {
               size: "MEDIUM",
               label: "Status",
               placeholder: "Select a status",
-              defaultValue: editTask.task_status,
+              defaultValue: taskToEdit.status,
               choices: [
                 {
                   text: "Not Started",
@@ -455,18 +482,18 @@ function Tasks() {
               size: "LARGE",
               label: "Assign to",
               placeholder: "Select a user",
-              defaultValue: editTask.assigned_member,
+              defaultValue: taskToEdit.assignedUser ? taskToEdit.assignedUser.id : null,
               choices: [
                 {
                   text: "Available for Sign Up",
                   value: null
                 },
-                ...evaluators.map((e) => {
+                ...(usersData ? usersData.users.map((u) => {
                   return {
-                    text: e.evaluator_name,
-                    value: e.evaluator_id
+                    text: u.nickname,
+                    value: u.id
                   }
-                })
+                }) : [])
               ]
             }
           ]}
@@ -481,6 +508,7 @@ function Tasks() {
           handleConfirm={handleDeleteTask}
           handleCancel={closeDeleteTaskModal}
           destructive
+          loading={deleteTaskIsLoading}
           data={deleteTaskId}
         >
           <p>Are you sure you want to delete this task? This action cannot be undone.</p>

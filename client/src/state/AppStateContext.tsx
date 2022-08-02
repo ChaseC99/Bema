@@ -1,6 +1,7 @@
 import React, { Dispatch, createContext, useEffect, useState } from "react";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import { reducer, initialState, AppState, Action, login } from "./appStateReducer";
+import { fetchAppState } from "./fetchAppState";
 
 type AppStateContextProps = {
   state: AppState
@@ -20,12 +21,23 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch("/api/internal/users/getFullUserProfile")
-    .then(response => response.json())
-    .then(data => {
-      dispatch(login(data));
-      setIsLoading(false);
-    });
+    fetchAppState()
+      .then((d) => {
+        const data = d.data.currentUser;
+
+        dispatch(login({
+          user: data.user ? {...data.user, evaluator_id: data.user?.id} : null,
+          loggedIn: data.loggedIn,
+          isAdmin: data.isAdmin,
+          isImpersonated: data.isImpersonated,
+          originKaid: data.originKaid,
+          logged_in: data.loggedIn,
+          is_admin: data.isAdmin,
+          is_impersonated: data.isImpersonated,
+          origin_kaid: data.originKaid,
+        }));
+        setIsLoading(false);
+      });
 
   }, []);
 
@@ -34,7 +46,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
       <LoadingSpinner size="LARGE" />
     );
   }
-  
+
   return (
     <AppStateContext.Provider value={{ state, dispatch }}>
       {children}

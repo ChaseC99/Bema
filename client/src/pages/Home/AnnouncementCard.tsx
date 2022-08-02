@@ -5,7 +5,8 @@ import useAppState from "../../state/useAppState";
 import ReactTimeAgo from "react-time-ago";
 
 type AnnouncementCardProps = {
-  author: string
+  authorId: number | null
+  authorNickname: string | null
   date: string
   id: number
   title: string
@@ -49,7 +50,18 @@ function AnnouncementCard(props: AnnouncementCardProps) {
           {props.children}
         </div>
         <div className="card-footer announcement-card-footer">
-          <p><em>{props.author} posted <ReactTimeAgo date={new Date(props.date)} locale="en-US"/>.</em></p>
+          <p><em>
+            {props.authorNickname && 
+              <React.Fragment>
+                {props.authorNickname} posted <ReactTimeAgo date={new Date(props.date)} locale="en-US"/>.
+              </React.Fragment>
+            }
+            {!props.authorNickname && 
+              <React.Fragment>
+                Posted <ReactTimeAgo date={new Date(props.date)} locale="en-US"/>.
+              </React.Fragment>
+            }
+          </em></p>
         </div>
       </article>
     </React.Fragment>

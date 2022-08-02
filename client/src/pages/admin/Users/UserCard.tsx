@@ -32,7 +32,7 @@ function UserCard(props: UserCardProps) {
       role: "button",
       action: props.handleChangePassword,
       text: "Change password",
-      data: props.user.evaluator_id
+      data: props.user.id
     });
   }
 
@@ -41,16 +41,16 @@ function UserCard(props: UserCardProps) {
       role: "button",
       action: props.handleEditPermissions,
       text: "Edit permissions",
-      data: props.user.evaluator_id
+      data: props.user.id
     });
   }
 
-  if ((state.is_admin || state.user?.permissions.assume_user_identities) && !props.user.account_locked) {
+  if ((state.is_admin || state.user?.permissions.assume_user_identities) && !props.user.accountLocked) {
     actions.push({
       role: "button",
       action: props.handleImpersonateUser,
       text: "Assume identity",
-      data: props.user.evaluator_kaid
+      data: props.user.kaid
     });
   }
 
@@ -59,23 +59,23 @@ function UserCard(props: UserCardProps) {
     <article className="card col-4" data-testid={props.testId}>
         <div className="card-header">
           <h3>
-            {props.user.evaluator_name}
-            {props.user.is_admin && <span className="badge">Admin</span>}
+            {props.user.name}
+            {props.user.isAdmin && <span className="badge">Admin</span>}
           </h3>
           <ActionMenu actions={actions}/>
         </div>
         <div className="card-body">
-          <p><ExternalLink to={"https://www.khanacademy.org/profile/" + props.user.evaluator_kaid} target="_blank">KA Profile</ExternalLink></p>
-          <p><Link to={"/evaluator/" + props.user.evaluator_id}>Bema Profile</Link></p>
-          <p><span className="label">ID: </span>{props.user.evaluator_id}</p>
-          <p><span className="label">KAID: </span>{props.user.evaluator_kaid}</p>
+          <p><ExternalLink to={"https://www.khanacademy.org/profile/" + props.user.kaid} target="_blank">KA Profile</ExternalLink></p>
+          <p><Link to={"/evaluator/" + props.user.id}>Bema Profile</Link></p>
+          <p><span className="label">ID: </span>{props.user.id}</p>
+          <p><span className="label">KAID: </span>{props.user.kaid}</p>
           <p><span className="label">Username: </span>{props.user.username}</p>
           <p><span className="label">Nickname: </span>{props.user.nickname}</p>
           <p><span className="label">Email: </span>{props.user.email}</p>
-          <p><span className="label">Notifications Enabled: </span>{props.user.receive_emails ? "Yes" : "No"}</p>
-          <p><span className="label">Term Start: </span>{props.user.dt_term_start}</p>
-          <p><span className="label">Term End: </span>{props.user.dt_term_end}</p>
-          <p><span className="label">Last Login: </span>{props.user.logged_in_tstz}</p>
+          <p><span className="label">Notifications Enabled: </span>{props.user.notificationsEnabled ? "Yes" : "No"}</p>
+          <p><span className="label">Term Start: </span>{props.user.termStart}</p>
+          <p><span className="label">Term End: </span>{props.user.termEnd}</p>
+          <p><span className="label">Last Login: </span>{props.user.lastLogin}</p>
         </div>
       </article>
   );

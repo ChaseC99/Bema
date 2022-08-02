@@ -1,53 +1,82 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
 import ProgressRing from "../../shared/ProgressRing/ProgressRing";
 import useAppState from "../../state/useAppState";
-import { fetchStats } from "./fetchStats";
 import ProgressBar from "../../shared/ProgressBar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
+import { gql, useQuery } from "@apollo/client";
 
-type ContestStats = {
-  groupEntriesCount: number
-  groupEvaluationsCount: number
-  groupEvaluatorCount: number
-  totalActiveEvaluators?: number
-  totalDisqualifiedEntries?: number
-  totalEntriesCount?: number
-  totalEvaluationsCount?: number
-  totalFlaggedEntries?: number
-  totalReviewedEntries?: number
-  yourReviewedEntriesCount: number
-  evaluationsPerEvaluator?: {
-    eval_count: number
-    group_id: number
+type Progress = {
+  count: number
+  total: number
+}
+
+type EvaluatorProgress = {
+  user: {
     nickname: string
-  }[]
-  entriesPerGroup?: {
-    entry_count: number
-    group_id: number
-  }[]
+  }
+  count: number
+  total: number
 }
 
-const defaultStats = {
-  groupEntriesCount: 50,
-  groupEvaluationsCount: 80,
-  groupEvaluatorCount: 3,
-  yourReviewedEntriesCount: 10
+type JudgingProgress = {
+  user: Progress
+  group: Progress
+  entries: Progress | null
+  evaluations: Progress | null
+  evaluators: EvaluatorProgress[] | null
 }
+
+type EntryCounts = {
+  flagged: number
+  disqualified: number
+  total: number
+}
+
+type GetJudgingProgressResponse = {
+  judgingProgress: JudgingProgress
+  entryCounts: EntryCounts | null
+}
+
+const GET_JUDGING_PROGRESS = gql`
+  query GetJudgingProgress {
+    judgingProgress {
+      user {
+        count
+        total
+      }
+      group {
+        count
+        total
+      }
+      entries {
+        count
+        total
+      }
+      evaluations {
+        count
+        total
+      }
+      evaluators {
+        user {
+          nickname
+        }
+        count
+        total
+      }
+    }
+    entryCounts {
+      flagged
+      disqualified
+      total
+    }
+  }
+`;
 
 function Dashboard() {
   const { state } = useAppState();
-  const [stats, setStats] = useState<ContestStats>(defaultStats);
-  const [statsLoading, setStatsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    fetchStats()
-      .then(data => {
-        setStats(data);
-        setStatsLoading(false);
-      });
-  }, []);
+  const { loading: isLoading, data: progressData } = useQuery<GetJudgingProgressResponse>(GET_JUDGING_PROGRESS);
 
   return (
     <React.Fragment>
@@ -59,28 +88,28 @@ function Dashboard() {
             <h2 data-testid="dashboard-header">Dashboard</h2>
           </div>
           <div className="section-body container col-12" data-testid="dashboard-section-body">
-            {statsLoading && <LoadingSpinner size="MEDIUM" testId="stats-spinner" />}
+            {isLoading && <LoadingSpinner size="MEDIUM" testId="stats-spinner" />}
 
-            {!statsLoading && (
+            {(!isLoading && progressData) && (
               <article className={(state.is_admin || state.user?.permissions.view_admin_stats) ? "card col-12" : "card col-8"} data-testid="contest-summary">
                 <div className="card-header">
                   <h3>Contest Summary</h3>
                 </div>
                 <div className="card-body no-footer container space-around col-12">
-                  <ProgressRing label="Your Progress" count={stats.yourReviewedEntriesCount} total={stats.groupEntriesCount} />
-                  <ProgressRing label="Group Progress" count={stats.groupEvaluationsCount} total={stats.groupEntriesCount * stats.groupEvaluatorCount} />
+                  <ProgressRing label="Your Progress" count={progressData.judgingProgress.user.count} total={progressData.judgingProgress.user.total} />
+                  <ProgressRing label="Group Progress" count={progressData.judgingProgress.group.count} total={progressData.judgingProgress.group.total} />
 
                   {(state.is_admin || state.user?.permissions.view_admin_stats) &&
-                    <ProgressRing label="Total Reviewed Entries" count={stats.totalReviewedEntries || 0} total={stats.totalEntriesCount || 0} />
+                    <ProgressRing label="Total Reviewed Entries" count={progressData.judgingProgress.entries?.count || 0} total={progressData.judgingProgress.entries?.total || 0} />
                   }
                   {(state.is_admin || state.user?.permissions.view_admin_stats) &&
-                    <ProgressRing label="Total Evaluations" count={stats.totalEvaluationsCount || 0} total={(stats.totalActiveEvaluators || 0) * (stats.totalEntriesCount || 0)} />
+                    <ProgressRing label="Total Evaluations" count={progressData.judgingProgress.evaluations?.count || 0} total={progressData.judgingProgress.evaluations?.total || 0} />
                   }
                 </div>
               </article>
             )}
 
-            {!statsLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
+            {!isLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
               <Table label="Evaluator Progress" cols={6}>
                 <TableHead>
                   <Row>
@@ -89,32 +118,31 @@ function Dashboard() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {stats.evaluationsPerEvaluator?.map((e) => {
-                    const groupEntryCount = stats.entriesPerGroup?.find((g) => g.group_id === e.group_id)?.entry_count || 0;
+                  {progressData?.judgingProgress.evaluators ? progressData.judgingProgress.evaluators.map((e) => {
                     return (
-                      <Row key={e.nickname + "-progress"}>
+                      <Row key={e.user.nickname + "-progress"}>
                         <Cell>
-                          {e.nickname}
+                          {e.user.nickname}
                         </Cell>
                         <Cell>
-                          <ProgressBar count={e.eval_count} total={groupEntryCount} />
+                          <ProgressBar count={e.count} total={e.total} />
                         </Cell>
                       </Row>
                     );
-                  }) || <div></div>}
+                  }) : ""}
                 </TableBody>
               </Table>
             )}
 
-            {!statsLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
+            {!isLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
               <article className="card col-6" data-testid="entry-stats">
                 <div className="card-header">
                   <h3>Entry Stats</h3>
                 </div>
                 <div className="card-body">
-                  <p>Flagged Entries: {stats.totalFlaggedEntries}</p>
-                  <p>Disqualified Entries: {stats.totalDisqualifiedEntries}</p>
-                  <p>Total Entries: {stats.totalEntriesCount}</p>
+                  <p>Flagged Entries: {progressData?.entryCounts?.flagged}</p>
+                  <p>Disqualified Entries: {progressData?.entryCounts?.disqualified}</p>
+                  <p>Total Entries: {progressData?.entryCounts?.total}</p>
                 </div>
               </article>
             )}

@@ -2,7 +2,6 @@ import { screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import useAppState from '../../state/useAppState';
 import { defaultAppStateLoggedIn, renderWithRouter } from '../../util/testing-utils';
-import { fetchAvailableTasks, fetchMyTasks } from './fetchTasks';
 import Tasks from "./Tasks";
 
 jest.mock("../../state/useAppState", () => {
@@ -13,28 +12,10 @@ jest.mock("../../state/useAppState", () => {
 });
 const useAppStateMock = useAppState as unknown as jest.Mock<Partial<ReturnType<typeof useAppState>>>;
 
-jest.mock("./fetchTasks.tsx", () => {
-  return {
-    __esModule: true,
-    fetchMyTasks: jest.fn(),
-    fetchAvailableTasks: jest.fn()
-  }
-});
-const fetchMyTasksMock = fetchMyTasks as unknown as jest.Mock<Partial<ReturnType<typeof fetchMyTasks>>>;
-const fetchAvailableTasksMock = fetchAvailableTasks as unknown as jest.Mock<Partial<ReturnType<typeof fetchAvailableTasks>>>;
-
 beforeEach(() => {
   useAppStateMock.mockReturnValue({
     state: defaultAppStateLoggedIn()
   });
-
-  fetchMyTasksMock.mockReturnValue(new Promise(resolve => {
-    resolve(myTasks)
-  }));
-
-  fetchAvailableTasksMock.mockReturnValue(new Promise(resolve => {
-    resolve(availableTasks)
-  }));
 });
 
 const myTasks = [
@@ -85,10 +66,6 @@ test("renders the available tasks section if there are available tasks", async (
 });
 
 test("does not render the available tasks section if there are no available tasks", async () => {
-  fetchAvailableTasksMock.mockReturnValue(new Promise(resolve => {
-    resolve([])
-  }));
-
   renderWithRouter(<Tasks />);
 
   await waitForElementToBeRemoved(() => screen.queryByTestId("available-tasks-spinner"));
@@ -111,10 +88,6 @@ test("renders the available tasks section correctly", async () => {
 });
 
 test("does not render the my tasks section if there are no assigned tasks", async () => {
-  fetchMyTasksMock.mockReturnValue(new Promise(resolve => {
-    resolve([])
-  }));
-
   renderWithRouter(<Tasks />);
 
   await waitForElementToBeRemoved(() => screen.queryByTestId("my-tasks-spinner"));

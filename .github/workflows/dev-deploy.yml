@@ -4,8 +4,26 @@ on:
   push:
     branches:
       - development
+  workflow_dispatch:
 
 jobs:
+  publish_schema:
+    runs-on: ubuntu-latest
+    env:
+      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+      APOLLO_VCS_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rover
+        run: |
+          curl -sSL https://rover.apollo.dev/nix/latest | sh
+
+          # Add Rover to the $GITHUB_PATH so it can be used in another step
+          # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#adding-a-system-path
+          echo "$HOME/.rover/bin" >> $GITHUB_PATH
+      - name: Publish schema to Apollo
+        run: |
+          awk 1 ./graph/graphql/*.graphqls | rover graph publish Bema@development --schema -
   deployment:
     runs-on: ubuntu-latest
     environment: bema-development

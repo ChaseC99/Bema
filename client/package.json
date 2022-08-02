@@ -4,6 +4,8 @@
   "private": true,
   "proxy": "http://localhost:6001",
   "dependencies": {
+    "@apollo/client": "^3.6.4",
+    "@apollo/explorer": "^0.5.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
@@ -12,6 +14,7 @@
     "@types/react": "^17.0.42",
     "@types/react-datepicker": "^4.4.0",
     "@types/react-dom": "^17.0.14",
+    "graphql": "^16.5.0",
     "html-react-parser": "^1.4.9",
     "javascript-time-ago": "^2.3.13",
     "react": "^17.0.2",

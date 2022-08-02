@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import Badge from "../../../shared/Badge";
 import Button from "../../../shared/Button";
 import ExternalLink from "../../../shared/ExternalLink";
@@ -7,78 +8,162 @@ import { ConfirmModal } from "../../../shared/Modals";
 import ProgramEmbed from "../../../shared/ProgramEmbed";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchNextEntry, fetchUserEntries } from "./fetchEntryData";
 import "./Levels.css";
 
-type Entry = {
-  contest_id: number
-  entry_author: string
-  entry_author_kaid: string
-  entry_height: number
-  entry_id: number
-  entry_kaid: string
-  entry_title: string
-  entry_url: string
-  entry_votes: number
+type ContestantEntry = {
+  id: string
+  title: string
+  url: string
+  contest: {
+    name: string
+  }
+  skillLevel: string
+  averageScore: number
+  isWinner: boolean
+  isDisqualified: string
 }
 
-type PastEntry = {
-  avg_score: number
-  contest_id: number
-  contest_name: string
-  disqualified: boolean
-  entry_id: number
-  entry_level: string
-  entry_title: string
-  is_winner: boolean
+type Author = {
+  kaid: string
+  name: string
+  entries: ContestantEntry[]
 }
+
+type Entry = {
+  id: string
+  title: string
+  url: string
+  kaid: string
+  author: Author
+  votes: number
+  height: number
+}
+
+type GetNextEntryResponse = {
+  entry: Entry
+}
+
+const GET_NEXT_ENTRY = gql`
+  query GetNextEntryToReviewLevel {
+    entry: nextEntryToReviewSkillLevel {
+      id
+      title
+      url
+      kaid
+      author {
+        kaid
+        name
+        entries {
+          id
+          title
+          url
+          contest {
+            name
+          }
+          skillLevel
+          averageScore
+          isWinner
+          isDisqualified
+        }
+      }
+      height
+      votes
+    }
+  }
+`;
+
+type EntryMutationResponse = {
+  entry: {
+    id: string
+    isFlagged: boolean
+    isDisqualified: boolean
+  } | null
+}
+
+const DISQUALIFY_ENTRY = gql`
+  mutation DisqualifyEntry($id: ID!) {
+    entry: disqualifyEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+type SetEntryLevelResponse = {
+  entry: Entry
+}
+
+const SET_ENTRY_LEVEL = gql`
+  mutation SetEntryLevel($id: ID!, $skillLevel: String!) {
+    entry: setEntryLevel(id: $id, skillLevel: $skillLevel) {
+      id
+      title
+      url
+      kaid
+      author {
+        kaid
+        name
+        entries {
+          id
+          title
+          url
+          contest {
+            name
+          }
+          skillLevel
+          averageScore
+          isWinner
+          isDisqualified
+        }
+      }
+      height
+      votes
+    }
+  }
+`;
 
 function Levels() {
-  const [entry, setEntry] = useState<Entry | null>(null);
-  const [entryIsLoading, setEntryIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
   const [programIsLoading, setProgramIsLoading] = useState<boolean>(true);
-  const [previousEntries, setPreviousEntries] = useState<PastEntry[]>([]);
-  const [previousEntriesIsLoading, setPreviousEntriesIsLoading] = useState<boolean>(true);
   const [showDisqualifyModal, setShowDisqualifyModal] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
-  useEffect(() => {
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (entry && entry.entry_id > 0) {
-      setPreviousEntriesIsLoading(true);
-      fetchUserEntries(entry?.entry_author_kaid || "")
-        .then((data) => {
-          setPreviousEntries(data.entries);
-          setPreviousEntriesIsLoading(false);
-        });
-    }
-  }, [entry]);
+  const { loading: entryIsLoading, data: entryData, refetch: fetchNextEntry } = useQuery<GetNextEntryResponse>(GET_NEXT_ENTRY, { onError: handleGQLError });
+  const [disqualifyEntry, { loading: disqualifyEntryIsLoading }] = useMutation<EntryMutationResponse>(DISQUALIFY_ENTRY, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<EntryMutationResponse>(DELETE_ENTRY, { onError: handleGQLError });
+  const [setEntryLevel, { loading: setEntryLevelIsLoading }] = useMutation<SetEntryLevelResponse>(SET_ENTRY_LEVEL, { onError: handleGQLError });
 
   const handleProgramLoad = () => {
     setProgramIsLoading(false);
   }
 
   const handleFetchNextEntry = () => {
-    setEntryIsLoading(true);
-    fetchNextEntry()
-      .then((data) => {
-        setEntry(data.entry);
-        setEntryIsLoading(false);
-      });
+    fetchNextEntry();
   }
 
   const handleSetSkillLevel = async (level: string) => {
-    await request("PUT", "/api/internal/admin/skillLevels/setEntrySkillLevel", {
-      entry_id: entry?.entry_id,
-      entry_level: level
+    if (!entryData || !entryData.entry) {
+      return;
+    }
+
+    await setEntryLevel({
+      variables: {
+        id: entryData.entry.id,
+        skillLevel: level
+      }
     });
 
     handleFetchNextEntry();
@@ -93,8 +178,10 @@ function Levels() {
   }
 
   const handleDisqualify = async () => {
-    await request("PUT", "/api/internal/entries/disqualify", {
-      entry_id: entry?.entry_id
+    await disqualifyEntry({
+      variables: {
+        id: entryData?.entry.id
+      }
     });
 
     closeDisqualifyModal();
@@ -110,12 +197,28 @@ function Levels() {
   }
 
   const handleDelete = async () => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: entry?.entry_id
+    await deleteEntry({
+      variables: {
+        id: entryData?.entry.id
+      }
     });
 
     closeDeleteModal();
     handleFetchNextEntry();
+  }
+
+  if (!entryIsLoading && entryData?.entry === null) {
+    return (
+      <React.Fragment>
+        <AdminSidebar />
+
+        <div className="container center col-12">
+          <div className="container center col-8" style={{ flexDirection: "column", alignItems: "center" }}>
+            <h2>Woohoo! All the entries have been reviewed!</h2>
+          </div>
+        </div >
+      </React.Fragment>
+    );
   }
 
   return (
@@ -130,23 +233,23 @@ function Levels() {
           <div className="section-body">
             {entryIsLoading && <LoadingSpinner size="MEDIUM" />}
 
-            {!entryIsLoading &&
+            {(!entryIsLoading && entryData) &&
               <React.Fragment>
-                <h2 style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}><ExternalLink to={entry?.entry_url || ""}>{entry?.entry_title || ""}</ExternalLink></h2>
-                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entry?.entry_author_kaid + "/projects"}>{entry?.entry_author || ""}</ExternalLink></p>
-                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entry?.entry_votes || 0}</p>
+                <h2 style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}><ExternalLink to={entryData.entry.url}>{entryData.entry.title}</ExternalLink></h2>
+                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entryData.entry.author.kaid + "/projects"}>{entryData.entry.author.name}</ExternalLink></p>
+                <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entryData.entry.votes}</p>
 
                 {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-                <ProgramEmbed programKaid={entry?.entry_url.split("/")[5] || ""} height={entry?.entry_height || 400} onLoad={handleProgramLoad} />
+                <ProgramEmbed programKaid={entryData.entry.kaid} height={entryData.entry.height} onLoad={handleProgramLoad} />
               </React.Fragment>
             }
 
             <div className="container col-10 actions-container">
               <div>
                 <h4>Set Skill Level</h4>
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Beginner" text="Beginner" />
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Intermediate" text="Intermediate" />
-                <Button type="primary" role="button" action={handleSetSkillLevel} data="Advanced" text="Advanced" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Beginner" text="Beginner" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Intermediate" text="Intermediate" />
+                <Button type="primary" role="button" action={handleSetSkillLevel} loading={setEntryLevelIsLoading} data="Advanced" text="Advanced" />
               </div>
               <div>
                 <h4>Moderation</h4>
@@ -155,7 +258,7 @@ function Levels() {
               </div>
             </div>
 
-            {!previousEntriesIsLoading &&
+            {(!entryIsLoading && entryData) &&
               <Table cols={10} noCard label="Previous Submissions">
                 <TableHead>
                   <Row>
@@ -167,18 +270,18 @@ function Levels() {
                   </Row>
                 </TableHead>
                 <TableBody>
-                  {previousEntries.map((e) => {
+                  {entryData.entry.author.entries.map((e) => {
                     return (
-                      <Row key={e.entry_id}>
-                        <Cell>{e.entry_id}</Cell>
+                      <Row key={e.id}>
+                        <Cell>{e.id}</Cell>
                         <Cell>
-                          {e.entry_title}
-                          {e.disqualified ? <Badge color="#d92916" text="Disqualified" type="secondary" /> : ""}
-                          {e.is_winner ? <Badge color="#ffb100" text="Winner" type="secondary" /> : ""}
+                          {e.title}
+                          {e.isDisqualified ? <Badge color="#d92916" text="Disqualified" type="secondary" /> : ""}
+                          {e.isWinner ? <Badge color="#ffb100" text="Winner" type="secondary" /> : ""}
                         </Cell>
-                        <Cell>{e.contest_name}</Cell>
-                        <Cell>{e.entry_level}</Cell>
-                        <Cell>{e.avg_score}</Cell>
+                        <Cell>{e.contest.name}</Cell>
+                        <Cell>{e.skillLevel}</Cell>
+                        <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>
                       </Row>
                     );
                   })}
@@ -195,6 +298,7 @@ function Levels() {
           confirmLabel="Disqualify"
           handleConfirm={handleDisqualify}
           handleCancel={closeDisqualifyModal}
+          loading={disqualifyEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
@@ -207,6 +311,7 @@ function Levels() {
           confirmLabel="Delete"
           handleConfirm={handleDelete}
           handleCancel={closeDeleteModal}
+          loading={deleteEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to delete this entry? This action cannot be undone.</p>

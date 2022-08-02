@@ -1,0 +1,93 @@
+extend type Query {
+    """
+    Judging progress for the current contest
+    """
+    judgingProgress: JudgingProgress!
+
+    """
+    Entry counts for the current contest. Requires View Admin Stats permission.
+    """
+    entryCounts: EntryCounts
+}
+
+type JudgingProgress {
+    """
+    The current user's progress
+    """
+    user: Progress!
+
+    """
+    The progress of the current user's group
+    """
+    group: Progress!
+
+    """
+    The number of entries that have received at least one evaluation
+    """
+    entries: Progress
+
+    """
+    The total and expected number of evaluations
+    """
+    evaluations: Progress
+
+    """
+    The progress of each evaluator
+    """
+    evaluators: [EvaluatorProgress!]!
+}
+
+"""
+The progress of a single evaluator
+"""
+type EvaluatorProgress {
+    """
+    The evaluator
+    """
+    user: User!
+
+    """
+    The number of entries scored by the evaluator
+    """
+    count: Int!
+
+    """
+    The number of entries in the evaluator's group
+    """
+    total: Int!
+}
+
+"""
+The progress of a general entity
+"""
+type Progress {
+    """
+    The current progress
+    """
+    count: Int!
+
+    """
+    The expected progress
+    """
+    total: Int!
+}
+
+"""
+The number of entries for a contest
+"""
+type EntryCounts {
+    """
+    The number of flagged entries
+    """
+    flagged: Int!
+
+    """
+    The number of disqualified entries
+    """
+    disqualified: Int!
+
+    """
+    The total number of active entries
+    """
+    total: Int!
+}

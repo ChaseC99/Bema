@@ -19,7 +19,7 @@ test("renders the task information correctly", () => {
     state: defaultAppStateLoggedIn()
   });
 
-  render(<TaskCard title="Sample task #1" status="Not Started" id={10} dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
+  render(<TaskCard title="Sample task #1" status="Not Started" id="10" dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
 
   const task = screen.getByTestId("task-card");
   expect(task.innerHTML).toMatch("Sample task #1");
@@ -33,7 +33,7 @@ test("renders a Mark as Started button for Not Started tasks", () => {
     state: defaultAppStateLoggedIn()
   });
 
-  render(<TaskCard title="Sample task #1" status="Not Started" id={10} dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
+  render(<TaskCard title="Sample task #1" status="Not Started" id="10" dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
 
   const task = screen.getByTestId("task-card");
   expect(task.innerHTML).toMatch("Mark as started");
@@ -44,7 +44,7 @@ test("renders a Mark as Completed button for Started tasks", () => {
     state: defaultAppStateLoggedIn()
   });
 
-  render(<TaskCard title="Sample task #1" status="Started" id={10} dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
+  render(<TaskCard title="Sample task #1" status="Started" id="10" dueDate = "04-01-2022" assigned={true} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
   
   const task = screen.getByTestId("task-card");
   expect(task.innerHTML).toMatch("Mark as completed");
@@ -55,7 +55,7 @@ test("renders a Signup for Task button for unassigned tasks", () => {
     state: defaultAppStateLoggedIn()
   });
 
-  render(<TaskCard title="Sample task #1" status="Not Started" id={10} dueDate = "04-01-2022" assigned={false} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
+  render(<TaskCard title="Sample task #1" status="Not Started" id="10" dueDate = "04-01-2022" assigned={false} testId="task-card" updateTaskStatus={updateTaskStatus} signupForTask={signupForTask} />);
 
   const task = screen.getByTestId("task-card");
   expect(task.innerHTML).toMatch("Sign up for task");

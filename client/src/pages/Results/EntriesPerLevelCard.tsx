@@ -1,8 +1,8 @@
-import { EntriesPerLevel } from ".";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
+import { EntryLevel } from "./Results";
 
 type EntriesPerLevelCardProps = {
-  entriesPerLevel: EntriesPerLevel[]
+  entriesPerLevel: EntryLevel[]
   testId?: string
 }
 
@@ -18,8 +18,8 @@ function EntriesPerLevelCard(props: EntriesPerLevelCardProps) {
       <TableBody>
         {props.entriesPerLevel.map((e) => {
           return (
-            <Row key={"entries-per-level-row-" + e.entry_level}>
-              <Cell>{e.entry_level}</Cell>
+            <Row key={"entries-per-level-row-" + e.level}>
+              <Cell>{e.level}</Cell>
               <Cell>{e.count}</Cell>
             </Row>
           );

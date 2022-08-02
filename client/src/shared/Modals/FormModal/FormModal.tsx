@@ -10,6 +10,8 @@ type FormModalProps = {
   fields: FormFields[]
   testId?: string
   cols?: number
+  loading?: boolean
+  disabled?: boolean
 }
 
 /**
@@ -42,7 +44,7 @@ function FormModal(props: FormModalProps) {
             <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.586L7.706 6.293a1 1 0 1 0-1.413 1.413L10.586 12l-4.293 4.294a1 1 0 0 0 1.413 1.413L12 13.414l4.294 4.293a1 1 0 0 0 1.413-1.413L13.414 12l4.293-4.294a1 1 0 1 0-1.413-1.413L12 10.586z"></path></svg>
           </button>
         </div>
-        <Form onSubmit={handleSubmit} onCancel={handleClose} submitLabel={props.submitLabel} fields={props.fields} testId={props.testId + "-form"} />
+        <Form onSubmit={handleSubmit} onCancel={handleClose} submitLabel={props.submitLabel} fields={props.fields} testId={props.testId + "-form"} loading={props.loading} disabled={props.disabled} />
       </div>
     </div>
   );

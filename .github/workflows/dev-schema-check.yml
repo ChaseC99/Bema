@@ -1,0 +1,29 @@
+name: Dev Schema Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:    
+      - 'development'
+
+jobs:
+  check_schema:
+    name: check schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - name: Internal API Check
+        uses: iansu/apollo-schema-check-action@v2
+        with:
+          title: Bema
+          graph: Bema
+          variant: development
+          localSchemaFile: 'graph/graphql/*.graphqls'
+          validationPeriod: P2W
+          key: ${{ secrets.APOLLO_KEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

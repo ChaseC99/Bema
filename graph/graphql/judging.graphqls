@@ -1,0 +1,189 @@
+extend type Query {
+    """
+    A single judging criteria
+    """
+    criteria(id: ID!): JudgingCriteria
+
+    """
+    A list of all judging criteria (both active and inactive). Requires View Judging Settings permission.
+    """
+    allCriteria: [JudgingCriteria!]!
+
+    """
+    A list of active judging criteria. Sample data is returned for unauthenticated users.
+    """
+    activeCriteria: [JudgingCriteria!]!
+
+    """
+    A list of all judging groups. Requires View Judging Settings permission.
+    """
+    allJudgingGroups: [JudgingGroup!]!
+
+    """
+    A list of all active judging groups. Requires authentication.
+    """
+    activeJudgingGroups: [JudgingGroup!]!
+
+    """
+    A single judging group. Requires authentication.
+    """
+    judgingGroup(id: ID!): JudgingGroup
+}
+
+extend type Mutation {
+    """
+    Creates a new judging criteria
+    """
+    createCriteria(input: JudgingCriteriaInput!): JudgingCriteria
+
+    """
+    Edits an existing judging criteria
+    """
+    editCriteria(id: ID!, input: JudgingCriteriaInput!): JudgingCriteria
+
+    """
+    Delete an existing judging criteria
+    """
+    deleteCriteria(id: ID!): JudgingCriteria
+
+    """
+    Creates a new judging group. Requires Manage Judging Groups permission.
+    """
+    createJudgingGroup(input: CreateJudgingGroupInput!): JudgingGroup
+
+    """
+    Edits an existing judging group. Requires Manage Judging Groups permission.
+    """
+    editJudgingGroup(id: ID!, input: EditJudgingGroupInput!): JudgingGroup
+
+    """
+    Deletes an existing judging group
+    """
+    deleteJudgingGroup(id: ID!): JudgingGroup
+
+    """
+    Creates an evaluation for an entry
+    """
+    scoreEntry(id: ID!, input: ScoreEntryInput!): Evaluation
+}
+
+"""
+Represents a criterium used for scoring entries
+"""
+type JudgingCriteria {
+    """
+    A unique integer ID
+    """
+    id: ID!
+
+    """
+    The name of the criteria
+    """
+    name: String!
+
+    """
+    An explanation of how to use the criteria
+    """
+    description: String!
+
+    """
+    Indicates if the criteria should be displayed on the judging page
+    """
+    isActive: Boolean!
+
+    """
+    The order in which the criteria appears
+    """
+    sortOrder: Int!
+}
+
+"""
+A group of evaluators that can be assigned entries to judge
+"""
+type JudgingGroup {
+    """
+    A uniqune integer ID
+    """
+    id: ID!
+
+    """
+    The name of the group
+    """
+    name: String!
+
+    """
+    Indicates whether new entries and users can be assigned to this group
+    """
+    isActive: Boolean!
+}
+
+"""
+Input used for creating or editing judging criteria
+"""
+input JudgingCriteriaInput {
+    """
+    The name of the criteria
+    """
+    name: String!
+
+    """
+    An explanation of how to use the criteria
+    """
+    description: String!
+
+    """
+    Indicates if the criteria should be displayed on the judging page
+    """
+    isActive: Boolean!
+
+    """
+    The order in which the criteria appears
+    """
+    sortOrder: Int!
+}
+
+input CreateJudgingGroupInput {
+    """
+    The name of the group
+    """
+    name: String!
+}
+
+input EditJudgingGroupInput {
+    """
+    The name of the group
+    """
+    name: String!
+
+    """
+    Indicates whether new entries and users can be assigned to this group
+    """
+    isActive: Boolean!
+}
+
+input ScoreEntryInput {
+    """
+    The creativity score
+    """
+    creativity: Float!
+
+    """
+    The complexity score
+    """
+    complexity: Float!
+
+    """
+    The execution score
+    """
+    execution: Float!
+
+    """
+    The interpretation score
+    """
+    interpretation: Float!
+
+    """
+    The suggested skill level of the entry
+    """
+    skillLevel: String!
+}

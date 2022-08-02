@@ -2,7 +2,6 @@ import { screen, waitForElementToBeRemoved } from '@testing-library/react';
 import useAppState from '../../state/useAppState';
 import { defaultAppStateLoggedIn, defaultAppStateLoggedOut, renderWithRouter } from '../../util/testing-utils';
 import Announcements from "./Announcements";
-import { fetchAnnouncements } from './fetchAnnouncements';
 
 jest.mock("../../state/useAppState", () => {
   return {
@@ -11,20 +10,6 @@ jest.mock("../../state/useAppState", () => {
   }
 });
 const useAppStateMock = useAppState as unknown as jest.Mock<Partial<ReturnType<typeof useAppState>>>;
-
-jest.mock("./fetchAnnouncements.tsx", () => {
-  return {
-    __esModule: true,
-    fetchAnnouncements: jest.fn()
-  }
-});
-const fetchAnnouncementsMock = fetchAnnouncements as unknown as jest.Mock<Partial<ReturnType<typeof fetchAnnouncements>>>;
-
-beforeEach(() => {
-  fetchAnnouncementsMock.mockReturnValue(new Promise(resolve => {
-    resolve(announcements)
-  }));
-});
 
 const announcements = [
   {

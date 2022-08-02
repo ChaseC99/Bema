@@ -1,87 +1,135 @@
-import React, { useEffect, useState } from "react";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React from "react";
 import LoadingSpinner from "../../shared/LoadingSpinner/LoadingSpinner";
+import useAppState from "../../state/useAppState";
+import useAppError from "../../util/errors";
 import request from "../../util/request";
-import { fetchAvailableTasks, fetchMyTasks } from "./fetchTasks";
 import TaskCard from "./TaskCard";
 
 type Task = {
-  task_title: string
-  task_status: "Not Started" | "Started"
-  task_id: number
-  due_date: string
-  assigned_member: number
-  testId?: string
+  id: string
+  title: string
+  assignedUser: {
+    id: string
+    nickname: string
+  } | null
+  status: "Not Started" | "Started"
+  dueDate: string
 }
 
-function Tasks() {
-  const [myTasksIsLoading, setMyTasksIsLoading] = useState<boolean>(true);
-  const [availableTasksIsLoading, setAvailableTasksIsLoading] = useState<boolean>(true);
-  const [myTasks, setMyTasks] = useState<Task[]>([]);
-  const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
+type GetTasksResponse = {
+  tasks: Task[]
+}
 
-  useEffect(() => {
-    fetchAvailableTasks()
-      .then(tasks => {
-        setAvailableTasks(tasks);
-        setAvailableTasksIsLoading(false);
-      });
-
-    fetchMyTasks()
-      .then(tasks => {
-        setMyTasks(tasks);
-        setMyTasksIsLoading(false);
-      });
-  }, []);
-
-  function updateTaskStatus(id: number) {
-    request("PUT", "/api/internal/tasks", {
-      edit_task_id: id
-    });
-
-    let newTasks = [...myTasks];
-    
-    for (let i = 0; i < newTasks.length; i++) {
-      if (newTasks[i].task_id === id) {
-        if (newTasks[i].task_status === "Not Started") {
-          newTasks[i].task_status = "Started";
-        }
-        else {
-          newTasks.splice(i, 1);
-        }
-
-        break;
+const GET_AVAILABLE_TASKS = gql`
+  query GetAvailableTasks {
+    tasks: availableTasks {
+      id
+      title
+      assignedUser {
+        id
+        nickname
       }
+      status
+      dueDate
+    }
+  }
+`;
+
+const GET_MY_TASKS = gql`
+  query GetMyTasks {
+    tasks: currentUserTasks {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+type EditTaskResponse = {
+  task: Task
+}
+
+const EDIT_TASK = gql`
+  mutation EditTask($id: ID!, $input: EditTaskInput!) {
+    task: editTask(id: $id, input: $input) {
+      id
+      title
+      assignedUser {
+        id
+        nickname
+      }
+      status
+      dueDate
+    }
+  }
+`;
+
+function Tasks() {
+  const { state } = useAppState();
+  const { handleGQLError } = useAppError();
+  const { loading: availableTasksIsLoading, data: availableTasksData, refetch: refetchAvailableTasks } = useQuery<GetTasksResponse>(GET_AVAILABLE_TASKS, { onError: handleGQLError });
+  const { loading: myTasksIsLoading, data: myTasksData, refetch: refetchMyTasks } = useQuery<GetTasksResponse>(GET_MY_TASKS, { onError: handleGQLError });
+  const [editTask] = useMutation<EditTaskResponse>(EDIT_TASK, { onError: handleGQLError });
+
+  async function updateTaskStatus(id: string) {
+    const task = myTasksData?.tasks.find(t => t.id === id) || null;
+    
+    if (task === null) {
+      return;
     }
 
-    setMyTasks(newTasks);
+    let newStatus = "Completed";
+    if (task.status === "Not Started") {
+      newStatus = "Started";
+    }
+
+    await editTask({
+      variables: {
+        id: id,
+        input: {
+          title: task.title,
+          assignedUser: task.assignedUser?.id,
+          status: newStatus,
+          dueDate: task.dueDate
+        }
+      }
+    });
+
+    refetchMyTasks();
   }
   
-  function signupForTask(id: number) {
-    request("PUT", "/api/internal/tasks/signup", {
-      task_id: id
+  async function signupForTask(id: string) {
+    const task = availableTasksData?.tasks.find(t => t.id === id) || null;
+
+    if (task === null || !state.user) {
+      return;
+    }
+
+    await editTask({
+      variables: {
+        id: id,
+        input: {
+          title: task.title,
+          assignedUser: state.user.id,
+          status: task.status,
+          dueDate: task.dueDate
+        }
+      }
     });
 
-    for (let i = 0; i < availableTasks.length; i++) {
-      if (availableTasks[i].task_id === id) {
-        let task = {...availableTasks[i]}
-
-        let newAvailableTasks = [...availableTasks];
-        newAvailableTasks.splice(i, 1);
-
-        let newMyTasks = [...myTasks];
-        newMyTasks.push(task);
-
-        setAvailableTasks(newAvailableTasks);
-        setMyTasks(newMyTasks);
-
-        break;
-      }
-    }
+    refetchAvailableTasks();
+    refetchMyTasks();
   }
 
   return (
     <React.Fragment>
-      { (availableTasksIsLoading || availableTasks.length > 0) &&
+      { (availableTasksIsLoading || (availableTasksData && availableTasksData.tasks.length > 0)) &&
         <section id="available-tasks-section" className="container center col-12">
           <div className="col-6">
             <div className="section-header">
@@ -90,18 +138,17 @@ function Tasks() {
             <div className="section-body" data-testid="available-tasks-section-body">
               {availableTasksIsLoading && <LoadingSpinner size="MEDIUM" testId="available-tasks-spinner" />}
 
-              {!availableTasksIsLoading && availableTasks.map((t) => {
+              {!availableTasksIsLoading && availableTasksData?.tasks.map((t) => {
                 return (
                   <TaskCard
-                    title={t.task_title}
-                    status={t.task_status}
-                    id={t.task_id}
-                    dueDate={t.due_date}
-                    assigned={t.assigned_member > 0}
+                    title={t.title}
+                    status={t.status}
+                    id={t.id}
+                    dueDate={t.dueDate}
+                    assigned={t.assignedUser !== null}
                     updateTaskStatus={updateTaskStatus}
                     signupForTask={signupForTask}
-                    testId={t.testId}
-                    key={"tasks-" + t.task_id}
+                    key={"tasks-" + t.id}
                   />
                 );
               })}
@@ -110,7 +157,7 @@ function Tasks() {
         </section>
       }
 
-      { (myTasksIsLoading || myTasks.length > 0) && 
+      { (myTasksIsLoading || (myTasksData && myTasksData.tasks.length > 0)) && 
         <section id="my-tasks-section" className="container center col-12">
           <div className="col-6">
             <div className="section-header">
@@ -119,18 +166,17 @@ function Tasks() {
             <div className="section-body" data-testid="my-tasks-section-body">
               {myTasksIsLoading && <LoadingSpinner size="MEDIUM" testId="my-tasks-spinner" />}
 
-              {!myTasksIsLoading && myTasks.length > 0 && myTasks.map((t) => {
+              {!myTasksIsLoading && myTasksData?.tasks.map((t) => {
                   return (
                     <TaskCard
-                      title={t.task_title}
-                      status={t.task_status}
-                      id={t.task_id}
-                      dueDate={t.due_date}
-                      assigned={t.assigned_member > 0}
+                      title={t.title}
+                      status={t.status}
+                      id={t.id}
+                      dueDate={t.dueDate}
+                      assigned={t.assignedUser !== null}
                       updateTaskStatus={updateTaskStatus}
                       signupForTask={signupForTask}
-                      testId={t.testId}
-                      key={"tasks-" + t.task_id}
+                      key={"tasks-" + t.id}
                     />
                   );
                 })}

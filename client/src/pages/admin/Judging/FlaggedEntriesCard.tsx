@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../../shared/Button";
 import ExternalLink from "../../../shared/ExternalLink";
@@ -6,43 +7,88 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal } from "../../../shared/Modals";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppState from "../../../state/useAppState";
+import useAppError from "../../../util/errors";
 import request from "../../../util/request";
-import { fetchFlaggedEntries } from "./fetchData";
 
 type Entry = {
-  assigned_group_id: number
-  contest_id: number
-  disqualified: boolean
-  entry_author: string
-  entry_author_kaid: string
-  entry_created: string
-  entry_height: number
-  entry_id: number
-  entry_kaid: string
-  entry_level: string
-  entry_level_locked: boolean
-  entry_title: string
-  entry_url: string
-  entry_votes: number
-  flagged: boolean
-  is_winner: boolean
+  id: string
+  title: string
+  url: string
+  author: {
+    name: string
+    kaid: string
+  } | null
+  created: string
 }
+
+type GetFlaggedEntriesResponse = {
+  flaggedEntries: Entry[]
+}
+
+const GET_FLAGGED_ENTRIES = gql`
+  query GetFlaggedEntries {
+    flaggedEntries {
+      id
+      title
+      url
+      author {
+        name
+        kaid
+      }
+      created
+    }
+  }
+`;
+
+type EntryMutationResponse = {
+  entry: {
+    id: string
+    isFlagged: boolean
+    isDisqualified: boolean
+  } | null
+}
+
+const APPROVE_ENTRY = gql`
+  mutation ApproveEntry($id: ID!) {
+    entry: approveEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DISQUALIFY_ENTRY = gql`
+  mutation DisqualifyEntry($id: ID!) {
+    entry: disqualifyEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
+
+const DELETE_ENTRY = gql`
+  mutation DeleteEntry($id: ID!) {
+    entry: deleteEntry(id: $id) {
+      id
+      isFlagged
+      isDisqualified
+    }
+  }
+`;
 
 function FlaggedEntriesCard() {
   const { state } = useAppState();
-  const [flaggedEntries, setFlaggedEntries] = useState<Entry[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
   const [approveEntryId, setApproveEntryId] = useState<number | null>();
   const [disqualifyEntryId, setDisqualifyEntryId] = useState<number | null>();
   const [deleteEntryId, setDeleteEntryId] = useState<number | null>();
 
-  useEffect(() => {
-    fetchFlaggedEntries()
-      .then((data) => {
-        setFlaggedEntries(data.flaggedEntries);
-        setIsLoading(false);
-      });
-  }, []);
+  const { loading, data, refetch } = useQuery<GetFlaggedEntriesResponse>(GET_FLAGGED_ENTRIES, { onError: handleGQLError });
+  const [approveEntry, { loading: approveEntryIsLoading }] = useMutation<EntryMutationResponse>(APPROVE_ENTRY, { onError: handleGQLError });
+  const [disqualifyEntry, { loading: disqualifyEntryIsLoading }] = useMutation<EntryMutationResponse>(DISQUALIFY_ENTRY, { onError: handleGQLError });
+  const [deleteEntry, { loading: deleteEntryIsLoading }] = useMutation<EntryMutationResponse>(DELETE_ENTRY, { onError: handleGQLError });
 
   const openApproveModal = (id: number) => {
     setApproveEntryId(id);
@@ -53,13 +99,13 @@ function FlaggedEntriesCard() {
   }
 
   const handleApprove = async (id: number) => {
-    await request("PUT", "/api/internal/entries/approve", {
-      entry_id: id
+    await approveEntry({
+      variables: {
+        id: id
+      }
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeApproveModal();
   }
 
@@ -72,13 +118,13 @@ function FlaggedEntriesCard() {
   }
 
   const handleDisqualify = async (id: number) => {
-    await request("PUT", "/api/internal/entries/disqualify", {
-      entry_id: id
+    await disqualifyEntry({
+      variables: {
+        id: id
+      }
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeDisqualifyModal();
   }
 
@@ -91,17 +137,17 @@ function FlaggedEntriesCard() {
   }
 
   const handleDelete = async (id: number) => {
-    await request("DELETE", "/api/internal/entries", {
-      entry_id: id
+    await deleteEntry({
+      variables: {
+        id: id
+      }
     });
 
-    const newFlaggedEntries = flaggedEntries.filter((e) => e.entry_id !== id);
-    setFlaggedEntries(newFlaggedEntries);
-
+    refetch();
     closeDeleteModal();
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <article className="card col-12">
         <div className="card-header">
@@ -127,27 +173,27 @@ function FlaggedEntriesCard() {
           </Row>
         </TableHead>
         <TableBody>
-          {flaggedEntries.map((e) => {
+          {data ? data.flaggedEntries.map((e) => {
             return (
-              <Row key={e.entry_id}>
-                <Cell>{e.entry_id}</Cell>
-                <Cell><ExternalLink to={e.entry_url}>{e.entry_title}</ExternalLink></Cell>
-                <Cell><Link to={"/contestants/" + e.entry_author_kaid}>{e.entry_author}</Link></Cell>
-                <Cell>{e.entry_created}</Cell>
+              <Row key={e.id}>
+                <Cell>{e.id}</Cell>
+                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                <Cell><Link to={"/contestants/" + e.author?.kaid}>{e.author?.name}</Link></Cell>
+                <Cell>{e.created}</Cell>
                 <Cell>
                   {(state.is_admin || state.user?.permissions.edit_entries) ?
                     <React.Fragment>
-                      <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.entry_id} style={{ marginRight: "24px" }} />
-                      <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.entry_id} style={{ marginRight: "24px" }} />
+                      <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.id} style={{ marginRight: "24px" }} />
+                      <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.id} style={{ marginRight: "24px" }} />
                     </React.Fragment>
                     : ""}
                   {(state.is_admin || state.user?.permissions.delete_entries) ?
-                    <Button type="tertiary" role="button" action={openDeleteModal} text="Delete" destructive data={e.entry_id} />
+                    <Button type="tertiary" role="button" action={openDeleteModal} text="Delete" destructive data={e.id} />
                     : ""}
                 </Cell>
               </Row>
             );
-          })}
+          }) : ""}
         </TableBody>
       </Table>
 
@@ -158,6 +204,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleApprove}
           handleCancel={closeApproveModal}
           data={approveEntryId}
+          loading={approveEntryIsLoading}
         >
           <p>Are you sure you want to approve this entry? This will place the entry back into the judging queue.</p>
         </ConfirmModal>
@@ -170,6 +217,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleDisqualify}
           handleCancel={closeDisqualifyModal}
           data={disqualifyEntryId}
+          loading={disqualifyEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to disqualify this entry? This will remove the entry from the judging queue for all users.</p>
@@ -183,6 +231,7 @@ function FlaggedEntriesCard() {
           handleConfirm={handleDelete}
           handleCancel={closeDeleteModal}
           data={deleteEntryId}
+          loading={deleteEntryIsLoading}
           destructive
         >
           <p>Are you sure you want to delete this entry? This action cannot be undone.</p>

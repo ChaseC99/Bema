@@ -1,31 +1,36 @@
-import { useEffect, useState } from "react";
 import LoadingSpinner from "../../LoadingSpinner";
 import SidebarItem from "../../SidebarItem/SidebarItem";
-import { fetchContests } from "./fetchContestData";
 import "../sidebars.css";
-
-interface Contest {
-  contest_name: string
-  contest_id: number
-}
+import { gql, useQuery } from "@apollo/client";
+import useAppError from "../../../util/errors";
 
 type ContestSidebarProps = {
   rootPath: string
 }
 
+type Contest = {
+  id: number
+  name: string
+}
+
+type GetAllContestsResponse = {
+  contests: Contest[]
+}
+
+const GET_ALL_CONTESTS = gql`
+  query GetAllContests {
+    contests {
+      id
+      name
+    }
+  }
+`;
+
 function ContestsSidebar(props: ContestSidebarProps) {
-  const [contests, setContests] = useState<Contest[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
+  const { loading, data, error } = useQuery<GetAllContestsResponse>(GET_ALL_CONTESTS, { onError: handleGQLError });
 
-  useEffect(() => {
-    fetchContests()
-      .then((data) => {
-        setContests(data);
-        setIsLoading(false);
-      });
-  }, []);
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="sidebar">
         <LoadingSpinner size="SMALL" testId="sidebar-spinner" />
@@ -33,14 +38,18 @@ function ContestsSidebar(props: ContestSidebarProps) {
     );
   }
 
+  if (error) {
+
+  }
+
   return (
     <div className="sidebar">
       <div className="sidebar-section">
         <h3>Contests</h3>
 
-        {contests.map((c) => {
+        {data?.contests.map((c) => {
           return (
-            <SidebarItem text={c.contest_name.split("Contest: ")[1]} to={props.rootPath + "/" + c.contest_id} key={"contest-sidebar-" + c.contest_id} />
+            <SidebarItem text={c.name.split("Contest: ")[1]} to={props.rootPath + "/" + c.id} key={"contest-sidebar-" + c.id} />
           );
         })}
       </div>

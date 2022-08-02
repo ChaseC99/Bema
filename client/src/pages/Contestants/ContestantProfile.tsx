@@ -1,59 +1,69 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import LoadingSpinner from "../../shared/LoadingSpinner";
 import AdminSidebar from "../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
-import { fetchContestantStats } from "./fetchContestantData";
 import "./ContestantProfile.css";
-import ErrorPage from "../../shared/ErrorPage";
-
-type ContestantStats = {
-  contestCount: number
-  entryCount: number
-  profileInfo: {
-    name: string
-    kaid: string
-  }
-}
+import { gql, useQuery } from "@apollo/client";
+import useAppError from "../../util/errors";
+import ExternalLink from "../../shared/ExternalLink";
 
 type Entry = {
-  avg_score: number
-  contest_id: number
-  contest_name: string
-  disqualified: boolean
-  entry_id: number
-  entry_level: string
-  entry_title: string
-  is_winner: boolean
+  id: string
+  title: string
+  contest: {
+    name: string
+  }
+  skillLevel: string
+  isWinner: boolean
+  isDisqualified: boolean
+  averageScore: number
+  url: string
 }
 
-const defaultStats: ContestantStats = {
-  contestCount: 0,
-  entryCount: 0,
-  profileInfo: {
-    name: "",
-    kaid: ""
-  }
+type Contestant = {
+  name: string
+  entryCount: number
+  contestCount: number
+  entries: Entry[]
 }
+
+type GetContestantProfileResponse = {
+  contestant: Contestant
+}
+
+const GET_CONTESTANT_PROFILE = gql`
+  query GetContestantProfile($kaid: String!) {
+    contestant(kaid: $kaid) {
+      name
+      entryCount
+      contestCount
+      entries {
+        id
+        title
+        contest {
+          name
+        }
+        skillLevel
+        isWinner
+        isDisqualified
+        averageScore
+        url
+      }
+    }
+  }
+`;
 
 function ContestantProfile() {
   const { contestantKaid } = useParams();
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [stats, setStats] = useState<ContestantStats>(defaultStats);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { handleGQLError } = useAppError();
 
-  useEffect(() => {
-    fetchContestantStats(contestantKaid || "")
-      .then((data) => {
-        setEntries(data.entries);
-        setStats(data.stats);
-        setIsLoading(false);
-      })
-  }, [contestantKaid]);
-
-  if (!isLoading && stats.profileInfo === undefined) {
-    return <ErrorPage type="ERROR" message="This contestant does not exist." />
-  }
+  const { loading: profileIsLoading, data: profileData } = useQuery<GetContestantProfileResponse>(GET_CONTESTANT_PROFILE, {
+    onError: handleGQLError,
+    variables: {
+      kaid: contestantKaid
+    }
+  });
 
   return (
     <React.Fragment>
@@ -65,18 +75,18 @@ function ContestantProfile() {
             <h2 data-testid="contestant-header">Contestant Profile</h2>
           </div>
           <div className="section-body" data-testid="contestant-section-body">
-            {isLoading && <LoadingSpinner size="LARGE" />}
+            {profileIsLoading && <LoadingSpinner size="LARGE" />}
 
-            {!isLoading &&
+            {!profileIsLoading &&
               <div className="card col-12 contestant-stats-card">
-                <h2>{stats.profileInfo.name}</h2>
+                <h2>{profileData?.contestant.name}</h2>
                 <div className="col-12 stats-container">
                   <div className="stats-box">
-                    <span className="stats-number">{stats.entryCount}</span>
+                    <span className="stats-number">{profileData?.contestant.entryCount}</span>
                     <span className="label">Entries<br />Submitted</span>
                   </div>
                   <div className="stats-box">
-                    <span className="stats-number">{stats.contestCount}</span>
+                    <span className="stats-number">{profileData?.contestant.contestCount}</span>
                     <span className="label">Contests<br />Entered</span>
                   </div>
                 </div>
@@ -92,17 +102,17 @@ function ContestantProfile() {
                     </Row>
                   </TableHead>
                   <TableBody>
-                    {entries.map((e) => {
+                    {profileData ? profileData.contestant.entries.map((e) => {
                       return (
-                        <Row key={e.entry_id}>
-                          <Cell>{e.entry_id}</Cell>
-                          <Cell>{e.entry_title}</Cell>
-                          <Cell>{e.contest_name}</Cell>
-                          <Cell>{e.entry_level}</Cell>
-                          <Cell>{e.avg_score}</Cell>
+                        <Row key={e.id}>
+                          <Cell>{e.id}</Cell>
+                          <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                          <Cell>{e.contest.name}</Cell>
+                          <Cell>{e.skillLevel}</Cell>
+                          <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>
                         </Row>
                       );
-                    })}
+                    }) : ""}
                   </TableBody>
                 </Table>
               </div>

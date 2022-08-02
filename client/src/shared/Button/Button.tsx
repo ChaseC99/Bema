@@ -1,5 +1,6 @@
 import { MouseEventHandler } from "react";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "../LoadingSpinner";
 import "./Button.css";
 
 type ButtonProps =
@@ -22,6 +23,7 @@ type ButtonProps =
     inverse?: boolean
     destructive?: boolean
     disabled?: boolean
+    loading?: boolean
     style?: React.CSSProperties
     testId?: string
   }
@@ -40,6 +42,17 @@ function Button(props: ButtonProps) {
 
   if (props.destructive) {
     c = "btn-destructive-" + props.type;
+  }
+
+  if (props.type === "primary" && props.role === "button" && props.loading) {
+    return (
+      <button className={c} onClick={props.action} data-testid={props.testId} disabled style={props.style}>
+        <span style={{ visibility: "hidden" }}>
+          {props.text}
+        </span>
+        <LoadingSpinner size="XSMALL" />
+      </button>
+    );
   }
 
   if (props.role === "link") {
