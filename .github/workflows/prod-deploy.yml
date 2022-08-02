@@ -23,7 +23,7 @@ jobs:
           echo "$HOME/.rover/bin" >> $GITHUB_PATH
       - name: Publish schema to Apollo
         run: |
-          rover graph publish Bema@current --schema ./graph/schema.graphqls
+          awk 1 ./graph/graphql/*.graphqls | rover graph publish Bema@current --schema -
   deployment:
     runs-on: ubuntu-latest
     environment: bema
