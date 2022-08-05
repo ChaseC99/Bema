@@ -58,16 +58,16 @@ function AdminSidebar() {
     <div className="sidebar">
       <div className="sidebar-section">
         <h3>Info</h3>
-        <SidebarItem text="Dashboard" to="/admin/dashboard" testId="sidebar-dashboard" />
-        <SidebarItem text="Contests" to="/admin/contests" testId="sidebar-contests" />
+        <SidebarItem text="Dashboard" to="/dashboard" testId="sidebar-dashboard" />
+        <SidebarItem text="Contests" to="/contests" testId="sidebar-contests" />
         <SidebarItem text="Entries" to={"/entries/" + currentContestData?.currentContest.id} testId="sidebar-entries" />
 
         {state.loggedIn && <SidebarItem text="Contestants" to="/contestants" testId="sidebar-contestants" />}
 
         {state.loggedIn && contestsEvaluatedByUserData && <SidebarItem text="Evaluations"
           to={contestsEvaluatedByUserData.contests.length > 0 ?
-            ("/admin/evaluations/" + state.user?.id + "/" + contestsEvaluatedByUserData.contests[0].id) :
-            ("/admin/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)}
+            ("/evaluations/" + state.user?.id + "/" + contestsEvaluatedByUserData.contests[0].id) :
+            ("/evaluations/" + state.user?.id + "/" + currentContestData?.currentContest.id)}
           testId="sidebar-evaluations" />}
 
         <SidebarItem text="Results" to={"/results/" + currentContestData?.currentContest.id} testId="sidebar-results" />

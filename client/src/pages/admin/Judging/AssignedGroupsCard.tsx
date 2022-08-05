@@ -157,7 +157,7 @@ function AssignedGroupsCard() {
       <article className="card col-12" style={{ paddingBottom: "16px" }}>
         <div className="card-header">
           <h3>Assigned Groups</h3>
-          {(state.is_admin || state.user?.permissions.assign_evaluator_groups) &&
+          {(state.isAdmin || state.user?.permissions.assign_evaluator_groups) &&
             <Button type="tertiary" role="button" action={openEditAllModal} text="Bulk Edit" />
           }
         </div>
@@ -181,7 +181,7 @@ function AssignedGroupsCard() {
                       <Cell>{u.id}</Cell>
                       <Cell>{u.nickname}</Cell>
                       <Cell>{u.assignedGroup ? (u.assignedGroup.id + " - " + u.assignedGroup.name) : "Unassigned"}</Cell>
-                      {(state.is_admin || state.user?.permissions.assign_evaluator_groups) ?
+                      {(state.isAdmin || state.user?.permissions.assign_evaluator_groups) ?
                         <Cell>
                           <ActionMenu actions={[
                             {

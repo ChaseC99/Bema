@@ -1,21 +1,44 @@
+import { gql, useMutation } from "@apollo/client";
 import { Link } from "react-router-dom";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
+import { setCookie } from "../../util/cookies";
+import useAppError from "../../util/errors";
 import Button from "../Button/Button";
 import "./Header.css";
 
+type ReturnFromImpersonationResponse = {
+  returnFromImpersonation: {
+    success: boolean
+    token?: string
+  }
+}
+
+const RETURN_FROM_IMPERSONATION = gql`
+  mutation ReturnFromImpersonation {
+    returnFromImpersonation {
+      success
+      token
+    }
+  }
+`;
+
 function Header() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
+  const [returnFromImpersonation] = useMutation<ReturnFromImpersonationResponse>(RETURN_FROM_IMPERSONATION, { onError: handleGQLError });
 
   async function handleReturnToAccount() {
-    await request('POST', '/api/auth/assumeUserIdentity', {});
-  
-    window.location.reload();
+    const { data } = await returnFromImpersonation();
+
+    if (data?.returnFromImpersonation.success && data.returnFromImpersonation.token) {
+      setCookie('auth', data.returnFromImpersonation.token, 4);
+      window.location.reload();
+    }
   }
 
   return (
     <header>
-      {state.is_impersonated &&
+      {state.isImpersonated &&
         <div className="banner" data-testid="impersonation-banner">
           <span>You're assuming another user's identity.</span>
           <Button type="tertiary" role="button" action={handleReturnToAccount} text="Return to your account" inverse />
@@ -53,10 +76,10 @@ function Header() {
         </div>
         <div className="links" data-testid="nav-links">
           <span>
-            <Link to="/admin/dashboard" data-testid="/admin/dashboard">Dashboard</Link>
+            <Link to="/dashboard" data-testid="/admin/dashboard">Dashboard</Link>
           </span>
 
-          {(state.user?.permissions.judge_entries || !state.logged_in) &&
+          {(state.user?.permissions.judge_entries || !state.loggedIn) &&
             <span>
               <Link to="/judging" data-testid="/judging">Judge</Link>
             </span>
@@ -66,20 +89,20 @@ function Header() {
             <Link to="kb" data-testid="/kb">Resources</Link>
           </span>
 
-          {state.logged_in &&
+          {state.loggedIn &&
             <span>
-              <Link to={"/evaluator/" + state.user?.evaluator_id} data-testid="/evaluator">Profile</Link>
+              <Link to={"/evaluator/" + state.user?.id} data-testid="/evaluator">Profile</Link>
             </span>
           }
 
-          {state.logged_in &&
+          {state.loggedIn &&
             <span>
               <Link to="/logout" data-testid="/logout">Logout</Link>
             </span>
           }
 
 
-          {!state.logged_in &&
+          {!state.loggedIn &&
             <span>
               <Link to="/login" data-testid="/login">Login</Link>
             </span>

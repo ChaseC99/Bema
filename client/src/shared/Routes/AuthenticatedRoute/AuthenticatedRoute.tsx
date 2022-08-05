@@ -15,7 +15,7 @@ function AuthenticatedRoute(props: AuthenticatedRouteProps) {
   const { state } = useAppState();
   const location = useLocation();
 
-  if (state.logged_in) {
+  if (state.loggedIn) {
     return (
       <React.Fragment>
         {props.children}

@@ -14,7 +14,7 @@ function UnauthenticatedRoute(props: UnauthenticatedRouteProps) {
   const { state } = useAppState();
   const [searchParams] = useSearchParams();
 
-  if (!state.logged_in) {
+  if (!state.loggedIn) {
     return (
       <React.Fragment>
         {props.children}

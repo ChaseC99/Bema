@@ -79,7 +79,7 @@ func GetEvaluationProgressByContestId(ctx context.Context, contestId int) (*mode
 	}
 
 	// Get the number of entries per group
-	rows, err := db.DB.Query("SELECT assigned_group_id, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false AND flagged = false GROUP BY assigned_group_id ORDER BY assigned_group_id ASC;", contestId)
+	rows, err := db.DB.Query("SELECT assigned_group_id, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false AND flagged = false AND assigned_group_id IS NOT NULL GROUP BY assigned_group_id ORDER BY assigned_group_id ASC;", contestId)
 	if err != nil {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the entry count per group", err)
 	}
@@ -124,7 +124,7 @@ func GetEvaluationProgressByContestId(ctx context.Context, contestId int) (*mode
 
 func GetEvaluatorProgressByContestId(ctx context.Context, contestId int) ([]*model.EvaluatorProgress, error) {
 	// Get evaluator evaluation counts
-	rows, err := db.DB.Query("SELECT e.evaluator_id, e.group_id, COUNT(*) FROM evaluator e INNER JOIN evaluation ev ON ev.evaluator_id = e.evaluator_id INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = $1 AND en.disqualified = false AND en.flagged = false AND ev.evaluation_complete = true GROUP BY e.evaluator_id, e.group_id;", contestId)
+	rows, err := db.DB.Query("SELECT e.evaluator_id, e.group_id, (SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = $1 AND en.disqualified = false AND en.flagged = false AND ev.evaluation_complete = true AND ev.evaluator_id = e.evaluator_id) FROM evaluator e INNER JOIN evaluator_permissions p ON p.evaluator_id = e.evaluator_id INNER JOIN evaluator_group g ON g.group_id = e.group_id WHERE e.account_locked = false AND p.judge_entries = true AND e.group_id IS NOT NULL AND g.is_active = true ORDER BY e.nickname;", contestId)
 	if err != nil {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the evaluation counts per evaluator", err)
 	}
@@ -147,7 +147,7 @@ func GetEvaluatorProgressByContestId(ctx context.Context, contestId int) ([]*mod
 	}
 
 	// Get the number of entries per group
-	rows, err = db.DB.Query("SELECT assigned_group_id, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false AND flagged = false GROUP BY assigned_group_id ORDER BY assigned_group_id ASC;", contestId)
+	rows, err = db.DB.Query("SELECT assigned_group_id, COUNT(*) FROM entry WHERE contest_id = $1 AND disqualified = false AND flagged = false AND assigned_group_id IS NOT NULL GROUP BY assigned_group_id ORDER BY assigned_group_id ASC;", contestId)
 	if err != nil {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the entry count per group", err)
 	}

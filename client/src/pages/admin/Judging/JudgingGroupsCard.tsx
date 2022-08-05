@@ -148,7 +148,7 @@ function JudgingGroupsCard() {
       <article className="card col-12" style={{ paddingBottom: "16px" }}>
         <div className="card-header">
           <h3>Judging Groups</h3>
-          {(state.is_admin || state.user?.permissions.manage_judging_groups) &&
+          {(state.isAdmin || state.user?.permissions.manage_judging_groups) &&
             <Button type="tertiary" role="button" action={openCreateGroupModal} text="Create Group" />
           }
         </div>
@@ -172,7 +172,7 @@ function JudgingGroupsCard() {
                       <Cell>{g.id}</Cell>
                       <Cell>{g.name}</Cell>
                       <Cell>{g.isActive ? "Active" : "Inactive"}</Cell>
-                      {(state.is_admin || state.user?.permissions.manage_judging_groups) ? (
+                      {(state.isAdmin || state.user?.permissions.manage_judging_groups) ? (
                         <Cell>
                           <ActionMenu
                             actions={[

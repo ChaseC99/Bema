@@ -7,6 +7,7 @@ import "./ContestantProfile.css";
 import { gql, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
 import ExternalLink from "../../shared/ExternalLink";
+import Badge from "../../shared/Badge";
 
 type Entry = {
   id: string
@@ -106,7 +107,7 @@ function ContestantProfile() {
                       return (
                         <Row key={e.id}>
                           <Cell>{e.id}</Cell>
-                          <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                          <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isWinner ? <Badge type='primary' text='Winner' color='#9059ff' /> : ''}{e.isDisqualified ? <Badge type="primary" text="Disqualified" color="#d92916" /> : ''}</Cell>
                           <Cell>{e.contest.name}</Cell>
                           <Cell>{e.skillLevel}</Cell>
                           <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>

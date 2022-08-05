@@ -155,6 +155,11 @@ type KBArticle {
     The current draft revision to the article
     """
     draft: KBArticleDraft
+
+    """
+    A list of the five previous article revisions
+    """
+    drafts: [KBArticleDraft!]!
 }
 
 type KBArticleDraft {

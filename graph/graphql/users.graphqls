@@ -55,6 +55,16 @@ extend type Mutation {
   Assigns a user to a judging group. Returns a boolean indicating success. Requires Assign Evaluator Groups permission.
   """
   assignUserToJudgingGroup(userId: ID!, groupId: ID): Boolean!
+
+  """
+  Logs the current user in as the given user to impersonate. Requires Assume User Identities permission.
+  """
+  impersonateUser(id: ID!): ImpersonateUserResponse!
+
+  """
+  Returns the current user to their own account. Requires that the user is currently impersonating someone.
+  """
+  returnFromImpersonation: ImpersonateUserResponse!
 }
 
 """
@@ -77,9 +87,9 @@ type FullUserProfile {
   loggedIn: Boolean!
 
   """
-  The kaid of the actual user, if the current actor is being impersonated
+  The ID of the actual user, if the current actor is being impersonated
   """
-  originKaid: String
+  originId: Int
 
   """
   The logged in user
@@ -338,6 +348,18 @@ type LoginResponse {
 
   """
   The user's auth token
+  """
+  token: String
+}
+
+type ImpersonateUserResponse {
+  """
+  Indicates if the impersonation was successful
+  """
+  success: Boolean!
+
+  """
+  The impersonated user's auth token
   """
   token: String
 }

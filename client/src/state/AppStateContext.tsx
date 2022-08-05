@@ -30,11 +30,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
           loggedIn: data.loggedIn,
           isAdmin: data.isAdmin,
           isImpersonated: data.isImpersonated,
-          originKaid: data.originKaid,
-          logged_in: data.loggedIn,
-          is_admin: data.isAdmin,
-          is_impersonated: data.isImpersonated,
-          origin_kaid: data.originKaid,
+          originId: data.originKaid,
         }));
         setIsLoading(false);
       });

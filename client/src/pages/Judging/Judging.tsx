@@ -180,7 +180,7 @@ function Judging() {
             <React.Fragment>
               <h2 style={{ width: "100%", textAlign: "center", margin: "0" }}>{entryData?.entry?.title || DEFAULT_ENTRY.title}</h2>
               <p style={{ width: "100%", textAlign: "center" }}>Entry #{entryData?.entry?.id || DEFAULT_ENTRY.id}</p>
-              {state.logged_in &&
+              {state.loggedIn &&
                 <div className="container col-12" style={{ justifyContent: "flex-end", marginBottom: "24px" }}>
                   <Button type="tertiary" destructive text="Flag Entry" role="button" action={openFlagEntryModal} />
                 </div>
@@ -197,7 +197,7 @@ function Judging() {
               onSubmit={handleSubmit}
               submitLabel="Submit"
               cols={12}
-              disabled={!state.logged_in}
+              disabled={!state.loggedIn}
               loading={scoreEntryIsLoading}
               fields={[
                 {

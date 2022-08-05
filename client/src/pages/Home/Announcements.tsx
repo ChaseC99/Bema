@@ -186,7 +186,7 @@ function Announcements() {
             <h2 data-testid="announcement-header">Announcements</h2>
 
             <span className="section-actions" data-testid="announcement-section-actions">
-              {(state.user?.permissions.manage_announcements || state.is_admin) && <Button type="tertiary" role="button" action={showCreateAnnouncementModal} text="New Announcement" />}
+              {(state.user?.permissions.manage_announcements || state.isAdmin) && <Button type="tertiary" role="button" action={showCreateAnnouncementModal} text="New Announcement" />}
             </span>
           </div>
           <div className="section-body" data-testid="announcement-section-body">

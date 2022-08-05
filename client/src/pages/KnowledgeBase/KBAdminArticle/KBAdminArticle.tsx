@@ -10,6 +10,7 @@ import ActionMenu, { Action } from "../../../shared/ActionMenu";
 import Button from "../../../shared/Button";
 import { Form } from "../../../shared/Forms";
 import useAppState from "../../../state/useAppState";
+import InfoModal from "../../../shared/Modals/InfoModal/InfoModal";
 
 type Draft = {
   id: string
@@ -39,6 +40,7 @@ type Article = {
   isPublished: boolean
   hasDraft: boolean
   draft: Draft
+  drafts: Draft[]
 }
 
 type GetArticleResponse = {
@@ -64,6 +66,16 @@ const GET_ARTICLE = gql`
       isPublished
       hasDraft
       draft {
+        id
+        title
+        content
+        author {
+          id
+          nickname
+        }
+        lastUpdated
+      }
+      drafts {
         id
         title
         content
@@ -237,6 +249,8 @@ export default function KBAdminArticle() {
   const [showConfirmPublishModal, setShowConfirmPublishModal] = useState<boolean>(false);
   const [showConfirmDeleteArticleModal, setShowConfirmDeleteArticleModal] = useState<boolean>(false);
   const [shouldNavigate, setShouldNavigate] = useState<boolean>(false);
+  const [showDraftVersion, setShowDraftVersion] = useState<number | null>(null);
+  const [confirmRevertVersion, setConfirmRevertVersion] = useState<Draft | null>(null);
 
   const { loading: articleIsLoading, data: articleData, refetch: refetchArticle } = useQuery<GetArticleResponse>(GET_ARTICLE, {
     variables: {
@@ -432,16 +446,20 @@ export default function KBAdminArticle() {
                     </div>
                   </div>
 
-                  {articleData.article.hasDraft &&
+                  {articleData.article.drafts &&
                     <div className="card col-12">
                       <div className="card-header">
-                        <h3>Drafts</h3>
+                        <h3>Revision History</h3>
                       </div>
-                      <div className="card-body">
-                        <div>
-                          <p><strong>Draft #1</strong> by {articleData.article.draft.author.nickname} {(state.isAdmin || state.user?.permissions.publish_kb_content) && <Button type='tertiary' role='button' action={openConfirmPublishDraftModal} text='Publish' style={{ marginLeft: '16px' }} />}</p>
-                          <p><em style={{ fontSize: '12px' }}>Last Updated {articleData.article.draft.lastUpdated}</em></p>
-                        </div>
+                      <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {articleData.article.drafts.map((d, i) => {
+                          return (
+                            <div>
+                              <p><Button type='tertiary' role='button' action={() => { setShowDraftVersion(i) }} text={d.title} /> by {d.author.nickname} {(i === 0 && articleData.article.hasDraft && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={openConfirmPublishDraftModal} text='Publish' style={{ marginLeft: '16px' }} />} {(!articleData.article.hasDraft && i !== 0 && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={() => { setConfirmRevertVersion(d) }} text='Revert to this version' style={{ marginLeft: '16px' }} />}</p>
+                              <p><em style={{ fontSize: '12px' }}>Last Updated {d.lastUpdated}</em></p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   }
@@ -508,6 +526,18 @@ export default function KBAdminArticle() {
       {showConfirmDeleteArticleModal &&
         <ConfirmModal title="Delete article?" confirmLabel="Delete" handleConfirm={handleDeleteArticle} handleCancel={closeConfirmDeleteArticleModal} loading={deleteArticleIsLoading} destructive>
           <p>Are you sure you want to delete this article? This action cannot be undone.</p>
+        </ConfirmModal>
+      }
+
+      {showDraftVersion !== null &&
+        <InfoModal title={articleData?.article.drafts[showDraftVersion].title || "Article Draft"} handleClose={() => { setShowDraftVersion(null) }}>
+          {parse(articleData?.article.drafts[showDraftVersion].content.replaceAll("\n\n", "</p><p>").replaceAll("<p><br></p>", "") || "") || "This draft has no content."}
+        </InfoModal>
+      }
+
+      {confirmRevertVersion &&
+        <ConfirmModal title='Revert to this version?' confirmLabel='Revert' handleConfirm={async () => { await handleEditArticle({ title: confirmRevertVersion.title, content: confirmRevertVersion.content }); setConfirmRevertVersion(null); }} handleCancel={() => { setConfirmRevertVersion(null) }} loading={editArticleIsLoading} >
+          <p>Are you sure you want to revert to this version? This will create a new suggested draft with the same content as the version you selected.</p>
         </ConfirmModal>
       }
 

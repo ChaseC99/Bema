@@ -15,7 +15,7 @@ function ContestCard(props: ContestCardProps) {
 
   const actions: Action[] = [];
 
-  if (state.is_admin || state.user?.permissions.edit_contests) {
+  if (state.isAdmin || state.user?.permissions.edit_contests) {
     actions.push({
       role: "button",
       action: props.handleEditContest,
@@ -25,7 +25,7 @@ function ContestCard(props: ContestCardProps) {
     });
   }
 
-  if (state.is_admin || state.user?.permissions.delete_contests) {
+  if (state.isAdmin || state.user?.permissions.delete_contests) {
     actions.push({
       role: "button",
       action: props.handleDeleteContest,
@@ -49,7 +49,7 @@ function ContestCard(props: ContestCardProps) {
         <p><span className="label">Start:</span> {props.contest.startDate}</p>
         <p><span className="label">End:</span> {props.contest.endDate}</p>
         <p><Link to={"/entries/" + props.contest.id}>View Entries</Link></p>
-        {state.logged_in && <p><Link to={"/evaluations/" + state.user?.id + "/" + props.contest.id}>Evaluations</Link></p>}
+        {state.loggedIn && <p><Link to={"/evaluations/" + state.user?.id + "/" + props.contest.id}>Evaluations</Link></p>}
         <p><Link to={"/results/" + props.contest.id}>View Results</Link></p>
       </div>
     </article>

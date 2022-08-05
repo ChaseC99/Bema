@@ -181,13 +181,13 @@ function FlaggedEntriesCard() {
                 <Cell><Link to={"/contestants/" + e.author?.kaid}>{e.author?.name}</Link></Cell>
                 <Cell>{e.created}</Cell>
                 <Cell>
-                  {(state.is_admin || state.user?.permissions.edit_entries) ?
+                  {(state.isAdmin || state.user?.permissions.edit_entries) ?
                     <React.Fragment>
                       <Button type="tertiary" role="button" action={openApproveModal} text="Approve" data={e.id} style={{ marginRight: "24px" }} />
                       <Button type="tertiary" role="button" action={openDisqualifyModal} text="Disqualify" destructive data={e.id} style={{ marginRight: "24px" }} />
                     </React.Fragment>
                     : ""}
-                  {(state.is_admin || state.user?.permissions.delete_entries) ?
+                  {(state.isAdmin || state.user?.permissions.delete_entries) ?
                     <Button type="tertiary" role="button" action={openDeleteModal} text="Delete" destructive data={e.id} />
                     : ""}
                 </Cell>
