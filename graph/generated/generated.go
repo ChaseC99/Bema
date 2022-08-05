@@ -195,6 +195,7 @@ type ComplexityRoot struct {
 		Author      func(childComplexity int) int
 		Content     func(childComplexity int) int
 		Draft       func(childComplexity int) int
+		Drafts      func(childComplexity int) int
 		HasDraft    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		IsPublished func(childComplexity int) int
@@ -454,6 +455,7 @@ type KBArticleResolver interface {
 	IsPublished(ctx context.Context, obj *model.KBArticle) (*bool, error)
 	HasDraft(ctx context.Context, obj *model.KBArticle) (*bool, error)
 	Draft(ctx context.Context, obj *model.KBArticle) (*model.KBArticleDraft, error)
+	Drafts(ctx context.Context, obj *model.KBArticle) ([]*model.KBArticleDraft, error)
 }
 type KBArticleDraftResolver interface {
 	Author(ctx context.Context, obj *model.KBArticleDraft) (*model.User, error)
@@ -1241,6 +1243,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.KBArticle.Draft(childComplexity), true
+
+	case "KBArticle.drafts":
+		if e.complexity.KBArticle.Drafts == nil {
+			break
+		}
+
+		return e.complexity.KBArticle.Drafts(childComplexity), true
 
 	case "KBArticle.hasDraft":
 		if e.complexity.KBArticle.HasDraft == nil {
@@ -2837,88 +2846,89 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "graph/graphql/announcements.graphqls", Input: `extend type Query {
-    """
-    A list of all announcements
-    """
-    announcements: [Announcement!]!
+	"""
+	A list of all announcements
+	"""
+	announcements: [Announcement!]!
 
-    """
-    A single announcement
-    """
-    announcement(id: ID!): Announcement
+	"""
+	A single announcement
+	"""
+	announcement(id: ID!): Announcement
 }
 
 extend type Mutation {
-    """
-    Creates a new announcement message
-    """
-    createAnnouncement(input: AnnouncementInput!): Announcement
+	"""
+	Creates a new announcement message
+	"""
+	createAnnouncement(input: AnnouncementInput!): Announcement
 
-    """
-    Edits an existing announcement
-    """
-    editAnnouncement(id: ID!, input: AnnouncementInput!): Announcement
+	"""
+	Edits an existing announcement
+	"""
+	editAnnouncement(id: ID!, input: AnnouncementInput!): Announcement
 
-    """
-    Deletes an existing announcement
-    """
-    deleteAnnouncement(id: ID!): Announcement
+	"""
+	Deletes an existing announcement
+	"""
+	deleteAnnouncement(id: ID!): Announcement
 }
 
 """
 An announcement message
 """
 type Announcement {
-    """
-    A unique integer ID
-    """
-    id: ID!
+	"""
+	A unique integer ID
+	"""
+	id: ID!
 
-    """
-    The author of the announcement
-    """
-    author: User
+	"""
+	The author of the announcement
+	"""
+	author: User
 
-    """
-    The creation date of the announcement
-    """
-    created: String!
+	"""
+	The creation date of the announcement
+	"""
+	created: String!
 
-    """
-    The announcement title
-    """
-    title: String!
+	"""
+	The announcement title
+	"""
+	title: String!
 
-    """
-    The announcement body
-    """
-    content: String!
+	"""
+	The announcement body
+	"""
+	content: String!
 
-    """
-    Indicates whether the announcement is shown to unauthenticated users
-    """
-    isPublic: Boolean!
+	"""
+	Indicates whether the announcement is shown to unauthenticated users
+	"""
+	isPublic: Boolean!
 }
 
 """
 The input required to create or edit an announcement
 """
 input AnnouncementInput {
-    """
-    The title of the announcement
-    """
-    title: String!
+	"""
+	The title of the announcement
+	"""
+	title: String!
 
-    """
-    The message content
-    """
-    content: String!
+	"""
+	The message content
+	"""
+	content: String!
 
-    """
-    Indicates whether the announcement is shown to unauthenticated users
-    """
-    isPublic: Boolean!
-}`, BuiltIn: false},
+	"""
+	Indicates whether the announcement is shown to unauthenticated users
+	"""
+	isPublic: Boolean!
+}
+`, BuiltIn: false},
 	{Name: "graph/graphql/contestants.graphqls", Input: `extend type Query {
     """
     A single contestant
@@ -3960,6 +3970,11 @@ type KBArticle {
     The current draft revision to the article
     """
     draft: KBArticleDraft
+
+    """
+    A list of the five previous article revisions
+    """
+    drafts: [KBArticleDraft!]!
 }
 
 type KBArticleDraft {
@@ -10915,6 +10930,62 @@ func (ec *executionContext) fieldContext_KBArticle_draft(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _KBArticle_drafts(ctx context.Context, field graphql.CollectedField, obj *model.KBArticle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KBArticle_drafts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.KBArticle().Drafts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.KBArticleDraft)
+	fc.Result = res
+	return ec.marshalNKBArticleDraft2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraftᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KBArticle_drafts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KBArticle",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KBArticleDraft_id(ctx, field)
+			case "title":
+				return ec.fieldContext_KBArticleDraft_title(ctx, field)
+			case "content":
+				return ec.fieldContext_KBArticleDraft_content(ctx, field)
+			case "author":
+				return ec.fieldContext_KBArticleDraft_author(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_KBArticleDraft_lastUpdated(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KBArticleDraft", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _KBArticleDraft_id(ctx context.Context, field graphql.CollectedField, obj *model.KBArticleDraft) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_KBArticleDraft_id(ctx, field)
 	if err != nil {
@@ -11398,6 +11469,8 @@ func (ec *executionContext) fieldContext_KBSection_articles(ctx context.Context,
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14064,6 +14137,8 @@ func (ec *executionContext) fieldContext_Mutation_createArticle(ctx context.Cont
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14138,6 +14213,8 @@ func (ec *executionContext) fieldContext_Mutation_editArticle(ctx context.Contex
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14212,6 +14289,8 @@ func (ec *executionContext) fieldContext_Mutation_editArticleProperties(ctx cont
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14286,6 +14365,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteArticle(ctx context.Cont
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14360,6 +14441,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteArticleDraft(ctx context
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14434,6 +14517,8 @@ func (ec *executionContext) fieldContext_Mutation_publishArticle(ctx context.Con
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -14508,6 +14593,8 @@ func (ec *executionContext) fieldContext_Mutation_unpublishArticle(ctx context.C
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -18644,6 +18731,8 @@ func (ec *executionContext) fieldContext_Query_article(ctx context.Context, fiel
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -18721,6 +18810,8 @@ func (ec *executionContext) fieldContext_Query_articles(ctx context.Context, fie
 				return ec.fieldContext_KBArticle_hasDraft(ctx, field)
 			case "draft":
 				return ec.fieldContext_KBArticle_draft(ctx, field)
+			case "drafts":
+				return ec.fieldContext_KBArticle_drafts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KBArticle", field.Name)
 		},
@@ -24770,6 +24861,26 @@ func (ec *executionContext) _KBArticle(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "drafts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._KBArticle_drafts(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -27922,6 +28033,60 @@ func (ec *executionContext) marshalNKBArticle2ᚖgithubᚗcomᚋKAᚑChallenge�
 		return graphql.Null
 	}
 	return ec._KBArticle(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNKBArticleDraft2ᚕᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraftᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KBArticleDraft) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNKBArticleDraft2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraft(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNKBArticleDraft2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleDraft(ctx context.Context, sel ast.SelectionSet, v *model.KBArticleDraft) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._KBArticleDraft(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNKBArticleInput2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐKBArticleInput(ctx context.Context, v interface{}) (model.KBArticleInput, error) {

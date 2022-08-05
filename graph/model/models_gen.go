@@ -482,6 +482,8 @@ type KBArticle struct {
 	HasDraft *bool `json:"hasDraft"`
 	// The current draft revision to the article
 	Draft *KBArticleDraft `json:"draft"`
+	// A list of the five previous article revisions
+	Drafts []*KBArticleDraft `json:"drafts"`
 }
 
 type KBArticleDraft struct {

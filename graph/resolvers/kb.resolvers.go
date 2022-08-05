@@ -71,6 +71,21 @@ func (r *kBArticleResolver) Draft(ctx context.Context, obj *model.KBArticle) (*m
 	return draft, nil
 }
 
+func (r *kBArticleResolver) Drafts(ctx context.Context, obj *model.KBArticle) ([]*model.KBArticleDraft, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.EditKbContent) {
+		return []*model.KBArticleDraft{}, nil
+	}
+
+	drafts, err := models.GetKBArticleRecentDraftsByArticleId(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return drafts, nil
+}
+
 func (r *kBArticleDraftResolver) Author(ctx context.Context, obj *model.KBArticleDraft) (*model.User, error) {
 	user, err := r.Query().User(ctx, obj.Author.ID)
 	if err != nil {

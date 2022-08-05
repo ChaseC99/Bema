@@ -162,6 +162,8 @@ models:
         resolver: true
       draft:
         resolver: true
+      drafts:
+        resolver: true
   KBArticleDraft:
     fields:
       author:

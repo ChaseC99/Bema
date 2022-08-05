@@ -267,6 +267,27 @@ func GetKBArticleDraftByArticleId(ctx context.Context, articleId int) (*model.KB
 	return &d, nil
 }
 
+func GetKBArticleRecentDraftsByArticleId(ctx context.Context, articleId int) ([]*model.KBArticleDraft, error) {
+	drafts := []*model.KBArticleDraft{}
+
+	rows, err := db.DB.Query("SELECT draft_id, draft_name, draft_content, draft_author, to_char(draft_last_updated, $1) FROM kb_article_draft WHERE article_id = $2 ORDER BY draft_id DESC LIMIT 5;", util.DisplayFancyDateFormat, articleId)
+	if err != nil {
+		return []*model.KBArticleDraft{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving recent drafts for a KB article", err)
+	}
+
+	for rows.Next() {
+		d := NewKBArticleDraftModel()
+
+		if err := rows.Scan(&d.ID, &d.Title, &d.Content, &d.Author.ID, &d.LastUpdated); err != nil {
+			return []*model.KBArticleDraft{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving recent drafts for a KB article", err)
+		}
+
+		drafts = append(drafts, &d)
+	}
+
+	return drafts, nil
+}
+
 func CreateKBSection(ctx context.Context, input *model.KBSectionInput) (*int, error) {
 	row := db.DB.QueryRow("INSERT INTO kb_section (section_name, section_description, section_visibility) VALUES ($1, $2, $3) RETURNING section_id;", input.Name, input.Description, input.Visibility)
 
