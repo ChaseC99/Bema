@@ -91,7 +91,7 @@ function Dashboard() {
             {isLoading && <LoadingSpinner size="MEDIUM" testId="stats-spinner" />}
 
             {(!isLoading && progressData) && (
-              <article className={(state.is_admin || state.user?.permissions.view_admin_stats) ? "card col-12" : "card col-8"} data-testid="contest-summary">
+              <article className={(state.isAdmin || state.user?.permissions.view_admin_stats) ? "card col-12" : "card col-8"} data-testid="contest-summary">
                 <div className="card-header">
                   <h3>Contest Summary</h3>
                 </div>
@@ -99,17 +99,17 @@ function Dashboard() {
                   <ProgressRing label="Your Progress" count={progressData.judgingProgress.user.count} total={progressData.judgingProgress.user.total} />
                   <ProgressRing label="Group Progress" count={progressData.judgingProgress.group.count} total={progressData.judgingProgress.group.total} />
 
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) &&
+                  {(state.isAdmin || state.user?.permissions.view_admin_stats) &&
                     <ProgressRing label="Total Reviewed Entries" count={progressData.judgingProgress.entries?.count || 0} total={progressData.judgingProgress.entries?.total || 0} />
                   }
-                  {(state.is_admin || state.user?.permissions.view_admin_stats) &&
+                  {(state.isAdmin || state.user?.permissions.view_admin_stats) &&
                     <ProgressRing label="Total Evaluations" count={progressData.judgingProgress.evaluations?.count || 0} total={progressData.judgingProgress.evaluations?.total || 0} />
                   }
                 </div>
               </article>
             )}
 
-            {!isLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
+            {!isLoading && (state.isAdmin || state.user?.permissions.view_admin_stats) && (
               <Table label="Evaluator Progress" cols={6}>
                 <TableHead>
                   <Row>
@@ -134,7 +134,7 @@ function Dashboard() {
               </Table>
             )}
 
-            {!isLoading && (state.is_admin || state.user?.permissions.view_admin_stats) && (
+            {!isLoading && (state.isAdmin || state.user?.permissions.view_admin_stats) && (
               <article className="card col-6" data-testid="entry-stats">
                 <div className="card-header">
                   <h3>Entry Stats</h3>

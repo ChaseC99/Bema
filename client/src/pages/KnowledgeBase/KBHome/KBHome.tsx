@@ -50,7 +50,7 @@ function KBHome() {
           <h2>Bema Resources</h2>
 
           <span className="section-actions" data-testid="announcement-section-actions">
-            {(state.is_admin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
+            {(state.isAdmin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
               <Button type="tertiary" role="link" action={"/admin/kb"} text="Go to KB Admin" />
             }
           </span>

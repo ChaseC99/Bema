@@ -9,6 +9,7 @@ import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
+import Badge from "../../shared/Badge";
 
 type GetEntriesResponse = {
   entries: Entry[]
@@ -397,7 +398,7 @@ function Entries() {
             <h2 data-testid="entries-page-section-header">Entries</h2>
 
             <span className="section-actions" data-testid="entries-section-actions">
-              {(state.is_admin || state.user?.permissions.add_entries) &&
+              {(state.isAdmin || state.user?.permissions.add_entries) &&
                 <ActionMenu
                   actions={[
                     {
@@ -414,7 +415,7 @@ function Entries() {
                   label="Import Entries"
                 />
               }
-              {(state.is_admin || state.user?.permissions.assign_entry_groups) &&
+              {(state.isAdmin || state.user?.permissions.assign_entry_groups) &&
                 <ActionMenu
                   actions={[
                     {
@@ -456,7 +457,7 @@ function Entries() {
               </TableHead>
               <TableBody>
                 {entriesData.entries.map((e) => {
-                  if (!state.logged_in) {
+                  if (!state.loggedIn) {
                     return (
                       <Row key={e.id}>
                         <Cell>{e.id}</Cell>
@@ -468,7 +469,7 @@ function Entries() {
                   }
 
                   const actions: Action[] = [];
-                  if (state.is_admin || state.user?.permissions.edit_entries) {
+                  if (state.isAdmin || state.user?.permissions.edit_entries) {
                     actions.push({
                       role: "button",
                       action: showEditEntryForm,
@@ -477,7 +478,7 @@ function Entries() {
                     });
                   }
 
-                  if (state.is_admin || state.user?.permissions.delete_entries) {
+                  if (state.isAdmin || state.user?.permissions.delete_entries) {
                     actions.push({
                       role: "button",
                       action: openConfirmDeleteEntryModal,
@@ -489,7 +490,7 @@ function Entries() {
                   return (
                     <Row key={e.id}>
                       <Cell>{e.id}</Cell>
-                      <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                      <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isFlagged ? <Badge type="secondary" text="Flagged" color="#d92916" /> : ''}{e.isDisqualified ? <Badge type="primary" text="Disqualified" color="#d92916" /> : ''}</Cell>
                       <Cell><Link to={"/contestants/" + e.author.kaid}>{e.author.name}</Link></Cell>
                       <Cell>{e.created}</Cell>
                       <Cell>{e.skillLevel || ""}</Cell>
@@ -575,7 +576,7 @@ function Entries() {
                   value: g.id
                 }
               }) : [],
-              disabled: !(state.is_admin || state.user?.permissions.assign_entry_groups)
+              disabled: !(state.isAdmin || state.user?.permissions.assign_entry_groups)
             },
             {
               fieldType: "CHECKBOX",

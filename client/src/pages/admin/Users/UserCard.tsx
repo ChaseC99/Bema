@@ -18,7 +18,7 @@ function UserCard(props: UserCardProps) {
 
   const actions: Action[] = [];
 
-  if (state.is_admin || state.user?.permissions.edit_user_profiles) {
+  if (state.isAdmin || state.user?.permissions.edit_user_profiles) {
     actions.push({
       role: "button",
       action: props.handleEditProfile,
@@ -27,7 +27,7 @@ function UserCard(props: UserCardProps) {
     });
   }
 
-  if (state.is_admin || state.user?.permissions.change_user_passwords) {
+  if (state.isAdmin || state.user?.permissions.change_user_passwords) {
     actions.push({
       role: "button",
       action: props.handleChangePassword,
@@ -36,7 +36,7 @@ function UserCard(props: UserCardProps) {
     });
   }
 
-  if (state.is_admin) {
+  if (state.isAdmin) {
     actions.push({
       role: "button",
       action: props.handleEditPermissions,
@@ -45,12 +45,12 @@ function UserCard(props: UserCardProps) {
     });
   }
 
-  if ((state.is_admin || state.user?.permissions.assume_user_identities) && !props.user.accountLocked) {
+  if ((state.isAdmin || state.user?.permissions.assume_user_identities) && !props.user.accountLocked) {
     actions.push({
       role: "button",
       action: props.handleImpersonateUser,
       text: "Assume identity",
-      data: props.user.kaid
+      data: props.user.id
     });
   }
 

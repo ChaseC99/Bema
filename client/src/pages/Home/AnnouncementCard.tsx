@@ -31,7 +31,7 @@ function AnnouncementCard(props: AnnouncementCardProps) {
       <article className="card announcement-card" data-testid={props.testId}>
         <div className="card-header">
           <h3>{props.title}</h3>
-          {(state.is_admin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
+          {(state.isAdmin || state.user?.permissions.manage_announcements) && <ActionMenu actions={[
             {
               role: "button",
               action: props.handleEdit,

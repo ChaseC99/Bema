@@ -274,7 +274,7 @@ function Tasks() {
             <h2 data-testid="tasks-header">Tasks</h2>
 
             <span className="section-actions" data-testid="tasks-section-actions">
-              {(state.user?.permissions.edit_all_tasks || state.is_admin) && <Button type="primary" role="button" action={openNewTaskModal} text="New Task" />}
+              {(state.user?.permissions.edit_all_tasks || state.isAdmin) && <Button type="primary" role="button" action={openNewTaskModal} text="New Task" />}
             </span>
           </div>
           <div className="section-body" data-testid="tasks-section-body">

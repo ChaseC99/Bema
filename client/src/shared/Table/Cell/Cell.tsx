@@ -9,19 +9,19 @@ type CellProps = {
   permissions?: PermissionName[]
   requireAllPermissions?: boolean
   requireLoggedIn?: boolean
-  children?: React.ReactChild | React.ReactChild[]
+  children?: React.ReactChild | React.ReactChild[] | null
   testId?: string
 }
 
 function Cell(props: CellProps) {
   const { state } = useAppState();
 
-  if (props.requireLoggedIn && !state.logged_in) {
+  if (props.requireLoggedIn && !state.loggedIn) {
     return null;
   }
 
-  if (props.permissions && !state.is_admin) {
-    if (!state.logged_in) {
+  if (props.permissions && !state.isAdmin) {
+    if (!state.loggedIn) {
       return null;
     }
 

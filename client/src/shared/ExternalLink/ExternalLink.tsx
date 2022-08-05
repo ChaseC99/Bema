@@ -7,12 +7,8 @@ type ExternalLinkProps = {
 }
 
 function ExternalLink(props: ExternalLinkProps) {
-  const handleClick = () => {
-    window.open(props.to, props.target || "_blank");
-  }
-
   return (
-    <a href={props.to} target={props.target} onClick={handleClick}>{props.children}</a>
+    <a href={props.to} target={props.target || "_blank"} >{props.children}</a>
   );
 }
 

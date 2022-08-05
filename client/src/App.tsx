@@ -31,6 +31,7 @@ import Explorer from "./pages/admin/Explorer";
 import KBAdminHome from "./pages/KnowledgeBase/KBAdminHome";
 import KBAdminArticle from "./pages/KnowledgeBase/KBAdminArticle";
 import KBAdminSections from "./pages/KnowledgeBase/KBAdminSections";
+import InfoModal from "./shared/Modals/InfoModal/InfoModal";
 
 function App() {
   const { error, dispatch } = useAppError();
@@ -50,13 +51,18 @@ function App() {
 
       <Header />
 
-      {error ?
+      {(error && (error.type === "NOT FOUND" || error?.type === "ERROR")) ?
         <React.Fragment>
           { error.type === "NOT FOUND" && <ErrorPage type="NOT FOUND" message={error.message || "The requested resource does not exist"} /> }
           { error.type === "ERROR" && <ErrorPage type="ERROR" /> }
         </React.Fragment>
         :
         <div className="page-container">
+          {(error && error.type === "PERMISSION") &&
+            <InfoModal title="Error" handleClose={() => { dispatch(clearError()); }}>
+              <p>{error.message}</p>
+            </InfoModal>
+          }
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/judging" element={<Judging />} />
@@ -65,11 +71,14 @@ function App() {
             <Route path="/contestants/:contestantKaid" element={<AuthenticatedRoute><ContestantProfile /></AuthenticatedRoute>} />
 
             <Route path="/evaluator/:evaluatorId" element={<AuthenticatedRoute><EvaluatorProfile /></AuthenticatedRoute>} />
+            
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/contests" element={<Contests />} />
+            <Route path="/evaluations/:evaluatorId/:contestId" element={<AuthenticatedRoute><Evaluations /></AuthenticatedRoute>} />
+            <Route path="/entries/:contestId" element={<Entries />} />
+            <Route path="/results/:contestId" element={<Results />} />
 
-            <Route path="/admin/contests" element={<Contests />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/tasks" element={<ProtectedRoute permissions={["view_all_tasks"]}><Tasks /></ProtectedRoute>} />
-            <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<AuthenticatedRoute><Evaluations /></AuthenticatedRoute>} />
             <Route path="/admin/errors" element={<ProtectedRoute permissions={["view_errors"]}><AllErrors /></ProtectedRoute>} />
             <Route path="/admin/errors/:errorId" element={<ProtectedRoute permissions={["view_errors"]}><ErrorDetail /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute permissions={["view_all_users"]}><Users /></ProtectedRoute>} />
@@ -77,9 +86,6 @@ function App() {
             <Route path="/admin/judging" element={<ProtectedRoute permissions={["view_judging_settings"]}><AdminJudging /></ProtectedRoute>} />
             <Route path="/admin/skill-levels" element={<ProtectedRoute permissions={[]} requireAdmin><Levels /></ProtectedRoute>} />
             <Route path="/admin/graphql" element={<ProtectedRoute permissions={["view_errors"]}><Explorer /></ProtectedRoute>} />
-
-            <Route path="/entries/:contestId" element={<Entries />} />
-            <Route path="/results/:contestId" element={<Results />} />
 
             <Route path="/kb" element={<KBHome />} />
             <Route path="/kb/article/:articleId" element={<KBArticle />} />
@@ -104,8 +110,6 @@ function App() {
 
 // Used to hide all open action menus
 window.addEventListener("click", (e: MouseEvent) => {
-  e.preventDefault();
-
   const target = e.target as Node as Element;
   if (target.classList.contains("actions-dropdown-btn-icon") || target.classList.contains("actions-dropdown-btn-text")) {
     return;

@@ -3,7 +3,7 @@ import React from "react";
 import { createContext, Dispatch, Reducer } from "react";
 
 export type AppError = {
-  type: "NOT FOUND" | "ERROR"
+  type: "NOT FOUND" | "ERROR" | "PERMISSION"
   message?: string
 }
 
@@ -32,6 +32,12 @@ export const reducer: Reducer<AppError | null, Action> = (state: AppError | null
         return {
           type: "NOT FOUND",
           message: action.payload?.graphQLErrors[0].message || "The requested resource does not exist."
+        };
+      }
+      else if (action.payload?.graphQLErrors.length > 0 && action.payload?.graphQLErrors[0].extensions.status === 403) {
+        return {
+          type: "PERMISSION",
+          message: action.payload?.graphQLErrors[0].message || "You do not have permission to perform this action."
         };
       }
       else {

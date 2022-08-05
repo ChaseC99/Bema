@@ -23,20 +23,20 @@ function ProtectedRoute(props: ProtectedRouteProps) {
   const { state } = useAppState();
   const location = useLocation();
 
-  if (!state.logged_in) {
+  if (!state.loggedIn) {
     return (
       <Navigate to={"/login?continue=" + location.pathname} />
     );
   }
 
-  if (state.is_admin) {
+  if (state.isAdmin) {
     return (
       <React.Fragment>
         {props.children}
       </React.Fragment>
     );
   }
-  else if (props.requireAdmin && !state.is_admin) {
+  else if (props.requireAdmin && !state.isAdmin) {
     return (
       <ErrorPage type="NO PERMISSION" />
     );

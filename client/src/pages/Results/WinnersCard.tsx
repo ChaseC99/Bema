@@ -32,7 +32,7 @@ function WinnersCard(props: WinnersCardProps) {
               <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
               <Cell><Link to={"/contestant/" + e.author?.kaid}>{e.author?.name}</Link></Cell>
               <Cell>{e.skillLevel}</Cell>
-              {(state.user?.permissions.manage_winners || state.is_admin) ?
+              {(state.user?.permissions.manage_winners || state.isAdmin) ?
                 <Cell>
                   <ActionMenu testId={"winner-action-" + e.id} actions={[
                     {

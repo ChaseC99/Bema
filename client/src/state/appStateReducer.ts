@@ -41,9 +41,6 @@ export type User = {
   username: string
   nickname: string
   permissions: Permissions
-
-  // Deprecated fields
-  evaluator_id: number
 }
 
 export type AppState = {
@@ -51,13 +48,7 @@ export type AppState = {
   loggedIn: boolean
   isAdmin: boolean
   isImpersonated: boolean
-  originKaid: string | null
-  
-  // Deprecated fields
-  logged_in: boolean
-  is_admin: boolean
-  is_impersonated: boolean
-  origin_kaid: string | null
+  originId: string | null
 }
 
 export type Action =
@@ -77,11 +68,7 @@ export const reducer: Reducer<AppState, Action> = (state: AppState, action: Acti
         loggedIn: false,
         isAdmin: false,
         isImpersonated: false,
-        originKaid: null,
-        logged_in: false,
-        is_admin: false,
-        is_impersonated: false,
-        origin_kaid: null,
+        originId: null,
       }
     }
     case "LOGIN": {
@@ -98,11 +85,7 @@ export const initialState = {
   loggedIn: false,
   isAdmin: false,
   isImpersonated: false,
-  originKaid: null,
-  logged_in: false,
-  is_admin: false,
-  is_impersonated: false,
-  origin_kaid: null,
+  originId: null,
 }
 
 export function logout(): Action {
