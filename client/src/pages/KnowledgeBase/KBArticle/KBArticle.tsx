@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import parse from "html-react-parser";
 import LoadingSpinner from "../../../shared/LoadingSpinner";
 import "./KBArticle.css";
@@ -8,6 +8,7 @@ import Button from "../../../shared/Button";
 import ReactTimeAgo from 'react-time-ago';
 import { gql, useQuery } from "@apollo/client";
 import useAppError from "../../../util/errors";
+import Breadcrumbs from "../../../shared/Breadcrumbs";
 
 type Article = {
   id: string
@@ -58,14 +59,21 @@ function KBArticle() {
 
         {(!articleIsLoading && articleData) &&
           <React.Fragment>
-            <div className="section-header">
-              <h2>{articleData.article.title}</h2>
+            <div className="article-header">
+              <Breadcrumbs>
+                <Link to='/kb'>Knowledge Base</Link>
+                <span>{articleData.article.section.name}</span>
+                <span>{articleData.article.title}</span>
+              </Breadcrumbs>
+              <div className="section-header">
+                <h2>{articleData.article.title}</h2>
 
-              <span className="section-actions" data-testid="announcement-section-actions">
-                {(state.is_admin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
-                  <Button type="tertiary" role="link" action={"/admin/kb/article/" + articleData?.article.id} text="View in KB admin" />
-                }
-              </span>
+                <span className="section-actions" data-testid="announcement-section-actions">
+                  {(state.is_admin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
+                    <Button type="tertiary" role="link" action={"/admin/kb/article/" + articleData?.article.id} text="View in KB admin" />
+                  }
+                </span>
+              </div>
             </div>
             <div className="section-body" >
               <div className="card col-12">

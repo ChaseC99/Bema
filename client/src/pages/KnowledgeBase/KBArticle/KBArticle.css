@@ -1,3 +1,9 @@
+.article-header {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .article-content {
   padding: 20px 20px 20px 30px;
 }
