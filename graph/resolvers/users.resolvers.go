@@ -89,7 +89,59 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, id int, password 
 		return false, errs.NewForbiddenError(ctx, "You do not have permission to change user passwords.")
 	}
 
-	err := models.ChangeUserPasswordById(ctx, id, password)
+	requestedUser, err := models.GetUserById(ctx, id)
+	if err != nil {
+		return false, nil
+	}
+
+	permissions, err := models.GetUserPermissionsById(ctx, id)
+	if err != nil {
+		return false, nil
+	}
+
+	// Don't allow users to change passwords of users with higher permissions than them
+	var hasPermission bool
+	if user.IsAdmin || user.ID == id {
+		hasPermission = true
+	} else if (permissions.AddEntries && !user.Permissions.AddEntries) ||
+		(permissions.AddUsers && !user.Permissions.AddUsers) ||
+		(permissions.AssignEntryGroups && !user.Permissions.AssignEntryGroups) ||
+		(permissions.AssignEvaluatorGroups && !user.Permissions.AssignEvaluatorGroups) ||
+		(permissions.AssumeUserIdentities && !user.Permissions.AssumeUserIdentities) ||
+		(permissions.ChangeUserPasswords && !user.Permissions.ChangeUserPasswords) ||
+		(permissions.DeleteAllEvaluations && !user.Permissions.DeleteAllEvaluations) ||
+		(permissions.DeleteAllTasks && !user.Permissions.DeleteAllTasks) ||
+		(permissions.DeleteContests && !user.Permissions.DeleteContests) ||
+		(permissions.DeleteEntries && !user.Permissions.DeleteEntries) ||
+		(permissions.DeleteErrors && !user.Permissions.DeleteErrors) ||
+		(permissions.DeleteKbContent && !user.Permissions.DeleteKbContent) ||
+		(permissions.EditAllEvaluations && !user.Permissions.EditAllEvaluations) ||
+		(permissions.EditAllTasks && !user.Permissions.EditAllTasks) ||
+		(permissions.EditContests && !user.Permissions.EditContests) ||
+		(permissions.EditEntries && !user.Permissions.EditEntries) ||
+		(permissions.EditKbContent && !user.Permissions.EditKbContent) ||
+		(permissions.EditUserProfiles && !user.Permissions.EditUserProfiles) ||
+		(permissions.JudgeEntries && !user.Permissions.JudgeEntries) ||
+		(permissions.ManageAnnouncements && !user.Permissions.ManageAnnouncements) ||
+		(permissions.ManageJudgingCriteria && !user.Permissions.ManageJudgingCriteria) ||
+		(permissions.ManageJudgingGroups && !user.Permissions.ManageJudgingGroups) ||
+		(permissions.ManageWinners && !user.Permissions.ManageWinners) ||
+		(permissions.PublishKbContent && !user.Permissions.PublishKbContent) ||
+		(permissions.ViewAdminStats && !user.Permissions.ViewAdminStats) ||
+		(permissions.ViewAllEvaluations && !user.Permissions.ViewAllEvaluations) ||
+		(permissions.ViewAllTasks && !user.Permissions.ViewAllTasks) ||
+		(permissions.ViewAllUsers && !user.Permissions.ViewAllUsers) ||
+		(permissions.ViewErrors && !user.Permissions.ViewErrors) ||
+		(permissions.ViewJudgingSettings && !user.Permissions.ViewJudgingSettings) ||
+		(*requestedUser.IsAdmin && !user.IsAdmin) {
+		hasPermission = false
+	}
+
+	if !hasPermission {
+		return false, errs.NewForbiddenError(ctx, "You do not have permission to change this user's password.")
+	}
+
+	err = models.ChangeUserPasswordById(ctx, id, password)
 	if err != nil {
 		return false, err
 	}
