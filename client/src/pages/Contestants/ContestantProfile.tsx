@@ -107,7 +107,7 @@ function ContestantProfile() {
                       return (
                         <Row key={e.id}>
                           <Cell>{e.id}</Cell>
-                          <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isWinner ? <Badge type='primary' text='Winner' color='#9059ff' /> : ''}</Cell>
+                          <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isWinner ? <Badge type='primary' text='Winner' color='#9059ff' /> : ''}{e.isDisqualified ? <Badge type="primary" text="Disqualified" color="#d92916" /> : ''}</Cell>
                           <Cell>{e.contest.name}</Cell>
                           <Cell>{e.skillLevel}</Cell>
                           <Cell>{e.averageScore ? e.averageScore : "N/A"}</Cell>
