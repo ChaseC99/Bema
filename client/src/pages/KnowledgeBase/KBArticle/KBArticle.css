@@ -14,6 +14,7 @@
 
 .article-content a {
   word-break: break-word;
+  color: #1865f2 !important;
 }
 
 .article-content h2:not(:first-of-type) {
