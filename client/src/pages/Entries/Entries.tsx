@@ -9,6 +9,7 @@ import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
 import useAppState from "../../state/useAppState";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import useAppError from "../../util/errors";
+import Badge from "../../shared/Badge";
 
 type GetEntriesResponse = {
   entries: Entry[]
@@ -489,7 +490,7 @@ function Entries() {
                   return (
                     <Row key={e.id}>
                       <Cell>{e.id}</Cell>
-                      <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                      <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isFlagged ? <Badge type="secondary" text="Flagged" color="#d92916" /> : ''}{e.isDisqualified ? <Badge type="primary" text="Disqualified" color="#d92916" /> : ''}</Cell>
                       <Cell><Link to={"/contestants/" + e.author.kaid}>{e.author.name}</Link></Cell>
                       <Cell>{e.created}</Cell>
                       <Cell>{e.skillLevel || ""}</Cell>
