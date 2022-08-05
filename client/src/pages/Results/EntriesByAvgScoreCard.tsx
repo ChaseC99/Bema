@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import ActionMenu, { Action } from "../../shared/ActionMenu";
+import Badge from "../../shared/Badge";
 import Button from "../../shared/Button";
 import ExternalLink from "../../shared/ExternalLink";
 import { Cell, Row, Table, TableBody, TableHead } from "../../shared/Table";
@@ -76,7 +77,7 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
             return (
               <Row key={"entry-score-" + e.id}>
                 <Cell>{e.id}</Cell>
-                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
+                <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink>{e.isVotedByUser ? <Badge type='primary' text='Voted' color='#1865f2' /> : ''}</Cell>
                 <Cell>{e.author ? <Link to={"/contestants/" + e.author.kaid}>{e.author.name}</Link> : "Unknown Author"}</Cell>
                 <Cell>{e.evaluationCount}</Cell>
                 <Cell>{e.skillLevel}</Cell>
