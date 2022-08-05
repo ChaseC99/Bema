@@ -38,7 +38,7 @@ function Header() {
 
   return (
     <header>
-      {state.is_impersonated &&
+      {state.isImpersonated &&
         <div className="banner" data-testid="impersonation-banner">
           <span>You're assuming another user's identity.</span>
           <Button type="tertiary" role="button" action={handleReturnToAccount} text="Return to your account" inverse />
@@ -79,7 +79,7 @@ function Header() {
             <Link to="/dashboard" data-testid="/admin/dashboard">Dashboard</Link>
           </span>
 
-          {(state.user?.permissions.judge_entries || !state.logged_in) &&
+          {(state.user?.permissions.judge_entries || !state.loggedIn) &&
             <span>
               <Link to="/judging" data-testid="/judging">Judge</Link>
             </span>
@@ -89,20 +89,20 @@ function Header() {
             <Link to="kb" data-testid="/kb">Resources</Link>
           </span>
 
-          {state.logged_in &&
+          {state.loggedIn &&
             <span>
-              <Link to={"/evaluator/" + state.user?.evaluator_id} data-testid="/evaluator">Profile</Link>
+              <Link to={"/evaluator/" + state.user?.id} data-testid="/evaluator">Profile</Link>
             </span>
           }
 
-          {state.logged_in &&
+          {state.loggedIn &&
             <span>
               <Link to="/logout" data-testid="/logout">Logout</Link>
             </span>
           }
 
 
-          {!state.logged_in &&
+          {!state.loggedIn &&
             <span>
               <Link to="/login" data-testid="/login">Login</Link>
             </span>

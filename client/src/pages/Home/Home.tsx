@@ -8,7 +8,7 @@ function Home() {
 
   return (
     <div className="container col-12">
-      {state.logged_in && <Tasks />}
+      {state.loggedIn && <Tasks />}
       <Announcements />
     </div>
   );

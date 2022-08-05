@@ -233,7 +233,7 @@ function EvaluatorProfile() {
               </div>
             </div>
 
-            {((state.user?.id === evaluatorId) || state.is_admin || state.user?.permissions.view_all_users) &&
+            {((state.user?.id === evaluatorId) || state.isAdmin || state.user?.permissions.view_all_users) &&
               <div className="card col-6">
                 <div className="card-header">
                   <h3>Personal Information</h3>
@@ -252,7 +252,7 @@ function EvaluatorProfile() {
               </div>
             }
 
-            {((state.user?.id === evaluatorId) || state.is_admin || state.user?.permissions.view_all_users) &&
+            {((state.user?.id === evaluatorId) || state.isAdmin || state.user?.permissions.view_all_users) &&
               <div className="card col-6">
                 <div className="card-header">
                   <h3>Login Information</h3>

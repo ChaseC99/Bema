@@ -69,7 +69,7 @@ function KBArticle() {
                 <h2>{articleData.article.title}</h2>
 
                 <span className="section-actions" data-testid="announcement-section-actions">
-                  {(state.is_admin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
+                  {(state.isAdmin || state.user?.permissions.edit_kb_content || state.user?.permissions.delete_kb_content || state.user?.permissions.publish_kb_content) &&
                     <Button type="tertiary" role="link" action={"/admin/kb/article/" + articleData?.article.id} text="View in KB admin" />
                   }
                 </span>

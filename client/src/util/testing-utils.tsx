@@ -42,10 +42,6 @@ export function defaultAppStateLoggedOut(): AppState {
     isAdmin: false,
     isImpersonated: false,
     originId: null,
-    logged_in: false,
-    is_admin: false,
-    is_impersonated: false,
-    origin_id: null,
   }
 }
 
@@ -57,7 +53,6 @@ export function defaultAppStateLoggedOut(): AppState {
 export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permissions]+?: boolean}): AppState {
   return {
     user: {
-      evaluator_id: 10,
       id: "10",
       name: "Test Evaluator 10",
       kaid: "kaid_1234567890",
@@ -70,10 +65,6 @@ export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permis
     isAdmin: false,
     isImpersonated: false,
     originId: null,
-    logged_in: true,
-    is_admin: false,
-    is_impersonated: false,
-    origin_id: null,
   }
 }
 

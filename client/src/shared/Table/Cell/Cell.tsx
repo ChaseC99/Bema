@@ -16,12 +16,12 @@ type CellProps = {
 function Cell(props: CellProps) {
   const { state } = useAppState();
 
-  if (props.requireLoggedIn && !state.logged_in) {
+  if (props.requireLoggedIn && !state.loggedIn) {
     return null;
   }
 
-  if (props.permissions && !state.is_admin) {
-    if (!state.logged_in) {
+  if (props.permissions && !state.isAdmin) {
+    if (!state.loggedIn) {
       return null;
     }
 

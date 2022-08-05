@@ -25,7 +25,7 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
   }
 
   return (
-    <Table label={state.logged_in ? "Entries by Average Score" : "All Entries"} testId={props.testId}>
+    <Table label={state.loggedIn ? "Entries by Average Score" : "All Entries"} testId={props.testId}>
       <TableHead>
         <Row>
           <Cell>ID</Cell>
@@ -41,7 +41,7 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
       <TableBody>
 
         {props.entriesByAvgScore.map((e) => {
-          if (!state.logged_in) {
+          if (!state.loggedIn) {
             return (
               <Row key={"entry-score-" + e.id}>
                 <Cell>{e.id}</Cell>
@@ -53,7 +53,7 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
           else {
             const entryActions: Action[] = [];
             
-            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.is_admin)) && !e.isVotedByUser) {
+            if ((props.votingEnabled && (state.user?.permissions.judge_entries || state.isAdmin)) && !e.isVotedByUser) {
               entryActions.push({
                 role: "button",
                 action: props.showVoteForm,
@@ -63,7 +63,7 @@ function EntriesByAvgScoreCard(props: EntriesByAvgScoreProps) {
               });
             }
 
-            if ((state.is_admin || state.user?.permissions.manage_winners)) {
+            if ((state.isAdmin || state.user?.permissions.manage_winners)) {
               entryActions.push({
                 role: "button",
                 action: props.handleAddWinner,

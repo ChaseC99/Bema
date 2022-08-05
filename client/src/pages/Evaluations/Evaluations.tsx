@@ -133,10 +133,10 @@ function Evaluations() {
   const [deleteEvaluation, { loading: deleteEvaluationIsLoading }] = useMutation<EvaluationMutationResponse>(DELETE_EVALUATION, { onError: handleGQLError });
 
   useEffect(() => {
-    if (state.is_admin || state.user?.permissions.view_all_evaluations) {
+    if (state.isAdmin || state.user?.permissions.view_all_evaluations) {
       fetchUsers();
     }
-  }, [state.is_admin, state.user?.permissions.view_all_evaluations, fetchUsers]);
+  }, [state.isAdmin, state.user?.permissions.view_all_evaluations, fetchUsers]);
 
   const scoreValidator = (value: string) => {
     const scores = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
@@ -197,12 +197,12 @@ function Evaluations() {
     closeDeleteEvaluatioinModal();
   }
 
-  if ((evaluatorId !== state.user?.evaluator_id) && !state.user?.permissions.view_all_evaluations) {
+  if ((evaluatorId !== state.user?.id) && !state.user?.permissions.view_all_evaluations) {
     return (
       <ErrorPage type="NO PERMISSION" />
     );
   }
-  else if ((evaluatorId !== state.user?.evaluator_id) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
+  else if ((evaluatorId !== state.user?.id) && (!usersIsLoading && !usersData?.users.find((u) => u.id === evaluatorId))) {
     return (
       <ErrorPage type="NOT FOUND" message="This evaluator does not exist." />
     );
@@ -246,13 +246,13 @@ function Evaluations() {
                     <Cell header>Interpretation</Cell>
                     <Cell header>Total</Cell>
                     <Cell header>Skill Level</Cell>
-                    {(evaluationsData?.evaluations[0]?.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ? <Cell header></Cell> : ""}
+                    {(evaluationsData?.evaluations[0]?.canEdit || state.isAdmin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ? <Cell header></Cell> : ""}
                   </Row>
                 </TableHead>
                 <TableBody>
                   {evaluationsData ? evaluationsData.evaluations.map((e) => {
                     let evaluationActions: Action[] = [];
-                    if (e.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations) {
+                    if (e.canEdit || state.isAdmin || state.user?.permissions.edit_all_evaluations) {
                       evaluationActions.push({
                         role: "button",
                         action: openEditEvaluationModal,
@@ -261,7 +261,7 @@ function Evaluations() {
                       });
                     }
 
-                    if (state.is_admin || state.user?.permissions.delete_all_evaluations) {
+                    if (state.isAdmin || state.user?.permissions.delete_all_evaluations) {
                       evaluationActions.push({
                         role: "button",
                         action: openDeleteEvaluationModal,
@@ -281,7 +281,7 @@ function Evaluations() {
                         <Cell>{e.interpretation}</Cell>
                         <Cell>{e.creativity + e.complexity + e.execution + e.interpretation}</Cell>
                         <Cell>{e.skillLevel}</Cell>
-                        {(evaluationsData?.evaluations[0]?.canEdit || state.is_admin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ?
+                        {(evaluationsData?.evaluations[0]?.canEdit || state.isAdmin || state.user?.permissions.edit_all_evaluations || state.user?.permissions.delete_all_evaluations) ?
                           <Cell><ActionMenu actions={evaluationActions} /></Cell>
                           : ""}
                       </Row>

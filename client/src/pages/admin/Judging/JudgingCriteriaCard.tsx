@@ -158,7 +158,7 @@ function JudgingCriteriaCard() {
       <article className="card col-12" style={{ paddingBottom: "16px" }}>
         <div className="card-header">
           <h3>Judging Criteria</h3>
-          {(state.is_admin || state.user?.permissions.manage_judging_criteria) &&
+          {(state.isAdmin || state.user?.permissions.manage_judging_criteria) &&
             <Button type="tertiary" role="button" action={openCreateCriteriaModal} text="Create Judging Criteria" />
           }
         </div>
@@ -186,7 +186,7 @@ function JudgingCriteriaCard() {
                       <Cell>{c.description}</Cell>
                       <Cell>{c.isActive ? "Yes" : "No"}</Cell>
                       <Cell>{c.sortOrder}</Cell>
-                      {(state.is_admin || state.user?.permissions.manage_judging_criteria) ? 
+                      {(state.isAdmin || state.user?.permissions.manage_judging_criteria) ? 
                         <Cell>
                           <ActionMenu actions={[
                             {

@@ -31,10 +31,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
           isAdmin: data.isAdmin,
           isImpersonated: data.isImpersonated,
           originId: data.originKaid,
-          logged_in: data.loggedIn,
-          is_admin: data.isAdmin,
-          is_impersonated: data.isImpersonated,
-          origin_id: data.originId,
         }));
         setIsLoading(false);
       });

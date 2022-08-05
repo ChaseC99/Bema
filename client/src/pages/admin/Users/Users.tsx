@@ -447,7 +447,7 @@ function Users(props: UserProps) {
             <span className="section-actions">
               {!props.inactive && <Button type="tertiary" role="link" action="/admin/users/inactive" text="View deactivated users" />}
               {props.inactive && <Button type="tertiary" role="link" action="/admin/users" text="View active users" />}
-              {(state.is_admin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
+              {(state.isAdmin || state.user?.permissions.add_users) && <Button type="primary" role="button" action={openAddUserModal} text="Add User" />}
             </span>
           </div>
           <div className="section-body">
@@ -613,7 +613,7 @@ function Users(props: UserProps) {
               label: "Administrator",
               description: "Grants the user all permissions. Use this with caution.",
               defaultValue: editUser.isAdmin,
-              disabled: !state.is_admin,
+              disabled: !state.isAdmin,
               size: "LARGE"
             },
             {
@@ -623,7 +623,7 @@ function Users(props: UserProps) {
               label: "Disable account",
               description: "Makes the user account inactive. The user will no longer be able to login.",
               defaultValue: editUser.accountLocked,
-              disabled: !state.is_admin,
+              disabled: !state.isAdmin,
               size: "LARGE"
             },
             {
