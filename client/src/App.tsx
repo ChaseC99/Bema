@@ -65,11 +65,14 @@ function App() {
             <Route path="/contestants/:contestantKaid" element={<AuthenticatedRoute><ContestantProfile /></AuthenticatedRoute>} />
 
             <Route path="/evaluator/:evaluatorId" element={<AuthenticatedRoute><EvaluatorProfile /></AuthenticatedRoute>} />
+            
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/contests" element={<Contests />} />
+            <Route path="/evaluations/:evaluatorId/:contestId" element={<AuthenticatedRoute><Evaluations /></AuthenticatedRoute>} />
+            <Route path="/entries/:contestId" element={<Entries />} />
+            <Route path="/results/:contestId" element={<Results />} />
 
-            <Route path="/admin/contests" element={<Contests />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/tasks" element={<ProtectedRoute permissions={["view_all_tasks"]}><Tasks /></ProtectedRoute>} />
-            <Route path="/admin/evaluations/:evaluatorId/:contestId" element={<AuthenticatedRoute><Evaluations /></AuthenticatedRoute>} />
             <Route path="/admin/errors" element={<ProtectedRoute permissions={["view_errors"]}><AllErrors /></ProtectedRoute>} />
             <Route path="/admin/errors/:errorId" element={<ProtectedRoute permissions={["view_errors"]}><ErrorDetail /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute permissions={["view_all_users"]}><Users /></ProtectedRoute>} />
@@ -77,9 +80,6 @@ function App() {
             <Route path="/admin/judging" element={<ProtectedRoute permissions={["view_judging_settings"]}><AdminJudging /></ProtectedRoute>} />
             <Route path="/admin/skill-levels" element={<ProtectedRoute permissions={[]} requireAdmin><Levels /></ProtectedRoute>} />
             <Route path="/admin/graphql" element={<ProtectedRoute permissions={["view_errors"]}><Explorer /></ProtectedRoute>} />
-
-            <Route path="/entries/:contestId" element={<Entries />} />
-            <Route path="/results/:contestId" element={<Results />} />
 
             <Route path="/kb" element={<KBHome />} />
             <Route path="/kb/article/:articleId" element={<KBArticle />} />

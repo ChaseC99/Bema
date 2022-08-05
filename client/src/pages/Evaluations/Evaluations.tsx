@@ -223,7 +223,7 @@ function Evaluations() {
                   return {
                     role: "link",
                     text: u.nickname,
-                    action: "/admin/evaluations/" + u.id + "/" + contestId
+                    action: "/evaluations/" + u.id + "/" + contestId
                   }
                 }) : []}
                 label={usersData?.users.find((u) => u.id === evaluatorId)?.nickname || "Change User"}

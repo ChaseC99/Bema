@@ -53,7 +53,7 @@ function Header() {
         </div>
         <div className="links" data-testid="nav-links">
           <span>
-            <Link to="/admin/dashboard" data-testid="/admin/dashboard">Dashboard</Link>
+            <Link to="/dashboard" data-testid="/admin/dashboard">Dashboard</Link>
           </span>
 
           {(state.user?.permissions.judge_entries || !state.logged_in) &&
