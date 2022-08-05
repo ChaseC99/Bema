@@ -9,7 +9,7 @@ type CellProps = {
   permissions?: PermissionName[]
   requireAllPermissions?: boolean
   requireLoggedIn?: boolean
-  children?: React.ReactChild | React.ReactChild[]
+  children?: React.ReactChild | React.ReactChild[] | null
   testId?: string
 }
 
