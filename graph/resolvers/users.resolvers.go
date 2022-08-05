@@ -53,7 +53,7 @@ func (r *mutationResolver) Login(ctx context.Context, username string, password 
 	// The user provided a correct username / password, so log them in
 	if isValid {
 		// Generate an auth token
-		token := auth.CreateAuthToken(ctx, user.ID)
+		token := auth.CreateAuthToken(ctx, user.ID, nil)
 
 		return &model.LoginResponse{
 			Success:    true,
@@ -179,6 +179,121 @@ func (r *mutationResolver) AssignUserToJudgingGroup(ctx context.Context, userID 
 	return true, nil
 }
 
+func (r *mutationResolver) ImpersonateUser(ctx context.Context, id int) (*model.ImpersonateUserResponse, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if !auth.HasPermission(user, auth.AssumeUserIdentities) {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, errs.NewForbiddenError(ctx, "You do not have permission to impersonate users.")
+	}
+
+	// Don't allow impersonation chains
+	if user.IsImpersonated {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, errs.NewForbiddenError(ctx, "You are already impersonating a user.")
+	}
+
+	// Make sure the requested user exists
+	requestedUser, err := models.GetUserById(ctx, id)
+	if err != nil {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, err
+	}
+
+	permissions, err := models.GetUserPermissionsById(ctx, id)
+	if err != nil {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, err
+	}
+
+	// If the requested user has any permissions that the user does not have, don't let them impersonate
+	var hasPermission bool
+	if user.IsAdmin {
+		hasPermission = true
+	} else if (permissions.AddEntries && !user.Permissions.AddEntries) ||
+		(permissions.AddUsers && !user.Permissions.AddUsers) ||
+		(permissions.AssignEntryGroups && !user.Permissions.AssignEntryGroups) ||
+		(permissions.AssignEvaluatorGroups && !user.Permissions.AssignEvaluatorGroups) ||
+		(permissions.AssumeUserIdentities && !user.Permissions.AssumeUserIdentities) ||
+		(permissions.ChangeUserPasswords && !user.Permissions.ChangeUserPasswords) ||
+		(permissions.DeleteAllEvaluations && !user.Permissions.DeleteAllEvaluations) ||
+		(permissions.DeleteAllTasks && !user.Permissions.DeleteAllTasks) ||
+		(permissions.DeleteContests && !user.Permissions.DeleteContests) ||
+		(permissions.DeleteEntries && !user.Permissions.DeleteEntries) ||
+		(permissions.DeleteErrors && !user.Permissions.DeleteErrors) ||
+		(permissions.DeleteKbContent && !user.Permissions.DeleteKbContent) ||
+		(permissions.EditAllEvaluations && !user.Permissions.EditAllEvaluations) ||
+		(permissions.EditAllTasks && !user.Permissions.EditAllTasks) ||
+		(permissions.EditContests && !user.Permissions.EditContests) ||
+		(permissions.EditEntries && !user.Permissions.EditEntries) ||
+		(permissions.EditKbContent && !user.Permissions.EditKbContent) ||
+		(permissions.EditUserProfiles && !user.Permissions.EditUserProfiles) ||
+		(permissions.JudgeEntries && !user.Permissions.JudgeEntries) ||
+		(permissions.ManageAnnouncements && !user.Permissions.ManageAnnouncements) ||
+		(permissions.ManageJudgingCriteria && !user.Permissions.ManageJudgingCriteria) ||
+		(permissions.ManageJudgingGroups && !user.Permissions.ManageJudgingGroups) ||
+		(permissions.ManageWinners && !user.Permissions.ManageWinners) ||
+		(permissions.PublishKbContent && !user.Permissions.PublishKbContent) ||
+		(permissions.ViewAdminStats && !user.Permissions.ViewAdminStats) ||
+		(permissions.ViewAllEvaluations && !user.Permissions.ViewAllEvaluations) ||
+		(permissions.ViewAllTasks && !user.Permissions.ViewAllTasks) ||
+		(permissions.ViewAllUsers && !user.Permissions.ViewAllUsers) ||
+		(permissions.ViewErrors && !user.Permissions.ViewErrors) ||
+		(permissions.ViewJudgingSettings && !user.Permissions.ViewJudgingSettings) ||
+		(*requestedUser.IsAdmin && !user.IsAdmin) {
+		hasPermission = false
+	}
+
+	if !hasPermission {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, errs.NewForbiddenError(ctx, "You do not have permission to impersonate this user.")
+	}
+
+	// Create an auth token for the requested user
+	token := auth.CreateAuthToken(ctx, id, &user.ID)
+	return &model.ImpersonateUserResponse{
+		Success: true,
+		Token:   token,
+	}, nil
+}
+
+func (r *mutationResolver) ReturnFromImpersonation(ctx context.Context) (*model.ImpersonateUserResponse, error) {
+	user := auth.GetUserFromContext(ctx)
+
+	if user == nil || !user.IsImpersonated {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, errs.NewForbiddenError(ctx, "You are not currently impersonating anyone.")
+	}
+
+	// Remove the token of the impersonated user
+	err := auth.RemoveAuthTokensForUser(ctx, user.ID)
+	if err != nil {
+		return &model.ImpersonateUserResponse{
+			Success: false,
+			Token:   nil,
+		}, err
+	}
+
+	// Create and return a new token for the original user
+	token := auth.CreateAuthToken(ctx, *user.OriginID, nil)
+	return &model.ImpersonateUserResponse{
+		Success: true,
+		Token:   token,
+	}, nil
+}
+
 func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile, error) {
 	user := auth.GetUserFromContext(ctx)
 
@@ -187,7 +302,7 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 			IsAdmin:        false,
 			IsImpersonated: false,
 			LoggedIn:       false,
-			OriginKaid:     nil,
+			OriginID:       nil,
 			User:           nil,
 		}, nil
 	} else {
@@ -200,7 +315,7 @@ func (r *queryResolver) CurrentUser(ctx context.Context) (*model.FullUserProfile
 			IsAdmin:        *userData.IsAdmin,
 			IsImpersonated: user.IsImpersonated,
 			LoggedIn:       true,
-			OriginKaid:     user.OriginKaid,
+			OriginID:       user.OriginID,
 			User:           userData,
 		}, nil
 	}

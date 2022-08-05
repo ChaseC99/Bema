@@ -6,6 +6,7 @@ import LoadingSpinner from "../../../shared/LoadingSpinner";
 import { ConfirmModal, FormModal } from "../../../shared/Modals";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import useAppState from "../../../state/useAppState";
+import { setCookie } from "../../../util/cookies";
 import useAppError from "../../../util/errors";
 import request from "../../../util/request";
 import UserCard from "./UserCard";
@@ -260,6 +261,22 @@ const EDIT_USER_PERMISSIONS = gql`
   }
 `;
 
+type ImpersonateUserResponse = {
+  impersonateUser: {
+    success: boolean
+    token?: string
+  }
+}
+
+const IMPERSONATE_USER = gql`
+  mutation ImpersonateUser($id: ID!) {
+    impersonateUser(id: $id) {
+      success
+      token
+    }
+  }
+`;
+
 function Users(props: UserProps) {
   const { state } = useAppState();
   const { handleGQLError } = useAppError();
@@ -275,6 +292,7 @@ function Users(props: UserProps) {
   const [createUser, { loading: createUserIsLoading }] = useMutation<CreateUserResponse>(CREATE_USER, { onError: handleGQLError });
   const [editUserProfile, { loading: editUserProfileIsLoading }] = useMutation<EditUserProfileResponse>(EDIT_USER_PROFILE, { onError: handleGQLError });
   const [editUserPermissions, { loading: editUserPermissionsIsLoading }] = useMutation<EditUserPermissionsResponse>(EDIT_USER_PERMISSIONS, { onError: handleGQLError });
+  const [impersonateUser, { loading: impersonateUserIsLoading }] = useMutation<ImpersonateUserResponse>(IMPERSONATE_USER, { onError: handleGQLError });
 
   const openAddUserModal = () => {
     setShowAddUserModal(true);
@@ -402,12 +420,19 @@ function Users(props: UserProps) {
     setImpersonateUserId(null);
   }
 
-  const handleImpersonateUser = async (userKaid: number) => {
-    await request("POST", "/api/auth/assumeUserIdentity", {
-      evaluator_kaid: userKaid
+  const handleImpersonateUser = async (id: string) => {
+    const { data } = await impersonateUser({
+      variables: {
+        id: id,
+      },
     });
 
-    window.location.reload();
+    closeImpersonateUserModal();
+
+    if (data?.impersonateUser.success && data.impersonateUser.token) {
+      setCookie("auth", data.impersonateUser.token, 4);
+      window.location.reload();
+    }
   }
 
   return (
@@ -926,6 +951,7 @@ function Users(props: UserProps) {
           confirmLabel="Impersonate User"
           handleConfirm={handleImpersonateUser}
           handleCancel={closeImpersonateUserModal}
+          loading={impersonateUserIsLoading}
           data={impersonateUserId}
         >
           <p>Are you sure you want to impersonate this user?</p>

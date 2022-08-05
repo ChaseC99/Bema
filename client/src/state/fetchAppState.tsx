@@ -7,7 +7,7 @@ export async function fetchAppState() {
         isAdmin
         isImpersonated
         loggedIn
-        originKaid
+        originId
         user {
           id
           kaid

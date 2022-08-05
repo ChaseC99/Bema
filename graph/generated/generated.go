@@ -165,8 +165,13 @@ type ComplexityRoot struct {
 		IsAdmin        func(childComplexity int) int
 		IsImpersonated func(childComplexity int) int
 		LoggedIn       func(childComplexity int) int
-		OriginKaid     func(childComplexity int) int
+		OriginID       func(childComplexity int) int
 		User           func(childComplexity int) int
+	}
+
+	ImpersonateUserResponse struct {
+		Success func(childComplexity int) int
+		Token   func(childComplexity int) int
 	}
 
 	JudgingCriteria struct {
@@ -269,12 +274,14 @@ type ComplexityRoot struct {
 		EditUserPermissions      func(childComplexity int, id int, input model.EditUserPermissionsInput) int
 		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
 		FlagEntry                func(childComplexity int, id int) int
+		ImpersonateUser          func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
 		ImportEntry              func(childComplexity int, contestID int, kaid string) int
 		Login                    func(childComplexity int, username string, password string) int
 		Logout                   func(childComplexity int) int
 		PublishArticle           func(childComplexity int, id int) int
 		RemoveWinner             func(childComplexity int, id int) int
+		ReturnFromImpersonation  func(childComplexity int) int
 		ScoreEntry               func(childComplexity int, id int, input model.ScoreEntryInput) int
 		SetEntryLevel            func(childComplexity int, id int, skillLevel string) int
 		TransferEntryGroups      func(childComplexity int, contest int, prevGroup int, newGroup int) int
@@ -516,6 +523,8 @@ type MutationResolver interface {
 	EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error)
 	EditUserPermissions(ctx context.Context, id int, input model.EditUserPermissionsInput) (*model.Permissions, error)
 	AssignUserToJudgingGroup(ctx context.Context, userID int, groupID *int) (bool, error)
+	ImpersonateUser(ctx context.Context, id int) (*model.ImpersonateUserResponse, error)
+	ReturnFromImpersonation(ctx context.Context) (*model.ImpersonateUserResponse, error)
 }
 type QueryResolver interface {
 	Announcements(ctx context.Context) ([]*model.Announcement, error)
@@ -1118,12 +1127,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FullUserProfile.LoggedIn(childComplexity), true
 
-	case "FullUserProfile.originKaid":
-		if e.complexity.FullUserProfile.OriginKaid == nil {
+	case "FullUserProfile.originId":
+		if e.complexity.FullUserProfile.OriginID == nil {
 			break
 		}
 
-		return e.complexity.FullUserProfile.OriginKaid(childComplexity), true
+		return e.complexity.FullUserProfile.OriginID(childComplexity), true
 
 	case "FullUserProfile.user":
 		if e.complexity.FullUserProfile.User == nil {
@@ -1131,6 +1140,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FullUserProfile.User(childComplexity), true
+
+	case "ImpersonateUserResponse.success":
+		if e.complexity.ImpersonateUserResponse.Success == nil {
+			break
+		}
+
+		return e.complexity.ImpersonateUserResponse.Success(childComplexity), true
+
+	case "ImpersonateUserResponse.token":
+		if e.complexity.ImpersonateUserResponse.Token == nil {
+			break
+		}
+
+		return e.complexity.ImpersonateUserResponse.Token(childComplexity), true
 
 	case "JudgingCriteria.description":
 		if e.complexity.JudgingCriteria.Description == nil {
@@ -1883,6 +1906,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FlagEntry(childComplexity, args["id"].(int)), true
 
+	case "Mutation.impersonateUser":
+		if e.complexity.Mutation.ImpersonateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_impersonateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ImpersonateUser(childComplexity, args["id"].(int)), true
+
 	case "Mutation.importEntries":
 		if e.complexity.Mutation.ImportEntries == nil {
 			break
@@ -1949,6 +1984,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RemoveWinner(childComplexity, args["id"].(int)), true
+
+	case "Mutation.returnFromImpersonation":
+		if e.complexity.Mutation.ReturnFromImpersonation == nil {
+			break
+		}
+
+		return e.complexity.Mutation.ReturnFromImpersonation(childComplexity), true
 
 	case "Mutation.scoreEntry":
 		if e.complexity.Mutation.ScoreEntry == nil {
@@ -4310,6 +4352,16 @@ extend type Mutation {
   Assigns a user to a judging group. Returns a boolean indicating success. Requires Assign Evaluator Groups permission.
   """
   assignUserToJudgingGroup(userId: ID!, groupId: ID): Boolean!
+
+  """
+  Logs the current user in as the given user to impersonate. Requires Assume User Identities permission.
+  """
+  impersonateUser(id: ID!): ImpersonateUserResponse!
+
+  """
+  Returns the current user to their own account. Requires that the user is currently impersonating someone.
+  """
+  returnFromImpersonation: ImpersonateUserResponse!
 }
 
 """
@@ -4332,9 +4384,9 @@ type FullUserProfile {
   loggedIn: Boolean!
 
   """
-  The kaid of the actual user, if the current actor is being impersonated
+  The ID of the actual user, if the current actor is being impersonated
   """
-  originKaid: String
+  originId: Int
 
   """
   The logged in user
@@ -4593,6 +4645,18 @@ type LoginResponse {
 
   """
   The user's auth token
+  """
+  token: String
+}
+
+type ImpersonateUserResponse {
+  """
+  Indicates if the impersonation was successful
+  """
+  success: Boolean!
+
+  """
+  The impersonated user's auth token
   """
   token: String
 }
@@ -5577,6 +5641,21 @@ func (ec *executionContext) field_Mutation_editUserProfile_args(ctx context.Cont
 }
 
 func (ec *executionContext) field_Mutation_flagEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_impersonateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -9736,8 +9815,8 @@ func (ec *executionContext) fieldContext_FullUserProfile_loggedIn(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _FullUserProfile_originKaid(ctx context.Context, field graphql.CollectedField, obj *model.FullUserProfile) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FullUserProfile_originKaid(ctx, field)
+func (ec *executionContext) _FullUserProfile_originId(ctx context.Context, field graphql.CollectedField, obj *model.FullUserProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FullUserProfile_originId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9750,7 +9829,7 @@ func (ec *executionContext) _FullUserProfile_originKaid(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OriginKaid, nil
+		return obj.OriginID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9759,19 +9838,19 @@ func (ec *executionContext) _FullUserProfile_originKaid(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FullUserProfile_originKaid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FullUserProfile_originId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FullUserProfile",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9847,6 +9926,91 @@ func (ec *executionContext) fieldContext_FullUserProfile_user(ctx context.Contex
 				return ec.fieldContext_User_totalContestsJudged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ImpersonateUserResponse_success(ctx context.Context, field graphql.CollectedField, obj *model.ImpersonateUserResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImpersonateUserResponse_success(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ImpersonateUserResponse_success(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ImpersonateUserResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ImpersonateUserResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.ImpersonateUserResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImpersonateUserResponse_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ImpersonateUserResponse_token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ImpersonateUserResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15305,6 +15469,117 @@ func (ec *executionContext) fieldContext_Mutation_assignUserToJudgingGroup(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_impersonateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_impersonateUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ImpersonateUser(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ImpersonateUserResponse)
+	fc.Result = res
+	return ec.marshalNImpersonateUserResponse2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐImpersonateUserResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_impersonateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_ImpersonateUserResponse_success(ctx, field)
+			case "token":
+				return ec.fieldContext_ImpersonateUserResponse_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ImpersonateUserResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_impersonateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_returnFromImpersonation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_returnFromImpersonation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ReturnFromImpersonation(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ImpersonateUserResponse)
+	fc.Result = res
+	return ec.marshalNImpersonateUserResponse2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐImpersonateUserResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_returnFromImpersonation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_ImpersonateUserResponse_success(ctx, field)
+			case "token":
+				return ec.fieldContext_ImpersonateUserResponse_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ImpersonateUserResponse", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_add_entries(ctx context.Context, field graphql.CollectedField, obj *model.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_add_entries(ctx, field)
 	if err != nil {
@@ -19268,8 +19543,8 @@ func (ec *executionContext) fieldContext_Query_currentUser(ctx context.Context, 
 				return ec.fieldContext_FullUserProfile_isImpersonated(ctx, field)
 			case "loggedIn":
 				return ec.fieldContext_FullUserProfile_loggedIn(ctx, field)
-			case "originKaid":
-				return ec.fieldContext_FullUserProfile_originKaid(ctx, field)
+			case "originId":
+				return ec.fieldContext_FullUserProfile_originId(ctx, field)
 			case "user":
 				return ec.fieldContext_FullUserProfile_user(ctx, field)
 			}
@@ -24489,13 +24764,45 @@ func (ec *executionContext) _FullUserProfile(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "originKaid":
+		case "originId":
 
-			out.Values[i] = ec._FullUserProfile_originKaid(ctx, field, obj)
+			out.Values[i] = ec._FullUserProfile_originId(ctx, field, obj)
 
 		case "user":
 
 			out.Values[i] = ec._FullUserProfile_user(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var impersonateUserResponseImplementors = []string{"ImpersonateUserResponse"}
+
+func (ec *executionContext) _ImpersonateUserResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ImpersonateUserResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, impersonateUserResponseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ImpersonateUserResponse")
+		case "success":
+
+			out.Values[i] = ec._ImpersonateUserResponse_success(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "token":
+
+			out.Values[i] = ec._ImpersonateUserResponse_token(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -25417,6 +25724,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_assignUserToJudgingGroup(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "impersonateUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_impersonateUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "returnFromImpersonation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_returnFromImpersonation(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -27837,6 +28162,20 @@ func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.Selectio
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNImpersonateUserResponse2githubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐImpersonateUserResponse(ctx context.Context, sel ast.SelectionSet, v model.ImpersonateUserResponse) graphql.Marshaler {
+	return ec._ImpersonateUserResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNImpersonateUserResponse2ᚖgithubᚗcomᚋKAᚑChallengeᚑCouncilᚋBemaᚋgraphᚋmodelᚐImpersonateUserResponse(ctx context.Context, sel ast.SelectionSet, v *model.ImpersonateUserResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ImpersonateUserResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {

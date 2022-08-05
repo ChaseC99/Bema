@@ -31,6 +31,7 @@ import Explorer from "./pages/admin/Explorer";
 import KBAdminHome from "./pages/KnowledgeBase/KBAdminHome";
 import KBAdminArticle from "./pages/KnowledgeBase/KBAdminArticle";
 import KBAdminSections from "./pages/KnowledgeBase/KBAdminSections";
+import InfoModal from "./shared/Modals/InfoModal/InfoModal";
 
 function App() {
   const { error, dispatch } = useAppError();
@@ -50,13 +51,18 @@ function App() {
 
       <Header />
 
-      {error ?
+      {(error && (error.type === "NOT FOUND" || error?.type === "ERROR")) ?
         <React.Fragment>
           { error.type === "NOT FOUND" && <ErrorPage type="NOT FOUND" message={error.message || "The requested resource does not exist"} /> }
           { error.type === "ERROR" && <ErrorPage type="ERROR" /> }
         </React.Fragment>
         :
         <div className="page-container">
+          {(error && error.type === "PERMISSION") &&
+            <InfoModal title="Error" handleClose={() => { dispatch(clearError()); }}>
+              <p>{error.message}</p>
+            </InfoModal>
+          }
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/judging" element={<Judging />} />

@@ -405,10 +405,17 @@ type FullUserProfile struct {
 	IsImpersonated bool `json:"isImpersonated"`
 	// Indicates whether the actor is logged in
 	LoggedIn bool `json:"loggedIn"`
-	// The kaid of the actual user, if the current actor is being impersonated
-	OriginKaid *string `json:"originKaid"`
+	// The ID of the actual user, if the current actor is being impersonated
+	OriginID *int `json:"originId"`
 	// The logged in user
 	User *User `json:"user"`
+}
+
+type ImpersonateUserResponse struct {
+	// Indicates if the impersonation was successful
+	Success bool `json:"success"`
+	// The impersonated user's auth token
+	Token *string `json:"token"`
 }
 
 // Represents a criterium used for scoring entries

@@ -50,7 +50,7 @@ function UserCard(props: UserCardProps) {
       role: "button",
       action: props.handleImpersonateUser,
       text: "Assume identity",
-      data: props.user.kaid
+      data: props.user.id
     });
   }
 

@@ -1,16 +1,39 @@
+import { gql, useMutation } from "@apollo/client";
 import { Link } from "react-router-dom";
 import useAppState from "../../state/useAppState";
-import request from "../../util/request";
+import { setCookie } from "../../util/cookies";
+import useAppError from "../../util/errors";
 import Button from "../Button/Button";
 import "./Header.css";
 
+type ReturnFromImpersonationResponse = {
+  returnFromImpersonation: {
+    success: boolean
+    token?: string
+  }
+}
+
+const RETURN_FROM_IMPERSONATION = gql`
+  mutation ReturnFromImpersonation {
+    returnFromImpersonation {
+      success
+      token
+    }
+  }
+`;
+
 function Header() {
   const { state } = useAppState();
+  const { handleGQLError } = useAppError();
+  const [returnFromImpersonation] = useMutation<ReturnFromImpersonationResponse>(RETURN_FROM_IMPERSONATION, { onError: handleGQLError });
 
   async function handleReturnToAccount() {
-    await request('POST', '/api/auth/assumeUserIdentity', {});
-  
-    window.location.reload();
+    const { data } = await returnFromImpersonation();
+
+    if (data?.returnFromImpersonation.success && data.returnFromImpersonation.token) {
+      setCookie('auth', data.returnFromImpersonation.token, 4);
+      window.location.reload();
+    }
   }
 
   return (

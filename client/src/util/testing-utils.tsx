@@ -41,11 +41,11 @@ export function defaultAppStateLoggedOut(): AppState {
     loggedIn: false,
     isAdmin: false,
     isImpersonated: false,
-    originKaid: null,
+    originId: null,
     logged_in: false,
     is_admin: false,
     is_impersonated: false,
-    origin_kaid: null,
+    origin_id: null,
   }
 }
 
@@ -69,11 +69,11 @@ export function defaultAppStateLoggedIn(permissions?: {[Property in keyof Permis
     loggedIn: true,
     isAdmin: false,
     isImpersonated: false,
-    originKaid: null,
+    originId: null,
     logged_in: true,
     is_admin: false,
     is_impersonated: false,
-    origin_kaid: null,
+    origin_id: null,
   }
 }
 
