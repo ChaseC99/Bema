@@ -356,3 +356,9 @@
 .slider-ticks .tick p:first-child {
   font-size: 12px;
 }
+
+.ql-editor {
+  height: 600px;
+  max-height: 600px;
+  overflow: auto;
+}
