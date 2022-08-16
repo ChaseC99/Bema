@@ -42,3 +42,7 @@
 .kb-section-card .card-body a:hover {
   text-decoration: underline;
 }
+
+.kb-section-card .card-header a {
+  color: #21242c;
+}

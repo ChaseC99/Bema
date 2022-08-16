@@ -62,7 +62,7 @@ function KBArticle() {
             <div className="article-header">
               <Breadcrumbs>
                 <Link to='/kb'>Knowledge Base</Link>
-                <span>{articleData.article.section.name}</span>
+                <Link to={'/kb/section/' + articleData.article.section.id}>{articleData.article.section.name}</Link>
                 <span>{articleData.article.title}</span>
               </Breadcrumbs>
               <div className="section-header">

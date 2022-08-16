@@ -32,6 +32,7 @@ import KBAdminHome from "./pages/KnowledgeBase/KBAdminHome";
 import KBAdminArticle from "./pages/KnowledgeBase/KBAdminArticle";
 import KBAdminSections from "./pages/KnowledgeBase/KBAdminSections";
 import InfoModal from "./shared/Modals/InfoModal/InfoModal";
+import KBSection from "./pages/KnowledgeBase/KBSection";
 
 function App() {
   const { error, dispatch } = useAppError();
@@ -89,6 +90,7 @@ function App() {
 
             <Route path="/kb" element={<KBHome />} />
             <Route path="/kb/article/:articleId" element={<KBArticle />} />
+            <Route path="/kb/section/:sectionId" element={<KBSection />} />
             <Route path="/admin/kb" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminHome filter="ALL" /></ProtectedRoute>} />
             <Route path="/admin/kb/drafts" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminHome filter="DRAFTS" /></ProtectedRoute>} />
             <Route path="/admin/kb/article/:articleId" element={<ProtectedRoute permissions={["edit_kb_content"]}><KBAdminArticle /></ProtectedRoute>}></Route>

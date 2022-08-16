@@ -351,14 +351,14 @@ func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, 
 	}
 
 	if !*article.IsPublished && !auth.HasPermission(user, auth.EditKbContent) {
-		return nil, nil
+		return nil, errs.NewNotFoundError(ctx, "Oops! This article does not exist.")
 	}
 
 	if *article.Visibility == "Public" || (*article.Visibility == "Evaluators Only" && user != nil) || (*article.Visibility == "Admins Only" && auth.HasPermission(user, auth.EditKbContent)) {
 		return article, nil
 	}
 
-	return nil, nil
+	return nil, errs.NewNotFoundError(ctx, "Oops! This article does not exist.")
 }
 
 func (r *queryResolver) Articles(ctx context.Context, filter *string) ([]*model.KBArticle, error) {
