@@ -12,6 +12,16 @@ type TextEditorFieldProps = {
   testId?: string
 }
 
+const modules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+    ['link', 'image'],
+    ['clean']
+  ],
+}
+
 function TextEditorField(props: TextEditorFieldProps) {
   const handleChange = (value: string, delta: DeltaStatic, source: Sources, editor: ReactQuill.UnprivilegedEditor) => {
     props.onChange(props.name, value);
@@ -25,7 +35,7 @@ function TextEditorField(props: TextEditorFieldProps) {
         <p className="form-item-description">{props.description}</p>
       }
 
-      <ReactQuill theme="snow" value={props.value} onChange={handleChange} />
+      <ReactQuill theme="snow" value={props.value} onChange={handleChange} modules={modules} />
     </div>
   );
 }
