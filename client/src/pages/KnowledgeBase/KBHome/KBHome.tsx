@@ -63,7 +63,7 @@ function KBHome() {
               return (
                 <article className="card kb-section-card col-12">
                   <div className="card-header">
-                    <h3>{s.name}</h3>
+                    <Link to={'/kb/section/' + s.id}><h3>{s.name}</h3></Link>
                   </div>
                   {s.description &&
                     <div className="kb-section-description">
