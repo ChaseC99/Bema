@@ -48,7 +48,7 @@ function EvaluationsSidebar(props: EvaluationsSidebarProps) {
         <h3>Contests</h3>
         {contestsData?.contests.map((c) => {
           return (
-            <SidebarItem text={c.name.split("Contest: ")[1]} to={"/admin/evaluations/" + props.evaluatorId + "/" + c.id} key={"contest-sidebar-" + c.id} />
+            <SidebarItem text={c.name.split("Contest: ")[1]} to={"/evaluations/" + props.evaluatorId + "/" + c.id} key={"contest-sidebar-" + c.id} />
           );
         })}
       </div>
