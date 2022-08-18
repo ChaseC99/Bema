@@ -78,7 +78,11 @@ function KBArticle() {
             <div className="section-body" >
               <div className="card col-12">
                 <div className="card-body article-content">
-                  {parse(articleData.article.content.replaceAll("\n\n", "</p><p>").replaceAll("<p><br></p>", ""))}
+                  {articleData.article.content === "" ? 
+                    <p>This article does not have any published content.</p>
+                    :
+                    parse(articleData.article.content.replaceAll("\n\n", "</p><p>").replaceAll("<p><br></p>", ""))
+                  }
                 </div>
                 <div className="card-footer article-footer">
                   <p><em>Last updated <span><ReactTimeAgo date={new Date(articleData.article.lastUpdated)} locale="en-US" /></span>.</em></p>
