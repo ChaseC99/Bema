@@ -95,7 +95,7 @@ function Header() {
             </span>
           }
 
-          {state.loggedIn &&
+          {(state.loggedIn && !state.isImpersonated) &&
             <span>
               <Link to="/logout" data-testid="/logout">Logout</Link>
             </span>

@@ -11,6 +11,7 @@ import Button from "../../../shared/Button";
 import { Form } from "../../../shared/Forms";
 import useAppState from "../../../state/useAppState";
 import InfoModal from "../../../shared/Modals/InfoModal/InfoModal";
+import ReactTimeAgo from "react-time-ago";
 
 type Draft = {
   id: string
@@ -442,7 +443,7 @@ export default function KBAdminArticle() {
                       <p><strong>Section: </strong>{articleData.article.section.name}</p>
                       <p><strong>Visbility: </strong>{articleData.article.visibility}</p>
                       <p><strong>Author: </strong>{articleData.article.author.nickname}</p>
-                      <p><strong>Last Updated: </strong>{articleData.article.lastUpdated}</p>
+                      <p><strong>Last Updated: </strong><ReactTimeAgo date={new Date(articleData.article.lastUpdated)} locale="en-US"/></p>
                     </div>
                   </div>
 
@@ -454,9 +455,9 @@ export default function KBAdminArticle() {
                       <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {articleData.article.drafts.map((d, i) => {
                           return (
-                            <div>
+                            <div key={d.id}>
                               <p><Button type='tertiary' role='button' action={() => { setShowDraftVersion(i) }} text={d.title} /> by {d.author.nickname} {(i === 0 && articleData.article.hasDraft && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={openConfirmPublishDraftModal} text='Publish' style={{ marginLeft: '16px' }} />} {(!articleData.article.hasDraft && i !== 0 && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={() => { setConfirmRevertVersion(d) }} text='Revert to this version' style={{ marginLeft: '16px' }} />}</p>
-                              <p><em style={{ fontSize: '12px' }}>Last Updated {d.lastUpdated}</em></p>
+                              <p><em style={{ fontSize: '12px' }}>Last Updated <ReactTimeAgo date={new Date(d.lastUpdated)} locale="en-US"/></em></p>
                             </div>
                           );
                         })}
