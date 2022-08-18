@@ -61,7 +61,7 @@ function KBHome() {
           {!sectionsIsLoading &&
             sectionsData?.sections.map((s) => {
               return (
-                <article className="card kb-section-card col-12">
+                <article className="card kb-section-card col-12" key={s.id}>
                   <div className="card-header">
                     <Link to={'/kb/section/' + s.id}><h3>{s.name}</h3></Link>
                   </div>

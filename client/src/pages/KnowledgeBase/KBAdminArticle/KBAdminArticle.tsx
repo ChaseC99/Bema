@@ -454,7 +454,7 @@ export default function KBAdminArticle() {
                       <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {articleData.article.drafts.map((d, i) => {
                           return (
-                            <div>
+                            <div key={d.id}>
                               <p><Button type='tertiary' role='button' action={() => { setShowDraftVersion(i) }} text={d.title} /> by {d.author.nickname} {(i === 0 && articleData.article.hasDraft && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={openConfirmPublishDraftModal} text='Publish' style={{ marginLeft: '16px' }} />} {(!articleData.article.hasDraft && i !== 0 && (state.isAdmin || state.user?.permissions.publish_kb_content)) && <Button type='tertiary' role='button' action={() => { setConfirmRevertVersion(d) }} text='Revert to this version' style={{ marginLeft: '16px' }} />}</p>
                               <p><em style={{ fontSize: '12px' }}>Last Updated {d.lastUpdated}</em></p>
                             </div>
