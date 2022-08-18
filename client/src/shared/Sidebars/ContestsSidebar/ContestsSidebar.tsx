@@ -49,7 +49,7 @@ function ContestsSidebar(props: ContestSidebarProps) {
 
         {data?.contests.map((c) => {
           return (
-            <SidebarItem text={c.name.split("Contest: ")[1]} to={props.rootPath + "/" + c.id} key={"contest-sidebar-" + c.id} />
+            <SidebarItem text={c.name.split("Contest: ")[1]} to={props.rootPath + "/" + c.id} key={"contest-sidebar-" + c.id} exact />
           );
         })}
       </div>
