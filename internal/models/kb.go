@@ -8,7 +8,6 @@ import (
 	"github.com/KA-Challenge-Council/Bema/graph/model"
 	"github.com/KA-Challenge-Council/Bema/internal/db"
 	"github.com/KA-Challenge-Council/Bema/internal/errors"
-	"github.com/KA-Challenge-Council/Bema/internal/util"
 )
 
 func NewKBSectionModel() model.KBSection {
@@ -64,7 +63,7 @@ func GetAllKBSections(ctx context.Context) ([]*model.KBSection, error) {
 func GetAllKBArticles(ctx context.Context) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article ORDER BY section_id ASC, article_id ASC;", util.DisplayFancyDateFormat)
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article ORDER BY section_id ASC, article_id ASC;")
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of KB articles", err)
 	}
@@ -85,7 +84,7 @@ func GetAllKBArticles(ctx context.Context) ([]*model.KBArticle, error) {
 func GetAllKBArticlesWithDrafts(ctx context.Context) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT a.article_id, a.section_id, a.article_name, a.article_content, a.article_author, to_char(a.article_last_updated, $1), a.article_visibility, a.is_published, d.draft_id FROM kb_article a INNER JOIN kb_article_draft d ON d.article_id = a.article_id WHERE d.is_published = false ORDER BY d.draft_last_updated DESC;", util.DisplayFancyDateFormat)
+	rows, err := db.DB.Query("SELECT a.article_id, a.section_id, a.article_name, a.article_content, a.article_author, a.article_last_updated, a.article_visibility, a.is_published, d.draft_id FROM kb_article a INNER JOIN kb_article_draft d ON d.article_id = a.article_id WHERE d.is_published = false ORDER BY d.draft_last_updated DESC;")
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of KB articles with drafts", err)
 	}
@@ -160,7 +159,7 @@ func GetKBSectionById(ctx context.Context, id int) (*model.KBSection, error) {
 }
 
 func GetKBArticleById(ctx context.Context, id int) (*model.KBArticle, error) {
-	row := db.DB.QueryRow("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE article_id = $2", util.DisplayFancyDateFormat, id)
+	row := db.DB.QueryRow("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE article_id = $1", id)
 
 	a := NewKBArticleModel()
 	if err := row.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
@@ -193,7 +192,7 @@ func CheckKBArticleHasDraft(ctx context.Context, id int) (bool, error) {
 func GetPublicKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE section_id = $2 AND article_visibility = 'Public' AND is_published = true ORDER BY article_id ASC", util.DisplayFancyDateFormat, sectionId)
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 AND article_visibility = 'Public' AND is_published = true ORDER BY article_id ASC", sectionId)
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
 	}
@@ -214,7 +213,7 @@ func GetPublicKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.
 func GetEvaluatorKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE section_id = $2 AND (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND is_published = true ORDER BY article_id ASC", util.DisplayFancyDateFormat, sectionId)
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 AND (article_visibility = 'Public' OR article_visibility = 'Evaluators Only') AND is_published = true ORDER BY article_id ASC", sectionId)
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
 	}
@@ -235,7 +234,7 @@ func GetEvaluatorKBArticlesBySection(ctx context.Context, sectionId int) ([]*mod
 func GetAdminKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.KBArticle, error) {
 	articles := []*model.KBArticle{}
 
-	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, to_char(article_last_updated, $1), article_visibility, is_published FROM kb_article WHERE section_id = $2 ORDER BY article_id ASC", util.DisplayFancyDateFormat, sectionId)
+	rows, err := db.DB.Query("SELECT article_id, section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published FROM kb_article WHERE section_id = $1 ORDER BY article_id ASC", sectionId)
 	if err != nil {
 		return []*model.KBArticle{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving articles for a KB section", err)
 	}
@@ -254,7 +253,7 @@ func GetAdminKBArticlesBySection(ctx context.Context, sectionId int) ([]*model.K
 }
 
 func GetKBArticleDraftByArticleId(ctx context.Context, articleId int) (*model.KBArticleDraft, error) {
-	row := db.DB.QueryRow("SELECT draft_id, draft_name, draft_content, draft_author, to_char(draft_last_updated, $1) FROM kb_article_draft WHERE article_id = $2 AND is_published = false ORDER BY draft_id DESC LIMIT 1;", util.DisplayFancyDateFormat, articleId)
+	row := db.DB.QueryRow("SELECT draft_id, draft_name, draft_content, draft_author, draft_last_updated FROM kb_article_draft WHERE article_id = $1 AND is_published = false ORDER BY draft_id DESC LIMIT 1;", articleId)
 
 	d := NewKBArticleDraftModel()
 	if err := row.Scan(&d.ID, &d.Title, &d.Content, &d.Author.ID, &d.LastUpdated); err != nil {
@@ -270,7 +269,7 @@ func GetKBArticleDraftByArticleId(ctx context.Context, articleId int) (*model.KB
 func GetKBArticleRecentDraftsByArticleId(ctx context.Context, articleId int) ([]*model.KBArticleDraft, error) {
 	drafts := []*model.KBArticleDraft{}
 
-	rows, err := db.DB.Query("SELECT draft_id, draft_name, draft_content, draft_author, to_char(draft_last_updated, $1) FROM kb_article_draft WHERE article_id = $2 ORDER BY draft_id DESC LIMIT 5;", util.DisplayFancyDateFormat, articleId)
+	rows, err := db.DB.Query("SELECT draft_id, draft_name, draft_content, draft_author, draft_last_updated FROM kb_article_draft WHERE article_id = $1 ORDER BY draft_id DESC LIMIT 5;", articleId)
 	if err != nil {
 		return []*model.KBArticleDraft{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving recent drafts for a KB article", err)
 	}
@@ -320,7 +319,7 @@ func DeleteKBSectionById(ctx context.Context, id int) error {
 }
 
 func CreateKBArticle(ctx context.Context, input *model.KBArticleInput, authorId int) (*int, error) {
-	articleRow := db.DB.QueryRow("INSERT INTO kb_article (section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING article_id;", input.Section, input.Title, "", authorId, time.Now(), input.Visibility, false)
+	articleRow := db.DB.QueryRow("INSERT INTO kb_article (section_id, article_name, article_content, article_author, article_last_updated, article_visibility, is_published) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING article_id;", input.Section, input.Title, "", authorId, time.Now().UTC(), input.Visibility, false)
 
 	var id int
 	if err := articleRow.Scan(&id); err != nil {
@@ -349,14 +348,14 @@ func EditKBArticle(ctx context.Context, articleId int, input *model.KBArticleInp
 
 	if draftId == nil {
 		// A draft does not exist, so create a new one
-		_, err := db.DB.Exec("INSERT INTO kb_article_draft (article_id, draft_name, draft_content, draft_author, draft_last_updated, is_published) VALUES ($1, $2, $3, $4, $5, $6);", articleId, input.Title, input.Content, authorId, time.Now(), false)
+		_, err := db.DB.Exec("INSERT INTO kb_article_draft (article_id, draft_name, draft_content, draft_author, draft_last_updated, is_published) VALUES ($1, $2, $3, $4, $5, $6);", articleId, input.Title, input.Content, authorId, time.Now().UTC(), false)
 
 		if err != nil {
 			return errors.NewInternalError(ctx, "An unexpected error occurred while creating a KB article draft", err)
 		}
 	} else {
 		// A draft already exists, so just update it
-		_, err := db.DB.Exec("UPDATE kb_article_draft SET draft_name = $1, draft_content = $2, draft_author = $3, draft_last_updated = $4 WHERE draft_id = $5;", input.Title, input.Content, authorId, time.Now(), draftId)
+		_, err := db.DB.Exec("UPDATE kb_article_draft SET draft_name = $1, draft_content = $2, draft_author = $3, draft_last_updated = $4 WHERE draft_id = $5;", input.Title, input.Content, authorId, time.Now().UTC(), draftId)
 
 		if err != nil {
 			return errors.NewInternalError(ctx, "An unexpected error occurred while updating a KB article draft", err)
@@ -409,7 +408,7 @@ func PublishKBArticle(ctx context.Context, id int) error {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while publishing a KB article", err)
 	}
 
-	_, err := db.DB.Exec("UPDATE kb_article SET article_name = $1, article_content = $2, article_author = $3, article_last_updated = $4, is_published = $5 WHERE article_id = $6", draftName, draftContent, draftAuthor, time.Now(), true, id)
+	_, err := db.DB.Exec("UPDATE kb_article SET article_name = $1, article_content = $2, article_author = $3, article_last_updated = $4, is_published = $5 WHERE article_id = $6", draftName, draftContent, draftAuthor, time.Now().UTC(), true, id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while publishing a KB article", err)
 	}
