@@ -219,7 +219,7 @@ func ValidateUserLogin(password string, hashedPassword string) bool {
 	return err == nil
 }
 
-func CreateAuthToken(ctx context.Context, userId int, impersonatedById *int) *string {
+func CreateAuthToken(ctx context.Context, userId int, impersonatedById *int, updateLastLogin bool) *string {
 	token := uuid.NewString()
 
 	_, err := db.DB.Exec("INSERT INTO user_session (user_id, token, expires, impersonated_by_user) VALUES ($1, $2, $3, $4);", userId, token, time.Now().Add(14400000000000), impersonatedById)
@@ -227,9 +227,11 @@ func CreateAuthToken(ctx context.Context, userId int, impersonatedById *int) *st
 		return nil
 	}
 
-	_, err = db.DB.Exec("UPDATE evaluator SET logged_in_tstz = $1 WHERE evaluator_id = $2;", time.Now(), userId)
-	if err != nil {
-		return nil
+	if updateLastLogin {
+		_, err = db.DB.Exec("UPDATE evaluator SET logged_in_tstz = $1 WHERE evaluator_id = $2;", time.Now(), userId)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return &token

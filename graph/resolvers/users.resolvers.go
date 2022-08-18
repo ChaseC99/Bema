@@ -53,7 +53,7 @@ func (r *mutationResolver) Login(ctx context.Context, username string, password 
 	// The user provided a correct username / password, so log them in
 	if isValid {
 		// Generate an auth token
-		token := auth.CreateAuthToken(ctx, user.ID, nil)
+		token := auth.CreateAuthToken(ctx, user.ID, nil, true)
 
 		return &model.LoginResponse{
 			Success:    true,
@@ -312,7 +312,7 @@ func (r *mutationResolver) ImpersonateUser(ctx context.Context, id int) (*model.
 	}
 
 	// Create an auth token for the requested user
-	token := auth.CreateAuthToken(ctx, id, &user.ID)
+	token := auth.CreateAuthToken(ctx, id, &user.ID, false)
 	return &model.ImpersonateUserResponse{
 		Success: true,
 		Token:   token,
@@ -339,7 +339,7 @@ func (r *mutationResolver) ReturnFromImpersonation(ctx context.Context) (*model.
 	}
 
 	// Create and return a new token for the original user
-	token := auth.CreateAuthToken(ctx, *user.OriginID, nil)
+	token := auth.CreateAuthToken(ctx, *user.OriginID, nil, true)
 	return &model.ImpersonateUserResponse{
 		Success: true,
 		Token:   token,
