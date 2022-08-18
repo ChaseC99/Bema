@@ -74,6 +74,10 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
+	if user.IsImpersonated {
+		return false, errs.NewForbiddenError(ctx, "You cannot log out an impersonated user. Use the \"Return to your account\" feature instead.")
+	}
+
 	err := auth.RemoveAuthTokensForUser(ctx, user.ID)
 	if err != nil {
 		return false, errs.NewInternalError(ctx, "An unexpected error occurred while logging out a user", err)
