@@ -114,7 +114,7 @@ func Middleware() func(http.Handler) http.Handler {
 			} else {
 				// Look up the user by their session token
 				var impersonatedBy *int
-				row := db.DB.QueryRow("SELECT e.evaluator_id, e.evaluator_kaid, e.evaluator_name, e.nickname, e.username, e.is_admin, p.view_admin_stats, p.edit_contests, p.delete_contests, p.add_entries, p.edit_entries, p.delete_entries, p.assign_entry_groups, p.view_all_evaluations, p.edit_all_evaluations, p.delete_all_evaluations, p.manage_winners, p.view_all_tasks, p.edit_all_tasks, p.delete_all_tasks, p.view_judging_settings, p.manage_judging_groups, p.assign_evaluator_groups, p.manage_judging_criteria, p.view_all_users, p.edit_user_profiles, p.change_user_passwords, p.assume_user_identities, p.add_users, p.view_errors, p.delete_errors, p.judge_entries, p.edit_kb_content, p.delete_kb_content, p.publish_kb_content, p.manage_announcements, s.impersonated_by_user FROM user_session s INNER JOIN evaluator e ON s.user_id = e.evaluator_id INNER JOIN evaluator_permissions p ON p.evaluator_id = e.evaluator_id WHERE s.token = $1 AND s.expires > $2 AND e.account_locked = false;", token.Value, time.Now())
+				row := db.DB.QueryRow("SELECT e.evaluator_id, e.evaluator_kaid, e.evaluator_name, e.nickname, e.username, e.is_admin, p.view_admin_stats, p.edit_contests, p.delete_contests, p.add_entries, p.edit_entries, p.delete_entries, p.assign_entry_groups, p.view_all_evaluations, p.edit_all_evaluations, p.delete_all_evaluations, p.manage_winners, p.view_all_tasks, p.edit_all_tasks, p.delete_all_tasks, p.view_judging_settings, p.manage_judging_groups, p.assign_evaluator_groups, p.manage_judging_criteria, p.view_all_users, p.edit_user_profiles, p.change_user_passwords, p.assume_user_identities, p.add_users, p.view_errors, p.delete_errors, p.judge_entries, p.edit_kb_content, p.delete_kb_content, p.publish_kb_content, p.manage_announcements, s.impersonated_by_user FROM user_session s INNER JOIN evaluator e ON s.user_id = e.evaluator_id INNER JOIN evaluator_permissions p ON p.evaluator_id = e.evaluator_id WHERE s.token = $1 AND s.expires > $2 AND e.account_locked = false;", token.Value, time.Now().UTC())
 				if err := row.Scan(&user.ID, &user.Kaid, &user.Name, &user.Nickname, &user.Username, &user.IsAdmin, &user.Permissions.ViewAdminStats, &user.Permissions.EditContests, &user.Permissions.DeleteContests, &user.Permissions.AddEntries, &user.Permissions.EditEntries, &user.Permissions.DeleteEntries, &user.Permissions.AssignEntryGroups, &user.Permissions.ViewAllEvaluations, &user.Permissions.EditAllEvaluations, &user.Permissions.DeleteAllEvaluations, &user.Permissions.ManageWinners, &user.Permissions.ViewAllTasks, &user.Permissions.EditAllTasks, &user.Permissions.DeleteAllTasks, &user.Permissions.ViewJudgingSettings, &user.Permissions.ManageJudgingGroups, &user.Permissions.AssignEvaluatorGroups, &user.Permissions.ManageJudgingCriteria, &user.Permissions.ViewAllUsers, &user.Permissions.EditUserProfiles, &user.Permissions.ChangeUserPasswords, &user.Permissions.AssumeUserIdentities, &user.Permissions.AddUsers, &user.Permissions.ViewErrors, &user.Permissions.DeleteErrors, &user.Permissions.JudgeEntries, &user.Permissions.EditKbContent, &user.Permissions.DeleteKbContent, &user.Permissions.PublishKbContent, &user.Permissions.ManageAnnouncements, &impersonatedBy); err != nil {
 					user = nil
 				}
@@ -219,17 +219,19 @@ func ValidateUserLogin(password string, hashedPassword string) bool {
 	return err == nil
 }
 
-func CreateAuthToken(ctx context.Context, userId int, impersonatedById *int) *string {
+func CreateAuthToken(ctx context.Context, userId int, impersonatedById *int, updateLastLogin bool) *string {
 	token := uuid.NewString()
 
-	_, err := db.DB.Exec("INSERT INTO user_session (user_id, token, expires, impersonated_by_user) VALUES ($1, $2, $3, $4);", userId, token, time.Now().Add(14400000000000), impersonatedById)
+	_, err := db.DB.Exec("INSERT INTO user_session (user_id, token, expires, impersonated_by_user) VALUES ($1, $2, $3, $4);", userId, token, time.Now().Add(14400000000000).UTC(), impersonatedById)
 	if err != nil {
 		return nil
 	}
 
-	_, err = db.DB.Exec("UPDATE evaluator SET logged_in_tstz = $1 WHERE evaluator_id = $2;", time.Now(), userId)
-	if err != nil {
-		return nil
+	if updateLastLogin {
+		_, err = db.DB.Exec("UPDATE evaluator SET logged_in_tstz = $1 WHERE evaluator_id = $2;", time.Now().UTC(), userId)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return &token
