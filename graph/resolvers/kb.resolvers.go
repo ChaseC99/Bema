@@ -339,7 +339,7 @@ func (r *queryResolver) Section(ctx context.Context, id int) (*model.KBSection, 
 		return section, nil
 	}
 
-	return nil, nil
+	return nil, errs.NewNotFoundError(ctx, "Oops! This section does not exist.")
 }
 
 func (r *queryResolver) Article(ctx context.Context, id int) (*model.KBArticle, error) {

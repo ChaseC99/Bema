@@ -150,7 +150,7 @@ func GetKBSectionById(ctx context.Context, id int) (*model.KBSection, error) {
 	s := NewKBSectionModel()
 	if err := row.Scan(&s.ID, &s.Name, &s.Description, &s.Visibility); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "This section does not exist.")
+			return nil, errors.NewNotFoundError(ctx, "Oops! This section does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a KB section", err)
 	}
@@ -164,7 +164,7 @@ func GetKBArticleById(ctx context.Context, id int) (*model.KBArticle, error) {
 	a := NewKBArticleModel()
 	if err := row.Scan(&a.ID, &a.Section.ID, &a.Title, &a.Content, &a.Author.ID, &a.LastUpdated, &a.Visibility, &a.IsPublished); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NewNotFoundError(ctx, "This article does not exist.")
+			return nil, errors.NewNotFoundError(ctx, "Oops! This article does not exist.")
 		}
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving a KB article.", err)
 	}
