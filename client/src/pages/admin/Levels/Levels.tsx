@@ -9,7 +9,6 @@ import ProgramEmbed from "../../../shared/ProgramEmbed";
 import AdminSidebar from "../../../shared/Sidebars/AdminSidebar";
 import { Cell, Row, Table, TableBody, TableHead } from "../../../shared/Table";
 import useAppError from "../../../util/errors";
-import request from "../../../util/request";
 import "./Levels.css";
 
 type ContestantEntry = {
@@ -151,6 +150,7 @@ function Levels() {
   }
 
   const handleFetchNextEntry = () => {
+    setProgramIsLoading(true);
     fetchNextEntry();
   }
 
@@ -239,8 +239,12 @@ function Levels() {
                 <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "8px" }}>By: <ExternalLink to={"https://www.khanacademy.org/profile/" + entryData.entry.author.kaid + "/projects"}>{entryData.entry.author.name}</ExternalLink></p>
                 <p style={{ width: "100%", textAlign: "center", marginTop: "0", marginBottom: "16px" }}>Votes: {entryData.entry.votes}</p>
 
-                {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-                <ProgramEmbed programKaid={entryData.entry.kaid} height={entryData.entry.height} onLoad={handleProgramLoad} />
+                {programIsLoading && 
+                  <div className="col-12">
+                    <LoadingSpinner size="MEDIUM" />
+                  </div>
+                }
+                <ProgramEmbed programKaid={entryData.entry.kaid} height={entryData.entry.height} onLoad={handleProgramLoad} hidden={programIsLoading} />
               </React.Fragment>
             }
 

@@ -8,7 +8,6 @@ import { ConfirmModal } from "../../shared/Modals";
 import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
-import request from "../../util/request";
 
 type Entry = {
   id: string
@@ -157,6 +156,7 @@ function Judging() {
   }
 
   const handleFetchNextEntry = () => {
+    setProgramIsLoading(true);
     fetchNextEntry();
   }
 
@@ -186,7 +186,7 @@ function Judging() {
                 </div>
               }
               {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-              <ProgramEmbed programKaid={entryData?.entry?.kaid || DEFAULT_ENTRY.kaid} height={entryData?.entry?.height || DEFAULT_ENTRY.height} onLoad={handleProgramLoad} />
+              <ProgramEmbed programKaid={entryData?.entry?.kaid || DEFAULT_ENTRY.kaid} height={entryData?.entry?.height || DEFAULT_ENTRY.height} onLoad={handleProgramLoad} hidden={programIsLoading} />
             </React.Fragment>
           }
 
