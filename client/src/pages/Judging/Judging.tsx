@@ -4,11 +4,10 @@ import { Link } from "react-router-dom";
 import Button from "../../shared/Button";
 import { Form } from "../../shared/Forms";
 import LoadingSpinner from "../../shared/LoadingSpinner";
-import { ConfirmModal } from "../../shared/Modals";
+import { ConfirmModal, FormModal } from "../../shared/Modals";
 import ProgramEmbed from "../../shared/ProgramEmbed";
 import useAppState from "../../state/useAppState";
 import useAppError from "../../util/errors";
-import request from "../../util/request";
 
 type Entry = {
   id: string
@@ -69,8 +68,8 @@ type FlagEntryResponse = {
 }
 
 const FLAG_ENTRY = gql`
-  mutation FlagEntry($id: ID!) {
-    flagEntry(id: $id) {
+  mutation FlagEntry($id: ID!, $reason: String!) {
+    flagEntry(id: $id, reason: $reason) {
       id
       title
       height
@@ -145,18 +144,20 @@ function Judging() {
     setShowFlagEntryModal(false);
   }
 
-  const handleFlagEntry = async (id: number) => {
+  const handleFlagEntry = async (values: { [name: string]: any }) => {
     await flagEntry({
       variables: {
-        id: id
+        id: entryData?.entry?.id,
+        reason: values.reason,
       }
     });
 
-    fetchNextEntry();
+    handleFetchNextEntry();
     closeFlagEntryModal();
   }
 
   const handleFetchNextEntry = () => {
+    setProgramIsLoading(true);
     fetchNextEntry();
   }
 
@@ -186,7 +187,7 @@ function Judging() {
                 </div>
               }
               {programIsLoading && <LoadingSpinner size="MEDIUM" />}
-              <ProgramEmbed programKaid={entryData?.entry?.kaid || DEFAULT_ENTRY.kaid} height={entryData?.entry?.height || DEFAULT_ENTRY.height} onLoad={handleProgramLoad} />
+              <ProgramEmbed programKaid={entryData?.entry?.kaid || DEFAULT_ENTRY.kaid} height={entryData?.entry?.height || DEFAULT_ENTRY.height} onLoad={handleProgramLoad} hidden={programIsLoading} />
             </React.Fragment>
           }
 
@@ -282,17 +283,24 @@ function Judging() {
       </div>
 
       {showFlagEntryModal &&
-        <ConfirmModal
-          title="Flag entry?"
-          confirmLabel="Flag"
-          handleConfirm={handleFlagEntry}
+        <FormModal 
+          title="Flag Entry"
+          submitLabel="Flag"
+          handleSubmit={handleFlagEntry}
           handleCancel={closeFlagEntryModal}
-          destructive
+          fields={[
+            {
+              fieldType: "TEXTAREA",
+              name: "reason",
+              id: "flag-reason",
+              label: "Describe why this entry needs to be deleted or disqualified",
+              defaultValue: "",
+              size: "LARGE",
+            }
+          ]}
+          cols={4}
           loading={flagEntryIsLoading}
-          data={entryData?.entry?.id}
-        >
-          <p>Are you sure you want to flag this entry? This will remove the entry from the judging queue for all users until it has been reviewed.</p>
-        </ConfirmModal>
+        />
       }
     </React.Fragment>
   );

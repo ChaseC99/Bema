@@ -54,7 +54,7 @@ extend type Mutation {
 	"""
 	Flags an entry for admin reviewal and removes it from the judging queue
 	"""
-	flagEntry(id: ID!): Entry
+	flagEntry(id: ID!, reason: String!): Entry
 
 	"""
 	Removes a flag from an entry and places it back in the judging queue
@@ -185,6 +185,11 @@ type Entry {
 	Indicates whether the entry has been flagged. Requires authentication.
 	"""
 	isFlagged: Boolean
+
+	"""
+	The reason the entry was flagged. Requires Edit Entries permission.
+	"""
+	flagReason: String
 
 	"""
 	Indicates whether the entry has been disqualified. Requires authentication.
