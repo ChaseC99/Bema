@@ -110,7 +110,7 @@ func (r *kBSectionResolver) Articles(ctx context.Context, obj *model.KBSection) 
 	var err error
 	if user == nil {
 		articles, err = models.GetPublicKBArticlesBySection(ctx, obj.ID)
-	} else if user.IsAdmin {
+	} else if auth.HasPermission(user, auth.EditKbContent) {
 		articles, err = models.GetAdminKBArticlesBySection(ctx, obj.ID)
 	} else {
 		articles, err = models.GetEvaluatorKBArticlesBySection(ctx, obj.ID)
@@ -303,7 +303,7 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*model.KBSection, error
 
 	if user == nil {
 		sections, err = models.GetPublicKBSections(ctx)
-	} else if user.IsAdmin {
+	} else if auth.HasPermission(user, auth.EditKbContent) {
 		sections, err = models.GetAllKBSections(ctx)
 	} else {
 		sections, err = models.GetEvaluatorKBSections(ctx)

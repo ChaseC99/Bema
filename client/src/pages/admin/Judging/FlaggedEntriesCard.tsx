@@ -19,6 +19,7 @@ type Entry = {
     kaid: string
   } | null
   created: string
+  flagReason: string
 }
 
 type GetFlaggedEntriesResponse = {
@@ -36,6 +37,7 @@ const GET_FLAGGED_ENTRIES = gql`
         kaid
       }
       created
+      flagReason
     }
   }
 `;
@@ -169,6 +171,7 @@ function FlaggedEntriesCard() {
             <Cell header>Name</Cell>
             <Cell header>Author</Cell>
             <Cell header>Created</Cell>
+            <Cell header>Flag Reason</Cell>
             <Cell header></Cell>
           </Row>
         </TableHead>
@@ -180,6 +183,7 @@ function FlaggedEntriesCard() {
                 <Cell><ExternalLink to={e.url}>{e.title}</ExternalLink></Cell>
                 <Cell><Link to={"/contestants/" + e.author?.kaid}>{e.author?.name}</Link></Cell>
                 <Cell>{e.created}</Cell>
+                <Cell>{e.flagReason}</Cell>
                 <Cell>
                   {(state.isAdmin || state.user?.permissions.edit_entries) ?
                     <React.Fragment>

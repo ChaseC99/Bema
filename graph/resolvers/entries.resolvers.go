@@ -79,6 +79,15 @@ func (r *entryResolver) IsFlagged(ctx context.Context, obj *model.Entry) (*bool,
 	return obj.IsFlagged, nil
 }
 
+func (r *entryResolver) FlagReason(ctx context.Context, obj *model.Entry) (*string, error) {
+	user := auth.GetUserFromContext(ctx)
+	if !auth.HasPermission(user, auth.EditEntries) {
+		return nil, nil
+	}
+
+	return obj.FlagReason, nil
+}
+
 func (r *entryResolver) IsDisqualified(ctx context.Context, obj *model.Entry) (*bool, error) {
 	user := auth.GetUserFromContext(ctx)
 	if user == nil {
@@ -211,14 +220,14 @@ func (r *mutationResolver) RemoveWinner(ctx context.Context, id int) (*model.Ent
 	return entry, nil
 }
 
-func (r *mutationResolver) FlagEntry(ctx context.Context, id int) (*model.Entry, error) {
+func (r *mutationResolver) FlagEntry(ctx context.Context, id int, reason string) (*model.Entry, error) {
 	user := auth.GetUserFromContext(ctx)
 
 	if !auth.HasPermission(user, auth.JudgeEntries) {
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to flag entries.")
 	}
 
-	err := models.FlagEntryById(ctx, id)
+	err := models.FlagEntryById(ctx, id, reason)
 	if err != nil {
 		return nil, err
 	}

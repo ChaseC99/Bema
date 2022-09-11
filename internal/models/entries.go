@@ -49,7 +49,7 @@ func NewEntryVoteModel() model.EntryVote {
 func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE contest_id = $2 ORDER BY entry_id ASC;", util.DisplayFancyDateFormat, contestId)
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, flag_reason, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE contest_id = $2 ORDER BY entry_id ASC;", util.DisplayFancyDateFormat, contestId)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of entries.", err)
 	}
@@ -59,7 +59,7 @@ func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, 
 		var groupId *int
 		var authorKaid *string
 
-		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
 			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of entries.", err)
 		}
 
@@ -84,7 +84,7 @@ func GetEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, 
 func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_level, e.entry_votes, to_char(e.entry_created, $1), e.entry_height, e.is_winner, e.assigned_group_id, e.flagged, e.disqualified, e.entry_author_kaid, e.entry_level_locked, AVG(ev.creativity + ev.complexity + ev.execution + ev.interpretation) as avg_score FROM entry e INNER JOIN evaluation ev ON e.entry_id = ev.entry_id WHERE e.contest_id = $2 AND ev.evaluation_complete = true AND e.disqualified = false GROUP BY e.entry_id ORDER BY e.entry_level, avg_score DESC, e.entry_id ASC;", util.DisplayFancyDateFormat, contestId)
+	rows, err := db.DB.Query("SELECT e.entry_id, e.contest_id, e.entry_url, e.entry_kaid, e.entry_title, e.entry_level, e.entry_votes, to_char(e.entry_created, $1), e.entry_height, e.is_winner, e.assigned_group_id, e.flagged, e.flag_reason, e.disqualified, e.entry_author_kaid, e.entry_level_locked, AVG(ev.creativity + ev.complexity + ev.execution + ev.interpretation) as avg_score FROM entry e INNER JOIN evaluation ev ON e.entry_id = ev.entry_id WHERE e.contest_id = $2 AND ev.evaluation_complete = true AND e.disqualified = false GROUP BY e.entry_id ORDER BY e.entry_level, avg_score DESC, e.entry_id ASC;", util.DisplayFancyDateFormat, contestId)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of entries.", err)
 	}
@@ -94,7 +94,7 @@ func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entr
 		var groupId *int
 		var authorKaid *string
 
-		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked, &entry.AverageScore); err != nil {
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked, &entry.AverageScore); err != nil {
 			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of entries.", err)
 		}
 
@@ -117,12 +117,12 @@ func GetEntriesByAverageScore(ctx context.Context, contestId int) ([]*model.Entr
 }
 
 func GetEntryById(ctx context.Context, id int) (*model.Entry, error) {
-	row := db.DB.QueryRow("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_id = $2;", util.DisplayFancyDateFormat, id)
+	row := db.DB.QueryRow("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, flag_reason, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_id = $2;", util.DisplayFancyDateFormat, id)
 
 	entry := NewEntryModel()
 	var groupId *int
 	var authorKaid *string
-	if err := row.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+	if err := row.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NewNotFoundError(ctx, "The requested entry does not exist.")
 		}
@@ -147,7 +147,7 @@ func GetEntryById(ctx context.Context, id int) (*model.Entry, error) {
 func GetEntriesByContestantKaid(ctx context.Context, contestantKaid string) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_author_kaid = $2 ORDER BY entry_id DESC;", util.DisplayFancyDateFormat, contestantKaid)
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, flag_reason, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE entry_author_kaid = $2 ORDER BY entry_id DESC;", util.DisplayFancyDateFormat, contestantKaid)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of contestant entries.", err)
 	}
@@ -156,7 +156,7 @@ func GetEntriesByContestantKaid(ctx context.Context, contestantKaid string) ([]*
 		entry := NewEntryModel()
 		var groupId *int
 		var authorKaid *string
-		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
 			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of contestant entries.", err)
 		}
 
@@ -181,7 +181,7 @@ func GetEntriesByContestantKaid(ctx context.Context, contestantKaid string) ([]*
 func GetWinningEntriesByContestId(ctx context.Context, contestId int) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE contest_id = $2 AND is_winner = true ORDER BY entry_level ASC;", util.DisplayFancyDateFormat, contestId)
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, flag_reason, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE contest_id = $2 AND is_winner = true ORDER BY entry_level ASC;", util.DisplayFancyDateFormat, contestId)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the contest winners.", err)
 	}
@@ -192,7 +192,7 @@ func GetWinningEntriesByContestId(ctx context.Context, contestId int) ([]*model.
 		var groupId *int
 		var authorKaid *string
 
-		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
 			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the contest winners.", err)
 		}
 
@@ -231,7 +231,7 @@ func GetEntryAverageScore(ctx context.Context, id int) (*float64, error) {
 func GetFlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
 	entries := []*model.Entry{}
 
-	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id ASC;", util.DisplayFancyDateFormat)
+	rows, err := db.DB.Query("SELECT entry_id, contest_id, entry_url, entry_kaid, entry_title, entry_level, entry_votes, to_char(entry_created, $1) as entry_created, entry_height, is_winner, assigned_group_id, flagged, flag_reason, disqualified, entry_author_kaid, entry_level_locked FROM entry WHERE flagged = true AND disqualified = false ORDER BY entry_id ASC;", util.DisplayFancyDateFormat)
 	if err != nil {
 		return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the list of flagged entries.", err)
 	}
@@ -241,7 +241,7 @@ func GetFlaggedEntries(ctx context.Context) ([]*model.Entry, error) {
 		var groupId *int
 		var authorKaid *string
 
-		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
+		if err := rows.Scan(&entry.ID, &entry.Contest.ID, &entry.URL, &entry.Kaid, &entry.Title, &entry.SkillLevel, &entry.Votes, &entry.Created, &entry.Height, &entry.IsWinner, &groupId, &entry.IsFlagged, &entry.FlagReason, &entry.IsDisqualified, &authorKaid, &entry.IsSkillLevelLocked); err != nil {
 			return []*model.Entry{}, errors.NewInternalError(ctx, "An unexpected error occurred while reading the list of flagged entries.", err)
 		}
 
@@ -415,8 +415,8 @@ func RemoveWinnerByEntryId(ctx context.Context, id int) error {
 	return nil
 }
 
-func FlagEntryById(ctx context.Context, id int) error {
-	_, err := db.DB.Exec("UPDATE entry SET flagged = true WHERE entry_id = $1;", id)
+func FlagEntryById(ctx context.Context, id int, reason string) error {
+	_, err := db.DB.Exec("UPDATE entry SET flagged = true, flag_reason = $1 WHERE entry_id = $2;", reason, id)
 	if err != nil {
 		return errors.NewInternalError(ctx, "An unexpected error occurred while flagging an entry", err)
 	}

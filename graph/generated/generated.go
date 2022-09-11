@@ -101,6 +101,7 @@ type ComplexityRoot struct {
 		Contest            func(childComplexity int) int
 		Created            func(childComplexity int) int
 		EvaluationCount    func(childComplexity int) int
+		FlagReason         func(childComplexity int) int
 		Group              func(childComplexity int) int
 		Height             func(childComplexity int) int
 		ID                 func(childComplexity int) int
@@ -273,7 +274,7 @@ type ComplexityRoot struct {
 		EditTask                 func(childComplexity int, id int, input model.EditTaskInput) int
 		EditUserPermissions      func(childComplexity int, id int, input model.EditUserPermissionsInput) int
 		EditUserProfile          func(childComplexity int, id int, input model.EditUserProfileInput) int
-		FlagEntry                func(childComplexity int, id int) int
+		FlagEntry                func(childComplexity int, id int, reason string) int
 		ImpersonateUser          func(childComplexity int, id int) int
 		ImportEntries            func(childComplexity int, contestID int) int
 		ImportEntry              func(childComplexity int, contestID int, kaid string) int
@@ -420,6 +421,7 @@ type EntryResolver interface {
 
 	Group(ctx context.Context, obj *model.Entry) (*model.JudgingGroup, error)
 	IsFlagged(ctx context.Context, obj *model.Entry) (*bool, error)
+	FlagReason(ctx context.Context, obj *model.Entry) (*string, error)
 	IsDisqualified(ctx context.Context, obj *model.Entry) (*bool, error)
 	IsSkillLevelLocked(ctx context.Context, obj *model.Entry) (*bool, error)
 	AverageScore(ctx context.Context, obj *model.Entry) (*float64, error)
@@ -480,7 +482,7 @@ type MutationResolver interface {
 	DeleteContest(ctx context.Context, id int) (*model.Contest, error)
 	AddWinner(ctx context.Context, id int) (*model.Entry, error)
 	RemoveWinner(ctx context.Context, id int) (*model.Entry, error)
-	FlagEntry(ctx context.Context, id int) (*model.Entry, error)
+	FlagEntry(ctx context.Context, id int, reason string) (*model.Entry, error)
 	ApproveEntry(ctx context.Context, id int) (*model.Entry, error)
 	DisqualifyEntry(ctx context.Context, id int) (*model.Entry, error)
 	EditEntry(ctx context.Context, id int, input model.EditEntryInput) (*model.Entry, error)
@@ -804,6 +806,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Entry.EvaluationCount(childComplexity), true
+
+	case "Entry.flagReason":
+		if e.complexity.Entry.FlagReason == nil {
+			break
+		}
+
+		return e.complexity.Entry.FlagReason(childComplexity), true
 
 	case "Entry.group":
 		if e.complexity.Entry.Group == nil {
@@ -1904,7 +1913,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FlagEntry(childComplexity, args["id"].(int)), true
+		return e.complexity.Mutation.FlagEntry(childComplexity, args["id"].(int), args["reason"].(string)), true
 
 	case "Mutation.impersonateUser":
 		if e.complexity.Mutation.ImpersonateUser == nil {
@@ -3251,7 +3260,7 @@ extend type Mutation {
 	"""
 	Flags an entry for admin reviewal and removes it from the judging queue
 	"""
-	flagEntry(id: ID!): Entry
+	flagEntry(id: ID!, reason: String!): Entry
 
 	"""
 	Removes a flag from an entry and places it back in the judging queue
@@ -3382,6 +3391,11 @@ type Entry {
 	Indicates whether the entry has been flagged. Requires authentication.
 	"""
 	isFlagged: Boolean
+
+	"""
+	The reason the entry was flagged. Requires Edit Entries permission.
+	"""
+	flagReason: String
 
 	"""
 	Indicates whether the entry has been disqualified. Requires authentication.
@@ -5652,6 +5666,15 @@ func (ec *executionContext) field_Mutation_flagEntry_args(ctx context.Context, r
 		}
 	}
 	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["reason"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["reason"] = arg1
 	return args, nil
 }
 
@@ -7015,6 +7038,8 @@ func (ec *executionContext) fieldContext_Contest_winners(ctx context.Context, fi
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -7186,6 +7211,8 @@ func (ec *executionContext) fieldContext_Contestant_entries(ctx context.Context,
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -7985,6 +8012,47 @@ func (ec *executionContext) fieldContext_Entry_isFlagged(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Entry_flagReason(ctx context.Context, field graphql.CollectedField, obj *model.Entry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entry_flagReason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entry().FlagReason(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entry_flagReason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9066,6 +9134,8 @@ func (ec *executionContext) fieldContext_Evaluation_entry(ctx context.Context, f
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12259,6 +12329,8 @@ func (ec *executionContext) fieldContext_Mutation_addWinner(ctx context.Context,
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12353,6 +12425,8 @@ func (ec *executionContext) fieldContext_Mutation_removeWinner(ctx context.Conte
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12399,7 +12473,7 @@ func (ec *executionContext) _Mutation_flagEntry(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FlagEntry(rctx, fc.Args["id"].(int))
+		return ec.resolvers.Mutation().FlagEntry(rctx, fc.Args["id"].(int), fc.Args["reason"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12447,6 +12521,8 @@ func (ec *executionContext) fieldContext_Mutation_flagEntry(ctx context.Context,
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12541,6 +12617,8 @@ func (ec *executionContext) fieldContext_Mutation_approveEntry(ctx context.Conte
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12635,6 +12713,8 @@ func (ec *executionContext) fieldContext_Mutation_disqualifyEntry(ctx context.Co
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12729,6 +12809,8 @@ func (ec *executionContext) fieldContext_Mutation_editEntry(ctx context.Context,
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12823,6 +12905,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteEntry(ctx context.Contex
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -12917,6 +13001,8 @@ func (ec *executionContext) fieldContext_Mutation_setEntryLevel(ctx context.Cont
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -13186,6 +13272,8 @@ func (ec *executionContext) fieldContext_Mutation_importEntry(ctx context.Contex
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -17596,6 +17684,8 @@ func (ec *executionContext) fieldContext_Query_entries(ctx context.Context, fiel
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -17690,6 +17780,8 @@ func (ec *executionContext) fieldContext_Query_entry(ctx context.Context, field 
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -17787,6 +17879,8 @@ func (ec *executionContext) fieldContext_Query_flaggedEntries(ctx context.Contex
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -17873,6 +17967,8 @@ func (ec *executionContext) fieldContext_Query_entriesByAverageScore(ctx context
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -18028,6 +18124,8 @@ func (ec *executionContext) fieldContext_Query_nextEntryToJudge(ctx context.Cont
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -18111,6 +18209,8 @@ func (ec *executionContext) fieldContext_Query_nextEntryToReviewSkillLevel(ctx c
 				return ec.fieldContext_Entry_group(ctx, field)
 			case "isFlagged":
 				return ec.fieldContext_Entry_isFlagged(ctx, field)
+			case "flagReason":
+				return ec.fieldContext_Entry_flagReason(ctx, field)
 			case "isDisqualified":
 				return ec.fieldContext_Entry_isDisqualified(ctx, field)
 			case "isSkillLevelLocked":
@@ -24203,6 +24303,23 @@ func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Entry_isFlagged(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "flagReason":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entry_flagReason(ctx, field, obj)
 				return res
 			}
 

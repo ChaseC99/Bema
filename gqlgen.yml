@@ -100,6 +100,8 @@ models:
         resolver: true
       isFlagged:
         resolver: true
+      flagReason:
+        resolver: true
       isDisqualified:
         resolver: true
       isSkillLevelLocked:

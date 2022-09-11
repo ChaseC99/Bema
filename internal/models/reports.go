@@ -16,7 +16,7 @@ type Progress struct {
 func GetUserProgressByContestId(ctx context.Context, userId int, contestId int) (*model.Progress, error) {
 	p := &model.Progress{}
 
-	row := db.DB.QueryRow("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = $1 AND ev.evaluator_id = $2 AND ev.evaluation_complete = true;", contestId, userId)
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM evaluation ev INNER JOIN entry en ON en.entry_id = ev.entry_id WHERE en.contest_id = $1 AND ev.evaluator_id = $2 AND en.disqualified = false AND en.flagged = false AND ev.evaluation_complete = true;", contestId, userId)
 	if err := row.Scan(&p.Count); err != nil {
 		return nil, errors.NewInternalError(ctx, "An unexpected error occurred while retrieving the user's total evaluations for a contest", err)
 	}

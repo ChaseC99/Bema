@@ -305,6 +305,8 @@ type Entry struct {
 	Group *JudgingGroup `json:"group"`
 	// Indicates whether the entry has been flagged. Requires authentication.
 	IsFlagged *bool `json:"isFlagged"`
+	// The reason the entry was flagged. Requires Edit Entries permission.
+	FlagReason *string `json:"flagReason"`
 	// Indicates whether the entry has been disqualified. Requires authentication.
 	IsDisqualified *bool `json:"isDisqualified"`
 	// Indicates whether the skill level has been permanently set for the entry. Requires Edit Entries permission.
