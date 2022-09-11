@@ -171,7 +171,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 func (r *mutationResolver) EditUserProfile(ctx context.Context, id int, input model.EditUserProfileInput) (*model.User, error) {
 	user := auth.GetUserFromContext(ctx)
 
-	if !auth.HasPermission(user, auth.EditUserProfiles) {
+	if user == nil || (!auth.HasPermission(user, auth.EditUserProfiles) && id != user.ID) {
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to edit user profiles")
 	}
 
