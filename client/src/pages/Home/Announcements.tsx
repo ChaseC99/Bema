@@ -48,7 +48,7 @@ type CreateAnnouncementResponse = {
 }
 
 const CREATE_ANNOUNCEMENT = gql`
-  mutation CreateAnnouncement($input: AnnouncementInput) {
+  mutation CreateAnnouncement($input: AnnouncementInput!) {
     announcement: createAnnouncement(input: $input) {
       id
     }
@@ -60,7 +60,7 @@ type EditAnnouncementResponse = {
 }
 
 const EDIT_ANNOUNCEMENT = gql`
-  mutation EditAnnouncement($id: ID!, $input: AnnouncementInput) {
+  mutation EditAnnouncement($id: ID!, $input: AnnouncementInput!) {
     announcement: editAnnouncement(id: $id, input: $input) {
       id
       author {
