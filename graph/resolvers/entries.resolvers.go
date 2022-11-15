@@ -459,7 +459,7 @@ func (r *mutationResolver) ImportEntry(ctx context.Context, contestID int, kaid 
 		return nil, errs.NewForbiddenError(ctx, "You do not have permission to import entries.")
 	}
 
-	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/show_scratchpad?scratchpad_id=%s", kaid)
+	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/_rg/program_details?program_id=%s", kaid)
 
 	res, err := http.Get(APIEndpoint)
 	if err != nil {
@@ -471,35 +471,31 @@ func (r *mutationResolver) ImportEntry(ctx context.Context, contestID int, kaid 
 		return nil, err
 	}
 
-	type Scratchpad struct {
-		URL        string `json:"url"`
-		AuthorKaid string `json:"kaid"`
-		Title      string `json:"title"`
-		Votes      int    `json:"sumVotesIncremented"`
-		Created    string `json:"created"`
-		Height     int    `json:"height"`
-	}
-
 	type Author struct {
 		AuthorName string `json:"nickname"`
+		AuthorKaid string `json:"kaid"`
 	}
 
 	type Response struct {
-		Scratchpad Scratchpad `json:"scratchpad"`
-		Author     Author     `json:"creatorProfile"`
+		Author  Author `json:"author"`
+		Created string `json:"created"`
+		Height  int    `json:"height"`
+		Votes   int    `json:"sumVotesIncremented"`
+		Title   string `json:"title"`
+		URL     string `json:"url"`
 	}
 
 	var data Response
 	json.Unmarshal(body, &data)
 
 	input := &models.EntryInput{
-		URL:        data.Scratchpad.URL,
+		URL:        "https://khanacademy.org" + data.URL,
 		Kaid:       kaid,
-		Title:      data.Scratchpad.Title,
-		AuthorName: data.Author.AuthorName,
-		AuthorKaid: data.Scratchpad.AuthorKaid,
-		Votes:      data.Scratchpad.Votes,
-		Created:    data.Scratchpad.Created,
+		Title:      data.Title,
+		AuthorName: data.AuthorName,
+		AuthorKaid: data.AuthorKaid,
+		Votes:      data.Votes,
+		Created:    data.Created,
 	}
 
 	id, err := models.CreateEntry(ctx, contestID, input)
