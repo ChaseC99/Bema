@@ -403,7 +403,7 @@ func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bo
 	}
 
 	splitURL := strings.Split(*contest.URL, "/")
-	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/scratchpads/Scratchpad:%s/top-forks?sort=2&page=0&limit=1000", splitURL[len(splitURL)-1])
+	APIEndpoint := fmt.Sprintf("https://www.khanacademy.org/api/internal/_rg/program_spinoffs?program_id=%s", splitURL[len(splitURL)-1])
 
 	res, err := http.Get(APIEndpoint)
 	if err != nil {
@@ -415,32 +415,35 @@ func (r *mutationResolver) ImportEntries(ctx context.Context, contestID int) (bo
 		return false, err
 	}
 
-	type Scratchpad struct {
-		Created    string `json:"created"`
-		Title      string `json:"title"`
-		Votes      int    `json:"sumVotesIncremented"`
-		URL        string `json:"url"`
-		AuthorKAID string `json:"authorKaid"`
-		AuthorName string `json:"authorNickname"`
+	type Author struct {
+		AuthorKAID string `json:"kaid"`
+		AuthorName string `json:"nickname"`
+	}
+	type Program struct {
+		Author  Author `json:"author"`
+		Created string `json:"created"`
+		Title   string `json:"title"`
+		URL     string `json:"url"`
+		Votes   int    `json:"sumVotesIncremented"`
 	}
 
 	type Response struct {
-		Scratchpads []Scratchpad `json:"scratchpads"`
+		Programs []Program `json:"programs"`
 	}
 
 	var data Response
 	json.Unmarshal(body, &data)
 
-	for i := range data.Scratchpads {
-		urlSplit := strings.Split(data.Scratchpads[i].URL, "/")
+	for i := range data.Programs {
+		urlSplit := strings.Split(data.Programs[i].URL, "/")
 		input := &models.EntryInput{
-			URL:        data.Scratchpads[i].URL,
+			URL:        "https://khanacademy.org" + data.Programs[i].URL,
 			Kaid:       urlSplit[len(urlSplit)-1],
-			Title:      data.Scratchpads[i].Title,
-			AuthorName: data.Scratchpads[i].AuthorName,
-			AuthorKaid: data.Scratchpads[i].AuthorKAID,
-			Votes:      data.Scratchpads[i].Votes,
-			Created:    data.Scratchpads[i].Created,
+			Title:      data.Programs[i].Title,
+			AuthorName: data.Programs[i].Author.AuthorName,
+			AuthorKaid: data.Programs[i].Author.AuthorKAID,
+			Votes:      data.Programs[i].Votes,
+			Created:    data.Programs[i].Created,
 		}
 
 		_, err := models.CreateEntry(ctx, contestID, input)
