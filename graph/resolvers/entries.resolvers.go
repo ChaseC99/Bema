@@ -492,8 +492,8 @@ func (r *mutationResolver) ImportEntry(ctx context.Context, contestID int, kaid 
 		URL:        "https://khanacademy.org" + data.URL,
 		Kaid:       kaid,
 		Title:      data.Title,
-		AuthorName: data.AuthorName,
-		AuthorKaid: data.AuthorKaid,
+		AuthorName: data.Author.AuthorName,
+		AuthorKaid: data.Author.AuthorKaid,
 		Votes:      data.Votes,
 		Created:    data.Created,
 	}
